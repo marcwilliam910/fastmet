@@ -35,9 +35,10 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       {/* <FontWrapper> */}
-      <Stack>
-        <Stack.Screen name="index" options={{headerShown: false}} />
-        <Stack.Screen name="(auth)" options={{headerShown: false}} />
+      <Stack screenOptions={{headerShown: false}}>
+        <Stack.Screen name="index" />
+        <Stack.Screen name="(auth)" />
+        <Stack.Screen name="(drawer)" />
       </Stack>
       {/* </FontWrapper> */}
     </SafeAreaProvider>

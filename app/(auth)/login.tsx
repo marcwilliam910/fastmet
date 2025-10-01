@@ -1,7 +1,7 @@
 import CustomKeyAvoidingView from "@/components/CustomKeyAvoid";
 import LogoWithText from "@/components/LogoWithText";
 import {Ionicons} from "@expo/vector-icons";
-import {Link} from "expo-router";
+import {Link, router} from "expo-router";
 import React, {useState} from "react";
 import {Pressable, Text, TextInput, TouchableOpacity, View} from "react-native";
 import {SafeAreaView} from "react-native-safe-area-context";
@@ -65,7 +65,10 @@ const Login = () => {
           </Link>
 
           {/* Sign In Button */}
-          <Pressable className="items-center py-4 rounded-lg bg-lightPrimary active:bg-darkPrimary">
+          <Pressable
+            className="items-center py-4 rounded-lg bg-lightPrimary active:bg-darkPrimary"
+            onPress={() => router.push("/(drawer)/(tabs)")}
+          >
             <Text className="text-base font-bold text-white">Sign In</Text>
           </Pressable>
 
