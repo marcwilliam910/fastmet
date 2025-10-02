@@ -40,6 +40,7 @@ export default function RootLayout() {
         <Stack.Screen name="index" />
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(drawer)" />
+        <Stack.Screen name="(root_screens)" />
       </Stack>
       {/* </FontWrapper> */}
       <StatusBar backgroundColor="#0F2535" barStyle="light-content" />

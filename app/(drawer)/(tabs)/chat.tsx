@@ -1,5 +1,6 @@
 import {Ionicons} from "@expo/vector-icons";
 import {Image} from "expo-image";
+import {router} from "expo-router";
 import React from "react";
 import {FlatList, Pressable, Text, View} from "react-native";
 import {TextInput} from "react-native-gesture-handler";
@@ -104,7 +105,10 @@ export default Chat;
 
 const MessageCard = ({item}: any) => {
   return (
-    <Pressable className="flex-row items-center gap-4 px-4 py-2 active:bg-ctaSecondary">
+    <Pressable
+      className="flex-row items-center gap-4 px-4 py-2 active:bg-ctaSecondary"
+      onPress={() => router.push("/(root_screens)/message")}
+    >
       <Image
         source={item.image}
         style={{width: 50, height: 50, borderRadius: 999}}
