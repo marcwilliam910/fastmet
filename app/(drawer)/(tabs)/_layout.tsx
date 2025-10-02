@@ -1,6 +1,7 @@
 import HeaderTabs from "@/components/headers/HeaderTabs";
 import {Ionicons} from "@expo/vector-icons";
 import {Tabs} from "expo-router";
+import {Text, View} from "react-native";
 
 export default function TabLayout() {
   return (
@@ -12,6 +13,7 @@ export default function TabLayout() {
           // paddingTop: 5, // Add bottom padding
         },
         tabBarActiveTintColor: "#FFA840",
+        tabBarInactiveTintColor: "#9FABB4",
         headerShown: true,
         headerStyle: {backgroundColor: "#0F2535"},
         headerTitle: () => <HeaderTabs />,
@@ -61,11 +63,16 @@ export default function TabLayout() {
         options={{
           title: "Chat",
           tabBarIcon: ({color, focused}) => (
-            <Ionicons
-              name={focused ? "chatbubbles" : "chatbubbles-outline"}
-              size={24}
-              color={color}
-            />
+            <View>
+              <Ionicons
+                name={focused ? "chatbubbles" : "chatbubbles-outline"}
+                size={24}
+                color={color}
+              />
+              <View className="absolute flex items-center justify-center bg-red-500 rounded-full size-4 -top-1 -right-2">
+                <Text className="text-xs font-semibold text-white">4</Text>
+              </View>
+            </View>
           ),
         }}
       />

@@ -16,6 +16,8 @@ module.exports = {
         lightPrimary: "#FFA840",
         darkPrimary: "#ED8718",
         secondary: "#0F2535",
+        ctaSecondary: "#EBEBEB",
+        ctaSecondaryActive: "#D9D9D9",
       },
     },
   },

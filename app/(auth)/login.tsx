@@ -18,13 +18,14 @@ const Login = () => {
 
           {/* Username Input */}
           <View className="gap-2">
-            <Text className="text-sm font-medium text-gray-700 ">Username</Text>
+            <Text className="text-sm font-medium text-gray-700 ">Email</Text>
             <TextInput
-              placeholder="Username"
+              placeholder="Email"
+              keyboardType="email-address"
               placeholderTextColor="#9CA3AF"
               className="p-4 text-base bg-gray-100 rounded-lg"
             />
-            {/* <Text className="ml-2 text-xs text-red-500">Invalid Username</Text> */}
+            {/* <Text className="ml-2 text-xs text-red-500">Invalid Email</Text> */}
           </View>
 
           {/* Password Input */}

@@ -11,11 +11,13 @@ const CustomKeyAvoidingView: FC<{children: React.ReactNode}> = ({children}) => {
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 50 : 0}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
     >
       <ScrollView
         keyboardShouldPersistTaps="handled"
         style={{flex: 1}}
+        contentInsetAdjustmentBehavior="automatic"
+        showsVerticalScrollIndicator={false}
         contentContainerStyle={{flexGrow: 1 /*dont know if this is needed*/}}
       >
         {children}

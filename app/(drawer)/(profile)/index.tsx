@@ -1,7 +1,8 @@
 import {Ionicons} from "@expo/vector-icons";
+import {Image} from "expo-image";
 import {router} from "expo-router";
 import React from "react";
-import {Image, Pressable, ScrollView, Text, View} from "react-native";
+import {Pressable, ScrollView, Text, View} from "react-native";
 
 export default function MyProfile() {
   const menuItems = [
@@ -10,9 +11,13 @@ export default function MyProfile() {
       label: "Edit Profile",
       onPress: () => router.push("/(drawer)/(profile)/editProfile"),
     },
-    {icon: "call", label: "Contact Number", onPress: () => {}},
-    {icon: "mail", label: "Email address", onPress: () => {}},
-    {icon: "lock-closed", label: "Change Password", onPress: () => {}},
+    // {icon: "call", label: "Contact Number", onPress: () => {}},
+    // {icon: "mail", label: "Email address", onPress: () => {}},
+    {
+      icon: "lock-closed",
+      label: "Change Password",
+      onPress: () => router.push("/(drawer)/(profile)/changePass"),
+    },
     {icon: "settings", label: "Settings", onPress: () => {}},
   ];
 
@@ -23,7 +28,8 @@ export default function MyProfile() {
         <View className="border border-[#FFA840] rounded-full p-2">
           <Image
             source={require("@/assets/images/icon.png")}
-            className="w-32 h-32 rounded-full"
+            style={{width: 120, height: 120, borderRadius: 999}}
+            contentFit="contain"
           />
         </View>
 

@@ -4,6 +4,7 @@ import {
   DrawerContentScrollView,
   DrawerItemList,
 } from "@react-navigation/drawer";
+import {router} from "expo-router";
 import {Drawer} from "expo-router/drawer";
 import {Pressable, Text, View} from "react-native";
 import {GestureHandlerRootView} from "react-native-gesture-handler";
@@ -13,7 +14,10 @@ const CustomDrawerContent = (props: any) => {
     <View className="flex-1">
       <DrawerContentScrollView {...props}>
         <DrawerItemList {...props} />
-        <Pressable className="flex-row items-center gap-3 px-5 py-4">
+        <Pressable
+          className="flex-row items-center gap-3 px-5 py-4"
+          onPress={() => router.push("/(auth)/login")}
+        >
           <Ionicons name="log-out-outline" size={24} color="white" />
           <Text className="font-semibold text-white">Logout</Text>
         </Pressable>
@@ -70,7 +74,7 @@ export default function DrawerLayout() {
           options={{
             drawerLabel: "My Profile",
             title: "My Profile",
-            headerShown: true,
+            // headerShown: true,
             drawerIcon: ({focused}) => (
               <Ionicons
                 name={focused ? "person" : "person-outline"}

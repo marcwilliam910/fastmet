@@ -5,6 +5,7 @@ import {
 } from "@expo-google-fonts/montserrat";
 import {SplashScreen, Stack} from "expo-router";
 import {useEffect} from "react";
+import {StatusBar} from "react-native";
 import {SafeAreaProvider} from "react-native-safe-area-context";
 import "../global.css";
 
@@ -41,6 +42,7 @@ export default function RootLayout() {
         <Stack.Screen name="(drawer)" />
       </Stack>
       {/* </FontWrapper> */}
+      <StatusBar backgroundColor="#0F2535" barStyle="light-content" />
     </SafeAreaProvider>
   );
 }
