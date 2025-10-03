@@ -6,7 +6,10 @@ import {
   StyleSheet,
 } from "react-native";
 
-const CustomKeyAvoidingView: FC<{children: React.ReactNode}> = ({children}) => {
+const CustomKeyAvoidingView: FC<{children: React.ReactNode; ref?: any}> = ({
+  children,
+  ref,
+}) => {
   return (
     <KeyboardAvoidingView
       style={styles.container}
@@ -14,6 +17,7 @@ const CustomKeyAvoidingView: FC<{children: React.ReactNode}> = ({children}) => {
       keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
     >
       <ScrollView
+        ref={ref}
         keyboardShouldPersistTaps="handled"
         style={{flex: 1}}
         contentInsetAdjustmentBehavior="automatic"

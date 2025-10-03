@@ -2,7 +2,7 @@ import CustomKeyAvoidingView from "@/components/CustomKeyAvoid";
 import LogoWithText from "@/components/LogoWithText";
 import {Ionicons} from "@expo/vector-icons";
 import {Link, useRouter} from "expo-router";
-import React, {useState} from "react";
+import React, {useRef, useState} from "react";
 import {Pressable, Text, TextInput, View} from "react-native";
 import {SafeAreaView} from "react-native-safe-area-context";
 
@@ -10,6 +10,9 @@ const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const router = useRouter();
+  const emailRef = useRef<TextInput | null>(null);
+  const passwordRef = useRef<TextInput | null>(null);
+  const confirmPasswordRef = useRef<TextInput | null>(null);
 
   return (
     <SafeAreaView style={{flex: 1, backgroundColor: "#fff"}}>
@@ -31,6 +34,9 @@ const Register = () => {
               placeholder="Username"
               placeholderTextColor="#9CA3AF"
               className="p-4 text-base bg-gray-100 rounded-lg"
+              returnKeyType="next"
+              onSubmitEditing={() => emailRef.current?.focus()}
+              submitBehavior="submit"
             />
           </View>
 
@@ -40,9 +46,13 @@ const Register = () => {
               Email Address
             </Text>
             <TextInput
+              ref={emailRef}
               placeholder="Enter email"
               placeholderTextColor="#9CA3AF"
               keyboardType="email-address"
+              returnKeyType="next"
+              onSubmitEditing={() => passwordRef.current?.focus()}
+              submitBehavior="submit"
               className="p-4 text-base bg-gray-100 rounded-lg"
             />
             {/* <Text className="ml-2 text-xs text-red-500">Invalid Email</Text> */}
@@ -53,9 +63,13 @@ const Register = () => {
             <Text className="text-sm font-medium text-gray-700">Password</Text>
             <View className="relative">
               <TextInput
+                ref={passwordRef}
                 placeholder="Password"
                 placeholderTextColor="#9CA3AF"
                 secureTextEntry={!showPassword}
+                returnKeyType="next"
+                onSubmitEditing={() => confirmPasswordRef.current?.focus()}
+                submitBehavior="submit"
                 className="p-4 pr-12 text-base bg-gray-100 rounded-lg"
               />
               <Pressable
@@ -81,6 +95,7 @@ const Register = () => {
             </Text>
             <View className="relative">
               <TextInput
+                ref={confirmPasswordRef}
                 placeholder="Confirm Password"
                 placeholderTextColor="#9CA3AF"
                 secureTextEntry={!showConfirmPassword}

@@ -2,12 +2,13 @@ import CustomKeyAvoidingView from "@/components/CustomKeyAvoid";
 import LogoWithText from "@/components/LogoWithText";
 import {Ionicons} from "@expo/vector-icons";
 import {Link, router} from "expo-router";
-import React, {useState} from "react";
+import React, {useRef, useState} from "react";
 import {Pressable, Text, TextInput, TouchableOpacity, View} from "react-native";
 import {SafeAreaView} from "react-native-safe-area-context";
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
+  const passwordRef = useRef<TextInput>(null);
 
   return (
     <SafeAreaView style={{flex: 1, backgroundColor: "#fff"}}>
@@ -23,6 +24,9 @@ const Login = () => {
               placeholder="Email"
               keyboardType="email-address"
               placeholderTextColor="#9CA3AF"
+              returnKeyType="next"
+              onSubmitEditing={() => passwordRef.current?.focus()} // focus password
+              submitBehavior="submit" // 👈 replacement for blurOnSubmit={false}
               className="p-4 text-base bg-gray-100 rounded-lg"
             />
             {/* <Text className="ml-2 text-xs text-red-500">Invalid Email</Text> */}
@@ -33,6 +37,7 @@ const Login = () => {
             <Text className="text-sm font-medium text-gray-700">Password</Text>
             <View className="relative">
               <TextInput
+                ref={passwordRef}
                 placeholder="Password"
                 placeholderTextColor="#9CA3AF"
                 secureTextEntry={!showPassword}

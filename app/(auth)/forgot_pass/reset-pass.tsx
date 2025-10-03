@@ -3,7 +3,7 @@ import LogoWithText from "@/components/LogoWithText";
 import {Ionicons} from "@expo/vector-icons";
 import {Image} from "expo-image";
 import {router, useRouter} from "expo-router";
-import React, {useState} from "react";
+import React, {useRef, useState} from "react";
 import {Modal, Pressable, Text, TextInput, View} from "react-native";
 import {SafeAreaView} from "react-native-safe-area-context";
 
@@ -12,6 +12,7 @@ export default function ResetPass() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+  const confirmPasswordRef = useRef<TextInput | null>(null);
 
   return (
     <SafeAreaView style={{flex: 1, backgroundColor: "#fff"}}>
@@ -39,6 +40,9 @@ export default function ResetPass() {
                 placeholder="New Password"
                 placeholderTextColor="#9CA3AF"
                 secureTextEntry={!showPassword}
+                returnKeyType="next"
+                onSubmitEditing={() => confirmPasswordRef.current?.focus()}
+                submitBehavior="submit"
                 className="p-4 pr-12 text-base bg-gray-100 rounded-lg"
               />
               <Pressable
@@ -63,6 +67,7 @@ export default function ResetPass() {
             </Text>
             <View className="relative">
               <TextInput
+                ref={confirmPasswordRef}
                 placeholder="Confirm Password"
                 placeholderTextColor="#9CA3AF"
                 secureTextEntry={!showConfirmPassword}

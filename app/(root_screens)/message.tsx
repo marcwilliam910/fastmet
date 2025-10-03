@@ -12,7 +12,7 @@ import {
   View,
 } from "react-native";
 import {Bubble, GiftedChat, IMessage} from "react-native-gifted-chat";
-import {SafeAreaView, useSafeAreaInsets} from "react-native-safe-area-context";
+import {SafeAreaView} from "react-native-safe-area-context";
 
 const Message = () => {
   const [messages, setMessages] = useState<IMessage[]>([
@@ -37,7 +37,6 @@ const Message = () => {
     },
   ]);
   const [text, setText] = useState("");
-  const insets = useSafeAreaInsets();
 
   const onSend = useCallback((newMessages: IMessage[] = []) => {
     setMessages((previousMessages) =>
@@ -55,8 +54,10 @@ const Message = () => {
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      // mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ["images"],
       allowsEditing: true,
+      selectionLimit: 1,
       quality: 0.8,
     });
 

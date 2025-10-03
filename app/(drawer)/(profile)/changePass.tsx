@@ -1,13 +1,15 @@
 import CustomKeyAvoidingView from "@/components/CustomKeyAvoid";
 import {Ionicons} from "@expo/vector-icons";
 import {router} from "expo-router";
-import React, {useState} from "react";
+import React, {useRef, useState} from "react";
 import {Pressable, Text, TextInput, View} from "react-native";
 
 const ChangePass = () => {
   const [showOldPassword, setShowOldPassword] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const newPassRef = useRef<TextInput | null>(null);
+  const confirmPassRef = useRef<TextInput | null>(null);
 
   return (
     <CustomKeyAvoidingView>
@@ -20,6 +22,9 @@ const ChangePass = () => {
             </Text>
             <View className="relative">
               <TextInput
+                returnKeyType="next"
+                onSubmitEditing={() => newPassRef.current?.focus()}
+                submitBehavior="submit"
                 placeholder="Old Password"
                 placeholderTextColor="#9CA3AF"
                 secureTextEntry={!showOldPassword}
@@ -45,6 +50,10 @@ const ChangePass = () => {
             </Text>
             <View className="relative">
               <TextInput
+                ref={newPassRef}
+                returnKeyType="next"
+                onSubmitEditing={() => confirmPassRef.current?.focus()}
+                submitBehavior="submit"
                 placeholder="New Password"
                 placeholderTextColor="#9CA3AF"
                 secureTextEntry={!showPassword}
@@ -70,6 +79,7 @@ const ChangePass = () => {
             </Text>
             <View className="relative">
               <TextInput
+                ref={confirmPassRef}
                 placeholder="Confirm New Password"
                 placeholderTextColor="#9CA3AF"
                 secureTextEntry={!showConfirmPassword}

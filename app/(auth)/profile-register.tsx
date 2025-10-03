@@ -2,13 +2,15 @@ import CustomKeyAvoidingView from "@/components/CustomKeyAvoid";
 import {Ionicons} from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import {useRouter} from "expo-router";
-import React, {useState} from "react";
+import React, {useRef, useState} from "react";
 import {Pressable, Text, TextInput, View} from "react-native";
 import {SafeAreaView} from "react-native-safe-area-context";
 
 export default function ProfileRegistration() {
   const router = useRouter();
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+  const midNameRef = useRef<TextInput | null>(null);
+  const lastNameRef = useRef<TextInput | null>(null);
 
   return (
     <SafeAreaView style={{flex: 1, backgroundColor: "#fff"}}>
@@ -38,6 +40,9 @@ export default function ProfileRegistration() {
             <TextInput
               placeholder="Enter First Name"
               placeholderTextColor="#9CA3AF"
+              returnKeyType="next"
+              onSubmitEditing={() => midNameRef.current?.focus()}
+              submitBehavior="submit"
               className="p-4 text-base bg-gray-100 rounded-lg"
             />
           </View>
@@ -48,8 +53,12 @@ export default function ProfileRegistration() {
               Middle Name
             </Text>
             <TextInput
+              ref={midNameRef}
               placeholder="Enter Middle Name"
               placeholderTextColor="#9CA3AF"
+              returnKeyType="next"
+              onSubmitEditing={() => lastNameRef.current?.focus()}
+              submitBehavior="submit"
               className="p-4 text-base bg-gray-100 rounded-lg"
             />
           </View>
@@ -60,6 +69,7 @@ export default function ProfileRegistration() {
               Last Name
             </Text>
             <TextInput
+              ref={lastNameRef}
               placeholder="Enter Last Name"
               placeholderTextColor="#9CA3AF"
               className="p-4 text-base bg-gray-100 rounded-lg"
