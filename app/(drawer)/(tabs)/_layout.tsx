@@ -59,7 +59,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="chat"
+        name="chats"
         options={{
           title: "Chat",
           tabBarIcon: ({color, focused}) => (
@@ -81,11 +81,16 @@ export default function TabLayout() {
         options={{
           title: "Notification",
           tabBarIcon: ({color, focused}) => (
-            <Ionicons
-              name={focused ? "notifications" : "notifications-outline"}
-              size={24}
-              color={color}
-            />
+            <View>
+              <Ionicons
+                name={focused ? "notifications" : "notifications-outline"}
+                size={24}
+                color={color}
+              />
+              <View className="absolute flex items-center justify-center bg-red-500 rounded-full -top-1 -right-1 size-4">
+                <Text className="text-xs font-semibold text-white">4</Text>
+              </View>
+            </View>
           ),
         }}
       />

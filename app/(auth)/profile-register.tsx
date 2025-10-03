@@ -85,6 +85,11 @@ export default function ProfileRegistration() {
                   setIsDatePickerOpen(false);
                   console.log(selectedDate);
                 }}
+                // iOS
+                textColor="#FFA840"
+                themeVariant="light"
+                // Android 12+
+                accentColor="#FFA840"
               />
             )}
           </View>

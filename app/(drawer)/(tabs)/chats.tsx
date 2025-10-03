@@ -121,7 +121,10 @@ const MessageCard = ({item}: any) => {
           </Text>
           <Text className="text-xs text-gray-400">{item.sent}</Text>
         </View>
-        <Text className="text-sm font-medium text-gray-600" numberOfLines={1}>
+        <Text
+          className="text-sm font-medium text-gray-600 max-w-[80%]"
+          numberOfLines={1}
+        >
           {item.message}
         </Text>
       </View>

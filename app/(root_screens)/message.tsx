@@ -1,8 +1,9 @@
 import {Ionicons} from "@expo/vector-icons";
 import {Image} from "expo-image";
-import React, {useState} from "react";
+import * as ImagePicker from "expo-image-picker";
+import {router} from "expo-router";
+import React, {useCallback, useState} from "react";
 import {
-  FlatList,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -10,59 +11,193 @@ import {
   TextInput,
   View,
 } from "react-native";
-import {SafeAreaView} from "react-native-safe-area-context";
+import {Bubble, GiftedChat, IMessage} from "react-native-gifted-chat";
+import {SafeAreaView, useSafeAreaInsets} from "react-native-safe-area-context";
 
 const Message = () => {
-  const [message, setMessage] = useState("");
-
-  // Sample messages data
-  const messages = [
-    {id: "1", text: "Hello location po?", isSender: false, time: "10:30 AM"},
+  const [messages, setMessages] = useState<IMessage[]>([
     {
-      id: "2",
+      _id: 2,
       text: "Address Location brgy 21",
-      isSender: true,
-      time: "10:31 AM",
+      createdAt: new Date(),
+      user: {
+        _id: 1,
+        name: "Me",
+      },
     },
-  ];
+    {
+      _id: 1,
+      text: "Hello location po?",
+      createdAt: new Date(),
+      user: {
+        _id: 2,
+        name: "Driver's Name",
+        avatar: require("@/assets/images/icon.png"),
+      },
+    },
+  ]);
+  const [text, setText] = useState("");
+  const insets = useSafeAreaInsets();
 
-  const renderMessage = ({item}: any) => (
-    <View
-      className={`flex-row mb-3 ${item.isSender ? "justify-end" : "justify-start"}`}
-    >
-      {!item.isSender && (
-        <View className="w-10 h-10 rounded-full bg-[#FFA840] items-center justify-center mr-2">
-          <Ionicons name="person" size={20} color="white" />
+  const onSend = useCallback((newMessages: IMessage[] = []) => {
+    setMessages((previousMessages) =>
+      GiftedChat.append(previousMessages, newMessages)
+    );
+  }, []);
+
+  // Pick image from gallery
+  const pickImage = async () => {
+    const {status} = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (status !== "granted") {
+      alert("Sorry, we need camera roll permissions!");
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      const newMessage: IMessage = {
+        _id: Math.random().toString(),
+        text: "",
+        createdAt: new Date(),
+        user: {
+          _id: 1,
+          name: "Me",
+        },
+        image: result.assets[0].uri,
+      };
+      onSend([newMessage]);
+    }
+  };
+
+  // Take photo with camera
+  const takePhoto = async () => {
+    const {status} = await ImagePicker.requestCameraPermissionsAsync();
+
+    if (status !== "granted") {
+      alert("Sorry, we need camera permissions!");
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      const newMessage: IMessage = {
+        _id: Math.random().toString(),
+        text: "",
+        createdAt: new Date(),
+        user: {
+          _id: 1,
+          name: "Me",
+        },
+        image: result.assets[0].uri,
+      };
+      onSend([newMessage]);
+    }
+  };
+
+  const renderInputToolbar = () => {
+    return (
+      <View className="p-2 bg-secondary">
+        <View className="flex-row items-end gap-3">
+          <View className="flex-row items-center gap-3 h-11">
+            {/* Camera */}
+            <Pressable onPress={takePhoto}>
+              <Ionicons name="camera" size={28} color="#FFA840" />
+            </Pressable>
+            {/* Gallery */}
+            <Pressable onPress={pickImage}>
+              <Ionicons name="image" size={28} color="#FFA840" />
+            </Pressable>
+          </View>
+          {/* Text input */}
+          <View className="flex-1 px-2 bg-white rounded-2xl">
+            <TextInput
+              placeholder="Type a message..."
+              value={text}
+              onChangeText={setText}
+              multiline
+              style={{
+                maxHeight: 120,
+                textAlignVertical: "center", // keep text centered
+              }}
+            />
+          </View>
+          <View className="flex-row items-center gap-3 h-11">
+            {/* Emoji */}
+            <Pressable>
+              <Ionicons name="happy" size={28} color="#FFA840" />
+            </Pressable>
+            {/* Send */}
+            <Pressable
+              onPress={() => {
+                if (!text.trim()) return;
+                onSend([
+                  {
+                    _id: Date.now(),
+                    text,
+                    createdAt: new Date(),
+                    user: {_id: 1},
+                  },
+                ]);
+                setText("");
+              }}
+            >
+              <Ionicons name="send" size={24} color="#FFA840" />
+            </Pressable>
+          </View>
         </View>
-      )}
-
-      <View
-        className={`max-w-[70%] px-4 py-3 rounded-2xl ${
-          item.isSender
-            ? "bg-[#FFA840] rounded-br-none"
-            : "bg-gray-200 rounded-bl-none"
-        }`}
-      >
-        <Text
-          className={`text-base ${item.isSender ? "text-white" : "text-gray-800"}`}
-        >
-          {item.text}
-        </Text>
       </View>
-    </View>
-  );
+    );
+  };
+
+  // Custom Bubble
+  const renderBubble = (props: any) => {
+    return (
+      <Bubble
+        {...props}
+        wrapperStyle={{
+          right: {
+            backgroundColor: "#FFA840",
+          },
+          left: {
+            backgroundColor: "#E5E5E5",
+          },
+        }}
+        textStyle={{
+          right: {
+            color: "white",
+            fontSize: 15,
+          },
+          left: {
+            color: "#1F2937",
+            fontSize: 15,
+          },
+        }}
+      />
+    );
+  };
 
   return (
-    <SafeAreaView style={{flex: 1, backgroundColor: "#fff"}}>
+    <SafeAreaView className="flex-1 bg-white">
       <KeyboardAvoidingView
-        className="flex-1 bg-white"
+        style={{flex: 1}}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0} // Adjust this offset for iOS
       >
-        {/* Header */}
-        <View className="bg-[#0F2535] px-4 py-3 flex-row items-center justify-between">
-          <View className="flex-row items-center flex-1 gap-3">
-            <Pressable>
-              <Ionicons name="arrow-back" size={24} color="#FFA840" />
+        {/* Custom Header */}
+        <View className="flex-row items-center justify-between px-4 py-3 bg-secondary">
+          <View className="flex-row items-center flex-1 gap-5">
+            <Pressable onPress={() => router.back()}>
+              <Ionicons name="chevron-back" size={24} color="#FFA840" />
             </Pressable>
 
             <Image
@@ -82,52 +217,29 @@ const Message = () => {
             </View>
           </View>
 
-          <View className="flex-row gap-4">
+          <View className="flex-row gap-6">
             <Pressable>
               <Ionicons name="call" size={24} color="#FFA840" />
             </Pressable>
             <Pressable>
-              <Ionicons name="chatbubble-ellipses" size={24} color="#FFA840" />
+              <Ionicons name="videocam" size={24} color="#FFA840" />
             </Pressable>
           </View>
         </View>
 
-        {/* Messages List */}
-        <FlatList
-          data={messages}
-          renderItem={renderMessage}
-          keyExtractor={(item) => item.id}
-          className="flex-1 px-4 pt-4"
-          contentContainerStyle={{paddingBottom: 20}}
+        {/* Gifted Chat */}
+        <GiftedChat
+          messages={messages}
+          onSend={(messages) => onSend(messages)}
+          user={{
+            _id: 1,
+          }}
+          renderBubble={renderBubble}
+          renderInputToolbar={renderInputToolbar} // custom toolbar
+          renderSend={() => null} // disable GiftedChat's default send
+          keyboardShouldPersistTaps="handled"
+          isKeyboardInternallyHandled={false}
         />
-
-        {/* Input Section */}
-        <View className="bg-[#0F2535] px-4 py-3 flex-row items-center gap-3">
-          <Pressable>
-            <Ionicons name="camera" size={28} color="#FFA840" />
-          </Pressable>
-
-          <Pressable>
-            <Ionicons name="image" size={28} color="#FFA840" />
-          </Pressable>
-
-          <View className="flex-row items-center flex-1 px-4 py-0 bg-white rounded-full">
-            <TextInput
-              value={message}
-              onChangeText={setMessage}
-              placeholder="Message"
-              placeholderTextColor="#999"
-              className="flex-1 text-base text-gray-800"
-            />
-            <Pressable>
-              <Ionicons name="send" size={24} color="#FFA840" />
-            </Pressable>
-          </View>
-
-          <Pressable>
-            <Ionicons name="happy" size={28} color="#FFA840" />
-          </Pressable>
-        </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

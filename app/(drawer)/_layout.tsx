@@ -1,11 +1,12 @@
 import HeaderDrawer from "@/components/headers/HeaderDrawer";
+import LogoutModal from "@/components/modals/logoutModal";
 import {Ionicons} from "@expo/vector-icons";
 import {
   DrawerContentScrollView,
   DrawerItemList,
 } from "@react-navigation/drawer";
-import {router} from "expo-router";
 import {Drawer} from "expo-router/drawer";
+import {useState} from "react";
 import {Pressable, Text, View} from "react-native";
 import {GestureHandlerRootView} from "react-native-gesture-handler";
 
@@ -16,7 +17,7 @@ const CustomDrawerContent = (props: any) => {
         <DrawerItemList {...props} />
         <Pressable
           className="flex-row items-center gap-3 px-5 py-4"
-          onPress={() => router.push("/(auth)/login")}
+          onPress={() => props.setIsOpen(true)}
         >
           <Ionicons name="log-out-outline" size={24} color="white" />
           <Text className="font-semibold text-white">Logout</Text>
@@ -34,10 +35,14 @@ const CustomDrawerContent = (props: any) => {
 };
 
 export default function DrawerLayout() {
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+
   return (
     <GestureHandlerRootView style={{flex: 1}}>
       <Drawer
-        drawerContent={(props) => <CustomDrawerContent {...props} />}
+        drawerContent={(props) => (
+          <CustomDrawerContent {...props} setIsOpen={setShowLogoutModal} />
+        )}
         screenOptions={{
           headerShown: false,
           drawerStyle: {
@@ -147,6 +152,7 @@ export default function DrawerLayout() {
           }}
         />
       </Drawer>
+      <LogoutModal isOpen={showLogoutModal} setIsOpen={setShowLogoutModal} />
     </GestureHandlerRootView>
   );
 }

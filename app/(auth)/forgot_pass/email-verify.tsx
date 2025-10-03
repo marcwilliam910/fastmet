@@ -2,11 +2,16 @@ import CustomKeyAvoidingView from "@/components/CustomKeyAvoid";
 import LogoWithText from "@/components/LogoWithText";
 import {Ionicons} from "@expo/vector-icons";
 import {useRouter} from "expo-router";
-import {Pressable, Text, TextInput, View} from "react-native";
+import {useRef} from "react";
+import {Keyboard, Pressable, Text, TextInput, View} from "react-native";
 import {SafeAreaView} from "react-native-safe-area-context";
 
 export default function EmailVerify() {
   const router = useRouter();
+  const input1Ref = useRef<TextInput | null>(null);
+  const input2Ref = useRef<TextInput | null>(null);
+  const input3Ref = useRef<TextInput | null>(null);
+  const input4Ref = useRef<TextInput | null>(null);
 
   return (
     <SafeAreaView style={{flex: 1, backgroundColor: "#fff"}}>
@@ -42,24 +47,43 @@ export default function EmailVerify() {
                 {/* OTP Input Boxes */}
                 <View className="flex-row justify-around">
                   <TextInput
+                    ref={input1Ref}
                     keyboardType="number-pad"
                     maxLength={1}
                     className="text-2xl font-semibold text-center text-gray-900 bg-gray-200 size-[4.5rem] rounded-2xl"
+                    onChangeText={(text) => {
+                      if (text) input2Ref.current?.focus();
+                    }}
                   />
                   <TextInput
+                    ref={input2Ref}
                     keyboardType="number-pad"
                     maxLength={1}
                     className="text-2xl font-semibold text-center text-gray-900 bg-gray-200 size-[4.5rem] rounded-2xl"
+                    onChangeText={(text) => {
+                      if (text) input3Ref.current?.focus();
+                      else input1Ref.current?.focus(); // go back if deleted
+                    }}
                   />
                   <TextInput
+                    ref={input3Ref}
                     keyboardType="number-pad"
                     maxLength={1}
                     className="text-2xl font-semibold text-center text-gray-900 bg-gray-200 size-[4.5rem] rounded-2xl"
+                    onChangeText={(text) => {
+                      if (text) input4Ref.current?.focus();
+                      else input2Ref.current?.focus();
+                    }}
                   />
                   <TextInput
+                    ref={input4Ref}
                     keyboardType="number-pad"
                     maxLength={1}
                     className="text-2xl font-semibold text-center text-gray-900 bg-gray-200 size-[4.5rem] rounded-2xl"
+                    onChangeText={(text) => {
+                      if (text) Keyboard.dismiss();
+                      else input3Ref.current?.focus(); // go back if deleted
+                    }}
                   />
                 </View>
               </View>

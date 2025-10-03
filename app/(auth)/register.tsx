@@ -1,7 +1,7 @@
 import CustomKeyAvoidingView from "@/components/CustomKeyAvoid";
 import LogoWithText from "@/components/LogoWithText";
 import {Ionicons} from "@expo/vector-icons";
-import {useRouter} from "expo-router";
+import {Link, useRouter} from "expo-router";
 import React, {useState} from "react";
 import {Pressable, Text, TextInput, View} from "react-native";
 import {SafeAreaView} from "react-native-safe-area-context";
@@ -104,8 +104,12 @@ const Register = () => {
 
           <Text className="mt-4 text-sm text-center text-gray-700 px-14">
             By Signing up you agree to our{"\n"}
-            <Text className="font-bold">Terms & Condition</Text> and
-            <Text className="font-bold"> Privacy Policy</Text>
+            <Link href="/(root_screens)/terms&conditions">
+              <Text className="font-bold underline">Terms & Condition</Text> and
+            </Link>
+            <Link href="/(root_screens)/privacyPolicy">
+              <Text className="font-bold underline"> Privacy Policy</Text>
+            </Link>
           </Text>
 
           {/*  Button */}

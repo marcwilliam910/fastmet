@@ -18,7 +18,11 @@ export default function MyProfile() {
       label: "Change Password",
       onPress: () => router.push("/(drawer)/(profile)/changePass"),
     },
-    {icon: "settings", label: "Settings", onPress: () => {}},
+    {
+      icon: "settings",
+      label: "Settings",
+      onPress: () => router.push("/(drawer)/settings"),
+    },
   ];
 
   return (
