@@ -1,14 +1,75 @@
 import CustomKeyAvoidingView from "@/components/CustomKeyAvoid";
 import LogoWithText from "@/components/LogoWithText";
+import LoadingModal from "@/components/modals/loading";
+import {login} from "@/lib/auth";
+import {LoginSchema} from "@/schemas/authSchema";
+import {validateForm} from "@/utils/validateForm";
 import {Ionicons} from "@expo/vector-icons";
 import {Link, router} from "expo-router";
 import React, {useRef, useState} from "react";
-import {Pressable, Text, TextInput, TouchableOpacity, View} from "react-native";
+import {
+  ActivityIndicator,
+  Pressable,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import {SafeAreaView} from "react-native-safe-area-context";
 
 const Login = () => {
+  const [form, setForm] = useState({
+    email: "",
+    password: "",
+  });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(false);
+
   const [showPassword, setShowPassword] = useState(false);
   const passwordRef = useRef<TextInput>(null);
+
+  const handleLogin = async () => {
+    const result = validateForm(LoginSchema, form);
+
+    if (!result.success) {
+      setErrors(result.errors);
+      return;
+    }
+    setErrors({});
+
+    try {
+      setLoading(true);
+      const res = await login(form.email, form.password);
+      console.log("Login success:", res.user.uid);
+    } catch (err: any) {
+      console.log(JSON.stringify(err, null, 2));
+
+      let message = "An unexpected error occurred. Please try again.";
+
+      switch (err.code) {
+        case "auth/invalid-email":
+          message = "The email address is not valid.";
+          break;
+        case "auth/user-disabled":
+          message = "This account has been disabled.";
+          break;
+        case "auth/user-not-found":
+          message = "No user found with this email.";
+          break;
+        case "auth/wrong-password":
+        case "auth/invalid-credential": // Firebase sometimes sends this instead
+          message = "Incorrect email or password.";
+          break;
+        case "auth/too-many-requests":
+          message = "Too many login attempts. Please try again later.";
+          break;
+      }
+
+      setErrors({form: message});
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView style={{flex: 1, backgroundColor: "#fff"}}>
@@ -21,15 +82,23 @@ const Login = () => {
           <View className="gap-2">
             <Text className="text-sm font-medium text-gray-700 ">Email</Text>
             <TextInput
+              value={form.email}
+              onChangeText={(text) => setForm({...form, email: text})}
+              autoCapitalize="none"
+              autoComplete="email"
               placeholder="Email"
               keyboardType="email-address"
               placeholderTextColor="#9CA3AF"
               returnKeyType="next"
               onSubmitEditing={() => passwordRef.current?.focus()} // focus password
               submitBehavior="submit" // 👈 replacement for blurOnSubmit={false}
-              className="p-4 text-base bg-gray-100 rounded-lg"
+              className={`p-4 text-base bg-gray-100 rounded-lg ${
+                errors.email || errors.form ? "border border-red-500" : ""
+              }`}
             />
-            {/* <Text className="ml-2 text-xs text-red-500">Invalid Email</Text> */}
+            {errors.email && (
+              <Text className="ml-2 text-xs text-red-500">{errors.email}</Text>
+            )}
           </View>
 
           {/* Password Input */}
@@ -37,11 +106,16 @@ const Login = () => {
             <Text className="text-sm font-medium text-gray-700">Password</Text>
             <View className="relative">
               <TextInput
+                value={form.password}
+                onChangeText={(text) => setForm({...form, password: text})}
+                autoCapitalize="none"
                 ref={passwordRef}
                 placeholder="Password"
                 placeholderTextColor="#9CA3AF"
                 secureTextEntry={!showPassword}
-                className="p-4 pr-12 text-base bg-gray-100 rounded-lg"
+                className={`p-4 pr-12 text-base bg-gray-100 rounded-lg ${
+                  errors.password || errors.form ? "border border-red-500" : ""
+                }`}
               />
               <Pressable
                 onPress={() => setShowPassword(!showPassword)}
@@ -54,8 +128,16 @@ const Login = () => {
                 />
               </Pressable>
             </View>
-            {/* <Text className="ml-2 text-xs text-red-500">Invalid Password</Text> */}
+            {errors.password && (
+              <Text className="ml-2 text-xs text-red-500">
+                {errors.password}
+              </Text>
+            )}
           </View>
+
+          {errors.form && (
+            <Text className="ml-2 text-red-500">{errors.form}</Text>
+          )}
 
           {/* Forgot Password */}
           <Link asChild href="/(auth)/forgot_pass/forgot-pass">
@@ -73,9 +155,12 @@ const Login = () => {
           {/* Sign In Button */}
           <Pressable
             className="items-center py-4 rounded-lg bg-lightPrimary active:bg-darkPrimary"
-            onPress={() => router.push("/(drawer)/(tabs)")}
+            onPress={handleLogin}
+            disabled={loading}
           >
-            <Text className="text-base font-bold text-white">Sign In</Text>
+            <Text className="text-base font-bold text-white">
+              {loading ? <ActivityIndicator color="#fff" /> : "Sign In"}
+            </Text>
           </Pressable>
 
           {/* Divider */}
@@ -108,15 +193,20 @@ const Login = () => {
           </View>
 
           {/* Create Account Button */}
-          <Link asChild href="/(auth)/register">
-            <Pressable className="items-center py-4 my-2 border rounded-lg border-lightPrimary active:bg-gray-50">
-              <Text className="text-base font-semibold text-gray-800">
-                Create Account
-              </Text>
-            </Pressable>
-          </Link>
+          <Pressable
+            className="items-center py-4 my-2 border rounded-lg border-lightPrimary active:bg-gray-50"
+            onPress={() => {
+              setErrors({form: ""});
+              router.push("/(auth)/register");
+            }}
+          >
+            <Text className="text-base font-semibold text-gray-800">
+              Create Account
+            </Text>
+          </Pressable>
         </View>
       </CustomKeyAvoidingView>
+      <LoadingModal visible={loading} />
     </SafeAreaView>
   );
 };

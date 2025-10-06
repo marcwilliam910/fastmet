@@ -1,3 +1,4 @@
+import {openGallery} from "@/utils/imagePicker";
 import {Ionicons} from "@expo/vector-icons";
 import {Image} from "expo-image";
 import * as ImagePicker from "expo-image-picker";
@@ -46,22 +47,8 @@ const Message = () => {
 
   // Pick image from gallery
   const pickImage = async () => {
-    const {status} = await ImagePicker.requestMediaLibraryPermissionsAsync();
-
-    if (status !== "granted") {
-      alert("Sorry, we need camera roll permissions!");
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      // mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      mediaTypes: ["images"],
-      allowsEditing: true,
-      selectionLimit: 1,
-      quality: 0.8,
-    });
-
-    if (!result.canceled && result.assets[0]) {
+    const result = await openGallery();
+    if (result && !result.canceled && result.assets[0]) {
       const newMessage: IMessage = {
         _id: Math.random().toString(),
         text: "",

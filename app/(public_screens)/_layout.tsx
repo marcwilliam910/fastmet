@@ -1,7 +1,7 @@
 import HeaderProfile from "@/components/headers/HeaderProfile";
 import {Stack} from "expo-router";
 
-export default function RootScreenLayout() {
+export default function PublicScreenLayout() {
   return (
     <Stack
       screenOptions={{
@@ -12,10 +12,6 @@ export default function RootScreenLayout() {
       }}
     >
       <Stack.Screen
-        name="message"
-        options={{title: "Message", headerShown: false}}
-      />
-      <Stack.Screen
         name="privacyPolicy"
         options={{
           title: "Privacy Policy",
@@ -25,30 +21,6 @@ export default function RootScreenLayout() {
         name="terms&conditions"
         options={{
           title: "Terms & Conditions",
-        }}
-      />
-      <Stack.Screen
-        name="help&support"
-        options={{
-          title: "Help and Support",
-        }}
-      />
-      <Stack.Screen
-        name="fileReport"
-        options={{
-          title: "File a Report",
-        }}
-      />
-      <Stack.Screen
-        name="about"
-        options={{
-          title: "About Us",
-        }}
-      />
-      <Stack.Screen
-        name="notifViewer"
-        options={{
-          title: "Notification",
         }}
       />
     </Stack>

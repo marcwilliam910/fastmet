@@ -1,4 +1,5 @@
 import CustomKeyAvoidingView from "@/components/CustomKeyAvoid";
+import {openGallery} from "@/utils/imagePicker";
 import {Ionicons} from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import {useRouter} from "expo-router";
@@ -11,6 +12,13 @@ export default function ProfileRegistration() {
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const midNameRef = useRef<TextInput | null>(null);
   const lastNameRef = useRef<TextInput | null>(null);
+
+  const pickProfilePic = async () => {
+    const result = await openGallery();
+    if (result && !result.canceled && result.assets[0]) {
+      console.log(result.assets[0].uri);
+    }
+  };
 
   return (
     <SafeAreaView style={{flex: 1, backgroundColor: "#fff"}}>
@@ -25,9 +33,12 @@ export default function ProfileRegistration() {
 
           {/* profile picture */}
           <View className="items-center gap-3 jusctify-center">
-            <Pressable className="items-center justify-center border rounded-full size-48 border-lightPrimary">
+            <Pressable
+              className="items-center justify-center border rounded-full size-48 border-lightPrimary active:border-2"
+              onPress={pickProfilePic}
+            >
               <View className="items-center justify-center bg-gray-100 rounded-full size-40">
-                <Text className="font-semibold text-gray-400">Photo</Text>
+                <Ionicons name="camera" size={24} color="#FFA840" />
               </View>
             </Pressable>
             <Text className="text-lg font-bold text-gray-700 ">Profile</Text>

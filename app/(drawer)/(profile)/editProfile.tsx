@@ -1,7 +1,7 @@
 import CustomKeyAvoidingView from "@/components/CustomKeyAvoid";
+import {openGallery} from "@/utils/imagePicker";
 import {Ionicons} from "@expo/vector-icons";
 import {Image} from "expo-image";
-import * as ImagePicker from "expo-image-picker";
 import {router} from "expo-router";
 import React, {useRef} from "react";
 import {
@@ -40,13 +40,8 @@ const EditProfile = () => {
   };
 
   const pickProfilePic = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ["images"],
-      allowsEditing: true,
-      selectionLimit: 1,
-      quality: 0.8,
-    });
-    if (!result.canceled && result.assets[0]) {
+    const result = await openGallery();
+    if (result && !result.canceled && result.assets[0]) {
       console.log(result.assets[0].uri);
     }
   };

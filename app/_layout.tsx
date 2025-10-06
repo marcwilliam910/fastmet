@@ -1,3 +1,4 @@
+import useAuth from "@/hooks/useAuth";
 import {
   Montserrat_400Regular,
   Montserrat_700Bold,
@@ -12,13 +13,15 @@ import "../global.css";
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+  const {user, loading} = useAuth();
+
   const [fontsLoaded] = useFonts({
     Montserrat_400Regular,
     Montserrat_700Bold,
   });
 
   useEffect(() => {
-    if (fontsLoaded) {
+    if (fontsLoaded && !loading) {
       // bypass TS check
       (Text as any).defaultProps = (Text as any).defaultProps || {};
       (Text as any).defaultProps.style = {
@@ -27,9 +30,9 @@ export default function RootLayout() {
 
       SplashScreen.hideAsync();
     }
-  }, [fontsLoaded]);
+  }, [fontsLoaded, loading]);
 
-  if (!fontsLoaded) {
+  if (!fontsLoaded || loading) {
     return null;
   }
 
@@ -37,10 +40,16 @@ export default function RootLayout() {
     <SafeAreaProvider>
       {/* <FontWrapper> */}
       <Stack screenOptions={{headerShown: false}}>
-        <Stack.Screen name="index" />
-        <Stack.Screen name="(auth)" />
-        <Stack.Screen name="(drawer)" />
-        <Stack.Screen name="(root_screens)" />
+        <Stack.Protected guard={!user}>
+          <Stack.Screen name="(auth)" />
+        </Stack.Protected>
+
+        <Stack.Protected guard={!!user}>
+          <Stack.Screen name="(drawer)" />
+          <Stack.Screen name="(root_screens)" />
+        </Stack.Protected>
+
+        <Stack.Screen name="(public_screens)" />
       </Stack>
       {/* </FontWrapper> */}
       <StatusBar backgroundColor="#0F2535" barStyle="light-content" />

@@ -12,11 +12,11 @@ const Settings = () => {
     () => [
       {
         label: "Privacy Policy",
-        onPress: () => router.push("/(root_screens)/privacyPolicy"),
+        onPress: () => router.push("/(public_screens)/privacyPolicy"),
       },
       {
         label: "Terms & Conditions",
-        onPress: () => router.push("/(root_screens)/terms&conditions"),
+        onPress: () => router.push("/(public_screens)/terms&conditions"),
       },
       {
         label: "Help and Support",

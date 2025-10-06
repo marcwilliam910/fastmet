@@ -1,8 +1,8 @@
+import {logout} from "@/lib/auth";
 import {Ionicons} from "@expo/vector-icons";
 import {Image} from "expo-image";
-import {router} from "expo-router";
-import React from "react";
-import {Modal, Pressable, Text, View} from "react-native";
+import React, {useState} from "react";
+import {ActivityIndicator, Modal, Pressable, Text, View} from "react-native";
 
 const LogoutModal = ({
   isOpen,
@@ -11,6 +11,15 @@ const LogoutModal = ({
   isOpen: boolean;
   setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }) => {
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleLogout = async () => {
+    setIsLoading(true);
+    await logout();
+    setIsLoading(false);
+    setIsOpen(false);
+  };
+
   return (
     <Modal
       visible={isOpen}
@@ -43,9 +52,11 @@ const LogoutModal = ({
           <View className="w-full mt-5">
             <Pressable
               className="items-center py-4 rounded-lg bg-lightPrimary active:bg-darkPrimary"
-              onPress={() => router.push("/(auth)/login")}
+              onPress={handleLogout}
             >
-              <Text className="text-base font-bold text-white">Yes</Text>
+              <Text className="text-base font-bold text-white">
+                {isLoading ? <ActivityIndicator color="white" /> : "Logout"}
+              </Text>
             </Pressable>
             <Pressable
               className="items-center py-4 my-2 border border-gray-300 rounded-lg bg-ctaSecondary active:bg-ctaSecondaryActive"
