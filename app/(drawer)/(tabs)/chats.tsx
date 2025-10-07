@@ -1,8 +1,10 @@
+import NotLoggedIn from "@/components/notLoggedIn";
+import useAuth from "@/hooks/useAuth";
 import {Ionicons} from "@expo/vector-icons";
 import {Image} from "expo-image";
 import {router} from "expo-router";
 import React from "react";
-import {FlatList, Pressable, Text, View} from "react-native";
+import {ActivityIndicator, FlatList, Pressable, Text, View} from "react-native";
 import {TextInput} from "react-native-gesture-handler";
 
 const DUMMYMESSAGES = [
@@ -81,6 +83,19 @@ const DUMMYMESSAGES = [
 ];
 
 const Chat = () => {
+  const {user, loading} = useAuth();
+
+  if (loading) {
+    return (
+      <View className="items-center justify-center flex-1">
+        <ActivityIndicator size="large" color="#FFA840" />
+      </View>
+    );
+  }
+  if (user === null) {
+    return <NotLoggedIn />;
+  }
+
   return (
     <View className="flex-1 gap-6 py-6 bg-white">
       <View className="flex-row items-center px-4 py-1 mx-4 rounded-full bg-ctaSecondary">

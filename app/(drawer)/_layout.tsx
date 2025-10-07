@@ -1,5 +1,6 @@
 import HeaderDrawer from "@/components/headers/HeaderDrawer";
 import LogoutModal from "@/components/modals/logoutModal";
+import useAuth from "@/hooks/useAuth";
 import {Ionicons} from "@expo/vector-icons";
 import {
   DrawerContentScrollView,
@@ -11,16 +12,26 @@ import {Pressable, Text, View} from "react-native";
 import {GestureHandlerRootView} from "react-native-gesture-handler";
 
 const CustomDrawerContent = (props: any) => {
+  const isAuthenticated = !!props.user;
+  const action = isAuthenticated
+    ? () => props.setIsOpen(true)
+    : () => props.navigation.navigate("(auth)");
   return (
     <View className="flex-1">
       <DrawerContentScrollView {...props}>
         <DrawerItemList {...props} />
         <Pressable
           className="flex-row items-center gap-3 px-5 py-4"
-          onPress={() => props.setIsOpen(true)}
+          onPress={action}
         >
-          <Ionicons name="log-out-outline" size={24} color="white" />
-          <Text className="font-semibold text-white">Logout</Text>
+          <Ionicons
+            name={isAuthenticated ? "log-out-outline" : "log-in-outline"}
+            size={24}
+            color="white"
+          />
+          <Text className="font-semibold text-white">
+            {isAuthenticated ? "Logout" : "Register / Login"}
+          </Text>
         </Pressable>
       </DrawerContentScrollView>
 
@@ -36,12 +47,17 @@ const CustomDrawerContent = (props: any) => {
 
 export default function DrawerLayout() {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const {user} = useAuth();
 
   return (
     <GestureHandlerRootView style={{flex: 1}}>
       <Drawer
         drawerContent={(props) => (
-          <CustomDrawerContent {...props} setIsOpen={setShowLogoutModal} />
+          <CustomDrawerContent
+            {...props}
+            setIsOpen={setShowLogoutModal}
+            user={user}
+          />
         )}
         screenOptions={{
           headerShown: false,

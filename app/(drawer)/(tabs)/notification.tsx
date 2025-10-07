@@ -1,7 +1,9 @@
+import NotLoggedIn from "@/components/notLoggedIn";
+import useAuth from "@/hooks/useAuth";
 import {Image} from "expo-image";
 import {router} from "expo-router";
 import React from "react";
-import {FlatList, Pressable, Text, View} from "react-native";
+import {ActivityIndicator, FlatList, Pressable, Text, View} from "react-native";
 
 const DUMMYNOTIFICATIONS = [
   {
@@ -35,6 +37,20 @@ const DUMMYNOTIFICATIONS = [
 ];
 
 const Notification = () => {
+  const {user, loading} = useAuth();
+
+  if (loading) {
+    return (
+      <View className="items-center justify-center flex-1">
+        <ActivityIndicator size="large" color="#FFA840" />
+      </View>
+    );
+  }
+
+  if (user === null) {
+    return <NotLoggedIn />;
+  }
+
   return (
     <View className="flex-1 gap-6 py-6 bg-white">
       <FlatList

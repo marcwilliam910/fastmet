@@ -41,6 +41,8 @@ const Login = () => {
       setLoading(true);
       const res = await login(form.email, form.password);
       console.log("Login success:", res.user.uid);
+
+      router.push("/(drawer)/(tabs)");
     } catch (err: any) {
       console.log(JSON.stringify(err, null, 2));
 
@@ -140,7 +142,7 @@ const Login = () => {
           )}
 
           {/* Forgot Password */}
-          <Link asChild href="/(auth)/forgot_pass/forgot-pass">
+          <Link asChild href="/(auth)/forgot-pass">
             <Pressable className="self-end">
               {({pressed}) => (
                 <Text
@@ -194,7 +196,7 @@ const Login = () => {
 
           {/* Create Account Button */}
           <Pressable
-            className="items-center py-4 my-2 border rounded-lg border-lightPrimary active:bg-gray-50"
+            className="items-center py-4 mt-2 border rounded-lg border-lightPrimary active:bg-gray-50"
             onPress={() => {
               setErrors({form: ""});
               router.push("/(auth)/register");
@@ -204,6 +206,13 @@ const Login = () => {
               Create Account
             </Text>
           </Pressable>
+
+          <Link
+            className="text-base font-semibold text-center text-gray-800 underline"
+            href="/(drawer)/(tabs)"
+          >
+            Continue as Guest
+          </Link>
         </View>
       </CustomKeyAvoidingView>
       <LoadingModal visible={loading} />

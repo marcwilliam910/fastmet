@@ -16,18 +16,6 @@ export default function RootScreenLayout() {
         options={{title: "Message", headerShown: false}}
       />
       <Stack.Screen
-        name="privacyPolicy"
-        options={{
-          title: "Privacy Policy",
-        }}
-      />
-      <Stack.Screen
-        name="terms&conditions"
-        options={{
-          title: "Terms & Conditions",
-        }}
-      />
-      <Stack.Screen
         name="help&support"
         options={{
           title: "Help and Support",
@@ -49,6 +37,13 @@ export default function RootScreenLayout() {
         name="notifViewer"
         options={{
           title: "Notification",
+        }}
+      />
+      <Stack.Screen
+        name="profile-register"
+        options={{
+          headerShown: false,
+          title: "Profile Registration",
         }}
       />
     </Stack>

@@ -1,5 +1,6 @@
 import {
   createUserWithEmailAndPassword,
+  sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signOut,
   updateProfile,
@@ -20,3 +21,6 @@ export const updateDisplayName = async (displayName: string) => {
 
   await updateProfile(user, {displayName});
 };
+
+export const forgotPassword = async (email: string) =>
+  sendPasswordResetEmail(auth, email);

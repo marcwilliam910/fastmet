@@ -17,5 +17,18 @@ export const LoginSchema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters"),
 });
 
+export const ResetPassSchema = z.object({
+  email: z.string().email("Invalid email"),
+});
+
+export const ProfileSchema = z.object({
+  firstName: z.string().min(1, "First name is required"),
+  midName: z.string().optional(),
+  lastName: z.string().min(1, "Last name is required"),
+  birthday: z.string().optional(),
+});
+
 export type RegisterSchemaType = z.infer<typeof RegisterSchema>;
 export type LoginSchemaType = z.infer<typeof LoginSchema>;
+export type ResetPassSchemaType = z.infer<typeof ResetPassSchema>;
+export type ProfileSchemaType = z.infer<typeof ProfileSchema>;

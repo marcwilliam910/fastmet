@@ -1,6 +1,7 @@
 import {logout} from "@/lib/auth";
 import {Ionicons} from "@expo/vector-icons";
 import {Image} from "expo-image";
+import {router} from "expo-router";
 import React, {useState} from "react";
 import {ActivityIndicator, Modal, Pressable, Text, View} from "react-native";
 
@@ -18,6 +19,7 @@ const LogoutModal = ({
     await logout();
     setIsLoading(false);
     setIsOpen(false);
+    router.push("/(auth)/login");
   };
 
   return (

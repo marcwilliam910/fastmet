@@ -46,6 +46,7 @@ const Register = () => {
       const res = await signup(form.email, form.password);
       await updateDisplayName(form.username);
 
+      router.push("/(root_screens)/profile-register");
       console.log("Signup success:", res.user.uid);
     } catch (err: any) {
       let message = "Signup failed. Please try again.";

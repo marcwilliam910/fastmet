@@ -36,19 +36,23 @@ export default function RootLayout() {
     return null;
   }
 
+  // const isProfileComplete = profile?.profileCompleted ?? false;
+
   return (
     <SafeAreaProvider>
       {/* <FontWrapper> */}
-      <Stack screenOptions={{headerShown: false}}>
-        <Stack.Protected guard={!user}>
+      <Stack screenOptions={{headerShown: false}} initialRouteName="(drawer)">
+        {/* <Stack.Protected guard={!user}>
           <Stack.Screen name="(auth)" />
         </Stack.Protected>
 
         <Stack.Protected guard={!!user}>
           <Stack.Screen name="(drawer)" />
           <Stack.Screen name="(root_screens)" />
-        </Stack.Protected>
-
+        </Stack.Protected> */}
+        <Stack.Screen name="(drawer)" />
+        <Stack.Screen name="(auth)" />
+        <Stack.Screen name="(root_screens)" />
         <Stack.Screen name="(public_screens)" />
       </Stack>
       {/* </FontWrapper> */}
