@@ -6,7 +6,7 @@ export default function useRequireAuth() {
   const {user} = useAuth();
 
   const requireAuth = useCallback(
-    (callback?: () => void) => {
+    async (callback?: () => Promise<void>) => {
       if (!user) {
         // ✅ Mobile-friendly login prompt
         if (Platform.OS === "android") {
@@ -25,7 +25,7 @@ export default function useRequireAuth() {
       }
 
       // If logged in, proceed
-      callback?.();
+      if (callback) await callback();
       return true;
     },
     [user]

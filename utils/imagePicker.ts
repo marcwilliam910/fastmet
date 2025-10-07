@@ -12,7 +12,6 @@ export const openGallery = async () => {
   return ImagePicker.launchImageLibraryAsync({
     mediaTypes: ["images"],
     allowsEditing: true,
-    aspect: [4, 3],
     quality: 1,
   });
 };

@@ -87,7 +87,6 @@ const Login = () => {
               value={form.email}
               onChangeText={(text) => setForm({...form, email: text})}
               autoCapitalize="none"
-              autoComplete="email"
               placeholder="Email"
               keyboardType="email-address"
               placeholderTextColor="#9CA3AF"

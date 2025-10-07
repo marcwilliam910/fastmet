@@ -6,8 +6,9 @@ import {forgotPassword} from "@/lib/auth";
 import {ResetPassSchema} from "@/schemas/authSchema";
 import {validateForm} from "@/utils/validateForm";
 import {Ionicons} from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import {useRouter} from "expo-router";
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -17,6 +18,10 @@ import {
 } from "react-native";
 import {SafeAreaView} from "react-native-safe-area-context";
 
+// Cooldown duration in seconds
+const COOLDOWN_DURATION = 60;
+const COOLDOWN_STORAGE_KEY = "lastPasswordResetTimestamp";
+
 const ForgotPass = () => {
   const router = useRouter();
   const [resetPassModal, setResetPassModal] = useState<boolean>(false);
@@ -24,7 +29,56 @@ const ForgotPass = () => {
   const [error, setError] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState<boolean>(false);
 
+  // New state variables for the timer
+  const [cooldownTime, setCooldownTime] = useState(0);
+  const [canResend, setCanResend] = useState(true);
+
+  // useEffect to handle the countdown timer
+  useEffect(() => {
+    let timerId: ReturnType<typeof setTimeout>;
+    if (cooldownTime > 0) {
+      timerId = setTimeout(() => {
+        setCooldownTime(cooldownTime - 1);
+      }, 1000);
+    } else {
+      setCanResend(true);
+    }
+
+    return () => clearTimeout(timerId);
+  }, [cooldownTime]);
+
+  // useEffect to retrieve cooldown state from AsyncStorage on component mount
+  useEffect(() => {
+    const checkCooldown = async () => {
+      try {
+        const lastTimestamp = await AsyncStorage.getItem(COOLDOWN_STORAGE_KEY);
+        if (lastTimestamp) {
+          const lastSentTime = parseInt(lastTimestamp, 10);
+          const currentTime = Date.now();
+          const timeElapsedInSeconds = (currentTime - lastSentTime) / 1000;
+          const remainingTime = Math.max(
+            0,
+            COOLDOWN_DURATION - Math.floor(timeElapsedInSeconds)
+          );
+
+          if (remainingTime > 0) {
+            setCooldownTime(remainingTime);
+            setCanResend(false);
+          }
+        }
+      } catch (e) {
+        console.error("Failed to load cooldown timer from storage", e);
+      }
+    };
+
+    checkCooldown();
+  }, []);
   const handleResetPass = async () => {
+    // Prevent execution if a cooldown is active
+    if (!canResend) {
+      return;
+    }
+
     const result = validateForm(ResetPassSchema, {email});
     if (!result.success) {
       setError(result.errors);
@@ -34,10 +88,22 @@ const ForgotPass = () => {
 
     try {
       setLoading(true);
+
       await forgotPassword(email);
+      // Store the current timestamp in AsyncStorage after a successful attempt
+      await AsyncStorage.setItem(COOLDOWN_STORAGE_KEY, Date.now().toString());
+
+      // Disable resend immediately and start the timer
+      setCanResend(false);
+      setCooldownTime(COOLDOWN_DURATION);
+
       setResetPassModal(true);
     } catch (error: any) {
       let message = "Something went wrong. Please try again.";
+
+      // Re-enable the button if the request fails
+      setCanResend(true);
+      setCooldownTime(0);
 
       if (error.code) {
         switch (error.code) {
@@ -99,13 +165,19 @@ const ForgotPass = () => {
           </View>
 
           <Pressable
-            className="items-center py-3.5 rounded-lg bg-lightPrimary active:bg-darkPrimary"
+            className={`items-center py-3.5 rounded-lg  ${
+              !canResend || loading
+                ? "bg-gray-300"
+                : "bg-lightPrimary active:bg-darkPrimary "
+            }`}
             onPress={handleResetPass}
-            disabled={loading}
+            disabled={loading || !canResend}
           >
             <Text className="text-base font-bold text-white">
               {loading ? (
                 <ActivityIndicator size="small" color="#fff" />
+              ) : !canResend ? (
+                `Resend in ${cooldownTime}s`
               ) : (
                 "Reset Password"
               )}

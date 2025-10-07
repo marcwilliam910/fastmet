@@ -1,10 +1,17 @@
 import CustomKeyAvoidingView from "@/components/CustomKeyAvoid";
 import LoadingModal from "@/components/modals/loading";
+import useAuth from "@/hooks/useAuth";
+import useRequireAuth from "@/hooks/useRequireAuth";
+import api from "@/lib/axios";
 import {ProfileSchema} from "@/schemas/authSchema";
+import {ApiResponse} from "@/types/api";
+import {User} from "@/types/user";
 import {openGallery} from "@/utils/imagePicker";
+import {safeApi} from "@/utils/safeApi";
 import {validateForm} from "@/utils/validateForm";
 import {Ionicons} from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import {Image} from "expo-image";
 import {useRouter} from "expo-router";
 import React, {useRef, useState} from "react";
 import {Pressable, Text, TextInput, View} from "react-native";
@@ -18,9 +25,12 @@ export default function ProfileRegistration() {
     midName: "",
     lastName: "",
     birthday: "",
+    profilePicture: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+  const {requireAuth} = useRequireAuth();
+  const {user} = useAuth();
 
   const midNameRef = useRef<TextInput | null>(null);
   const lastNameRef = useRef<TextInput | null>(null);
@@ -29,6 +39,7 @@ export default function ProfileRegistration() {
     const result = await openGallery();
     if (result && !result.canceled && result.assets[0]) {
       console.log(result.assets[0].uri);
+      setForm({...form, profilePicture: result.assets[0].uri});
     }
   };
 
@@ -36,7 +47,7 @@ export default function ProfileRegistration() {
     setForm({...form, [name]: value});
   };
 
-  const onSubmit = () => {
+  const onSubmit = async () => {
     const result = validateForm(ProfileSchema, form);
 
     if (!result.success) {
@@ -47,8 +58,56 @@ export default function ProfileRegistration() {
 
     try {
       setLoading(true);
-      console.log(form);
+
+      let profilePictureUrl = "";
+
+      // Upload profile picture if selected
+      // if (form.profilePicture) {
+      //   // TODO: Get actual user ID from your auth context/state
+      //   const userId = "user_123"; // Replace with actual user ID
+
+      //   const uploadResult = await uploadImageToFirebase(
+      //     form.profilePicture,
+      //     userId,
+      //     "profile_pictures"
+      //   );
+
+      //   if (uploadResult.success && uploadResult.url) {
+      //     profilePictureUrl = uploadResult.url;
+      //     console.log("Profile picture uploaded:", profilePictureUrl);
+      //   } else {
+      //     console.error("Failed to upload profile picture:", uploadResult.error);
+      //     setLoading(false);
+      //     return;
+      //   }
+      // }
+
+      // Now save to database with the profilePictureUrl
+      const dataToSave = {
+        uid: user?.uid,
+        email: user?.email,
+        firstName: form.firstName,
+        midName: form.midName,
+        lastName: form.lastName,
+        birthday: form.birthday,
+        profilePictureUrl, // This is the Firebase Storage URL
+      };
+
+      await requireAuth(async () => {
+        const [data, error] = await safeApi<ApiResponse<User>>(
+          api.post("/user/register-profile", dataToSave)
+        );
+
+        console.log(data);
+
+        if (error) throw new Error(error);
+
+        if (data?.success) {
+          router.push("/(drawer)/(tabs)");
+        }
+      });
     } catch (error) {
+      console.error("Error:", error);
     } finally {
       setLoading(false);
     }
@@ -71,9 +130,32 @@ export default function ProfileRegistration() {
               className="items-center justify-center border rounded-full size-48 border-lightPrimary active:border-2"
               onPress={pickProfilePic}
             >
-              <View className="items-center justify-center bg-gray-100 rounded-full size-40">
-                <Ionicons name="camera" size={24} color="#FFA840" />
-              </View>
+              {form.profilePicture ? (
+                <View className="items-center justify-center bg-gray-100 rounded-full size-40">
+                  <Image
+                    source={{uri: form.profilePicture}}
+                    style={{width: 140, height: 140, borderRadius: 999}}
+                    contentFit="cover"
+                  />
+                  <Pressable
+                    className="absolute right-0 p-1 bg-white rounded-full top-2"
+                    onPress={() =>
+                      setForm((prev) => ({...prev, profilePicture: ""}))
+                    }
+                  >
+                    <Ionicons
+                      name="close-outline"
+                      size={24}
+                      color="red"
+                      className="font-bold"
+                    />
+                  </Pressable>
+                </View>
+              ) : (
+                <View className="items-center justify-center bg-gray-100 rounded-full size-40">
+                  <Ionicons name="camera" size={24} color="#FFA840" />
+                </View>
+              )}
             </Pressable>
             <Text className="text-lg font-bold text-gray-700 ">Profile</Text>
           </View>
