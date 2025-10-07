@@ -1,13 +1,11 @@
 import CustomKeyAvoidingView from "@/components/CustomKeyAvoid";
 import LoadingModal from "@/components/modals/loading";
 import useAuth from "@/hooks/useAuth";
-import useRequireAuth from "@/hooks/useRequireAuth";
-import api from "@/lib/axios";
+import {useAuthGuard} from "@/hooks/useAuthGuard";
+import {useRegisterProfile} from "@/mutations/userMutations";
 import {ProfileSchema} from "@/schemas/authSchema";
-import {ApiResponse} from "@/types/api";
 import {User} from "@/types/user";
 import {openGallery} from "@/utils/imagePicker";
-import {safeApi} from "@/utils/safeApi";
 import {validateForm} from "@/utils/validateForm";
 import {Ionicons} from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
@@ -28,9 +26,9 @@ export default function ProfileRegistration() {
     profilePicture: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [loading, setLoading] = useState(false);
-  const {requireAuth} = useRequireAuth();
+  const {isAuthenticated} = useAuthGuard();
   const {user} = useAuth();
+  const {mutate, isPending} = useRegisterProfile();
 
   const midNameRef = useRef<TextInput | null>(null);
   const lastNameRef = useRef<TextInput | null>(null);
@@ -56,61 +54,48 @@ export default function ProfileRegistration() {
     }
     setErrors({});
 
-    try {
-      setLoading(true);
+    if (!isAuthenticated()) return;
 
-      let profilePictureUrl = "";
+    let profilePictureUrl = "";
 
-      // Upload profile picture if selected
-      // if (form.profilePicture) {
-      //   // TODO: Get actual user ID from your auth context/state
-      //   const userId = "user_123"; // Replace with actual user ID
+    // Upload profile picture if selected
+    // if (form.profilePicture) {
+    //   // TODO: Get actual user ID from your auth context/state
+    //   const userId = "user_123"; // Replace with actual user ID
 
-      //   const uploadResult = await uploadImageToFirebase(
-      //     form.profilePicture,
-      //     userId,
-      //     "profile_pictures"
-      //   );
+    //   const uploadResult = await uploadImageToFirebase(
+    //     form.profilePicture,
+    //     userId,
+    //     "profile_pictures"
+    //   );
 
-      //   if (uploadResult.success && uploadResult.url) {
-      //     profilePictureUrl = uploadResult.url;
-      //     console.log("Profile picture uploaded:", profilePictureUrl);
-      //   } else {
-      //     console.error("Failed to upload profile picture:", uploadResult.error);
-      //     setLoading(false);
-      //     return;
-      //   }
-      // }
+    //   if (uploadResult.success && uploadResult.url) {
+    //     profilePictureUrl = uploadResult.url;
+    //     console.log("Profile picture uploaded:", profilePictureUrl);
+    //   } else {
+    //     console.error("Failed to upload profile picture:", uploadResult.error);
+    //     setLoading(false);
+    //     return;
+    //   }
+    // }
 
-      // Now save to database with the profilePictureUrl
-      const dataToSave = {
-        uid: user?.uid,
-        email: user?.email,
-        firstName: form.firstName,
-        midName: form.midName,
-        lastName: form.lastName,
-        birthday: form.birthday,
-        profilePictureUrl, // This is the Firebase Storage URL
-      };
+    // Now save to database with the profilePictureUrl
+    const dataToSave: User = {
+      uid: user!.uid,
+      email: user!.email ?? "",
+      firstName: form.firstName,
+      middleName: form.midName,
+      lastName: form.lastName,
+      birthDate: form.birthday,
+      profilePictureUrl, // This is the Firebase Storage URL
+    };
 
-      await requireAuth(async () => {
-        const [data, error] = await safeApi<ApiResponse<User>>(
-          api.post("/user/register-profile", dataToSave)
-        );
-
-        console.log(data);
-
-        if (error) throw new Error(error);
-
-        if (data?.success) {
-          router.push("/(drawer)/(tabs)");
-        }
-      });
-    } catch (error) {
-      console.error("Error:", error);
-    } finally {
-      setLoading(false);
-    }
+    mutate(dataToSave, {
+      onSuccess: () => {
+        console.log("Profile registered successfully");
+        router.push("/(drawer)/(tabs)");
+      },
+    });
   };
 
   return (
@@ -278,7 +263,7 @@ export default function ProfileRegistration() {
           </View>
         </View>
       </CustomKeyAvoidingView>
-      <LoadingModal visible={loading} />
+      <LoadingModal visible={isPending} />
     </SafeAreaView>
   );
 }

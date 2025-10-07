@@ -1,9 +1,11 @@
 import useAuth from "@/hooks/useAuth";
+import {queryClient} from "@/lib/queryClient";
 import {
   Montserrat_400Regular,
   Montserrat_700Bold,
   useFonts,
 } from "@expo-google-fonts/montserrat";
+import {QueryClientProvider} from "@tanstack/react-query";
 import {SplashScreen, Stack} from "expo-router";
 import {useEffect} from "react";
 import {StatusBar} from "react-native";
@@ -36,13 +38,12 @@ export default function RootLayout() {
     return null;
   }
 
-  // const isProfileComplete = profile?.profileCompleted ?? false;
-
   return (
     <SafeAreaProvider>
       {/* <FontWrapper> */}
-      <Stack screenOptions={{headerShown: false}} initialRouteName="(drawer)">
-        {/* <Stack.Protected guard={!user}>
+      <QueryClientProvider client={queryClient}>
+        <Stack screenOptions={{headerShown: false}} initialRouteName="(drawer)">
+          {/* <Stack.Protected guard={!user}>
           <Stack.Screen name="(auth)" />
         </Stack.Protected>
 
@@ -50,11 +51,13 @@ export default function RootLayout() {
           <Stack.Screen name="(drawer)" />
           <Stack.Screen name="(root_screens)" />
         </Stack.Protected> */}
-        <Stack.Screen name="(drawer)" />
-        <Stack.Screen name="(auth)" />
-        <Stack.Screen name="(root_screens)" />
-        <Stack.Screen name="(public_screens)" />
-      </Stack>
+          <Stack.Screen name="(drawer)" />
+          <Stack.Screen name="(auth)" />
+          <Stack.Screen name="(root_screens)" />
+          <Stack.Screen name="(public_screens)" />
+        </Stack>
+      </QueryClientProvider>
+
       {/* </FontWrapper> */}
       <StatusBar backgroundColor="#0F2535" barStyle="light-content" />
     </SafeAreaProvider>
