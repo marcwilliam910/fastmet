@@ -88,6 +88,7 @@ export default function ProfileRegistration() {
       lastName: form.lastName,
       birthDate: form.birthday,
       profilePictureUrl, // This is the Firebase Storage URL
+      fromOAuth: false,
     };
 
     mutate(dataToSave, {

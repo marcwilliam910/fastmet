@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "657062346189",
+    "project_id": "fastmet-56397",
+    "storage_bucket": "fastmet-56397.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:657062346189:android:7748ecdc1bad243fc11884",
+        "android_client_info": {
+          "package_name": "com.guildsman.fastmet"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "657062346189-ohvrg9ccpssql68dif9lu1hm014dag4u.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDQ7sIRaKbS8CIxIhBd4FlObhg1tSo5XHc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "657062346189-ohvrg9ccpssql68dif9lu1hm014dag4u.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

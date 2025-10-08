@@ -58,8 +58,11 @@ const EditProfile = () => {
             onPress={pickProfilePic}
           >
             <Image
-              source={require("@/assets/images/icon.png")}
-              // style={{width: 32, height: 32}}
+              source={
+                profile?.profilePictureUrl
+                  ? {uri: profile.profilePictureUrl}
+                  : require("@/assets/images/icon.png")
+              } // style={{width: 32, height: 32}}
               style={{width: 128, height: 128, borderRadius: 999}}
               contentFit="contain"
             />
@@ -175,7 +178,9 @@ const EditProfile = () => {
           {/*  Button */}
           <View className="my-5 ">
             <Pressable className="items-center py-4 rounded-lg bg-lightPrimary active:bg-darkPrimary">
-              <Text className="text-base font-bold text-white">Confirm</Text>
+              <Text className="text-base font-bold text-white">
+                Update Profile
+              </Text>
             </Pressable>
             <Pressable
               className="items-center py-4 my-2 border border-gray-300 rounded-lg bg-ctaSecondary active:bg-ctaSecondaryActive"

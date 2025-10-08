@@ -44,7 +44,7 @@ const Register = () => {
     try {
       setLoading(true);
       const res = await signup(form.email, form.password);
-      await updateDisplayName(form.username);
+      if (form.username.length > 0) await updateDisplayName(form.username);
 
       router.push("/(root_screens)/profile-register");
       console.log("Signup success:", res.user.uid);

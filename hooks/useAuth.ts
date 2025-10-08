@@ -15,6 +15,7 @@ export default function useAuth() {
         setUser(firebaseUser);
         const profile = await getUserProfile(firebaseUser.uid);
         if (profile.success && profile.user) setProfile(profile.user);
+        else setProfile(null);
         setLoading(false); // only after profile fetched
       } else {
         setUser(null);

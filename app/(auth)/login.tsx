@@ -2,8 +2,10 @@ import CustomKeyAvoidingView from "@/components/CustomKeyAvoid";
 import LogoWithText from "@/components/LogoWithText";
 import LoadingModal from "@/components/modals/loading";
 import {login} from "@/lib/auth";
+import {useRegisterProfile} from "@/mutations/userMutations";
 import {LoginSchema} from "@/schemas/authSchema";
-import {useProfileStore} from "@/store/useProfileStore";
+import {signInWithGoogle} from "@/services/googleAuth";
+import {User} from "@/types/user";
 import {validateForm} from "@/utils/validateForm";
 import {Ionicons} from "@expo/vector-icons";
 import {Link, router} from "expo-router";
@@ -28,8 +30,7 @@ const Login = () => {
 
   const [showPassword, setShowPassword] = useState(false);
   const passwordRef = useRef<TextInput>(null);
-
-  const setProfile = useProfileStore((state) => state.setProfile);
+  const {mutate, isPending} = useRegisterProfile();
 
   const handleLogin = async () => {
     const result = validateForm(LoginSchema, form);
@@ -71,6 +72,48 @@ const Login = () => {
       }
 
       setErrors({form: message});
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setLoading(true);
+    try {
+      const user = await signInWithGoogle();
+      // Optional: Split displayName into name parts
+      const nameParts = user.displayName?.split(" ") ?? [];
+      const firstName = nameParts[0] ?? "";
+      const lastName = nameParts.length > 1 ? nameParts.slice(1).join(" ") : "";
+
+      const dataToSave: User = {
+        uid: user.uid,
+        email: user.email ?? "",
+        firstName,
+        middleName: "", // Google doesn't provide this
+        lastName,
+        birthDate: "", // Google doesn't provide this
+        profilePictureUrl: user.photoURL ?? "",
+        fromOAuth: true,
+      };
+
+      mutate(dataToSave, {
+        onSuccess: () => {
+          console.log("Profile registered successfully");
+          router.push("/(drawer)/(tabs)");
+        },
+      });
+
+      // Navigation will be handled by your auth flow
+      // Or manually navigate:
+      // router.replace('/(tabs)');
+    } catch (error: any) {
+      console.error("Google Sign-In Error:", error);
+
+      // Don't show error if user cancelled
+      if (error.message !== "Sign in was cancelled") {
+        setErrors({form: error.message});
+      }
     } finally {
       setLoading(false);
     }
@@ -183,6 +226,8 @@ const Login = () => {
 
             <TouchableOpacity
               className="items-center justify-center bg-red-500 rounded-lg size-12"
+              onPress={handleGoogleSignIn}
+              disabled={loading}
               activeOpacity={0.8}
             >
               <Ionicons name="logo-google" size={24} color="#fff" />
@@ -217,7 +262,7 @@ const Login = () => {
           </Link>
         </View>
       </CustomKeyAvoidingView>
-      <LoadingModal visible={loading} />
+      <LoadingModal visible={loading || isPending} />
     </SafeAreaView>
   );
 };

@@ -6,4 +6,5 @@ export type User = {
   middleName?: string;
   birthDate?: string;
   profilePictureUrl?: string;
+  fromOAuth: boolean;
 };

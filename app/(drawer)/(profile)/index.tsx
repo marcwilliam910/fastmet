@@ -11,7 +11,8 @@ export default function MyProfile() {
   const profile = useProfileStore((state) => state.profile);
   const {user} = useAuth();
 
-  const menuItems = [
+  // profile?.fromOAuth && menuItems.push({icon: "log-out", label: "Logout", onPress: () => {}});
+  const fromEmailAndPassOptions = [
     {
       icon: "person",
       label: "Edit Profile",
@@ -30,6 +31,21 @@ export default function MyProfile() {
       onPress: () => router.push("/(drawer)/settings"),
     },
   ];
+  const fromOAuthOptions = [
+    {
+      icon: "person",
+      label: "Edit Profile",
+      onPress: () => router.push("/(drawer)/(profile)/editProfile"),
+    },
+    {
+      icon: "settings",
+      label: "Settings",
+      onPress: () => router.push("/(drawer)/settings"),
+    },
+  ];
+  const menuItems = profile?.fromOAuth
+    ? fromOAuthOptions
+    : fromEmailAndPassOptions;
 
   if (!user || !profile) return <NotLoggedIn />;
 
@@ -39,7 +55,11 @@ export default function MyProfile() {
         {/* Profile Image with Border */}
         <View className="border border-[#FFA840] rounded-full p-2">
           <Image
-            source={require("@/assets/images/icon.png")}
+            source={
+              profile.profilePictureUrl
+                ? {uri: profile.profilePictureUrl}
+                : require("@/assets/images/icon.png")
+            }
             style={{width: 120, height: 120, borderRadius: 999}}
             contentFit="contain"
           />
