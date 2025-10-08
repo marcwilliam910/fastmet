@@ -44,16 +44,6 @@ export const signInWithGoogle = async (): Promise<User> => {
   }
 };
 
-export const signOutGoogle = async (): Promise<void> => {
-  try {
-    await GoogleSignin.signOut();
-    await auth.signOut();
-  } catch (error: any) {
-    console.error("Sign Out Error:", error);
-    throw error;
-  }
-};
-
 export const getCurrentUser = async () => {
   try {
     const currentUser = GoogleSignin.getCurrentUser();
