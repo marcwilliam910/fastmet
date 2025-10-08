@@ -81,6 +81,12 @@ const Login = () => {
     setLoading(true);
     try {
       const user = await signInWithGoogle();
+
+      if (!user) {
+        // User cancelled — exit silently
+        return;
+      }
+
       // Optional: Split displayName into name parts
       const nameParts = user.displayName?.split(" ") ?? [];
       const firstName = nameParts[0] ?? "";
@@ -108,8 +114,6 @@ const Login = () => {
       // Or manually navigate:
       // router.replace('/(tabs)');
     } catch (error: any) {
-      console.error("Google Sign-In Error:", error);
-
       // Don't show error if user cancelled
       if (error.message !== "Sign in was cancelled") {
         setErrors({form: error.message});
