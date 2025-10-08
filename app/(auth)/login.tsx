@@ -3,6 +3,7 @@ import LogoWithText from "@/components/LogoWithText";
 import LoadingModal from "@/components/modals/loading";
 import {login} from "@/lib/auth";
 import {LoginSchema} from "@/schemas/authSchema";
+import {useProfileStore} from "@/store/useProfileStore";
 import {validateForm} from "@/utils/validateForm";
 import {Ionicons} from "@expo/vector-icons";
 import {Link, router} from "expo-router";
@@ -27,6 +28,8 @@ const Login = () => {
 
   const [showPassword, setShowPassword] = useState(false);
   const passwordRef = useRef<TextInput>(null);
+
+  const setProfile = useProfileStore((state) => state.setProfile);
 
   const handleLogin = async () => {
     const result = validateForm(LoginSchema, form);

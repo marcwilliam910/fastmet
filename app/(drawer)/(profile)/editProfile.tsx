@@ -1,4 +1,5 @@
 import CustomKeyAvoidingView from "@/components/CustomKeyAvoid";
+import {useProfileStore} from "@/store/useProfileStore";
 import {openGallery} from "@/utils/imagePicker";
 import {Ionicons} from "@expo/vector-icons";
 import {Image} from "expo-image";
@@ -16,6 +17,7 @@ import {
 import {SafeAreaView} from "react-native-safe-area-context";
 
 const EditProfile = () => {
+  const profile = useProfileStore((state) => state.profile);
   const mnameRef = useRef<TextInput>(null);
   const lnameRef = useRef<TextInput>(null);
   const numRef = useRef<TextInput>(null);
@@ -81,6 +83,7 @@ const EditProfile = () => {
               First Name
             </Text>
             <TextInput
+              value={profile?.firstName}
               onSubmitEditing={() => mnameRef.current?.focus()}
               returnKeyType="next"
               submitBehavior="submit"
@@ -101,6 +104,7 @@ const EditProfile = () => {
               onFocus={() =>
                 scrollToInput(mnameRef as React.RefObject<TextInput>)
               }
+              value={profile?.middleName}
               submitBehavior="submit"
               returnKeyType="next"
               placeholder="Enter Middle Name"
@@ -120,6 +124,7 @@ const EditProfile = () => {
               onFocus={() =>
                 scrollToInput(lnameRef as React.RefObject<TextInput>)
               }
+              value={profile?.lastName}
               submitBehavior="submit"
               returnKeyType="next"
               placeholder="Enter Last Name"

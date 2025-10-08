@@ -9,3 +9,10 @@ export async function registerUserProfile(payload: User) {
   );
   return res.data;
 }
+
+export async function getUserProfile(uid: string) {
+  const res = await api.get<{success: boolean; message: string; user: User}>(
+    `/user/${uid}`
+  );
+  return res.data;
+}

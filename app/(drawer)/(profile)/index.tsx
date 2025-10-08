@@ -1,3 +1,6 @@
+import NotLoggedIn from "@/components/notLoggedIn";
+import useAuth from "@/hooks/useAuth";
+import {useProfileStore} from "@/store/useProfileStore";
 import {Ionicons} from "@expo/vector-icons";
 import {Image} from "expo-image";
 import {router} from "expo-router";
@@ -5,6 +8,9 @@ import React from "react";
 import {Pressable, ScrollView, Text, View} from "react-native";
 
 export default function MyProfile() {
+  const profile = useProfileStore((state) => state.profile);
+  const {user} = useAuth();
+
   const menuItems = [
     {
       icon: "person",
@@ -25,6 +31,8 @@ export default function MyProfile() {
     },
   ];
 
+  if (!user || !profile) return <NotLoggedIn />;
+
   return (
     <ScrollView className="flex-1 bg-white">
       <View className="items-center gap-4 pt-12 pb-8">
@@ -40,9 +48,9 @@ export default function MyProfile() {
         {/* User Info */}
         <View className="items-center gap-1">
           <Text className="text-xl font-bold text-gray-800">
-            Jonathan Dela Cruz
+            {profile?.firstName} {profile?.lastName}
           </Text>
-          <Text className="text-base text-gray-400">jonathan@gmail.com</Text>
+          <Text className="text-base text-gray-400">{profile?.email}</Text>
         </View>
       </View>
 

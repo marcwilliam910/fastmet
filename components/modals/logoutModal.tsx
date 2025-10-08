@@ -1,4 +1,5 @@
 import {logout} from "@/lib/auth";
+import {useProfileStore} from "@/store/useProfileStore";
 import {Ionicons} from "@expo/vector-icons";
 import {Image} from "expo-image";
 import {router} from "expo-router";
@@ -13,12 +14,14 @@ const LogoutModal = ({
   setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }) => {
   const [isLoading, setIsLoading] = useState(false);
+  const clearProfile = useProfileStore((state) => state.clearProfile);
 
   const handleLogout = async () => {
     setIsLoading(true);
     await logout();
     setIsLoading(false);
     setIsOpen(false);
+    clearProfile();
     router.push("/(auth)/login");
   };
 
