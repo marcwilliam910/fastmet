@@ -77,6 +77,10 @@ export default function DrawerLayout() {
         }}
       >
         <Drawer.Screen
+          name="index"
+          options={{drawerItemStyle: {display: "none"}}}
+        />
+        <Drawer.Screen
           name="(tabs)"
           options={{
             drawerLabel: "Home",
