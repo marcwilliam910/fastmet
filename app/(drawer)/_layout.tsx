@@ -52,7 +52,6 @@ export default function DrawerLayout() {
   return (
     <GestureHandlerRootView style={{flex: 1}}>
       <Drawer
-        initialRouteName="(tabs)"
         drawerContent={(props) => (
           <CustomDrawerContent
             {...props}
