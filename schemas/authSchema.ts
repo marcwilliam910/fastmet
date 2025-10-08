@@ -25,6 +25,7 @@ export const ProfileSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
   midName: z.string().optional(),
   lastName: z.string().min(1, "Last name is required"),
+  contactNumber: z.string().min(11, "Please enter a valid contact number"),
   birthday: z.string().optional(),
 });
 

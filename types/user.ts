@@ -4,6 +4,7 @@ export type User = {
   firstName: string;
   lastName: string;
   middleName?: string;
+  contactNumber?: string;
   birthDate?: string;
   profilePictureUrl?: string;
   fromOAuth: boolean;

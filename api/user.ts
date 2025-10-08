@@ -16,3 +16,11 @@ export async function getUserProfile(uid: string) {
   );
   return res.data;
 }
+
+export async function updateUserProfile(uid: string, payload: Partial<User>) {
+  const res = await api.put<{success: boolean; message: string; user: User}>(
+    `/user/update-profile/${uid}`,
+    payload
+  );
+  return res.data;
+}

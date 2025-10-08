@@ -22,6 +22,7 @@ export default function ProfileRegistration() {
     firstName: "",
     midName: "",
     lastName: "",
+    contactNumber: "",
     birthday: "",
     profilePicture: "",
   });
@@ -32,6 +33,7 @@ export default function ProfileRegistration() {
 
   const midNameRef = useRef<TextInput | null>(null);
   const lastNameRef = useRef<TextInput | null>(null);
+  const contactNumberRef = useRef<TextInput | null>(null);
 
   const pickProfilePic = async () => {
     const result = await openGallery();
@@ -85,6 +87,7 @@ export default function ProfileRegistration() {
       email: user!.email ?? "",
       firstName: form.firstName,
       middleName: form.midName,
+      contactNumber: form.contactNumber,
       lastName: form.lastName,
       birthDate: form.birthday,
       profilePictureUrl, // This is the Firebase Storage URL
@@ -198,12 +201,38 @@ export default function ProfileRegistration() {
               onChangeText={(text) => onFormChange("lastName", text)}
               placeholder="Enter Last Name"
               placeholderTextColor="#9CA3AF"
+              returnKeyType="next"
+              onSubmitEditing={() => contactNumberRef.current?.focus()}
+              submitBehavior="submit"
               className={`p-4 text-base bg-gray-100 rounded-lg ${
                 errors.lastName ? "border border-red-500" : ""
               }`}
             />
             {errors.lastName && (
               <Text className="text-xs text-red-500">{errors.lastName}</Text>
+            )}
+          </View>
+
+          {/* contact number */}
+          <View className="gap-2">
+            <Text className="text-sm font-medium text-gray-700 ">
+              Contact Number <Text className="text-red-500">*</Text>
+            </Text>
+            <TextInput
+              ref={contactNumberRef}
+              value={form.contactNumber}
+              onChangeText={(text) => onFormChange("contactNumber", text)}
+              placeholder="ex. 09xxxxxxxxx"
+              keyboardType="phone-pad"
+              placeholderTextColor="#9CA3AF"
+              className={`p-4 text-base bg-gray-100 rounded-lg ${
+                errors.lastName ? "border border-red-500" : ""
+              }`}
+            />
+            {errors.contactNumber && (
+              <Text className="text-xs text-red-500">
+                {errors.contactNumber}
+              </Text>
             )}
           </View>
 
