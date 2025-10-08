@@ -46,6 +46,13 @@ export default function RootScreenLayout() {
           title: "Profile Registration",
         }}
       />
+      <Stack.Screen
+        name="book"
+        options={{
+          title: "Book",
+          headerShown: false,
+        }}
+      />
     </Stack>
   );
 }

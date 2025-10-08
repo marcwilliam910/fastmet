@@ -1,5 +1,6 @@
 import Carousel from "@/components/Carousel";
 import {Ionicons} from "@expo/vector-icons";
+import {router} from "expo-router";
 import React from "react";
 import {Pressable, ScrollView, Text, View} from "react-native";
 
@@ -33,10 +34,13 @@ const Home = () => {
       </ScrollView>
       {/* buttons */}
       <View className="absolute flex-row w-full bottom-3 justify-evenly">
-        <Pressable className="bg-[#f59e0b] px-10 py-4 rounded-md">
+        <Pressable
+          className="px-10 py-4 rounded-md bg-lightPrimary active:bg-darkPrimary"
+          onPress={() => router.push("/(root_screens)/book")}
+        >
           <Text className="font-bold text-white">Book now</Text>
         </Pressable>
-        <Pressable className="px-10 py-4 bg-gray-400 rounded-md">
+        <Pressable className="px-10 py-4 bg-gray-400 rounded-md active:bg-gray-500">
           <Text className="font-bold text-white">Schedule</Text>
         </Pressable>
       </View>
