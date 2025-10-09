@@ -5,6 +5,7 @@ import {useAuthGuard} from "@/hooks/useAuthGuard";
 import {useUpdateProfile} from "@/mutations/userMutations";
 import {ProfileSchema} from "@/schemas/authSchema";
 import {useProfileStore} from "@/store/useProfileStore";
+import {User} from "@/types/user";
 import {openGallery} from "@/utils/imagePicker";
 import {validateForm} from "@/utils/validateForm";
 import {Ionicons} from "@expo/vector-icons";
@@ -24,6 +25,8 @@ import {SafeAreaView} from "react-native-safe-area-context";
 
 const EditProfile = () => {
   const profile = useProfileStore((state) => state.profile);
+  const setProfile = useProfileStore((state) => state.setProfile);
+
   const {user} = useAuth();
   const {isAuthenticated} = useAuthGuard();
 
@@ -31,7 +34,7 @@ const EditProfile = () => {
   const lnameRef = useRef<TextInput>(null);
   const numRef = useRef<TextInput>(null);
   const scrollRef = useRef<ScrollView>(null);
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<Partial<User>>({
     firstName: "",
     middleName: "",
     lastName: "",
@@ -81,7 +84,7 @@ const EditProfile = () => {
     }
   };
 
-  const onSubmit = () => {
+  const onSubmit = async () => {
     const result = validateForm(ProfileSchema, form);
 
     if (!result.success) {
@@ -99,6 +102,7 @@ const EditProfile = () => {
       },
       {
         onSuccess: () => {
+          setProfile({...profile!, ...form});
           console.log("Profile updated successfully");
         },
       }
