@@ -40,7 +40,7 @@ const Home = () => {
         >
           <Text className="font-bold text-white">Book now</Text>
         </Pressable>
-        <Pressable className="px-10 py-4 bg-gray-400 rounded-md active:bg-gray-500">
+        <Pressable className="px-10 py-4 rounded-md bg-[#9FABB4] active:bg-gray-400">
           <Text className="font-bold text-white">Schedule</Text>
         </Pressable>
       </View>
