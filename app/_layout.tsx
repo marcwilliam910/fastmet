@@ -45,10 +45,7 @@ export default function RootLayout() {
       <SafeAreaProvider>
         {/* <FontWrapper> */}
         <QueryClientProvider client={queryClient}>
-          <Stack
-            screenOptions={{headerShown: false}}
-            initialRouteName="(drawer)"
-          >
+          <Stack screenOptions={{headerShown: false}}>
             {/* <Stack.Protected guard={!user}>
           <Stack.Screen name="(auth)" />
         </Stack.Protected>
