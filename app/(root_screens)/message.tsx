@@ -33,7 +33,7 @@ const Message = () => {
       user: {
         _id: 2,
         name: "Driver's Name",
-        avatar: require("@/assets/images/icon.png"),
+        avatar: require("@/assets/images/user.png"),
       },
     },
   ]);
@@ -189,7 +189,7 @@ const Message = () => {
             </Pressable>
 
             <Image
-              source={require("@/assets/images/icon.png")}
+              source={require("@/assets/images/user.png")}
               style={{width: 40, height: 40, borderRadius: 999}}
               contentFit="contain"
             />

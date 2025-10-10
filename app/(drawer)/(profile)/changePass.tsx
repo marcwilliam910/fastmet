@@ -1,5 +1,6 @@
 import CustomKeyAvoidingView from "@/components/CustomKeyAvoid";
 import LoadingModal from "@/components/modals/loading";
+import SuccessModal from "@/components/modals/successModal";
 import {changePassword} from "@/lib/firebase/auth";
 import {ChangePassSchema, ChangePassSchemaType} from "@/schemas/authSchema";
 import {validateForm} from "@/utils/validateForm";
@@ -21,6 +22,7 @@ const ChangePass = () => {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
 
   const handleChange = (value: string, name: string) => {
     setForm({...form, [name]: value});
@@ -38,7 +40,7 @@ const ChangePass = () => {
       setLoading(true);
       // Reauthenticate first
       await changePassword(form);
-
+      setIsSuccess(true);
       console.log("Password changed successfully");
 
       setForm({oldPassword: "", newPassword: "", confirmPassword: ""});
@@ -187,6 +189,11 @@ const ChangePass = () => {
         </View>
       </View>
       <LoadingModal visible={loading} />
+      <SuccessModal
+        visible={isSuccess}
+        text="Password changed successfully!"
+        setVisible={setIsSuccess}
+      />
     </CustomKeyAvoidingView>
   );
 };

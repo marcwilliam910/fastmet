@@ -8,6 +8,7 @@ import {signInWithGoogle} from "@/services/googleAuth";
 import {User} from "@/types/user";
 import {validateForm} from "@/utils/validateForm";
 import {Ionicons} from "@expo/vector-icons";
+import {Image} from "expo-image";
 import {Link, router} from "expo-router";
 import React, {useRef, useState} from "react";
 import {
@@ -229,12 +230,16 @@ const Login = () => {
             </TouchableOpacity>
 
             <TouchableOpacity
-              className="items-center justify-center bg-red-500 rounded-lg size-12"
+              className="items-center justify-center bg-gray-100 rounded-lg size-12"
               onPress={handleGoogleSignIn}
               disabled={loading}
               activeOpacity={0.8}
             >
-              <Ionicons name="logo-google" size={24} color="#fff" />
+              <Image
+                source={require("@/assets/images/google.png")}
+                style={{width: 20, height: 20}}
+                contentFit="contain"
+              />
             </TouchableOpacity>
 
             <TouchableOpacity

@@ -58,7 +58,7 @@ export default function MyProfile() {
             source={
               profile.profilePictureUrl
                 ? {uri: profile.profilePictureUrl}
-                : require("@/assets/images/icon.png")
+                : require("@/assets/images/user.png")
             }
             style={{width: 120, height: 120, borderRadius: 999}}
             contentFit="contain"

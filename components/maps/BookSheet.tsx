@@ -1,8 +1,16 @@
+import {Ionicons} from "@expo/vector-icons";
 import BottomSheet, {BottomSheetView} from "@gorhom/bottom-sheet";
 import {Image} from "expo-image";
 import React, {useMemo, useRef, useState} from "react";
-import {Dimensions, Pressable, ScrollView, Text, View} from "react-native";
-import {useSafeAreaInsets} from "react-native-safe-area-context";
+import {
+  Dimensions,
+  Modal,
+  Pressable,
+  ScrollView,
+  Text,
+  View,
+} from "react-native";
+import {SafeAreaView, useSafeAreaInsets} from "react-native-safe-area-context";
 
 const loadOptions = [
   "Regular 1000kg",
@@ -16,26 +24,36 @@ const vehicles = [
     id: 1,
     name: "Motorcycle",
     img: require("@/assets/vehicle/motor.png"),
+    description:
+      "Ideal for quick solo trips or small deliveries. Seats 1–2 people and carries light cargo up to 20 kg.",
   },
   {
     id: 2,
-    name: "Car",
+    name: "Sedan",
     img: require("@/assets/vehicle/car.png"),
+    description:
+      "Comfortable for city or short-distance travel. Seats up to 4 passengers with moderate luggage space in the trunk.",
   },
   {
     id: 3,
-    name: "Open Truck",
+    name: "Small Pickup",
     img: require("@/assets/vehicle/open_truck.png"),
+    description:
+      "Suitable for light hauling or small business use. Can transport goods up to 500 kg with limited passenger seating.",
   },
   {
     id: 4,
-    name: "SUV",
+    name: "MPV-SUV",
     img: require("@/assets/vehicle/suv.png"),
+    description:
+      "Spacious and versatile for family or group travel. Seats 5–7 passengers with extra cargo room for luggage or equipment.",
   },
   {
     id: 5,
     name: "FastMet Truck",
     img: require("@/assets/vehicle/fastmet_truck.png"),
+    description:
+      "Heavy-duty truck for large-scale transport. Handles up to 3 tons of cargo, ideal for logistics and industrial hauling.",
   },
 ];
 
@@ -45,12 +63,14 @@ const BookSheet = () => {
   const [selectedVehicle, setSelectedVehicle] = useState(vehicles[0].id);
   const insets = useSafeAreaInsets();
   const {height: screenHeight} = Dimensions.get("window");
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedInfo, setSelectedInfo] = useState(vehicles[0]);
 
   // Convert 40% to actual pixels, then subtract inset.bottom
   const snapPoints = useMemo(() => {
     const first = 0.17 * screenHeight + insets.bottom;
-    const secondInPx = 0.4 * screenHeight + insets.bottom;
-    return [first, secondInPx];
+    const second = 0.4 * screenHeight + insets.bottom;
+    return [first, second];
   }, [insets.bottom, screenHeight]);
 
   return (
@@ -99,24 +119,34 @@ const BookSheet = () => {
           contentContainerStyle={{gap: 15, padding: 10}}
         >
           {vehicles.map((v) => (
-            <Pressable
-              key={v.id}
-              className={`items-center gap-1 px-4 py-1 rounded-lg ${
-                selectedVehicle === v.id ? "bg-[#fad19f]" : ""
-              }`}
-              onPress={() => setSelectedVehicle(v.id)}
-            >
-              <Image
-                source={v.img}
-                style={{height: 50, width: 50}}
-                contentFit="contain"
-              />
-              <Text
-                className={`text-xs text-gray-500 ${selectedVehicle === v.id ? "font-semibold" : ""}`}
+            <View key={v.id} className="relative items-center gap-1">
+              <Pressable
+                className={`items-center gap-1 px-4 py-1 rounded-lg ${
+                  selectedVehicle === v.id ? "border border-[#fad19f]" : ""
+                }`}
+                onPress={() => setSelectedVehicle(v.id)}
               >
-                {v.name}
-              </Text>
-            </Pressable>
+                <Image
+                  source={v.img}
+                  style={{height: 50, width: 50}}
+                  contentFit="contain"
+                />
+                <Text
+                  className={`text-xs text-gray-500 ${selectedVehicle === v.id ? "font-semibold" : ""}`}
+                >
+                  {v.name}
+                </Text>
+              </Pressable>
+              <Pressable
+                className="absolute -top-2 -right-2"
+                onPress={() => {
+                  setSelectedInfo(v);
+                  setModalVisible(true);
+                }}
+              >
+                <Ionicons name="information-circle" size={22} color="#FFA840" />
+              </Pressable>
+            </View>
           ))}
         </ScrollView>
 
@@ -138,8 +168,54 @@ const BookSheet = () => {
           </View>
         </View>
       </BottomSheetView>
+      <InfoModal
+        visible={modalVisible}
+        setModalVisible={setModalVisible}
+        selectedInfo={selectedInfo}
+      />
     </BottomSheet>
   );
 };
 
 export default BookSheet;
+
+export const InfoModal = ({
+  visible,
+  setModalVisible,
+  selectedInfo,
+}: {
+  visible: boolean;
+  setModalVisible: React.Dispatch<React.SetStateAction<boolean>>;
+  selectedInfo: (typeof vehicles)[0];
+}) => {
+  return (
+    <Modal
+      visible={visible}
+      onRequestClose={() => setModalVisible(false)}
+      animationType="slide"
+      presentationStyle="fullScreen"
+    >
+      <SafeAreaView className="flex-1 p-4 bg-white">
+        <View className="flex-row justify-end">
+          <Pressable onPress={() => setModalVisible(false)}>
+            <Ionicons name="close" size={28} color="#FFA840" />
+          </Pressable>
+        </View>
+
+        <View className="items-center gap-3 mt-4">
+          <Image
+            source={selectedInfo.img}
+            style={{width: 150, height: 150}}
+            contentFit="contain"
+          />
+          <Text className="mt-4 text-xl font-semibold">
+            {selectedInfo.name}
+          </Text>
+          <Text className="px-4 mt-2 text-center text-gray-600">
+            {selectedInfo.description}
+          </Text>
+        </View>
+      </SafeAreaView>
+    </Modal>
+  );
+};

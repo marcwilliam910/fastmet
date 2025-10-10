@@ -11,28 +11,28 @@ const DUMMYNOTIFICATIONS = [
     title: "Truck is ready",
     message: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
     sent: "2h ago",
-    image: require("@/assets/images/icon.png"),
+    image: require("@/assets/images/user.png"),
   },
   {
     id: "2",
     title: "Truck Arrived",
     message: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
     sent: "1min ago",
-    image: require("@/assets/images/icon.png"),
+    image: require("@/assets/images/user.png"),
   },
   {
     id: "3",
     title: "Truck Driver Cancelled",
     message: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
     sent: "Yesterday",
-    image: require("@/assets/images/icon.png"),
+    image: require("@/assets/images/user.png"),
   },
   {
     id: "4",
     title: "Truck on the way",
     message: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
     sent: "3hrs ago",
-    image: require("@/assets/images/icon.png"),
+    image: require("@/assets/images/user.png"),
   },
 ];
 

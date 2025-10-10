@@ -1,5 +1,6 @@
 import CustomKeyAvoidingView from "@/components/CustomKeyAvoid";
 import LoadingModal from "@/components/modals/loading";
+import SuccessModal from "@/components/modals/successModal";
 import useAuth from "@/hooks/useAuth";
 import {useAuthGuard} from "@/hooks/useAuthGuard";
 import {useUpdateProfile} from "@/mutations/userMutations";
@@ -41,6 +42,7 @@ const EditProfile = () => {
     contactNumber: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isSuccess, setIsSuccess] = useState(false);
 
   const {mutate, isPending} = useUpdateProfile();
 
@@ -102,6 +104,7 @@ const EditProfile = () => {
       },
       {
         onSuccess: () => {
+          setIsSuccess(true);
           setProfile({...profile!, ...form});
           console.log("Profile updated successfully");
         },
@@ -122,7 +125,7 @@ const EditProfile = () => {
               source={
                 profile?.profilePictureUrl
                   ? {uri: profile.profilePictureUrl}
-                  : require("@/assets/images/icon.png")
+                  : require("@/assets/images/user.png")
               } // style={{width: 32, height: 32}}
               style={{width: 128, height: 128, borderRadius: 999}}
               contentFit="contain"
@@ -273,12 +276,17 @@ const EditProfile = () => {
               className="items-center py-4 my-2 border border-gray-300 rounded-lg bg-ctaSecondary active:bg-ctaSecondaryActive"
               onPress={() => router.back()}
             >
-              <Text className="text-base font-bold ">Cancel</Text>
+              <Text className="text-base font-bold ">Back</Text>
             </Pressable>
           </View>
         </View>
       </CustomKeyAvoidingView>
       <LoadingModal visible={isPending} />
+      <SuccessModal
+        visible={isSuccess}
+        text="Profile successfully updated!"
+        setVisible={setIsSuccess}
+      />
     </SafeAreaView>
   );
 };

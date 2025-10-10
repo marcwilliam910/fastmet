@@ -29,7 +29,7 @@ const HeaderTabs = () => {
       </View>
       <View>
         <Image
-          source={require("@/assets/fastmet/announcement.png")}
+          source={require("@/assets/images/announcement.png")}
           style={{width: 30, height: 30}}
           contentFit="contain"
         />

@@ -36,7 +36,7 @@ const Home = () => {
       <View className="absolute flex-row w-full bottom-3 justify-evenly">
         <Pressable
           className="px-10 py-4 rounded-md bg-lightPrimary active:bg-darkPrimary"
-          onPress={() => router.push("/(root_screens)/book")}
+          onPress={() => router.push("/(root_screens)/(booking)/book")}
         >
           <Text className="font-bold text-white">Book now</Text>
         </Pressable>
