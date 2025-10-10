@@ -29,7 +29,19 @@ export const ProfileSchema = z.object({
   birthday: z.string().optional(),
 });
 
+export const ChangePassSchema = z
+  .object({
+    oldPassword: z.string().min(8, "Old password is required"),
+    newPassword: z.string().min(8, "Password must be at least 8 characters"),
+    confirmPassword: z.string().min(8, "Confirm password is required"),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
+
 export type RegisterSchemaType = z.infer<typeof RegisterSchema>;
 export type LoginSchemaType = z.infer<typeof LoginSchema>;
 export type ResetPassSchemaType = z.infer<typeof ResetPassSchema>;
 export type ProfileSchemaType = z.infer<typeof ProfileSchema>;
+export type ChangePassSchemaType = z.infer<typeof ChangePassSchema>;

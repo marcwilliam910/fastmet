@@ -1,8 +1,12 @@
+import {ChangePassSchemaType} from "@/schemas/authSchema";
 import {GoogleSignin} from "@react-native-google-signin/google-signin";
 import {
   createUserWithEmailAndPassword,
+  EmailAuthProvider,
+  reauthenticateWithCredential,
   sendPasswordResetEmail,
   signInWithEmailAndPassword,
+  updatePassword,
   updateProfile,
 } from "firebase/auth";
 import {auth} from "./firebaseConfig";
@@ -46,3 +50,15 @@ export const updateDisplayName = async (displayName: string) => {
 
 export const forgotPassword = async (email: string) =>
   sendPasswordResetEmail(auth, email);
+
+export const changePassword = async (form: ChangePassSchemaType) => {
+  const user = auth.currentUser;
+
+  if (!user || !user.email) return;
+
+  const credential = EmailAuthProvider.credential(user.email, form.oldPassword);
+  await reauthenticateWithCredential(user, credential);
+
+  // Then update password
+  await updatePassword(user, form.newPassword);
+};
