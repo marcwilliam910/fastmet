@@ -11,12 +11,18 @@ export async function registerUserProfile(payload: User) {
 }
 
 export async function getUserProfile(uid: string) {
-  const res = await api.get<{success: boolean; message: string; user: User}>(
-    `/user/${uid}`
-  );
-  return res.data;
+  try {
+    const res = await api.get<{success: boolean; message: string; user: User}>(
+      `/user/${uid}`
+    );
+    return res.data;
+  } catch (error: any) {
+    if (error.response?.status === 404) {
+      return {success: false, message: "User not found", user: null};
+    }
+    throw error;
+  }
 }
-
 export async function updateUserProfile(uid: string, payload: Partial<User>) {
   const res = await api.put<{success: boolean; message: string; user: User}>(
     `/user/update-profile/${uid}`,

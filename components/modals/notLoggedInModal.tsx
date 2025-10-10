@@ -1,3 +1,4 @@
+import {Ionicons} from "@expo/vector-icons";
 import {Image} from "expo-image";
 import {router} from "expo-router";
 import React from "react";
@@ -21,7 +22,13 @@ const NotLoggedInModal = ({
       animationType="fade"
     >
       <View className="items-center justify-center flex-1 bg-black/50">
-        <View className="items-center w-4/5 gap-5 p-6 bg-white rounded-xl">
+        <View className="relative items-center w-4/5 gap-5 p-6 bg-white rounded-xl">
+          <Pressable
+            className="absolute top-4 right-4 "
+            onPress={() => setVisible(false)}
+          >
+            <Ionicons name="close" size={28} color="#FFA840" />
+          </Pressable>
           <Image
             source={require("@/assets/images/phone.png")}
             style={{width: 100, height: 100}}
@@ -53,9 +60,15 @@ const NotLoggedInModal = ({
 
             <View className="gap-2">
               <Pressable
-                className="items-center justify-center w-full py-4 rounded-xl bg-lightPrimary active:bg-darkPrimary"
+                className="flex-row items-center justify-center w-full py-4 rounded-xl bg-lightPrimary active:bg-darkPrimary"
                 onPress={() => router.push("/(auth)/register")}
               >
+                <Ionicons
+                  name="mail-outline"
+                  size={20}
+                  color="white"
+                  style={{marginRight: 8}}
+                />
                 <Text className="font-semibold text-white">
                   Create Account with Email
                 </Text>

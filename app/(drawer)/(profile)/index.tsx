@@ -5,11 +5,17 @@ import {Ionicons} from "@expo/vector-icons";
 import {Image} from "expo-image";
 import {router} from "expo-router";
 import React from "react";
-import {Pressable, ScrollView, Text, View} from "react-native";
+import {
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  Text,
+  View,
+} from "react-native";
 
 export default function MyProfile() {
   const profile = useProfileStore((state) => state.profile);
-  const {user} = useAuth();
+  const {user, loading} = useAuth();
 
   // profile?.fromOAuth && menuItems.push({icon: "log-out", label: "Logout", onPress: () => {}});
   const fromEmailAndPassOptions = [
@@ -46,6 +52,14 @@ export default function MyProfile() {
   const menuItems = profile?.fromOAuth
     ? fromOAuthOptions
     : fromEmailAndPassOptions;
+
+  if (loading) {
+    return (
+      <View className="items-center justify-center flex-1">
+        <ActivityIndicator size="large" color="#FFA840" />
+      </View>
+    );
+  }
 
   if (!user || !profile) return <NotLoggedIn />;
 

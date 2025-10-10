@@ -5,20 +5,14 @@ import {login} from "@/lib/firebase/auth";
 import {useRegisterProfile} from "@/mutations/userMutations";
 import {LoginSchema} from "@/schemas/authSchema";
 import {signInWithGoogle} from "@/services/googleAuth";
+import {useProfileStore} from "@/store/useProfileStore";
 import {User} from "@/types/user";
 import {validateForm} from "@/utils/validateForm";
 import {Ionicons} from "@expo/vector-icons";
 import {Image} from "expo-image";
 import {Link, router} from "expo-router";
 import React, {useRef, useState} from "react";
-import {
-  ActivityIndicator,
-  Pressable,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import {Pressable, Text, TextInput, TouchableOpacity, View} from "react-native";
 import {SafeAreaView} from "react-native-safe-area-context";
 
 const Login = () => {
@@ -31,6 +25,7 @@ const Login = () => {
 
   const [showPassword, setShowPassword] = useState(false);
   const passwordRef = useRef<TextInput>(null);
+  const {setProfile} = useProfileStore();
   const {mutate, isPending} = useRegisterProfile();
 
   const handleLogin = async () => {
@@ -106,6 +101,7 @@ const Login = () => {
 
       mutate(dataToSave, {
         onSuccess: () => {
+          setProfile(dataToSave);
           console.log("Profile registered successfully");
           router.push("/(drawer)/(tabs)");
         },
@@ -210,9 +206,7 @@ const Login = () => {
             onPress={handleLogin}
             disabled={loading}
           >
-            <Text className="text-base font-bold text-white">
-              {loading ? <ActivityIndicator color="#fff" /> : "Sign In"}
-            </Text>
+            <Text className="text-base font-bold text-white">Sign In</Text>
           </Pressable>
 
           {/* Divider */}
