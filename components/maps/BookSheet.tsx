@@ -1,6 +1,6 @@
 import BottomSheet, {BottomSheetView} from "@gorhom/bottom-sheet";
 import {Image} from "expo-image";
-import React, {useMemo, useRef} from "react";
+import React, {useMemo, useRef, useState} from "react";
 import {Dimensions, Pressable, ScrollView, Text, View} from "react-native";
 import {useSafeAreaInsets} from "react-native-safe-area-context";
 
@@ -41,7 +41,8 @@ const vehicles = [
 
 const BookSheet = () => {
   const sheetRef = useRef<BottomSheet>(null);
-
+  const [selectedLoad, setSelectedLoad] = useState(loadOptions[0]);
+  const [selectedVehicle, setSelectedVehicle] = useState(vehicles[0].id);
   const insets = useSafeAreaInsets();
   const {height: screenHeight} = Dimensions.get("window");
 
@@ -71,15 +72,18 @@ const BookSheet = () => {
           {loadOptions.map((item, index) => (
             <Pressable
               key={index}
+              onPress={() => setSelectedLoad(item)}
               className={`pb-1 ${
-                index === 0
+                selectedLoad === item
                   ? "border-b-2 border-[#FFA840]"
                   : "border-b border-transparent"
               }`}
             >
               <Text
                 className={`${
-                  index === 0 ? "text-[#FFA840] font-semibold" : "text-gray-500"
+                  selectedLoad === item
+                    ? "text-[#FFA840] font-semibold"
+                    : "text-gray-500"
                 }`}
               >
                 {item}
@@ -92,17 +96,27 @@ const BookSheet = () => {
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{gap: 24, padding: 10}}
+          contentContainerStyle={{gap: 15, padding: 10}}
         >
           {vehicles.map((v) => (
-            <View key={v.id} className="items-center gap-1">
+            <Pressable
+              key={v.id}
+              className={`items-center gap-1 px-4 py-1 rounded-lg ${
+                selectedVehicle === v.id ? "bg-[#fad19f]" : ""
+              }`}
+              onPress={() => setSelectedVehicle(v.id)}
+            >
               <Image
                 source={v.img}
                 style={{height: 50, width: 50}}
                 contentFit="contain"
               />
-              <Text className="text-xs text-gray-500">{v.name}</Text>
-            </View>
+              <Text
+                className={`text-xs text-gray-500 ${selectedVehicle === v.id ? "font-semibold" : ""}`}
+              >
+                {v.name}
+              </Text>
+            </Pressable>
           ))}
         </ScrollView>
 

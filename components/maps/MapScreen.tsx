@@ -40,9 +40,10 @@ export default function MapScreen() {
     <View className="flex-1">
       <MapView
         ref={mapRef}
+        showsUserLocation={true} // Show user blue dot
+        showsCompass={true} // Compass
         style={StyleSheet.absoluteFillObject}
         initialRegion={region}
-        showsUserLocation
         onPress={handleMapPress}
       >
         <Marker coordinate={region} title="Selected Location" />
