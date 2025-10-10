@@ -1,6 +1,6 @@
 import CustomKeyAvoidingView from "@/components/CustomKeyAvoid";
 import LoadingModal from "@/components/modals/loading";
-import {changePassword} from "@/lib/auth";
+import {changePassword} from "@/lib/firebase/auth";
 import {ChangePassSchema, ChangePassSchemaType} from "@/schemas/authSchema";
 import {validateForm} from "@/utils/validateForm";
 import {Ionicons} from "@expo/vector-icons";

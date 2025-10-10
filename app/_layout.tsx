@@ -17,7 +17,7 @@ import "../global.css";
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const {user, loading} = useAuth();
+  const {loading} = useAuth();
 
   const [fontsLoaded] = useFonts({
     Montserrat_400Regular,

@@ -1,7 +1,7 @@
 import CustomKeyAvoidingView from "@/components/CustomKeyAvoid";
 import LogoWithText from "@/components/LogoWithText";
 import LoadingModal from "@/components/modals/loading";
-import {signup, updateDisplayName} from "@/lib/auth";
+import {signup, updateDisplayName} from "@/lib/firebase/auth";
 import {RegisterSchema} from "@/schemas/authSchema";
 import {validateForm} from "@/utils/validateForm";
 import {Ionicons} from "@expo/vector-icons";

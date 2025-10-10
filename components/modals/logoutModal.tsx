@@ -1,4 +1,4 @@
-import {logout} from "@/lib/auth";
+import {logout} from "@/lib/firebase/auth";
 import {useProfileStore} from "@/store/useProfileStore";
 import {Ionicons} from "@expo/vector-icons";
 import {Image} from "expo-image";

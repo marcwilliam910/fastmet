@@ -2,7 +2,7 @@ import CustomKeyAvoidingView from "@/components/CustomKeyAvoid";
 import LogoWithText from "@/components/LogoWithText";
 import LoadingModal from "@/components/modals/loading";
 import ResetPassModal from "@/components/modals/resetPassModal";
-import {forgotPassword} from "@/lib/auth";
+import {forgotPassword} from "@/lib/firebase/auth";
 import {ResetPassSchema} from "@/schemas/authSchema";
 import {validateForm} from "@/utils/validateForm";
 import {Ionicons} from "@expo/vector-icons";
