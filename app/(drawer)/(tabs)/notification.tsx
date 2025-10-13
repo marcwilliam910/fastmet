@@ -41,7 +41,7 @@ const Notification = () => {
 
   if (loading) {
     return (
-      <View className="items-center justify-center flex-1">
+      <View className="items-center justify-center flex-1 bg-white">
         <ActivityIndicator size="large" color="#FFA840" />
       </View>
     );

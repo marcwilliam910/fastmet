@@ -1,6 +1,6 @@
 import * as Location from "expo-location";
 import {useEffect, useRef, useState} from "react";
-import {StyleSheet, View} from "react-native";
+import {StatusBar, StyleSheet, View} from "react-native";
 import MapView, {Marker} from "react-native-maps";
 
 export default function MapScreen() {
@@ -15,8 +15,15 @@ export default function MapScreen() {
 
   useEffect(() => {
     (async () => {
-      const {status} = await Location.requestForegroundPermissionsAsync();
-      if (status === "granted") {
+      try {
+        const {status} = await Location.requestForegroundPermissionsAsync();
+
+        if (status !== "granted") {
+          StatusBar.setHidden(true);
+          console.log("Location permission not granted");
+          return;
+        }
+
         const loc = await Location.getCurrentPositionAsync({});
         const newRegion = {
           ...region,
@@ -25,6 +32,10 @@ export default function MapScreen() {
         };
         setRegion(newRegion);
         mapRef.current?.animateToRegion(newRegion, 1000);
+      } catch (err) {
+        console.log("Location error:", err);
+      } finally {
+        StatusBar.setHidden(true);
       }
     })();
   }, []);

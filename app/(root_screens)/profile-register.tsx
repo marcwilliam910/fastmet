@@ -18,20 +18,20 @@ import {SafeAreaView} from "react-native-safe-area-context";
 export default function ProfileRegistration() {
   const router = useRouter();
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<Partial<User>>({
     firstName: "",
-    midName: "",
+    middleName: "",
     lastName: "",
     contactNumber: "",
-    birthday: "",
-    profilePicture: "",
+    birthDate: "",
+    profilePictureUrl: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const {isAuthenticated} = useAuthGuard();
   const {user} = useAuth();
   const {mutate, isPending} = useRegisterProfile();
 
-  const midNameRef = useRef<TextInput | null>(null);
+  const middleNameRef = useRef<TextInput | null>(null);
   const lastNameRef = useRef<TextInput | null>(null);
   const contactNumberRef = useRef<TextInput | null>(null);
 
@@ -39,7 +39,7 @@ export default function ProfileRegistration() {
     const result = await openGallery();
     if (result && !result.canceled && result.assets[0]) {
       console.log(result.assets[0].uri);
-      setForm({...form, profilePicture: result.assets[0].uri});
+      setForm({...form, profilePictureUrl: result.assets[0].uri});
     }
   };
 
@@ -85,11 +85,11 @@ export default function ProfileRegistration() {
     const dataToSave: User = {
       uid: user!.uid,
       email: user!.email ?? "",
-      firstName: form.firstName,
-      middleName: form.midName,
+      firstName: form.firstName || "",
+      middleName: form.middleName,
       contactNumber: form.contactNumber,
-      lastName: form.lastName,
-      birthDate: form.birthday,
+      lastName: form.lastName || "",
+      birthDate: form.birthDate,
       profilePictureUrl, // This is the Firebase Storage URL
       fromOAuth: false,
     };
@@ -119,17 +119,17 @@ export default function ProfileRegistration() {
               className="items-center justify-center border rounded-full size-48 border-lightPrimary active:border-2"
               onPress={pickProfilePic}
             >
-              {form.profilePicture ? (
+              {form.profilePictureUrl ? (
                 <View className="items-center justify-center bg-gray-100 rounded-full size-40">
                   <Image
-                    source={{uri: form.profilePicture}}
+                    source={{uri: form.profilePictureUrl}}
                     style={{width: 140, height: 140, borderRadius: 999}}
                     contentFit="cover"
                   />
                   <Pressable
                     className="absolute right-0 p-1 bg-white rounded-full top-2"
                     onPress={() =>
-                      setForm((prev) => ({...prev, profilePicture: ""}))
+                      setForm((prev) => ({...prev, profilePictureUrl: ""}))
                     }
                   >
                     <Ionicons
@@ -159,7 +159,7 @@ export default function ProfileRegistration() {
               placeholder="Enter First Name"
               placeholderTextColor="#9CA3AF"
               returnKeyType="next"
-              onSubmitEditing={() => midNameRef.current?.focus()}
+              onSubmitEditing={() => middleNameRef.current?.focus()}
               submitBehavior="submit"
               className={`p-4 text-base bg-gray-100 rounded-lg ${
                 errors.firstName ? "border border-red-500" : ""
@@ -176,16 +176,16 @@ export default function ProfileRegistration() {
               Middle Name
             </Text>
             <TextInput
-              value={form.midName}
-              onChangeText={(text) => onFormChange("midName", text)}
-              ref={midNameRef}
+              value={form.middleName}
+              onChangeText={(text) => onFormChange("middleName", text)}
+              ref={middleNameRef}
               placeholder="Enter Middle Name"
               placeholderTextColor="#9CA3AF"
               returnKeyType="next"
               onSubmitEditing={() => lastNameRef.current?.focus()}
               submitBehavior="submit"
               className={`p-4 text-base bg-gray-100 rounded-lg ${
-                errors.midName ? "border border-red-500" : ""
+                errors.middleName ? "border border-red-500" : ""
               }`}
             />
           </View>
@@ -243,16 +243,16 @@ export default function ProfileRegistration() {
               onPress={() => setIsDatePickerOpen(true)}
               className={`p-4 bg-gray-100 rounded-lg `}
             >
-              <Text className={`${form.birthday ? "" : "text-gray-400"}`}>
-                {form.birthday != ""
-                  ? new Date(form.birthday).toDateString()
+              <Text className={`${form.birthDate ? "" : "text-gray-400"}`}>
+                {form.birthDate
+                  ? new Date(form.birthDate).toDateString()
                   : "Select date"}
               </Text>
             </Pressable>
 
             {isDatePickerOpen && (
               <DateTimePicker
-                value={new Date(form.birthday)}
+                value={form.birthDate ? new Date(form.birthDate) : new Date()}
                 mode="date"
                 display="default"
                 maximumDate={new Date()}
@@ -261,7 +261,7 @@ export default function ProfileRegistration() {
                   setIsDatePickerOpen(false);
                   console.log(selectedDate);
                   if (selectedDate) {
-                    onFormChange("birthday", selectedDate.toISOString());
+                    onFormChange("birthDate", selectedDate.toISOString());
                   }
                 }}
                 // iOS

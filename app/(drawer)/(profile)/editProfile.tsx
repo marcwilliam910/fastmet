@@ -40,6 +40,7 @@ const EditProfile = () => {
     middleName: "",
     lastName: "",
     contactNumber: "",
+    profilePictureUrl: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSuccess, setIsSuccess] = useState(false);
@@ -53,6 +54,7 @@ const EditProfile = () => {
         middleName: profile.middleName || "",
         lastName: profile.lastName,
         contactNumber: profile.contactNumber || "",
+        profilePictureUrl: profile.profilePictureUrl || "",
       });
     }
   }, [profile]);
@@ -83,6 +85,7 @@ const EditProfile = () => {
     const result = await openGallery();
     if (result && !result.canceled && result.assets[0]) {
       console.log(result.assets[0].uri);
+      setForm({...form, profilePictureUrl: result.assets[0].uri});
     }
   };
 
@@ -123,13 +126,30 @@ const EditProfile = () => {
           >
             <Image
               source={
-                profile?.profilePictureUrl
-                  ? {uri: profile.profilePictureUrl}
+                form.profilePictureUrl
+                  ? {uri: form.profilePictureUrl}
                   : require("@/assets/images/user.png")
               } // style={{width: 32, height: 32}}
               style={{width: 128, height: 128, borderRadius: 999}}
               contentFit="contain"
             />
+
+            {form.profilePictureUrl && (
+              <Pressable
+                className="absolute p-1 bg-white rounded-full right-2 top-2"
+                onPress={() =>
+                  setForm((prev) => ({...prev, profilePictureUrl: ""}))
+                }
+              >
+                <Ionicons
+                  name="close-outline"
+                  size={24}
+                  color="red"
+                  className="font-bold"
+                />
+              </Pressable>
+            )}
+
             <View
               className="absolute p-2 bg-white rounded-full bottom-2 right-2 "
               style={{
