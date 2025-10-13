@@ -1,11 +1,16 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
-import React, {useRef, useState} from "react";
+import React, {useRef} from "react";
 import {Animated, Easing, Pressable, Text, TextInput, View} from "react-native";
 import {useSafeAreaInsets} from "react-native-safe-area-context";
 
-export default function LocationInputs() {
+export default function LocationInputs({
+  isExpanded,
+  setIsExpanded,
+}: {
+  isExpanded: boolean;
+  setIsExpanded: React.Dispatch<React.SetStateAction<boolean>>;
+}) {
   const inset = useSafeAreaInsets();
-  const [isExpanded, setIsExpanded] = useState(true);
   const slideAnim = useRef(new Animated.Value(0)).current;
 
   const toggleExpand = () => {

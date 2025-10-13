@@ -1,7 +1,7 @@
 import {Ionicons} from "@expo/vector-icons";
 import BottomSheet, {BottomSheetView} from "@gorhom/bottom-sheet";
 import {Image} from "expo-image";
-import React, {useMemo, useRef, useState} from "react";
+import React, {useEffect, useMemo, useRef, useState} from "react";
 import {
   Dimensions,
   Modal,
@@ -57,7 +57,7 @@ const vehicles = [
   },
 ];
 
-const BookSheet = () => {
+const BookSheet = ({isExpanded}: {isExpanded: boolean}) => {
   const sheetRef = useRef<BottomSheet>(null);
   const [selectedLoad, setSelectedLoad] = useState(loadOptions[0]);
   const [selectedVehicle, setSelectedVehicle] = useState(vehicles[0].id);
@@ -72,6 +72,11 @@ const BookSheet = () => {
     const second = 0.4 * screenHeight + insets.bottom;
     return [first, second];
   }, [insets.bottom, screenHeight]);
+
+  useEffect(() => {
+    if (isExpanded) sheetRef.current?.snapToIndex(1);
+    else sheetRef.current?.snapToIndex(0);
+  }, [isExpanded]);
 
   return (
     <BottomSheet

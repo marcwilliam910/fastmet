@@ -47,7 +47,7 @@ const Services = () => {
 
   return (
     <SafeAreaView style={{flex: 1, backgroundColor: "white"}}>
-      <View className="relative flex-row items-center justify-center px-6 py-4">
+      <View className="relative flex-row items-center justify-center px-6 pt-2 pb-4">
         <Pressable className="absolute left-5" onPress={() => router.back()}>
           <Ionicons name="chevron-back" size={28} color="#FFA840" />
         </Pressable>
@@ -88,9 +88,7 @@ const Services = () => {
           </View>
 
           {/* Services Add's on */}
-          <Text className="mt-6 mb-4 text-base font-bold">
-            Services Add's on
-          </Text>
+          <Text className="mt-6 mb-4 text-lg font-bold">Services Add's on</Text>
 
           {/* Service Items */}
           <View className="gap-3 mb-6">
