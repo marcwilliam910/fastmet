@@ -1,6 +1,6 @@
 import {Ionicons} from "@expo/vector-icons";
 import {router} from "expo-router";
-import React from "react";
+import React, {useState} from "react";
 import {
   KeyboardAvoidingView,
   Pressable,
@@ -11,51 +11,81 @@ import {
 } from "react-native";
 import {SafeAreaView, useSafeAreaInsets} from "react-native-safe-area-context";
 
+type Service = {
+  id: number;
+  name: string;
+  price: string | null;
+  icon: string;
+};
+
+const defaultService: Service[] = [
+  {
+    id: 1,
+    name: "Standard service free",
+    price: null,
+    icon: "📦",
+  },
+  {
+    id: 2,
+    name: "Toll and Parking Fee",
+    price: null,
+    icon: "🚗",
+  },
+];
+
+const serviceAddons: Service[] = [
+  {id: 3, name: "Small Truck", price: "Php 100", icon: "🚚"},
+  {id: 4, name: "Safety Shoes", price: "Php 100", icon: "👞"},
+  {
+    id: 5,
+    name: "1 Extra Helper",
+    price: "Php 100",
+    icon: "🧑",
+  },
+  {id: 6, name: "Reflector Vest", price: null, icon: "🦺"},
+  {id: 7, name: "Extra Space", price: null, icon: "📦"},
+  {id: 8, name: "Fire Extinguisher", price: null, icon: "🧯"},
+  {id: 9, name: "Document Print", price: null, icon: "📄"},
+  {id: 10, name: "FastMet ID", price: null, icon: "🪪"},
+];
+
 const Services = () => {
   const insets = useSafeAreaInsets();
-
-  const serviceAddons = [
+  const [selectedServices, setSelectedServices] = useState<Service[]>([
     {
       id: 1,
       name: "Standard service free",
       price: null,
       icon: "📦",
-      checked: true,
     },
     {
       id: 2,
       name: "Toll and Parking Fee",
       price: null,
       icon: "🚗",
-      checked: true,
     },
-    {id: 3, name: "Small Truck", price: "Php 100", icon: "🚚", checked: true},
-    {id: 4, name: "Safety Shoes", price: "Php 100", icon: "👞", checked: true},
-    {
-      id: 5,
-      name: "1 Extra Helper",
-      price: "Php 100",
-      icon: "🧑",
-      checked: true,
-    },
-    {id: 6, name: "Reflector Vest", price: null, icon: "🦺", checked: false},
-    {id: 7, name: "Extra Space", price: null, icon: "📦", checked: false},
-    {id: 8, name: "Fire Extinguisher", price: null, icon: "🧯", checked: false},
-    {id: 9, name: "Document Print", price: null, icon: "📄", checked: false},
-    {id: 10, name: "FastMet ID", price: null, icon: "🪪", checked: false},
-  ];
+  ]);
+
+  const toggleService = (service: Service) => {
+    setSelectedServices((prev) => {
+      const exists = prev.some((s) => s.id === service.id);
+      return exists
+        ? prev.filter((s) => s.id !== service.id)
+        : [...prev, service];
+    });
+  };
 
   return (
     <SafeAreaView style={{flex: 1, backgroundColor: "white"}}>
       <View className="relative flex-row items-center justify-center px-6 pt-2 pb-4">
-        <Pressable className="absolute left-5" onPress={() => router.back()}>
+        <Pressable
+          className="absolute left-5 top-1.5"
+          onPress={() => router.back()}
+        >
           <Ionicons name="chevron-back" size={28} color="#FFA840" />
         </Pressable>
         <Text className="text-lg font-semibold">Services</Text>
-        <Text
-          className="font-semibold"
-          style={{position: "absolute", right: 24}}
-        >
+        <Text className="absolute text-sm font-semibold right-5 top-3.5">
           Step 2/3
         </Text>
       </View>
@@ -88,21 +118,21 @@ const Services = () => {
           </View>
 
           {/* Services Add's on */}
-          <Text className="mt-6 mb-4 text-lg font-bold">Services Add's on</Text>
+          <Text className="mt-6 mb-4 text-lg font-bold">Services Add-Ons</Text>
 
           {/* Service Items */}
           <View className="gap-3 mb-6">
-            {serviceAddons.map((service) => (
+            {defaultService.map((service) => (
               <View
                 key={service.id}
-                className="flex-row items-center justify-between p-3 border border-gray-300 rounded-lg"
+                className="flex-row items-center justify-between p-3 border border-gray-200 rounded-lg bg-gray-50"
               >
                 <View className="flex-row items-center flex-1 gap-3">
                   <View className="items-center justify-center w-10 h-10 bg-gray-100 rounded-lg">
                     <Text className="text-xl">{service.icon}</Text>
                   </View>
                   <View className="flex-1 gap-1">
-                    <Text className="text-sm font-semibold">
+                    <Text className="text-sm font-semibold text-gray-600">
                       {service.name}
                     </Text>
                     {service.price && (
@@ -112,17 +142,50 @@ const Services = () => {
                     )}
                   </View>
                 </View>
-                <View
-                  className={`w-6 h-6 rounded items-center justify-center ${
-                    service.checked ? "bg-lightPrimary" : "bg-gray-300"
-                  }`}
-                >
-                  {service.checked && (
-                    <Ionicons name="checkmark" size={16} color="white" />
-                  )}
+                <View className="items-center justify-center w-6 h-6 rounded bg-lightPrimary">
+                  <Ionicons name="checkmark" size={16} color="white" />
                 </View>
               </View>
             ))}
+
+            {serviceAddons.map((service) => {
+              const isSelected = selectedServices.some(
+                (s) => s.id === service.id
+              );
+
+              return (
+                <Pressable
+                  key={service.id}
+                  onPress={() => toggleService(service)}
+                  className="flex-row items-center justify-between p-3 border border-gray-300 rounded-lg active:bg-gray-50"
+                >
+                  <View className="flex-row items-center flex-1 gap-3">
+                    <View className="items-center justify-center w-10 h-10 bg-gray-100 rounded-lg">
+                      <Text className="text-xl">{service.icon}</Text>
+                    </View>
+                    <View className="flex-1 gap-1">
+                      <Text className="text-sm font-semibold">
+                        {service.name}
+                      </Text>
+                      {service.price && (
+                        <Text className="text-sm font-semibold text-darkPrimary">
+                          {service.price}
+                        </Text>
+                      )}
+                    </View>
+                  </View>
+                  <View
+                    className={`w-6 h-6 rounded items-center justify-center ${
+                      isSelected ? "bg-lightPrimary" : "bg-gray-300"
+                    }`}
+                  >
+                    {isSelected && (
+                      <Ionicons name="checkmark" size={16} color="white" />
+                    )}
+                  </View>
+                </Pressable>
+              );
+            })}
           </View>
 
           {/* Note and attachment */}
