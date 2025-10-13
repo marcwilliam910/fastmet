@@ -189,16 +189,33 @@ const Services = () => {
           </View>
 
           {/* Note and attachment */}
-          <Text className="mb-3 text-lg font-bold">Note and attachment</Text>
-          <TextInput
-            multiline
-            numberOfLines={4}
-            placeholder="Type here..."
-            style={{height: 120, textAlignVertical: "top"}}
-            className="p-4 border border-gray-300 rounded-lg"
-          />
+          <View className="gap-5">
+            <View className="gap-2">
+              <Text className="text-lg font-bold">Note and attachment</Text>
+              <TextInput
+                multiline
+                numberOfLines={4}
+                placeholder="Type here..."
+                style={{height: 120, textAlignVertical: "top"}}
+                className="p-4 border border-gray-300 rounded-lg"
+              />
+            </View>
 
-          {/* Payment Review Button */}
+            <View className="gap-2">
+              <Text className="text-lg font-bold">Upload Photo</Text>
+              <View className="flex-row items-center justify-between gap-2">
+                <Pressable className="items-center justify-center flex-1 gap-1 border border-gray-300 h-28 rounded-xl active:bg-gray-100">
+                  <Ionicons name="add-outline" size={22} color="gray" />
+                </Pressable>
+                <Pressable className="items-center justify-center flex-1 gap-1 border border-gray-300 h-28 rounded-xl active:bg-gray-100">
+                  <Ionicons name="add-outline" size={22} color="gray" />
+                </Pressable>
+                <Pressable className="items-center justify-center flex-1 gap-1 border border-gray-300 h-28 rounded-xl active:bg-gray-100">
+                  <Ionicons name="add-outline" size={22} color="gray" />
+                </Pressable>
+              </View>
+            </View>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
 

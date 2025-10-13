@@ -78,7 +78,7 @@ export default function SelectTimeModal({
                 <Pressable
                   className={`flex-row items-center gap-2 px-4 py-3  rounded-lg ${
                     isNowSelected
-                      ? "border-2 border-[#FFA840]"
+                      ? "border-2 border-darkPrimary"
                       : "border border-gray-300"
                   }`}
                   onPress={() => handleConfirm("now")}
@@ -89,7 +89,7 @@ export default function SelectTimeModal({
                     color={isNowSelected ? "#FFA840" : "gray"}
                   />
                   <Text
-                    className={`text-base font-medium ${isNowSelected ? "text-[#FFA840]" : ""}`}
+                    className={`text-base font-medium ${isNowSelected ? "text-lightPrimary" : ""}`}
                   >
                     Pick up now
                   </Text>
@@ -98,7 +98,7 @@ export default function SelectTimeModal({
                 <Pressable
                   className={`flex-row items-center gap-2 px-4 py-3  rounded-lg ${
                     isHourSelected
-                      ? "border-2 border-[#FFA840]"
+                      ? "border-2 border-darkPrimary"
                       : "border border-gray-300"
                   }`}
                   onPress={() => {
@@ -111,7 +111,7 @@ export default function SelectTimeModal({
                     color={isHourSelected ? "#FFA840" : "gray"}
                   />
                   <Text
-                    className={`text-base font-medium ${isHourSelected ? "text-[#FFA840]" : ""}`}
+                    className={`text-base font-medium ${isHourSelected ? "text-lightPrimary" : ""}`}
                   >
                     Pick up next few hours
                   </Text>
@@ -120,7 +120,7 @@ export default function SelectTimeModal({
                 <Pressable
                   className={`flex-row items-center gap-2 px-4 py-3  rounded-lg ${
                     isScheduleSelected
-                      ? "border-2 border-[#FFA840]"
+                      ? "border-2 border-darkPrimary"
                       : "border border-gray-300"
                   }`}
                   onPress={() => {
@@ -134,7 +134,7 @@ export default function SelectTimeModal({
                     color={isScheduleSelected ? "#FFA840" : "gray"}
                   />
                   <Text
-                    className={`text-base font-medium ${isScheduleSelected ? "text-[#FFA840]" : ""}`}
+                    className={`text-base font-medium ${isScheduleSelected ? "text-lightPrimary" : ""}`}
                   >
                     Schedule Pickup
                   </Text>
@@ -171,7 +171,7 @@ export default function SelectTimeModal({
                     onPress={() => setSelectedHour(hour)}
                     className={`flex-row items-center gap-2 border rounded-lg px-4 py-3 ${
                       selectedHour === hour
-                        ? "border-orange-400 bg-orange-50"
+                        ? "border-darkPrimary bg-orange-50"
                         : "border-gray-300"
                     }`}
                   >
@@ -193,7 +193,7 @@ export default function SelectTimeModal({
 
               <Pressable
                 onPress={() => handleConfirm("hour")}
-                className="py-4 bg-orange-400 rounded-xl"
+                className="py-4 bg-lightPrimary rounded-xl"
               >
                 <Text className="font-semibold text-center text-white">
                   Confirm
@@ -248,7 +248,7 @@ export default function SelectTimeModal({
 
               <Pressable
                 onPress={() => handleConfirm("schedule")}
-                className="py-3 bg-orange-400 rounded-xl"
+                className="py-3 bg-lightPrimary rounded-xl"
               >
                 <Text className="font-semibold text-center text-white">
                   Confirm
