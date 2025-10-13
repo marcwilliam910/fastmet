@@ -1,14 +1,66 @@
+import {isDateString} from "@/utils/date";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import React, {useRef} from "react";
 import {Animated, Easing, Pressable, Text, TextInput, View} from "react-native";
 import {useSafeAreaInsets} from "react-native-safe-area-context";
 
+function formatScheduleToText(schedule: string | null) {
+  if (schedule === null) {
+    return (
+      <>
+        <Ionicons name="cube" size={18} color="#FFA840" />
+        <Text className="text-sm font-semibold">Select Time</Text>
+      </>
+    );
+  }
+
+  if (schedule === "Pick up now") {
+    return (
+      <>
+        <Ionicons name="car" size={18} color="#ED8718" />
+        <Text className="text-sm font-bold text-darkPrimary">Pick up now</Text>
+      </>
+    );
+  }
+
+  if (!isNaN(Number(schedule))) {
+    return (
+      <>
+        <Ionicons name="time" size={18} color="#ED8718" />
+        <Text className="text-sm font-bold text-darkPrimary">
+          in {schedule} hour{schedule === "1" ? "" : "s"}
+        </Text>
+      </>
+    );
+  }
+
+  if (isDateString(schedule)) {
+    const formatted = new Date(schedule).toLocaleDateString("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    });
+    return (
+      <>
+        <Ionicons name="calendar" size={18} color="#ED8718" />
+        <Text className="text-sm font-bold text-darkPrimary">{formatted}</Text>
+      </>
+    );
+  }
+
+  return null;
+}
+
 export default function LocationInputs({
   isExpanded,
   setIsExpanded,
+  setModalVisible,
+  selectedTime,
 }: {
   isExpanded: boolean;
   setIsExpanded: React.Dispatch<React.SetStateAction<boolean>>;
+  setModalVisible: React.Dispatch<React.SetStateAction<boolean>>;
+  selectedTime: string | null;
 }) {
   const inset = useSafeAreaInsets();
   const slideAnim = useRef(new Animated.Value(0)).current;
@@ -77,7 +129,7 @@ export default function LocationInputs({
         {/* Action Row */}
         <View className="flex-row justify-between">
           <Pressable
-            className="items-center self-center justify-center bg-white rounded-full size-9"
+            className="items-center self-center justify-center bg-white rounded-full size-9 active:bg-gray-100"
             style={{
               shadowColor: "#000",
               shadowOffset: {width: 0, height: 2},
@@ -92,7 +144,7 @@ export default function LocationInputs({
 
           <View className="flex-row gap-2">
             <Pressable
-              className="flex-row items-center gap-1 px-2 py-1.5 bg-white rounded-md"
+              className="flex-row items-center gap-1 px-2 py-1.5 bg-white rounded-md active:bg-gray-100"
               style={{
                 shadowColor: "#000",
                 shadowOffset: {width: 0, height: 2},
@@ -106,7 +158,8 @@ export default function LocationInputs({
             </Pressable>
 
             <Pressable
-              className="flex-row items-center gap-1 px-2 py-1.5 bg-white rounded-md"
+              onPress={() => setModalVisible(true)}
+              className="flex-row items-center gap-2 px-2 py-1.5 bg-white rounded-md active:bg-gray-100"
               style={{
                 shadowColor: "#000",
                 shadowOffset: {width: 0, height: 2},
@@ -115,8 +168,7 @@ export default function LocationInputs({
                 elevation: 15,
               }}
             >
-              <Ionicons name="time-outline" size={15} color="black" />
-              <Text className="text-sm font-semibold">Select Time</Text>
+              {formatScheduleToText(selectedTime)}
             </Pressable>
           </View>
         </View>
@@ -126,7 +178,7 @@ export default function LocationInputs({
       {!isExpanded && (
         <View className="absolute top-0 left-0 right-0 z-20">
           <Pressable
-            className="items-center self-center justify-center bg-white rounded-full size-10"
+            className="items-center self-center justify-center bg-white rounded-full size-10 active:bg-gray-100"
             style={{
               shadowColor: "#000",
               shadowOffset: {width: 0, height: 2},
