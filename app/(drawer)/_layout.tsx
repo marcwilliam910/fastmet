@@ -10,8 +10,10 @@ import {Drawer} from "expo-router/drawer";
 import {useState} from "react";
 import {Pressable, Text, View} from "react-native";
 import {GestureHandlerRootView} from "react-native-gesture-handler";
+import {useSafeAreaInsets} from "react-native-safe-area-context";
 
 const CustomDrawerContent = (props: any) => {
+  const inset = useSafeAreaInsets();
   const isAuthenticated = !!props.user;
   const action = isAuthenticated
     ? () => props.setIsOpen(true)
@@ -36,7 +38,7 @@ const CustomDrawerContent = (props: any) => {
       </DrawerContentScrollView>
 
       {/* Footer */}
-      <View className="mb-5">
+      <View style={{marginBottom: inset.bottom + 10}}>
         <Text className="text-sm tracking-widest text-center text-gray-400">
           www.fastmet.com
         </Text>

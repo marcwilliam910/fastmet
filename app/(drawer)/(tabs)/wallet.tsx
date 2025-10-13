@@ -3,7 +3,7 @@ import {Text, View} from "react-native";
 
 const Wallet = () => {
   return (
-    <View>
+    <View className="flex-1 gap-6 py-6 bg-white">
       <Text>Wallet</Text>
     </View>
   );

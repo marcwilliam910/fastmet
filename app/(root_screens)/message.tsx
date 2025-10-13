@@ -3,8 +3,9 @@ import {Ionicons} from "@expo/vector-icons";
 import {Image} from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import {router} from "expo-router";
-import React, {useCallback, useState} from "react";
+import React, {useCallback, useEffect, useState} from "react";
 import {
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -16,6 +17,8 @@ import {Bubble, GiftedChat, IMessage} from "react-native-gifted-chat";
 import {SafeAreaView} from "react-native-safe-area-context";
 
 const Message = () => {
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+
   const [messages, setMessages] = useState<IMessage[]>([
     {
       _id: 2,
@@ -43,6 +46,21 @@ const Message = () => {
     setMessages((previousMessages) =>
       GiftedChat.append(previousMessages, newMessages)
     );
+    console.log(newMessages);
+  }, []);
+
+  useEffect(() => {
+    const showSub = Keyboard.addListener("keyboardDidShow", () => {
+      setKeyboardVisible(true);
+    });
+    const hideSub = Keyboard.addListener("keyboardDidHide", () => {
+      setKeyboardVisible(false);
+    });
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
   }, []);
 
   // Pick image from gallery
@@ -94,7 +112,7 @@ const Message = () => {
 
   const renderInputToolbar = () => {
     return (
-      <View className="p-2 bg-secondary">
+      <View className="px-2 py-3 border-t border-gray-700 bg-secondary">
         <View className="flex-row items-end gap-3">
           <View className="flex-row items-center gap-3 h-11">
             {/* Camera */}
@@ -178,7 +196,13 @@ const Message = () => {
     <SafeAreaView className="flex-1 bg-secondary">
       <KeyboardAvoidingView
         style={{flex: 1}}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        behavior={
+          Platform.OS === "ios"
+            ? "padding"
+            : keyboardVisible
+              ? "height"
+              : undefined
+        }
         keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0} // Adjust this offset for iOS
       >
         {/* Custom Header */}
@@ -227,6 +251,13 @@ const Message = () => {
           renderSend={() => null} // disable GiftedChat's default send
           keyboardShouldPersistTaps="handled"
           isKeyboardInternallyHandled={false}
+          listViewProps={
+            {
+              contentContainerStyle: {
+                paddingTop: 10,
+              },
+            } as any
+          }
         />
       </KeyboardAvoidingView>
     </SafeAreaView>

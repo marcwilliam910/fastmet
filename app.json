@@ -26,6 +26,7 @@
         "foregroundImage": "./assets/fastmet/icon.png",
         "backgroundColor": "#E6F4FE"
       },
+      // "softwareKeyboardLayoutMode": "pan",
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "package": "com.guildsman.fastmet",
