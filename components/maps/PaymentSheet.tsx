@@ -1,5 +1,6 @@
 import {Ionicons} from "@expo/vector-icons";
 import BottomSheet, {BottomSheetScrollView} from "@gorhom/bottom-sheet";
+import {router} from "expo-router";
 import React, {useMemo, useRef, useState} from "react";
 import {Dimensions, Pressable, Switch, Text, View} from "react-native";
 import {useSafeAreaInsets} from "react-native-safe-area-context";
@@ -31,6 +32,7 @@ const PaymentSheet = ({
       snapPoints={snapPoints}
       handleIndicatorStyle={{backgroundColor: "#FFA840"}}
       bottomInset={inset.bottom}
+      backgroundStyle={{borderWidth: 1, borderColor: "#e5e7eb"}}
     >
       <BottomSheetScrollView
         className="px-4 "
@@ -43,29 +45,31 @@ const PaymentSheet = ({
         keyboardShouldPersistTaps="handled"
       >
         <View className="relative flex-row items-center justify-between px-4 py-4 border border-gray-300 rounded-lg">
-          <Text className="text-lg font-semibold text-gray-800">
+          <Text className="font-semibold text-gray-800">
             Tolls, Parking fee & others
           </Text>
           <Pressable>
-            <Text className="underline">View all</Text>
+            <Text className="text-sm underline">View all</Text>
           </Pressable>
-          <View className="absolute items-center justify-center rounded-full -right-1 -top-2 size-6 bg-lightPrimary">
-            <Ionicons name="checkmark-outline" size={16} color="white" />
+          <View className="absolute items-center justify-center rounded-full -right-1 -top-2 size-5 bg-lightPrimary">
+            <Ionicons name="checkmark-outline" size={14} color="white" />
           </View>
         </View>
 
         {/* Regular Request */}
         <View className="relative gap-3 px-4 py-4 border border-gray-300 rounded-lg">
           <View className="flex-row items-center justify-between ">
-            <Text className="text-lg font-semibold text-gray-800">
-              Regular Request
-            </Text>
-            <Pressable>
-              <Text className="underline">Change</Text>
+            <Text className="font-semibold text-gray-800">Regular Request</Text>
+            <Pressable
+              onPress={() =>
+                router.push("/(root_screens)/(booking)/request-method")
+              }
+            >
+              <Text className="text-sm underline">Change</Text>
             </Pressable>
           </View>
           <View className="flex-row items-center justify-between ">
-            <Text className="text-lg font-semibold text-gray-800">
+            <Text className="font-semibold text-gray-800">
               Favorite Driver First
             </Text>
 
@@ -79,24 +83,22 @@ const PaymentSheet = ({
             />
           </View>
 
-          <View className="absolute items-center justify-center rounded-full -right-1 -top-2 size-6 bg-lightPrimary">
-            <Ionicons name="checkmark-outline" size={16} color="white" />
+          <View className="absolute items-center justify-center rounded-full -right-1 -top-2 size-5 bg-lightPrimary">
+            <Ionicons name="checkmark-outline" size={14} color="white" />
           </View>
         </View>
 
         <View className="relative flex-row items-center justify-between px-4 py-4 border border-gray-300 rounded-lg">
-          <Text className="text-lg font-semibold text-gray-800">
-            Payment Method
-          </Text>
+          <Text className="font-semibold text-gray-800 ">Payment Method</Text>
           <Pressable
             className="flex-row items-center gap-2"
             onPress={() => setIsCoD(!isCoD)}
           >
             <View className="h-8 bg-gray-300 w-14" />
-            <Text className="font-bold underline">Select</Text>
+            <Text className="text-sm font-bold underline">Select</Text>
           </Pressable>
-          <View className="absolute items-center justify-center rounded-full -right-1 -top-2 size-6 bg-lightPrimary">
-            <Ionicons name="checkmark-outline" size={16} color="white" />
+          <View className="absolute items-center justify-center rounded-full -right-1 -top-2 size-5 bg-lightPrimary">
+            <Ionicons name="checkmark-outline" size={14} color="white" />
           </View>
         </View>
       </BottomSheetScrollView>
