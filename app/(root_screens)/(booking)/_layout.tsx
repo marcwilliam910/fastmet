@@ -9,10 +9,6 @@ export default function BookingLayout() {
       StatusBar.setHidden(false); // restore on unmount
     };
   }, []);
-  return (
-    <Stack screenOptions={{headerShown: false}}>
-      <Stack.Screen name="book" />
-      <Stack.Screen name="services" />
-    </Stack>
-  );
+
+  return <Stack screenOptions={{headerShown: false}} />;
 }

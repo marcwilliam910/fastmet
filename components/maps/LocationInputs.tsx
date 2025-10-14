@@ -1,10 +1,11 @@
+import {useBookStore} from "@/store/useBookStore";
 import {isDateString} from "@/utils/date";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import React, {useRef} from "react";
 import {Animated, Easing, Pressable, Text, TextInput, View} from "react-native";
 import {useSafeAreaInsets} from "react-native-safe-area-context";
 
-function formatScheduleToText(schedule: string | null) {
+export function formatScheduleToText(schedule: string | null) {
   if (schedule === null) {
     return (
       <>
@@ -55,15 +56,14 @@ export default function LocationInputs({
   isExpanded,
   setIsExpanded,
   setModalVisible,
-  selectedTime,
 }: {
   isExpanded: boolean;
   setIsExpanded: React.Dispatch<React.SetStateAction<boolean>>;
   setModalVisible: React.Dispatch<React.SetStateAction<boolean>>;
-  selectedTime: string | null;
 }) {
   const inset = useSafeAreaInsets();
   const slideAnim = useRef(new Animated.Value(0)).current;
+  const selectedTime = useBookStore((state) => state.selectedTime);
 
   const toggleExpand = () => {
     Animated.timing(slideAnim, {

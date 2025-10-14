@@ -10,9 +10,6 @@ import {SafeAreaView} from "react-native-safe-area-context";
 const Book = () => {
   const [isExpanded, setIsExpanded] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
-  const [selectedTime, setSelectedTime] = useState<string | null>(null);
-
-  console.log(selectedTime);
 
   return (
     <SafeAreaView
@@ -25,7 +22,6 @@ const Book = () => {
           isExpanded={isExpanded}
           setIsExpanded={setIsExpanded}
           setModalVisible={setModalVisible}
-          selectedTime={selectedTime}
         />
 
         <MapScreen />
@@ -38,8 +34,6 @@ const Book = () => {
       <SelectTimeModal
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
-        setSelectedTime={setSelectedTime}
-        currentTypeSelected={selectedTime}
       />
     </SafeAreaView>
   );

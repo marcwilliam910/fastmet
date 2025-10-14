@@ -1,24 +1,23 @@
+import {useBookStore} from "@/store/useBookStore";
 import {isDateString} from "@/utils/date";
 import {Ionicons} from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import {useState} from "react";
-import {Modal, Pressable, Text, View} from "react-native";
+import {Modal, Pressable, StatusBar, Text, View} from "react-native";
 
 export default function SelectTimeModal({
   visible,
   onClose,
-  setSelectedTime,
-  currentTypeSelected,
 }: {
   visible: boolean;
   onClose: () => void;
-  setSelectedTime: React.Dispatch<React.SetStateAction<string | null>>;
-  currentTypeSelected: string | null;
 }) {
   const [step, setStep] = useState<"main" | "hours" | "calendar">("main");
   const [selectedHour, setSelectedHour] = useState<number>(1);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showCalendar, setShowCalendar] = useState(true);
+  const selectedTime = useBookStore((state) => state.selectedTime);
+  const setSelectedTime = useBookStore((state) => state.setSelectedTime);
 
   const handleConfirm = (type: string) => {
     switch (type) {
@@ -51,12 +50,12 @@ export default function SelectTimeModal({
   let isHourSelected = false;
   let isScheduleSelected = false;
 
-  if (currentTypeSelected === "Pick up now") {
+  if (selectedTime === "Pick up now") {
     isNowSelected = true;
-  } else if (currentTypeSelected && !isNaN(Number(currentTypeSelected))) {
+  } else if (selectedTime && !isNaN(Number(selectedTime))) {
     // pure numeric string
     isHourSelected = true;
-  } else if (currentTypeSelected && isDateString(currentTypeSelected)) {
+  } else if (selectedTime && isDateString(selectedTime)) {
     // valid date string
     isScheduleSelected = true;
   }
@@ -76,10 +75,10 @@ export default function SelectTimeModal({
 
               <View className="gap-3">
                 <Pressable
-                  className={`flex-row items-center gap-2 px-4 py-3  rounded-lg ${
+                  className={`flex-row items-center gap-2 px-4 py-3 border rounded-lg ${
                     isNowSelected
-                      ? "border-2 border-darkPrimary"
-                      : "border border-gray-300"
+                      ? " border-darkPrimary bg-orange-50"
+                      : " border-gray-300"
                   }`}
                   onPress={() => handleConfirm("now")}
                 >
@@ -96,10 +95,10 @@ export default function SelectTimeModal({
                 </Pressable>
 
                 <Pressable
-                  className={`flex-row items-center gap-2 px-4 py-3  rounded-lg ${
+                  className={`flex-row items-center gap-2 px-4 py-3 border rounded-lg ${
                     isHourSelected
-                      ? "border-2 border-darkPrimary"
-                      : "border border-gray-300"
+                      ? " border-darkPrimary bg-orange-50"
+                      : " border-gray-300"
                   }`}
                   onPress={() => {
                     setStep("hours");
@@ -118,10 +117,10 @@ export default function SelectTimeModal({
                 </Pressable>
 
                 <Pressable
-                  className={`flex-row items-center gap-2 px-4 py-3  rounded-lg ${
+                  className={`flex-row items-center gap-2 px-4 py-3 border rounded-lg ${
                     isScheduleSelected
-                      ? "border-2 border-darkPrimary"
-                      : "border border-gray-300"
+                      ? " border-darkPrimary bg-orange-50"
+                      : " border-gray-300"
                   }`}
                   onPress={() => {
                     setShowCalendar(true);
@@ -238,6 +237,8 @@ export default function SelectTimeModal({
                   onChange={(event, date) => {
                     setShowCalendar(false);
                     if (event.type === "set" && date) setSelectedDate(date);
+
+                    setTimeout(() => StatusBar.setHidden(true), 120);
                   }}
                   minimumDate={new Date()}
                   maximumDate={

@@ -1,6 +1,9 @@
+import {useBookStore} from "@/store/useBookStore";
+import {Service} from "@/types/book";
+import {defaultService, serviceAddons} from "@/utils/constants";
 import {Ionicons} from "@expo/vector-icons";
 import {router} from "expo-router";
-import React, {useState} from "react";
+import React from "react";
 import {
   KeyboardAvoidingView,
   Pressable,
@@ -11,69 +14,10 @@ import {
 } from "react-native";
 import {SafeAreaView, useSafeAreaInsets} from "react-native-safe-area-context";
 
-type Service = {
-  id: number;
-  name: string;
-  price: string | null;
-  icon: string;
-};
-
-const defaultService: Service[] = [
-  {
-    id: 1,
-    name: "Standard service free",
-    price: null,
-    icon: "📦",
-  },
-  {
-    id: 2,
-    name: "Toll and Parking Fee",
-    price: null,
-    icon: "🚗",
-  },
-];
-
-const serviceAddons: Service[] = [
-  {id: 3, name: "Small Truck", price: "Php 100", icon: "🚚"},
-  {id: 4, name: "Safety Shoes", price: "Php 100", icon: "👞"},
-  {
-    id: 5,
-    name: "1 Extra Helper",
-    price: "Php 100",
-    icon: "🧑",
-  },
-  {id: 6, name: "Reflector Vest", price: null, icon: "🦺"},
-  {id: 7, name: "Extra Space", price: null, icon: "📦"},
-  {id: 8, name: "Fire Extinguisher", price: null, icon: "🧯"},
-  {id: 9, name: "Document Print", price: null, icon: "📄"},
-  {id: 10, name: "FastMet ID", price: null, icon: "🪪"},
-];
-
 const Services = () => {
   const insets = useSafeAreaInsets();
-  const [selectedServices, setSelectedServices] = useState<Service[]>([
-    {
-      id: 1,
-      name: "Standard service free",
-      price: null,
-      icon: "📦",
-    },
-    {
-      id: 2,
-      name: "Toll and Parking Fee",
-      price: null,
-      icon: "🚗",
-    },
-  ]);
-
-  const toggleService = (service: Service) => {
-    setSelectedServices((prev) => {
-      const exists = prev.some((s) => s.id === service.id);
-      return exists
-        ? prev.filter((s) => s.id !== service.id)
-        : [...prev, service];
-    });
-  };
+  const addedServices = useBookStore((state) => state.addedServices);
+  const toggleService = useBookStore((state) => state.toggleService);
 
   return (
     <SafeAreaView style={{flex: 1, backgroundColor: "white"}}>
@@ -93,7 +37,9 @@ const Services = () => {
         <ScrollView
           className="flex-1 px-6"
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{paddingBottom: insets.bottom + 40}}
+          contentContainerStyle={{
+            paddingBottom: insets.bottom + (insets.bottom == 0 ? 70 : 30),
+          }}
         >
           {/* Summary Card */}
           <View className="flex-row justify-around py-4 mt-4 border-2 rounded-lg border-lightPrimary">
@@ -149,41 +95,15 @@ const Services = () => {
             ))}
 
             {serviceAddons.map((service) => {
-              const isSelected = selectedServices.some(
-                (s) => s.id === service.id
-              );
+              const isSelected = addedServices.some((s) => s.id === service.id);
 
               return (
-                <Pressable
+                <ServiceCard
                   key={service.id}
-                  onPress={() => toggleService(service)}
-                  className="flex-row items-center justify-between p-3 border border-gray-300 rounded-lg active:bg-gray-50"
-                >
-                  <View className="flex-row items-center flex-1 gap-3">
-                    <View className="items-center justify-center w-10 h-10 bg-gray-100 rounded-lg">
-                      <Text className="text-xl">{service.icon}</Text>
-                    </View>
-                    <View className="flex-1 gap-1">
-                      <Text className="text-sm font-semibold">
-                        {service.name}
-                      </Text>
-                      {service.price && (
-                        <Text className="text-sm font-semibold text-darkPrimary">
-                          {service.price}
-                        </Text>
-                      )}
-                    </View>
-                  </View>
-                  <View
-                    className={`w-6 h-6 rounded items-center justify-center ${
-                      isSelected ? "bg-lightPrimary" : "bg-gray-300"
-                    }`}
-                  >
-                    {isSelected && (
-                      <Ionicons name="checkmark" size={16} color="white" />
-                    )}
-                  </View>
-                </Pressable>
+                  service={service}
+                  isSelected={isSelected}
+                  toggleService={toggleService}
+                />
               );
             })}
           </View>
@@ -228,7 +148,12 @@ const Services = () => {
           bottom: insets.bottom + 10, // respect safe area
         }}
       >
-        <Pressable className="self-center px-10 py-4 rounded-lg bg-lightPrimary">
+        <Pressable
+          className="self-center px-10 py-4 rounded-lg bg-lightPrimary"
+          onPress={() =>
+            router.push("/(root_screens)/(booking)/payment-review")
+          }
+        >
           <Text className="text-base font-bold text-center text-white">
             Payment Review
           </Text>
@@ -239,3 +164,42 @@ const Services = () => {
 };
 
 export default Services;
+
+export const ServiceCard = ({
+  service,
+  isSelected,
+  toggleService,
+}: {
+  service: Service;
+  isSelected: boolean;
+  toggleService: (service: Service) => void;
+}) => {
+  return (
+    <Pressable
+      key={service.id}
+      onPress={() => toggleService(service)}
+      className="flex-row items-center justify-between p-3 border border-gray-300 rounded-lg active:bg-gray-50"
+    >
+      <View className="flex-row items-center flex-1 gap-3">
+        <View className="items-center justify-center w-10 h-10 bg-gray-100 rounded-lg">
+          <Text className="text-xl">{service.icon}</Text>
+        </View>
+        <View className="flex-1 gap-1">
+          <Text className="text-sm font-semibold">{service.name}</Text>
+          {service.price && (
+            <Text className="text-sm font-semibold text-darkPrimary">
+              {service.price}
+            </Text>
+          )}
+        </View>
+      </View>
+      <View
+        className={`w-6 h-6 rounded items-center justify-center ${
+          isSelected ? "bg-lightPrimary" : "bg-gray-300"
+        }`}
+      >
+        {isSelected && <Ionicons name="checkmark" size={16} color="white" />}
+      </View>
+    </Pressable>
+  );
+};

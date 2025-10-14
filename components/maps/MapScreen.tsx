@@ -12,15 +12,14 @@ export default function MapScreen() {
     latitudeDelta: 0.05,
     longitudeDelta: 0.05,
   });
-
   useEffect(() => {
     (async () => {
       try {
         const {status} = await Location.requestForegroundPermissionsAsync();
 
         if (status !== "granted") {
-          StatusBar.setHidden(true);
           console.log("Location permission not granted");
+          setTimeout(() => StatusBar.setHidden(true), 200);
           return;
         }
 
@@ -35,7 +34,8 @@ export default function MapScreen() {
       } catch (err) {
         console.log("Location error:", err);
       } finally {
-        StatusBar.setHidden(true);
+        // delay to ensure system dialog fully closes
+        setTimeout(() => StatusBar.setHidden(true), 200);
       }
     })();
   }, []);
