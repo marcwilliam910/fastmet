@@ -3,6 +3,7 @@ import {useRouter} from "expo-router";
 import React, {useState} from "react";
 import {Pressable, Text, View} from "react-native";
 import {SafeAreaView} from "react-native-safe-area-context";
+import Header from "./header";
 
 const RequestMethod = () => {
   const router = useRouter();
@@ -35,17 +36,7 @@ const RequestMethod = () => {
   return (
     <SafeAreaView className="flex-1 bg-white" style={{paddingBottom: 15}}>
       {/* Header */}
-      <View className="relative flex-row items-center justify-center px-6 py-2">
-        <Pressable
-          className="absolute left-5 top-1.5"
-          onPress={() => router.back()}
-        >
-          <Ionicons name="chevron-back" size={28} color="#FFA840" />
-        </Pressable>
-        <Text className="text-lg font-semibold text-gray-800">
-          Select Method
-        </Text>
-      </View>
+      <Header text="Select Method" />
 
       {/* Options */}
       <View className="flex-1 gap-5 px-6 pt-5">
@@ -112,7 +103,7 @@ const RequestMethod = () => {
         </Pressable>
 
         <Pressable
-          className="items-center py-4 bg-gray-200 rounded-xl active:bg-gray-300"
+          className="items-center py-4 bg-gray-100 border border-gray-300 rounded-xl active:bg-gray-200"
           onPress={() => router.back()}
         >
           <Text className="text-base font-semibold text-gray-800">Cancel</Text>

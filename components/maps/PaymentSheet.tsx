@@ -19,8 +19,8 @@ const PaymentSheet = ({
 
   // Convert 40% to actual pixels, then subtract inset.bottom
   const snapPoints = useMemo(() => {
-    const first = 0.07 * (screenHeight + inset.bottom) + (isCoD ? 50 : 0);
-    const second = 0.4 * (screenHeight + inset.bottom) + (isCoD ? 50 : -10);
+    const first = 0.07 * (screenHeight + inset.bottom) + (isCoD ? 40 : 0);
+    const second = 0.4 * (screenHeight + inset.bottom) + (isCoD ? 40 : -20);
     return [first, second];
   }, [inset.bottom, screenHeight, isCoD]);
   return (
@@ -48,7 +48,9 @@ const PaymentSheet = ({
           <Text className="font-semibold text-gray-800">
             Tolls, Parking fee & others
           </Text>
-          <Pressable>
+          <Pressable
+            onPress={() => router.push("/(root_screens)/(booking)/fees")}
+          >
             <Text className="text-sm underline">View all</Text>
           </Pressable>
           <View className="absolute items-center justify-center rounded-full -right-1 -top-2 size-5 bg-lightPrimary">
@@ -76,10 +78,10 @@ const PaymentSheet = ({
             <Switch
               trackColor={{false: "gray", true: "#FFA840"}}
               thumbColor={"white"}
-              ios_backgroundColor="#3e3e3e"
+              ios_backgroundColor="#ccc"
               onValueChange={setFavoriteFirst}
               value={favoriteFirst}
-              style={{transform: [{scaleX: 1.4}, {scaleY: 1.3}]}}
+              style={{transform: [{scaleX: 1.2}, {scaleY: 1.1}]}}
             />
           </View>
 
@@ -92,7 +94,9 @@ const PaymentSheet = ({
           <Text className="font-semibold text-gray-800 ">Payment Method</Text>
           <Pressable
             className="flex-row items-center gap-2"
-            onPress={() => setIsCoD(!isCoD)}
+            onPress={() =>
+              router.push("/(root_screens)/(booking)/payment-method")
+            }
           >
             <View className="h-8 bg-gray-300 w-14" />
             <Text className="text-sm font-bold underline">Select</Text>
