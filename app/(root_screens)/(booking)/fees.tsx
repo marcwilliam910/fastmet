@@ -73,18 +73,18 @@ const Fees = () => {
       </ScrollView>
       <View className="gap-3 px-6 mt-auto">
         <Pressable
-          className="mt-8 py-4 border-2 border-[#FFA840] rounded-xl items-center flex-row justify-center gap-2"
+          className="flex-row items-center justify-center gap-2 py-4 mt-8 border-2 border-lightPrimary rounded-xl active:bg-orange-50"
           onPress={() => router.push("/(root_screens)/(booking)/fee-calcu")}
         >
           <Ionicons name="calculator-outline" size={20} color="#FFA840" />
-          <Text className="font-semibold text-[#FFA840] text-base">
+          <Text className="text-base font-semibold text-lightPrimary">
             Toll Fee Calculator
           </Text>
         </Pressable>
 
         {/* Action Buttons */}
         <View className="gap-3 mt-6">
-          <Pressable className="items-center py-4 rounded-xl bg-[#FFA840]">
+          <Pressable className="items-center py-4 rounded-xl bg-lightPrimary active:bg-darkPrimary">
             <Text className="text-base font-semibold text-white">Confirm</Text>
           </Pressable>
 

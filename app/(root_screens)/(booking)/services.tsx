@@ -149,7 +149,7 @@ const Services = () => {
         }}
       >
         <Pressable
-          className="self-center px-10 py-4 rounded-lg bg-lightPrimary"
+          className="self-center px-10 py-4 rounded-lg bg-lightPrimary active:bg-darkPrimary"
           onPress={() =>
             router.push("/(root_screens)/(booking)/payment-review")
           }

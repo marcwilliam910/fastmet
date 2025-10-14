@@ -54,11 +54,9 @@ const PaymentMethod = () => {
 
         {/* Footer Total */}
         <View className="flex-row items-center justify-between px-5 py-4 bg-lightPrimary rounded-xl">
-          <Text className="text-base font-semibold text-white">
-            Total Amount
-          </Text>
-          <Text className="text-base font-bold text-white">
-            Php 5,500 <Text className="text-xs font-normal">(vat in)</Text>
+          <Text className="text-lg font-semibold text-white">Total Amount</Text>
+          <Text className="text-lg font-bold text-white">
+            Php 5,500 <Text className="text-sm font-normal">(vat in)</Text>
           </Text>
         </View>
       </View>

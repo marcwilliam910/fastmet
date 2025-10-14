@@ -46,6 +46,7 @@ const EditProfile = () => {
   const [isSuccess, setIsSuccess] = useState(false);
 
   const {mutate, isPending} = useUpdateProfile();
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (profile) {
@@ -82,11 +83,13 @@ const EditProfile = () => {
   };
 
   const pickProfilePic = async () => {
+    setLoading(true);
     const result = await openGallery();
     if (result && !result.canceled && result.assets[0]) {
       console.log(result.assets[0].uri);
       setForm({...form, profilePictureUrl: result.assets[0].uri});
     }
+    setLoading(false);
   };
 
   const onSubmit = async () => {
@@ -301,7 +304,7 @@ const EditProfile = () => {
           </View>
         </View>
       </CustomKeyAvoidingView>
-      <LoadingModal visible={isPending} />
+      <LoadingModal visible={isPending || loading} />
       <SuccessModal
         visible={isSuccess}
         text="Profile successfully updated!"

@@ -1,37 +1,46 @@
 import {Ionicons} from "@expo/vector-icons";
 import {useRouter} from "expo-router";
 import React, {useState} from "react";
-import {Pressable, Text, View} from "react-native";
+import {Modal, Pressable, Text, View} from "react-native";
 import {SafeAreaView} from "react-native-safe-area-context";
 import Header from "./header";
+
+const methods = [
+  {
+    id: "regular",
+    label: "Regular Request",
+    price: "Php 5,500",
+    icon: "car-outline",
+    badge: null,
+    description:
+      "Book a vehicle exclusively for your trip. This option ensures a direct, private ride with no sharing or waiting time. Ideal for users who prefer convenience, comfort, and faster travel to their destination with upfront pricing.",
+  },
+  {
+    id: "bidding",
+    label: "Bidding Request",
+    price: "Php 5,500",
+    icon: "briefcase-outline",
+    badge: "BID",
+    description:
+      "Propose your preferred rate and allow drivers to bid for your request. You’ll have the flexibility to review offers and select a driver that matches your budget and schedule. Best for users who want to negotiate for potentially lower fares.",
+  },
+  {
+    id: "pooling",
+    label: "Pooling Request",
+    price: "Php 500",
+    icon: "people-outline",
+    badge: null,
+    description:
+      "Join other passengers heading in the same direction to share a single trip and split the cost. This option is eco-friendly and budget-friendly, though travel time may be slightly longer due to multiple pickup and drop-off points.",
+  },
+];
 
 const RequestMethod = () => {
   const router = useRouter();
   const [selected, setSelected] = useState("regular");
+  const [selectedInfo, setSelectedInfo] = useState(methods[0]);
 
-  const methods = [
-    {
-      id: "regular",
-      label: "Regular Request",
-      price: "Php 5,500",
-      icon: "car-outline",
-      badge: null,
-    },
-    {
-      id: "bidding",
-      label: "Bidding Request",
-      price: "Php 5,500",
-      icon: "briefcase-outline",
-      badge: "BID",
-    },
-    {
-      id: "pooling",
-      label: "Pooling Request",
-      price: "Php 500",
-      icon: "people-outline",
-      badge: null,
-    },
-  ];
+  const [modalVisible, setModalVisible] = useState(false);
 
   return (
     <SafeAreaView className="flex-1 bg-white" style={{paddingBottom: 15}}>
@@ -76,7 +85,12 @@ const RequestMethod = () => {
                   </Text>
                 </View>
 
-                <Pressable onPress={() => console.log("test")}>
+                <Pressable
+                  onPress={() => {
+                    setSelectedInfo(item);
+                    setModalVisible(true);
+                  }}
+                >
                   <Ionicons
                     name="information-circle"
                     size={22}
@@ -109,8 +123,50 @@ const RequestMethod = () => {
           <Text className="text-base font-semibold text-gray-800">Cancel</Text>
         </Pressable>
       </View>
+
+      <InfoModal
+        visible={modalVisible}
+        setModalVisible={setModalVisible}
+        selectedInfo={selectedInfo}
+      />
     </SafeAreaView>
   );
 };
 
 export default RequestMethod;
+
+export const InfoModal = ({
+  visible,
+  setModalVisible,
+  selectedInfo,
+}: {
+  visible: boolean;
+  setModalVisible: React.Dispatch<React.SetStateAction<boolean>>;
+  selectedInfo: (typeof methods)[0];
+}) => {
+  return (
+    <Modal
+      visible={visible}
+      onRequestClose={() => setModalVisible(false)}
+      animationType="slide"
+      presentationStyle="fullScreen"
+    >
+      <SafeAreaView className="flex-1 p-4 bg-white">
+        <View className="absolute flex-row top-6 right-6">
+          <Pressable onPress={() => setModalVisible(false)}>
+            <Ionicons name="close" size={30} color="#FFA840" />
+          </Pressable>
+        </View>
+
+        <View className="items-center gap-3 mt-4">
+          <Text className="mt-4 text-xl font-semibold text-secondary">
+            {selectedInfo.label}
+          </Text>
+          <Text className="px-4 mt-2 text-justify text-gray-600">
+            {selectedInfo.description}
+          </Text>
+        </View>
+      </SafeAreaView>
+    </Modal>
+  );
+};

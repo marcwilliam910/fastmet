@@ -201,9 +201,9 @@ export const InfoModal = ({
       presentationStyle="fullScreen"
     >
       <SafeAreaView className="flex-1 p-4 bg-white">
-        <View className="flex-row justify-end">
+        <View className="absolute flex-row top-6 right-6">
           <Pressable onPress={() => setModalVisible(false)}>
-            <Ionicons name="close" size={28} color="#FFA840" />
+            <Ionicons name="close" size={30} color="#FFA840" />
           </Pressable>
         </View>
 

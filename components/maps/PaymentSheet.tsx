@@ -44,7 +44,7 @@ const PaymentSheet = ({
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <View className="relative flex-row items-center justify-between px-4 py-4 border border-gray-300 rounded-lg">
+        <View className="relative flex-row items-center justify-between px-4 py-4 border rounded-lg border-lightPrimary">
           <Text className="font-semibold text-gray-800">
             Tolls, Parking fee & others
           </Text>
@@ -59,7 +59,7 @@ const PaymentSheet = ({
         </View>
 
         {/* Regular Request */}
-        <View className="relative gap-3 px-4 py-4 border border-gray-300 rounded-lg">
+        <View className="relative gap-3 px-4 py-4 border rounded-lg border-lightPrimary">
           <View className="flex-row items-center justify-between ">
             <Text className="font-semibold text-gray-800">Regular Request</Text>
             <Pressable
@@ -101,9 +101,9 @@ const PaymentSheet = ({
             <View className="h-8 bg-gray-300 w-14" />
             <Text className="text-sm font-bold underline">Select</Text>
           </Pressable>
-          <View className="absolute items-center justify-center rounded-full -right-1 -top-2 size-5 bg-lightPrimary">
+          {/* <View className="absolute items-center justify-center rounded-full -right-1 -top-2 size-5 bg-lightPrimary">
             <Ionicons name="checkmark-outline" size={14} color="white" />
-          </View>
+          </View> */}
         </View>
       </BottomSheetScrollView>
     </BottomSheet>

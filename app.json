@@ -14,7 +14,10 @@
       },
       "supportsTablet": true,
       "bundleIdentifier": "com.guildsman.fastmet",
-      "googleServicesFile": "./GoogleService-Info.plist"
+      "googleServicesFile": "./GoogleService-Info.plist",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "config": {
@@ -26,7 +29,6 @@
         "foregroundImage": "./assets/fastmet/icon.png",
         "backgroundColor": "#E6F4FE"
       },
-      // "softwareKeyboardLayoutMode": "pan",
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "package": "com.guildsman.fastmet",
