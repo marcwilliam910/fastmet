@@ -1,6 +1,7 @@
 import useAuth from "@/hooks/useAuth";
 import {useRegisterProfile} from "@/mutations/userMutations";
 import {signInWithGoogle} from "@/services/googleAuth";
+import {useBookStore} from "@/store/useBookStore";
 import {User} from "@/types/user";
 import {router} from "expo-router";
 import React, {useState} from "react";
@@ -15,6 +16,7 @@ const SheetButton = () => {
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const {mutate} = useRegisterProfile();
+  const setSelectedTime = useBookStore((state) => state.setSelectedTime);
 
   const handleNext = () => {
     if (user === null) setShowModal(true);
@@ -60,6 +62,11 @@ const SheetButton = () => {
     }
   };
 
+  const onBackPress = () => {
+    setSelectedTime(null);
+    router.back();
+  };
+
   return (
     <View
       className="flex-row justify-between gap-5 px-5 py-2 bg-white"
@@ -74,7 +81,7 @@ const SheetButton = () => {
     >
       <Pressable
         className="flex-1 py-4 rounded-md bg-ctaSecondary active:bg-gray-200"
-        onPress={() => router.back()}
+        onPress={() => onBackPress()}
       >
         <Text className="font-bold text-center">Cancel</Text>
       </Pressable>

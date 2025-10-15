@@ -46,7 +46,7 @@
         {
           "image": "./assets/fastmet/splash.png",
           "resizeMode": "contain",
-          "backgroundColor": "#fff",
+          "backgroundColor": "#ffffff",
           "imageWidth": 200
         }
       ],

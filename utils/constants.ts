@@ -5,13 +5,13 @@ export const defaultService: Service[] = [
     id: "1",
     name: "Standard service free",
     price: null,
-    icon: "📦",
+    icon: "🛠️",
   },
   {
     id: "2",
     name: "Toll and Parking Fee",
     price: null,
-    icon: "🚗",
+    icon: "🛣️",
   },
 ];
 

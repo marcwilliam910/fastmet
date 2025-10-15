@@ -75,10 +75,10 @@ const NotLoggedInModal = ({
               </Pressable>
 
               <Pressable
-                className="items-center justify-center w-full py-4 rounded-xl bg-lightPrimary active:bg-darkPrimary"
+                className="items-center justify-center w-full py-4 border rounded-xl border-lightPrimary active:bg-darkPrimary"
                 onPress={() => router.push("/(auth)/login")}
               >
-                <Text className="font-semibold text-white">Login</Text>
+                <Text className="font-semibold">Login</Text>
               </Pressable>
             </View>
           </View>

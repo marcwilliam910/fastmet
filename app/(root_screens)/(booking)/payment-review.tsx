@@ -5,10 +5,10 @@ import {Service} from "@/types/book";
 import {defaultService} from "@/utils/constants";
 import {isDateString} from "@/utils/date";
 import {Ionicons} from "@expo/vector-icons";
+import {Image} from "expo-image";
 import {router} from "expo-router";
 import {useEffect, useState} from "react";
 import {
-  Image,
   KeyboardAvoidingView,
   Pressable,
   ScrollView,
@@ -72,7 +72,7 @@ export default function PaymentReview() {
   const addedServices = useBookStore((state) => state.addedServices);
   const toggleService = useBookStore((state) => state.toggleService);
   const [newServices, setNewServices] = useState<Service[]>([]);
-  const [isCoD, setIsCoD] = useState(false);
+  const [isCoD, setIsCoD] = useState(true);
 
   const inset = useSafeAreaInsets();
 
@@ -99,7 +99,7 @@ export default function PaymentReview() {
       <KeyboardAvoidingView className="flex-1" behavior="padding">
         <ScrollView
           className="flex-1"
-          contentContainerStyle={{paddingBottom: inset.bottom + 50, gap: 25}}
+          contentContainerStyle={{paddingBottom: inset.bottom + 60, gap: 25}}
           showsVerticalScrollIndicator={false}
         >
           {/* Pick Up Now Card */}
@@ -117,8 +117,8 @@ export default function PaymentReview() {
             <View className="flex-row gap-4 p-4">
               <Image
                 source={require("@/assets/vehicle/truck.png")}
-                className="w-16 h-16"
-                resizeMode="contain"
+                style={{width: 60, height: 60}}
+                contentFit="contain"
               />
               <View className="flex-1 gap-1">
                 <Text className="text-base font-semibold">
