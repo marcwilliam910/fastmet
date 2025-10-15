@@ -163,7 +163,7 @@ export const InfoModal = ({
 }: {
   visible: boolean;
   setModalVisible: React.Dispatch<React.SetStateAction<boolean>>;
-  selectedInfo: (typeof methods)[0];
+  selectedInfo: any;
 }) => {
   return (
     <Modal

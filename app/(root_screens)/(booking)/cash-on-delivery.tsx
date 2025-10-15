@@ -15,7 +15,7 @@ const CashOnDeliveryConfirmation = () => {
       {/* Header */}
       <Header text="Cash on Delivery" />
 
-      <View className="flex-1 gap-3 px-6 mt-6">
+      <View className="flex-1 gap-10 px-6 mt-6">
         {/* Info */}
         <View>
           <Text className="mb-3 text-base leading-6 text-gray-700">
@@ -24,13 +24,13 @@ const CashOnDeliveryConfirmation = () => {
           </Text>
 
           {/* Timer notice */}
-          <View className="flex-row items-center justify-center gap-2 px-4 py-2 rounded-full bg-[#FFF8E1] border border-[#FFD54F] my-4">
-            <Ionicons name="time-outline" size={18} color="#FFA000" />
-            <Text className="text-[#FFA000] font-bold text-base">3:00</Text>
-            <Text className="text-[#FFA000] font-medium text-sm">
+          {/* <View className="flex-row items-center justify-center gap-2 px-4 py-2 rounded-full bg-[#FFF8E1] border border-lightPrimary my-4">
+            <Ionicons name="time-outline" size={18} color="#ED8718" />
+            <Text className="text-base font-bold text-darkPrimary">3:00</Text>
+            <Text className="text-sm font-medium text-darkPrimary">
               remaining to confirm
             </Text>
-          </View>
+          </View> */}
         </View>
 
         {/* Selection */}

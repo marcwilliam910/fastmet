@@ -2,12 +2,15 @@ import BookedDetailsCard from "@/components/maps/BookedDetails";
 import {BidCardProps} from "@/types/book";
 import {Ionicons} from "@expo/vector-icons";
 import {Image} from "expo-image";
-import React from "react";
+import React, {useState} from "react";
 import {Pressable, ScrollView, Text, View} from "react-native";
 import {SafeAreaView} from "react-native-safe-area-context";
+import {InfoModal} from ".";
 import Header from "../header";
 
 const Bidding = () => {
+  const [modalVisible, setModalVisible] = useState(false);
+
   return (
     <SafeAreaView className="flex-1 bg-white" style={{paddingBottom: 15}}>
       {/* Header */}
@@ -19,11 +22,11 @@ const Bidding = () => {
 
         {/* Waiting for other drivers to bid */}
         <View className="items-center gap-2">
-          <View className="flex-row items-center ">
+          <View className="flex-row items-center gap-2">
             <Text className="text-base font-medium text-gray-700">
               Waiting for other drivers to bid
             </Text>
-            <Pressable className="ml-1 active:opacity-70">
+            <Pressable onPress={() => setModalVisible(true)}>
               <Ionicons name="information-circle" size={20} color="#FFA840" />
             </Pressable>
           </View>
@@ -57,6 +60,15 @@ const Bidding = () => {
           ))}
         </ScrollView>
       </View>
+      <InfoModal
+        visible={modalVisible}
+        setModalVisible={setModalVisible}
+        selectedInfo={{
+          label: "Bidding Request",
+          description:
+            "Drivers submit their proposed delivery price through bidding. The sender can review all bids and choose the most suitable offer based on rate, driver rating, and booking history.",
+        }}
+      />
     </SafeAreaView>
   );
 };
