@@ -1,3 +1,4 @@
+import {useBookStore} from "@/store/useBookStore";
 import {Ionicons} from "@expo/vector-icons";
 import {useRouter} from "expo-router";
 import React, {useState} from "react";
@@ -9,6 +10,7 @@ const Fees = () => {
   const router = useRouter();
   const [tollEnabled, setTollEnabled] = useState(false);
   const [parkingEnabled, setParkingEnabled] = useState(true);
+  const setIsTallVisited = useBookStore((state) => state.setIsTollVisited);
 
   return (
     <SafeAreaView className="flex-1 bg-white" style={{paddingBottom: 15}}>
@@ -84,7 +86,13 @@ const Fees = () => {
 
         {/* Action Buttons */}
         <View className="gap-3 mt-6">
-          <Pressable className="items-center py-4 rounded-xl bg-lightPrimary active:bg-darkPrimary">
+          <Pressable
+            className="items-center py-4 rounded-xl bg-lightPrimary active:bg-darkPrimary"
+            onPress={() => {
+              setIsTallVisited(true);
+              router.back();
+            }}
+          >
             <Text className="text-base font-semibold text-white">Confirm</Text>
           </Pressable>
 

@@ -1,9 +1,12 @@
+import {useBookStore} from "@/store/useBookStore";
+import {METHODS} from "@/utils/constants";
 import {Ionicons} from "@expo/vector-icons";
 import BottomSheet, {BottomSheetScrollView} from "@gorhom/bottom-sheet";
 import {router} from "expo-router";
 import React, {useMemo, useRef, useState} from "react";
 import {Dimensions, Pressable, Switch, Text, View} from "react-native";
 import {useSafeAreaInsets} from "react-native-safe-area-context";
+
 const PaymentSheet = ({
   isCoD,
   setIsCoD,
@@ -14,6 +17,8 @@ const PaymentSheet = ({
   const sheetRef = useRef<BottomSheet>(null);
   const {height: screenHeight} = Dimensions.get("window");
   const [favoriteFirst, setFavoriteFirst] = useState(false);
+  const selectedMethod = useBookStore((state) => state.selectedMethod);
+  const isTollVisited = useBookStore((state) => state.isTollVisited);
 
   const inset = useSafeAreaInsets();
 
@@ -44,7 +49,10 @@ const PaymentSheet = ({
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <View className="relative flex-row items-center justify-between px-4 py-4 border rounded-lg border-lightPrimary">
+        {/* Tolls, Parking fee & others */}
+        <View
+          className={`relative flex-row items-center justify-between px-4 py-4 border rounded-lg  ${isTollVisited ? "border-lightPrimary" : "border-gray-300"}`}
+        >
           <Text className="font-semibold text-gray-800">
             Tolls, Parking fee & others
           </Text>
@@ -53,21 +61,30 @@ const PaymentSheet = ({
           >
             <Text className="text-sm underline">View all</Text>
           </Pressable>
-          <View className="absolute items-center justify-center rounded-full -right-1 -top-2 size-5 bg-lightPrimary">
-            <Ionicons name="checkmark-outline" size={14} color="white" />
-          </View>
+          {isTollVisited && (
+            <View className="absolute items-center justify-center rounded-full -right-1 -top-2 size-5 bg-lightPrimary">
+              <Ionicons name="checkmark-outline" size={14} color="white" />
+            </View>
+          )}
         </View>
 
-        {/* Regular Request */}
-        <View className="relative gap-3 px-4 py-4 border rounded-lg border-lightPrimary">
+        {/* Request Method*/}
+        <View
+          className={`relative gap-3 px-4 py-4 border rounded-lg ${selectedMethod ? "border-lightPrimary" : "border-gray-300"} ${isTollVisited ? "" : "bg-gray-100 opacity-50"}`}
+        >
           <View className="flex-row items-center justify-between ">
-            <Text className="font-semibold text-gray-800">Regular Request</Text>
+            <Text className="font-semibold text-gray-800">
+              {selectedMethod ? METHODS[selectedMethod] : "Request Method"}
+            </Text>
             <Pressable
+              disabled={!isTollVisited}
               onPress={() =>
-                router.push("/(root_screens)/(booking)/request-method")
+                router.push("/(root_screens)/(booking)/request_method")
               }
             >
-              <Text className="text-sm underline">Change</Text>
+              <Text className="text-sm underline">
+                {selectedMethod ? "Change" : "Select"}
+              </Text>
             </Pressable>
           </View>
           <View className="flex-row items-center justify-between ">
@@ -76,6 +93,7 @@ const PaymentSheet = ({
             </Text>
 
             <Switch
+              disabled={!isTollVisited}
               trackColor={{false: "gray", true: "#FFA840"}}
               thumbColor={"white"}
               ios_backgroundColor="#ccc"
@@ -85,20 +103,26 @@ const PaymentSheet = ({
             />
           </View>
 
-          <View className="absolute items-center justify-center rounded-full -right-1 -top-2 size-5 bg-lightPrimary">
-            <Ionicons name="checkmark-outline" size={14} color="white" />
-          </View>
+          {selectedMethod && (
+            <View className="absolute items-center justify-center rounded-full -right-1 -top-2 size-5 bg-lightPrimary">
+              <Ionicons name="checkmark-outline" size={14} color="white" />
+            </View>
+          )}
         </View>
 
-        <View className="relative flex-row items-center justify-between px-4 py-4 border border-gray-300 rounded-lg">
+        {/* Payment Method */}
+        <View
+          className={`relative flex-row items-center justify-between px-4 py-4 border border-gray-300 rounded-lg ${selectedMethod ? "" : "bg-gray-100 opacity-50"}`}
+        >
           <Text className="font-semibold text-gray-800 ">Payment Method</Text>
           <Pressable
+            disabled={!selectedMethod}
             className="flex-row items-center gap-2"
             onPress={() =>
               router.push("/(root_screens)/(booking)/payment-method")
             }
           >
-            <View className="h-8 bg-gray-300 w-14" />
+            <View className="items-center justify-center h-8 bg-gray-300 w-14" />
             <Text className="text-sm font-bold underline">Select</Text>
           </Pressable>
           {/* <View className="absolute items-center justify-center rounded-full -right-1 -top-2 size-5 bg-lightPrimary">

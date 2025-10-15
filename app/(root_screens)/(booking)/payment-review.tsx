@@ -1,13 +1,11 @@
+import BookedDetailsCard from "@/components/maps/BookedDetails";
 import PaymentSheet from "@/components/maps/PaymentSheet";
-import SelectTimeModal from "@/components/modals/SelectTimeModal";
-import {useBookStore} from "@/store/useBookStore";
-import {Service} from "@/types/book";
-import {defaultService} from "@/utils/constants";
-import {isDateString} from "@/utils/date";
-import {Ionicons} from "@expo/vector-icons";
-import {Image} from "expo-image";
-import {router} from "expo-router";
-import {useEffect, useState} from "react";
+import { useBookStore } from "@/store/useBookStore";
+import { Service } from "@/types/book";
+import { defaultService } from "@/utils/constants";
+import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
+import { useEffect, useState } from "react";
 import {
   KeyboardAvoidingView,
   Pressable,
@@ -16,59 +14,10 @@ import {
   TextInput,
   View,
 } from "react-native";
-import {SafeAreaView, useSafeAreaInsets} from "react-native-safe-area-context";
-import {ServiceCard} from "./services";
-
-function formatScheduleToText(schedule: string | null) {
-  if (schedule === null) {
-    return (
-      <>
-        <Ionicons name="cube" size={18} color="white" />
-        <Text className="font-semibold text-white">Select Time</Text>
-      </>
-    );
-  }
-
-  if (schedule === "Pick up now") {
-    return (
-      <>
-        <Ionicons name="car" size={18} color="white" />
-        <Text className="font-semibold text-white">Pick up now</Text>
-      </>
-    );
-  }
-
-  if (!isNaN(Number(schedule))) {
-    return (
-      <>
-        <Ionicons name="time" size={18} color="white" />
-        <Text className="font-semibold text-white">
-          in {schedule} hour{schedule === "1" ? "" : "s"}
-        </Text>
-      </>
-    );
-  }
-
-  if (isDateString(schedule)) {
-    const formatted = new Date(schedule).toLocaleDateString("en-US", {
-      month: "long",
-      day: "numeric",
-      year: "numeric",
-    });
-    return (
-      <>
-        <Ionicons name="calendar" size={18} color="white" />
-        <Text className="font-semibold text-white">{formatted}</Text>
-      </>
-    );
-  }
-
-  return null;
-}
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { ServiceCard } from "./services";
 
 export default function PaymentReview() {
-  const [modalVisible, setModalVisible] = useState(false);
-  const selectedTime = useBookStore((state) => state.selectedTime);
   const addedServices = useBookStore((state) => state.addedServices);
   const toggleService = useBookStore((state) => state.toggleService);
   const [newServices, setNewServices] = useState<Service[]>([]);
@@ -98,55 +47,15 @@ export default function PaymentReview() {
 
       <KeyboardAvoidingView className="flex-1" behavior="padding">
         <ScrollView
-          className="flex-1"
+          className="flex-1 px-4"
           contentContainerStyle={{paddingBottom: inset.bottom + 60, gap: 25}}
           showsVerticalScrollIndicator={false}
         >
           {/* Pick Up Now Card */}
-          <View className="mx-4 overflow-hidden border bg-lightPrimary/10 border-lightPrimary/30 rounded-2xl">
-            <View className="flex-row items-center justify-between px-3 py-4 bg-lightPrimary/90">
-              <View className="flex-row items-center gap-2">
-                {formatScheduleToText(selectedTime)}
-              </View>
-              <Pressable onPress={() => setModalVisible(true)}>
-                <Text className="font-medium text-white underline">Change</Text>
-              </Pressable>
-            </View>
-
-            {/* Truck Info */}
-            <View className="flex-row gap-4 p-4">
-              <Image
-                source={require("@/assets/vehicle/truck.png")}
-                style={{width: 60, height: 60}}
-                contentFit="contain"
-              />
-              <View className="flex-1 gap-1">
-                <Text className="text-base font-semibold">
-                  Closed Truck Name
-                </Text>
-                <Text className="text-sm text-gray-600">
-                  Regular Service: 2000kg
-                </Text>
-
-                <View className="gap-1 mt-2">
-                  <Text className="text-sm text-gray-600">
-                    Pickup time:{" "}
-                    <Text className="font-medium">March 27, 2025</Text>
-                  </Text>
-                  <Text className="text-sm text-gray-600">
-                    Distance: <Text className="font-medium">1,000km</Text>
-                  </Text>
-                  <Text className="text-sm text-gray-600">
-                    Estimated Time:{" "}
-                    <Text className="font-medium">June 30, 2025 10:00am</Text>
-                  </Text>
-                </View>
-              </View>
-            </View>
-          </View>
+          <BookedDetailsCard  />
 
           {/* Pickup and Drop Point */}
-          <View className="gap-3 mx-4">
+          <View className="gap-3">
             <Text className="text-lg font-bold">Pickup and Drop Point</Text>
 
             <View className="gap-4 p-4 border border-gray-100 bg-gray-50 rounded-2xl">
@@ -188,7 +97,7 @@ export default function PaymentReview() {
             </View>
           </View>
 
-          <View className="gap-3 mx-4 ">
+          <View className="gap-3">
             {/* Services Add's on */}
             <Text className="text-lg font-bold">
               Services Add-Ons ({addedServices.length})
@@ -233,7 +142,7 @@ export default function PaymentReview() {
           </View>
 
           {/* Note and attachment */}
-          <View className="gap-3 mx-4 ">
+          <View className="gap-3">
             <View className="gap-2">
               <Text className="text-lg font-bold">Note and attachment</Text>
               <TextInput
@@ -285,10 +194,6 @@ export default function PaymentReview() {
         </View>
       )}
 
-      <SelectTimeModal
-        visible={modalVisible}
-        onClose={() => setModalVisible(false)}
-      />
     </SafeAreaView>
   );
 }

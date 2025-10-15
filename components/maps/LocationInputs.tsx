@@ -5,7 +5,7 @@ import React, {useRef} from "react";
 import {Animated, Easing, Pressable, Text, TextInput, View} from "react-native";
 import {useSafeAreaInsets} from "react-native-safe-area-context";
 
-export function formatScheduleToText(schedule: string | null) {
+function formatScheduleToText(schedule: string | null) {
   if (schedule === null) {
     return (
       <>

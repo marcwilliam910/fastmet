@@ -1,4 +1,5 @@
 import {Image} from "expo-image";
+import {router} from "expo-router";
 import React from "react";
 import {Pressable, Text, View} from "react-native";
 import {SafeAreaView} from "react-native-safe-area-context";
@@ -26,7 +27,12 @@ const PaymentMethod = () => {
             </Text>
           </View>
           <View className="items-center justify-center w-[30%]">
-            <Pressable className="items-center p-4 border-2 border-orange-400 rounded-2xl active:bg-gray-100">
+            <Pressable
+              className="items-center p-4 border-2 border-orange-400 rounded-2xl active:bg-gray-100"
+              onPress={() =>
+                router.push("/(root_screens)/(booking)/cash-on-delivery")
+              }
+            >
               <Image
                 source={require("@/assets/images/cash.png")}
                 style={{width: 40, height: 40}}

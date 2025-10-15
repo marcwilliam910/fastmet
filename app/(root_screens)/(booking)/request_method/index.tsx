@@ -1,11 +1,13 @@
+import {useBookStore} from "@/store/useBookStore";
+import {Method} from "@/types/book";
 import {Ionicons} from "@expo/vector-icons";
 import {useRouter} from "expo-router";
 import React, {useState} from "react";
 import {Modal, Pressable, Text, View} from "react-native";
 import {SafeAreaView} from "react-native-safe-area-context";
-import Header from "./header";
+import Header from "../header";
 
-const methods = [
+const methods: Method[] = [
   {
     id: "regular",
     label: "Regular Request",
@@ -37,25 +39,29 @@ const methods = [
 
 const RequestMethod = () => {
   const router = useRouter();
-  const [selected, setSelected] = useState("regular");
-  const [selectedInfo, setSelectedInfo] = useState(methods[0]);
+  const [selectedInfo, setSelectedInfo] = useState<Method | null>(null);
 
   const [modalVisible, setModalVisible] = useState(false);
+  const setSelectedMethod = useBookStore((state) => state.setSelectedMethod);
+  const selectedMethod = useBookStore((state) => state.selectedMethod);
 
   return (
     <SafeAreaView className="flex-1 bg-white" style={{paddingBottom: 15}}>
       {/* Header */}
-      <Header text="Select Method" />
+      <Header
+        text="Select Method"
+        additonalMethod={() => setSelectedMethod(null)}
+      />
 
       {/* Options */}
-      <View className="flex-1 gap-5 px-6 pt-5">
+      <View className="flex-1 gap-4 px-6 pt-5">
         {methods.map((item) => {
-          const isSelected = selected === item.id;
+          const isSelected = selectedMethod === item.id;
           return (
             <View key={item.id} className="gap-2">
               <Text className="font-semibold text-gray-500 ">{item.label}</Text>
               <Pressable
-                onPress={() => setSelected(item.id)}
+                onPress={() => setSelectedMethod(item.id)}
                 className={`flex-row items-center justify-between border rounded-xl p-4 ${
                   isSelected
                     ? "border-[#FFA840] bg-[#FFF7EE]"
@@ -105,12 +111,22 @@ const RequestMethod = () => {
 
       {/* Buttons */}
       <View className="gap-3 px-6 mt-auto">
-        <Pressable className="items-center py-4 rounded-xl bg-[#FFA840]">
+        <Pressable
+          className="items-center py-4 rounded-xl bg-lightPrimary active:bg-darkPrimary"
+          onPress={() => {
+            if (selectedMethod === "regular" || selectedMethod === "pooling")
+              router.back();
+            if (selectedMethod === "bidding")
+              router.push("/(root_screens)/(booking)/request_method/bidding");
+            // if (selectedMethod === "pooling")
+            //   router.push("/(root_screens)/(booking)/request_method/pooling");
+          }}
+        >
           <Text className="text-base font-semibold text-white">
             Select{" "}
-            {selected === "regular"
+            {selectedMethod === "regular"
               ? "Regular Request"
-              : selected === "bidding"
+              : selectedMethod === "bidding"
                 ? "Bidding Request"
                 : "Pooling Request"}
           </Text>
@@ -118,17 +134,22 @@ const RequestMethod = () => {
 
         <Pressable
           className="items-center py-4 bg-gray-100 border border-gray-300 rounded-xl active:bg-gray-200"
-          onPress={() => router.back()}
+          onPress={() => {
+            router.back();
+            setSelectedMethod(null);
+          }}
         >
           <Text className="text-base font-semibold text-gray-800">Cancel</Text>
         </Pressable>
       </View>
 
-      <InfoModal
-        visible={modalVisible}
-        setModalVisible={setModalVisible}
-        selectedInfo={selectedInfo}
-      />
+      {selectedInfo && (
+        <InfoModal
+          visible={modalVisible}
+          setModalVisible={setModalVisible}
+          selectedInfo={selectedInfo}
+        />
+      )}
     </SafeAreaView>
   );
 };

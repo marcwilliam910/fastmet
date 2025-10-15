@@ -30,3 +30,9 @@ export const serviceAddons: Service[] = [
   {id: "9", name: "Document Print", price: null, icon: "📄"},
   {id: "10", name: "FastMet ID", price: null, icon: "🪪"},
 ];
+
+export const METHODS = {
+  regular: "Regular Request",
+  bidding: "Bidding Request",
+  pooling: "Pooling Request",
+};
