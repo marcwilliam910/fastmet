@@ -4,7 +4,7 @@ import {useRouter} from "expo-router";
 import React, {useState} from "react";
 import {Pressable, ScrollView, Switch, Text, View} from "react-native";
 import {SafeAreaView} from "react-native-safe-area-context";
-import Header from "./header";
+import HeaderRoot from "../../../components/headers/HeaderRoot";
 
 const Fees = () => {
   const router = useRouter();
@@ -15,7 +15,7 @@ const Fees = () => {
   return (
     <SafeAreaView className="flex-1 bg-white" style={{paddingBottom: 15}}>
       {/* Header */}
-      <Header text="Tolls, Parking Fee & Others" />
+      <HeaderRoot text="Tolls, Parking Fee & Others" />
 
       <ScrollView
         className="px-6 mt-3"

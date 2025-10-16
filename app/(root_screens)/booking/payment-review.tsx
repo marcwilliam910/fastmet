@@ -47,7 +47,10 @@ export default function PaymentReview() {
       <KeyboardAvoidingView className="flex-1" behavior="padding">
         <ScrollView
           className="flex-1 px-4"
-          contentContainerStyle={{paddingBottom: inset.bottom + 60, gap: 25}}
+          contentContainerStyle={{
+            paddingBottom: inset.bottom + (inset.bottom === 0 ? 120 : 80),
+            gap: 25,
+          }}
           showsVerticalScrollIndicator={false}
         >
           {/* Pick Up Now Card */}

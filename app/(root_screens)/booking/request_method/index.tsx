@@ -6,7 +6,7 @@ import {useRouter} from "expo-router";
 import React, {useState} from "react";
 import {Pressable, Text, View} from "react-native";
 import {SafeAreaView} from "react-native-safe-area-context";
-import Header from "../header";
+import HeaderRoot from "../../../../components/headers/HeaderRoot";
 
 const methods: Method[] = [
   {
@@ -49,7 +49,7 @@ const RequestMethod = () => {
   return (
     <SafeAreaView className="flex-1 bg-white" style={{paddingBottom: 15}}>
       {/* Header */}
-      <Header
+      <HeaderRoot
         text="Select Method"
         additonalMethod={() => setSelectedMethod(null)}
       />

@@ -97,7 +97,7 @@ export default function DrawerLayout() {
           }}
         />
         <Drawer.Screen
-          name="(profile)"
+          name="profile"
           options={{
             drawerLabel: "My Profile",
             title: "My Profile",

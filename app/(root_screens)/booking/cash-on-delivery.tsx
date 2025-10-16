@@ -3,7 +3,7 @@ import {router} from "expo-router";
 import React, {useState} from "react";
 import {Pressable, Text, View} from "react-native";
 import {SafeAreaView} from "react-native-safe-area-context";
-import Header from "./header";
+import HeaderRoot from "../../../components/headers/HeaderRoot";
 
 const CashOnDeliveryConfirmation = () => {
   const [selectedPayer, setSelectedPayer] = useState<
@@ -13,7 +13,7 @@ const CashOnDeliveryConfirmation = () => {
   return (
     <SafeAreaView className="flex-1 bg-white" style={{paddingBottom: 15}}>
       {/* Header */}
-      <Header text="Cash on Delivery" />
+      <HeaderRoot text="Cash on Delivery" />
 
       <View className="flex-1 gap-10 px-6 mt-6">
         {/* Info */}

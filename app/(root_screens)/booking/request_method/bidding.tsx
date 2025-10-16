@@ -5,7 +5,7 @@ import {Image} from "expo-image";
 import React from "react";
 import {FlatList, ScrollView, Text, View} from "react-native";
 import {SafeAreaView} from "react-native-safe-area-context";
-import Header from "../header";
+import HeaderRoot from "../../../../components/headers/HeaderRoot";
 
 const Bidding = () => {
   const addedServices = useBookStore((state) => state.addedServices);
@@ -13,10 +13,10 @@ const Bidding = () => {
   return (
     <SafeAreaView className="flex-1 bg-white">
       {/* Header */}
-      <Header text="Bidding Request" />
+      <HeaderRoot text="Bidding Request" />
 
       <ScrollView
-        className="flex-1 mx-4 mt-6"
+        className="flex-1 mx-4 mt-4"
         contentContainerStyle={{
           paddingBottom: 140,
           gap: 20,
@@ -114,7 +114,7 @@ const Bidding = () => {
         <View className="gap-5">
           <View className="gap-2">
             <Text className="text-lg font-bold">Note and attachment</Text>
-            <Text className="text-gray-500">
+            <Text className="text-sm text-gray-500">
               Lorem ipsum dolor sit amet consectetur adipisicing elit. Laborum
               nemo, unde hic ut provident aut totam harum dignissimos quibusdam
               nisi. Quasi commodi ipsum veniam sed qui ipsa incidunt corporis

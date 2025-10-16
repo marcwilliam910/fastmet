@@ -2,14 +2,14 @@ import Select from "@/components/Dropdown";
 import React, {useState} from "react";
 import {Pressable, Text, View} from "react-native";
 import {SafeAreaView} from "react-native-safe-area-context";
-import Header from "./header";
+import HeaderRoot from "../../../components/headers/HeaderRoot";
 
 export default function TollFeeCalculator() {
   const [activeTab, setActiveTab] = useState("journey1");
 
   return (
     <SafeAreaView className="flex-1 bg-white">
-      <Header text="Toll Fee Calculator" />
+      <HeaderRoot text="Toll Fee Calculator" />
 
       <View className="flex-1 px-4 mt-6">
         {/* Journey Tabs */}

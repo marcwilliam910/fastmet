@@ -22,14 +22,14 @@ export default function MyProfile() {
     {
       icon: "person",
       label: "Edit Profile",
-      onPress: () => router.push("/(drawer)/(profile)/editProfile"),
+      onPress: () => router.push("/(drawer)/profile/editProfile"),
     },
     // {icon: "call", label: "Contact Number", onPress: () => {}},
     // {icon: "mail", label: "Email address", onPress: () => {}},
     {
       icon: "lock-closed",
       label: "Change Password",
-      onPress: () => router.push("/(drawer)/(profile)/changePass"),
+      onPress: () => router.push("/(drawer)/profile/changePass"),
     },
     {
       icon: "settings",
@@ -41,7 +41,7 @@ export default function MyProfile() {
     {
       icon: "person",
       label: "Edit Profile",
-      onPress: () => router.push("/(drawer)/(profile)/editProfile"),
+      onPress: () => router.push("/(drawer)/profile/editProfile"),
     },
     {
       icon: "settings",

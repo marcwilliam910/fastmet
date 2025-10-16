@@ -3,13 +3,13 @@ import {router} from "expo-router";
 import React from "react";
 import {Pressable, Text, View} from "react-native";
 import {SafeAreaView} from "react-native-safe-area-context";
-import Header from "./header";
+import HeaderRoot from "../../../components/headers/HeaderRoot";
 
 const PaymentMethod = () => {
   return (
     <SafeAreaView className="flex-1 bg-white" style={{paddingBottom: 15}}>
       {/* Header */}
-      <Header text="Payment Method" />
+      <HeaderRoot text="Payment Method" />
 
       <View className="justify-between flex-1 px-5 mt-6">
         {/* Payment Options */}
