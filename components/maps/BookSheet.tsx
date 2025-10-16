@@ -1,16 +1,11 @@
+import {Vehicle} from "@/types/book";
 import {Ionicons} from "@expo/vector-icons";
 import BottomSheet, {BottomSheetView} from "@gorhom/bottom-sheet";
 import {Image} from "expo-image";
 import React, {useEffect, useMemo, useRef, useState} from "react";
-import {
-  Dimensions,
-  Modal,
-  Pressable,
-  ScrollView,
-  Text,
-  View,
-} from "react-native";
-import {SafeAreaView, useSafeAreaInsets} from "react-native-safe-area-context";
+import {Dimensions, Pressable, ScrollView, Text, View} from "react-native";
+import {useSafeAreaInsets} from "react-native-safe-area-context";
+import InfoModal from "../modals/infoModal";
 
 const loadOptions = [
   "Regular 1000kg",
@@ -19,37 +14,37 @@ const loadOptions = [
   "Heavy 3000kg",
 ];
 
-const vehicles = [
+const vehicles: Vehicle[] = [
   {
-    id: 1,
+    id: "1",
     name: "Motorcycle",
     img: require("@/assets/vehicle/motor.png"),
     description:
       "Ideal for quick solo trips or small deliveries. Seats 1–2 people and carries light cargo up to 20 kg.",
   },
   {
-    id: 2,
+    id: "2",
     name: "Sedan",
     img: require("@/assets/vehicle/car.png"),
     description:
       "Comfortable for city or short-distance travel. Seats up to 4 passengers with moderate luggage space in the trunk.",
   },
   {
-    id: 3,
+    id: "3",
     name: "Small Pickup",
     img: require("@/assets/vehicle/open_truck.png"),
     description:
       "Suitable for light hauling or small business use. Can transport goods up to 500 kg with limited passenger seating.",
   },
   {
-    id: 4,
+    id: "4",
     name: "MPV-SUV",
     img: require("@/assets/vehicle/suv.png"),
     description:
       "Spacious and versatile for family or group travel. Seats 5–7 passengers with extra cargo room for luggage or equipment.",
   },
   {
-    id: 5,
+    id: "5",
     name: "FastMet Truck",
     img: require("@/assets/vehicle/fastmet_truck.png"),
     description:
@@ -64,7 +59,7 @@ const BookSheet = ({isExpanded}: {isExpanded: boolean}) => {
   const insets = useSafeAreaInsets();
   const {height: screenHeight} = Dimensions.get("window");
   const [modalVisible, setModalVisible] = useState(false);
-  const [selectedInfo, setSelectedInfo] = useState(vehicles[0]);
+  const [selectedInfo, setSelectedInfo] = useState<Vehicle | null>(null);
 
   // Convert 40% to actual pixels, then subtract inset.bottom
   const snapPoints = useMemo(() => {
@@ -173,54 +168,15 @@ const BookSheet = ({isExpanded}: {isExpanded: boolean}) => {
           </View>
         </View>
       </BottomSheetView>
-      <InfoModal
-        visible={modalVisible}
-        setModalVisible={setModalVisible}
-        selectedInfo={selectedInfo}
-      />
+      {selectedInfo && (
+        <InfoModal
+          visible={modalVisible}
+          setModalVisible={setModalVisible}
+          selectedInfo={selectedInfo}
+        />
+      )}
     </BottomSheet>
   );
 };
 
 export default BookSheet;
-
-export const InfoModal = ({
-  visible,
-  setModalVisible,
-  selectedInfo,
-}: {
-  visible: boolean;
-  setModalVisible: React.Dispatch<React.SetStateAction<boolean>>;
-  selectedInfo: (typeof vehicles)[0];
-}) => {
-  return (
-    <Modal
-      visible={visible}
-      onRequestClose={() => setModalVisible(false)}
-      animationType="slide"
-      presentationStyle="fullScreen"
-    >
-      <SafeAreaView className="flex-1 p-4 bg-white">
-        <View className="absolute flex-row top-6 right-6">
-          <Pressable onPress={() => setModalVisible(false)}>
-            <Ionicons name="close" size={30} color="#FFA840" />
-          </Pressable>
-        </View>
-
-        <View className="items-center gap-3 mt-4">
-          <Image
-            source={selectedInfo.img}
-            style={{width: 150, height: 150}}
-            contentFit="contain"
-          />
-          <Text className="mt-4 text-xl font-semibold">
-            {selectedInfo.name}
-          </Text>
-          <Text className="px-4 mt-2 text-center text-gray-600">
-            {selectedInfo.description}
-          </Text>
-        </View>
-      </SafeAreaView>
-    </Modal>
-  );
-};

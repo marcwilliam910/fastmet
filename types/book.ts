@@ -14,9 +14,16 @@ export type Method = {
   description: string;
 };
 
-export interface BidCardProps {
+export type BidCardProps = {
   driverName: string;
   rating: number;
   totalBooking: number;
   amount: number;
-}
+};
+
+export type Vehicle = {
+  id: string;
+  name: string;
+  img: string;
+  description: string;
+};

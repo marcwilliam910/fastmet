@@ -1,4 +1,3 @@
-import {InfoModal} from "@/app/(root_screens)/booking/request_method";
 import {BidCardProps} from "@/types/book";
 import {Ionicons} from "@expo/vector-icons";
 import BottomSheet, {BottomSheetScrollView} from "@gorhom/bottom-sheet";
@@ -6,6 +5,7 @@ import {Image} from "expo-image";
 import React, {useMemo, useRef, useState} from "react";
 import {Pressable, Text, View} from "react-native";
 import {useSafeAreaInsets} from "react-native-safe-area-context";
+import InfoModal from "../modals/infoModal";
 
 const BiddingSheet = () => {
   const [modalVisible, setModalVisible] = useState(false);
@@ -71,7 +71,7 @@ const BiddingSheet = () => {
         selectedInfo={{
           label: "Bidding Request",
           description:
-            "Drivers submit their proposed delivery price through bidding. The sender can review all bids and choose the most suitable offer based on rate, driver rating, and booking history.",
+            "Once you submit a bidding request, drivers nearby have 3 minutes to respond with their offers. This short window ensures quick matching and keeps your delivery moving fast. If no driver bids within that time, you can try again or adjust your request.",
         }}
       />
     </BottomSheet>
