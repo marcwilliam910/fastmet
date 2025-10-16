@@ -57,7 +57,7 @@ const PaymentSheet = ({
             Tolls, Parking fee & others
           </Text>
           <Pressable
-            onPress={() => router.push("/(root_screens)/(booking)/fees")}
+            onPress={() => router.push("/(root_screens)/booking/fees")}
           >
             <Text className="text-sm underline">View all</Text>
           </Pressable>
@@ -79,7 +79,7 @@ const PaymentSheet = ({
             <Pressable
               disabled={!isTollVisited}
               onPress={() =>
-                router.push("/(root_screens)/(booking)/request_method")
+                router.push("/(root_screens)/booking/request_method")
               }
             >
               <Text className="text-sm underline">
@@ -119,7 +119,7 @@ const PaymentSheet = ({
             disabled={!selectedMethod}
             className="flex-row items-center gap-2"
             onPress={() =>
-              router.push("/(root_screens)/(booking)/payment-method")
+              router.push("/(root_screens)/booking/payment-method")
             }
           >
             <View className="items-center justify-center h-8 bg-gray-300 w-14" />

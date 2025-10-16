@@ -117,9 +117,9 @@ const RequestMethod = () => {
             if (selectedMethod === "regular" || selectedMethod === "pooling")
               router.back();
             if (selectedMethod === "bidding")
-              router.push("/(root_screens)/(booking)/request_method/bidding");
+              router.push("/(root_screens)/booking/request_method/bidding");
             // if (selectedMethod === "pooling")
-            //   router.push("/(root_screens)/(booking)/request_method/pooling");
+            //   router.push("/(root_screens)/booking/request_method/pooling");
           }}
         >
           <Text className="text-base font-semibold text-white">

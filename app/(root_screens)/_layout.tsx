@@ -47,7 +47,7 @@ export default function RootScreenLayout() {
         }}
       />
       <Stack.Screen
-        name="(booking)"
+        name="booking"
         options={{
           title: "Book",
           headerShown: false,

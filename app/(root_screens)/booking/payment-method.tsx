@@ -30,7 +30,7 @@ const PaymentMethod = () => {
             <Pressable
               className="items-center p-4 border-2 border-orange-400 rounded-2xl active:bg-gray-100"
               onPress={() =>
-                router.push("/(root_screens)/(booking)/cash-on-delivery")
+                router.push("/(root_screens)/booking/cash-on-delivery")
               }
             >
               <Image

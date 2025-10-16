@@ -76,7 +76,7 @@ const Fees = () => {
       <View className="gap-3 px-6 mt-auto">
         <Pressable
           className="flex-row items-center justify-center gap-2 py-4 mt-8 border-2 border-lightPrimary rounded-xl active:bg-orange-50"
-          onPress={() => router.push("/(root_screens)/(booking)/fee-calcu")}
+          onPress={() => router.push("/(root_screens)/booking/fee-calcu")}
         >
           <Ionicons name="calculator-outline" size={20} color="#FFA840" />
           <Text className="text-base font-semibold text-lightPrimary">

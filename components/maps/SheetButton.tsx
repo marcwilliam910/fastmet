@@ -20,7 +20,7 @@ const SheetButton = () => {
 
   const handleNext = () => {
     if (user === null) setShowModal(true);
-    else router.push("/(root_screens)/(booking)/services");
+    else router.push("/(root_screens)/booking/services");
   };
 
   const handleGoogleSignIn = async () => {
