@@ -1,11 +1,11 @@
 import BookedDetailsCard from "@/components/maps/BookedDetails";
 import PaymentSheet from "@/components/maps/PaymentSheet";
-import { useBookStore } from "@/store/useBookStore";
-import { Service } from "@/types/book";
-import { defaultService } from "@/utils/constants";
-import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
-import { useEffect, useState } from "react";
+import {useBookStore} from "@/store/useBookStore";
+import {Service} from "@/types/book";
+import {defaultService} from "@/utils/constants";
+import {Ionicons} from "@expo/vector-icons";
+import {router} from "expo-router";
+import {useEffect, useState} from "react";
 import {
   KeyboardAvoidingView,
   Pressable,
@@ -14,14 +14,13 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
-import { ServiceCard } from "./services";
+import {SafeAreaView, useSafeAreaInsets} from "react-native-safe-area-context";
+import {ServiceCard} from "./services";
 
 export default function PaymentReview() {
   const addedServices = useBookStore((state) => state.addedServices);
   const toggleService = useBookStore((state) => state.toggleService);
   const [newServices, setNewServices] = useState<Service[]>([]);
-  const [isCoD, setIsCoD] = useState(true);
 
   const inset = useSafeAreaInsets();
 
@@ -52,7 +51,7 @@ export default function PaymentReview() {
           showsVerticalScrollIndicator={false}
         >
           {/* Pick Up Now Card */}
-          <BookedDetailsCard  />
+          <BookedDetailsCard />
 
           {/* Pickup and Drop Point */}
           <View className="gap-3">
@@ -172,28 +171,29 @@ export default function PaymentReview() {
         </ScrollView>
       </KeyboardAvoidingView>
 
-      <PaymentSheet isCoD={isCoD} setIsCoD={setIsCoD} />
+      <PaymentSheet />
 
       {/* confirm btn */}
-      {isCoD && (
-        <View
-          className="flex-row px-4 py-2 bg-white"
-          style={{
-            position: "absolute",
-            left: 0,
-            right: 0,
-            // bottom: insets.bottom + 10, // respect safe area
-            bottom: 0,
-            paddingBottom: inset.bottom + 10,
-          }}
-        >
-          <Pressable className="flex-row items-center justify-between flex-1 px-6 py-4 rounded-lg bg-lightPrimary">
-            <Text className="text-lg font-semibold text-white">Confirm</Text>
-            <Text className="text-lg font-semibold text-white">Php 5,500</Text>
-          </Pressable>
-        </View>
-      )}
 
+      <View
+        className="flex-row px-4 py-2 bg-white"
+        style={{
+          position: "absolute",
+          left: 0,
+          right: 0,
+          // bottom: insets.bottom + 10, // respect safe area
+          bottom: 0,
+          paddingBottom: inset.bottom + 10,
+        }}
+      >
+        <Pressable
+          disabled={true}
+          className={`flex-row items-center justify-between flex-1 px-6 py-4 rounded-lg bg-lightPrimary active:bg-darkPrimary ${false ? "" : "opacity-70"}`}
+        >
+          <Text className="text-lg font-semibold text-white">Confirm</Text>
+          <Text className="text-lg font-semibold text-white">Php 5,500</Text>
+        </Pressable>
+      </View>
     </SafeAreaView>
   );
 }

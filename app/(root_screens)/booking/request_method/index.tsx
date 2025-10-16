@@ -112,7 +112,10 @@ const RequestMethod = () => {
       {/* Buttons */}
       <View className="gap-3 px-6 mt-auto">
         <Pressable
-          className="items-center py-4 rounded-xl bg-lightPrimary active:bg-darkPrimary"
+          disabled={!selectedMethod}
+          className={`items-center py-4 rounded-xl bg-lightPrimary active:bg-darkPrimary ${
+            selectedMethod ? "" : "opacity-70"
+          }`}
           onPress={() => {
             if (selectedMethod === "regular" || selectedMethod === "pooling")
               router.back();

@@ -7,15 +7,9 @@ import React, {useMemo, useRef, useState} from "react";
 import {Dimensions, Pressable, Switch, Text, View} from "react-native";
 import {useSafeAreaInsets} from "react-native-safe-area-context";
 
-const PaymentSheet = ({
-  isCoD,
-  setIsCoD,
-}: {
-  isCoD: boolean;
-  setIsCoD: React.Dispatch<React.SetStateAction<boolean>>;
-}) => {
+const {height: screenHeight} = Dimensions.get("window");
+const PaymentSheet = () => {
   const sheetRef = useRef<BottomSheet>(null);
-  const {height: screenHeight} = Dimensions.get("window");
   const [favoriteFirst, setFavoriteFirst] = useState(false);
   const selectedMethod = useBookStore((state) => state.selectedMethod);
   const isTollVisited = useBookStore((state) => state.isTollVisited);
@@ -24,10 +18,10 @@ const PaymentSheet = ({
 
   // Convert 40% to actual pixels, then subtract inset.bottom
   const snapPoints = useMemo(() => {
-    const first = 0.07 * (screenHeight + inset.bottom) + (isCoD ? 40 : 0);
-    const second = 0.4 * (screenHeight + inset.bottom) + (isCoD ? 40 : -20);
+    const first = 0.05 * screenHeight + inset.bottom;
+    const second = 0.37 * screenHeight + inset.bottom;
     return [first, second];
-  }, [inset.bottom, screenHeight, isCoD]);
+  }, [inset.bottom, screenHeight]);
   return (
     <BottomSheet
       ref={sheetRef}
@@ -36,7 +30,7 @@ const PaymentSheet = ({
       enableContentPanningGesture={false} // 👈 This is the key
       snapPoints={snapPoints}
       handleIndicatorStyle={{backgroundColor: "#FFA840"}}
-      bottomInset={inset.bottom}
+      bottomInset={inset.bottom + (inset.bottom === 0 ? 60 : 20)}
       backgroundStyle={{borderWidth: 1, borderColor: "#e5e7eb"}}
     >
       <BottomSheetScrollView

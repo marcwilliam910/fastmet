@@ -1,139 +1,156 @@
+import BiddingSheet from "@/components/maps/BiddingSheet";
 import BookedDetailsCard from "@/components/maps/BookedDetails";
-import {BidCardProps} from "@/types/book";
-import {Ionicons} from "@expo/vector-icons";
+import {useBookStore} from "@/store/useBookStore";
 import {Image} from "expo-image";
-import React, {useState} from "react";
-import {Pressable, ScrollView, Text, View} from "react-native";
+import React from "react";
+import {FlatList, ScrollView, Text, View} from "react-native";
 import {SafeAreaView} from "react-native-safe-area-context";
-import {InfoModal} from ".";
 import Header from "../header";
 
 const Bidding = () => {
-  const [modalVisible, setModalVisible] = useState(false);
+  const addedServices = useBookStore((state) => state.addedServices);
 
   return (
-    <SafeAreaView className="flex-1 bg-white" style={{paddingBottom: 15}}>
+    <SafeAreaView className="flex-1 bg-white">
       {/* Header */}
       <Header text="Bidding Request" />
 
-      <View className="flex-1 gap-5 mx-4 mt-6">
+      <ScrollView
+        className="flex-1 mx-4 mt-6"
+        contentContainerStyle={{
+          paddingBottom: 140,
+          gap: 20,
+        }}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Pick Up Now Card */}
         <BookedDetailsCard />
 
-        {/* Waiting for other drivers to bid */}
-        <View className="items-center gap-2">
-          <View className="flex-row items-center gap-2">
-            <Text className="text-base font-medium text-gray-700">
-              Waiting for other drivers to bid
-            </Text>
-            <Pressable onPress={() => setModalVisible(true)}>
-              <Ionicons name="information-circle" size={20} color="#FFA840" />
-            </Pressable>
-          </View>
+        {/* Pickup and Drop Point */}
+        <View className="gap-3">
+          <Text className="text-lg font-bold">Pickup and Drop Point</Text>
 
-          <View className="flex-row items-center justify-center gap-2 px-4 py-2 border rounded-full bg-orange-50 border-lightPrimary">
-            <Ionicons name="time-outline" size={18} color="#FFA000" />
-            <Text className="text-base font-bold tracking-wide text-darkPrimary">
-              3:00
-            </Text>
-            <Text className="text-sm font-medium text-darkPrimary">
-              remaining to bid
-            </Text>
+          <View className="gap-4 p-4 border border-gray-100 bg-gray-50 rounded-2xl">
+            {/* Pickup */}
+            <View className="flex-row items-start gap-3">
+              <View className="w-3 h-3 mt-1.5 rounded-full bg-green-500" />
+              <View className="flex-1 gap-1">
+                <Text className="text-[15px] font-semibold text-gray-800">
+                  Balagtas Bulacan
+                </Text>
+                <Text className="text-sm text-gray-600">
+                  Balagtas Bulacan 37 street building 657
+                </Text>
+                <Text className="text-sm text-gray-600">
+                  Jonathan B ·{" "}
+                  <Text className="font-medium">0923 734 2345</Text>
+                </Text>
+              </View>
+            </View>
+
+            {/* Divider */}
+            <View className="h-[1px] bg-gray-200 mx-1" />
+
+            {/* Drop */}
+            <View className="flex-row items-start gap-3">
+              <View className="w-3 h-3 mt-1.5 rounded-full bg-red-500" />
+              <View className="flex-1 gap-1">
+                <Text className="text-[15px] font-semibold text-gray-800">
+                  Marilao
+                </Text>
+                <Text className="text-sm text-gray-600">
+                  Marilao Street, JCS Building
+                </Text>
+                <Text className="text-sm text-gray-600">
+                  <Text className="font-medium">0923 734 2345</Text>
+                </Text>
+              </View>
+            </View>
           </View>
         </View>
 
-        <ScrollView
+        {/* Service Add-ons */}
+        <FlatList
+          data={addedServices}
+          keyExtractor={(item) => item.id}
+          numColumns={2}
+          scrollEnabled={false}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{
+          contentContainerStyle={{gap: 10}}
+          columnWrapperStyle={{
             gap: 10,
-            paddingBottom: 10,
+            justifyContent: "flex-start", // aligns items to the left
           }}
-        >
-          {[1, 2, 3, 4, 5, 6, 7].map((item) => (
-            <BidCard
-              key={item}
-              driverName="Driver’s name"
-              rating={3}
-              totalBooking={100}
-              amount={4802}
-            />
-          ))}
-        </ScrollView>
-      </View>
-      <InfoModal
-        visible={modalVisible}
-        setModalVisible={setModalVisible}
-        selectedInfo={{
-          label: "Bidding Request",
-          description:
-            "Drivers submit their proposed delivery price through bidding. The sender can review all bids and choose the most suitable offer based on rate, driver rating, and booking history.",
-        }}
-      />
+          ListHeaderComponent={
+            <View>
+              <Text className="text-lg font-bold">
+                Service Add-ons{" "}
+                {addedServices.length > 0 && `(${addedServices.length})`}
+              </Text>
+            </View>
+          }
+          renderItem={({item}) => (
+            <View
+              style={{width: 160}} // fixed width for consistent layout (or 48%)
+              className="flex-row items-center gap-3 p-3 bg-white border border-gray-200 rounded-xl"
+            >
+              <Text className="text-lg">{item.icon}</Text>
+              <View className="flex-1">
+                <Text
+                  className="text-sm font-semibold text-gray-800"
+                  numberOfLines={1}
+                >
+                  {item.name}
+                </Text>
+                {item.price && (
+                  <Text className="text-xs text-gray-500">{item.price}</Text>
+                )}
+              </View>
+            </View>
+          )}
+        />
+
+        {/* Note and attachment */}
+        <View className="gap-5">
+          <View className="gap-2">
+            <Text className="text-lg font-bold">Note and attachment</Text>
+            <Text className="text-gray-500">
+              Lorem ipsum dolor sit amet consectetur adipisicing elit. Laborum
+              nemo, unde hic ut provident aut totam harum dignissimos quibusdam
+              nisi. Quasi commodi ipsum veniam sed qui ipsa incidunt corporis
+              velit!
+            </Text>
+          </View>
+
+          <View className="gap-3">
+            <Text className="text-lg font-bold">Uploaded Photo</Text>
+            <View className="flex-row items-center gap-2">
+              <View className="px-3 border border-gray-400 rounded-md">
+                <Image
+                  source={require("@/assets/vehicle/truck.png")}
+                  style={{width: 80, height: 80}}
+                />
+              </View>
+              <View className="px-3 border border-gray-400 rounded-md">
+                <Image
+                  source={require("@/assets/vehicle/truck.png")}
+                  style={{width: 80, height: 80}}
+                />
+              </View>
+              {/* <View className="px-3 border border-gray-400 rounded-md">
+                <Image
+                  source={require("@/assets/vehicle/truck.png")}
+                  style={{width: 80, height: 80}}
+                />
+              </View> */}
+            </View>
+          </View>
+        </View>
+      </ScrollView>
+
+      <BiddingSheet />
     </SafeAreaView>
   );
 };
 
 export default Bidding;
-
-function BidCard({driverName, rating, totalBooking, amount}: BidCardProps) {
-  return (
-    <View className={`rounded-xl p-4 border bg-white border-lightPrimary`}>
-      <View className="flex-row items-start justify-between">
-        {/* Left: Profile and Rating */}
-        <View className="flex-row gap-3">
-          <Image
-            source={require("@/assets/images/user.png")}
-            style={{width: 45, height: 45, borderRadius: 9999}}
-          />
-
-          <View>
-            <Text
-              className={`text-base font-semibold 
-      text-secondary
-              `}
-            >
-              {driverName}
-            </Text>
-
-            <View className="flex-row mt-0.5">
-              {Array.from({length: 5}).map((_, i) => (
-                <Ionicons
-                  key={i}
-                  name={i < rating ? "star" : "star-outline"}
-                  size={17}
-                  color={i < rating ? "#FACC15" : "#D1D5DB"}
-                />
-              ))}
-            </View>
-          </View>
-        </View>
-
-        {/* Right: Booking count */}
-        <Text className={`text-sm font-medium text-gray-600`}>
-          {totalBooking} Booking
-        </Text>
-      </View>
-
-      {/* Bottom section */}
-      <View className="flex-row items-center justify-between mt-3">
-        <View>
-          <Text className="text-sm text-gray-500">Bid amount:</Text>
-          <Text
-            className={`text-xl font-bold text-secondary
-            `}
-          >
-            Php {amount.toLocaleString()}
-          </Text>
-        </View>
-
-        <Pressable
-          className={`px-5 py-2.5 rounded-lg bg-green-500 active:bg-green-600`}
-        >
-          <Text className={`text-sm px-3 font-semibold text-white`}>
-            Accept
-          </Text>
-        </Pressable>
-      </View>
-    </View>
-  );
-}
