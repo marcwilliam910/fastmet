@@ -1,4 +1,4 @@
-{
+export default {
   "expo": {
     "name": "FastMet",
     "slug": "fastmet",
@@ -10,34 +10,34 @@
     "newArchEnabled": true,
     "ios": {
       "config": {
-        "googleMapsApiKey": "AIzaSyAoOVrcaGEkQ6UKWq0glKLpBRcjoPQJ97k"
+        "googleMapsApiKey": "AIzaSyAoOVrcaGEkQ6UKWq0glKLpBRcjoPQJ97k",
       },
       "supportsTablet": true,
       "bundleIdentifier": "com.guildsman.fastmet",
       "googleServicesFile": "./GoogleService-Info.plist",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
-      }
+        "ITSAppUsesNonExemptEncryption": false,
+      },
     },
     "android": {
       "config": {
         "googleMaps": {
-          "apiKey": "AIzaSyCohdfeYW7rt9iVKQZgkOomHnmjkLpM_no"
-        }
+          "apiKey": "AIzaSyCohdfeYW7rt9iVKQZgkOomHnmjkLpM_no",
+        },
       },
       "adaptiveIcon": {
         "foregroundImage": "./assets/fastmet/icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#ffffff",
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "package": "com.guildsman.fastmet",
-      "googleServicesFile": "./google-services.json"
+      "googleServicesFile": "./google-services.json",
     },
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/fastmet/icon.png"
+      "favicon": "./assets/fastmet/icon.png",
     },
     "plugins": [
       "expo-router",
@@ -47,27 +47,32 @@
           "image": "./assets/fastmet/splash.png",
           "resizeMode": "contain",
           "backgroundColor": "#ffffff",
-          "imageWidth": 200
-        }
+          "imageWidth": 200,
+        },
       ],
       [
         "@react-native-google-signin/google-signin",
         {
-          "iosUrlScheme": "com.googleusercontent.apps.657062346189-9uo7mfoih186nsrih5c6cr4q36uvpoe8"
-        }
+          "iosUrlScheme":
+            "com.googleusercontent.apps.657062346189-9uo7mfoih186nsrih5c6cr4q36uvpoe8",
+        },
       ],
       "expo-font",
-      "expo-web-browser"
+      "expo-web-browser",
     ],
     "experiments": {
       "typedRoutes": true,
-      "reactCompiler": true
+      "reactCompiler": true,
     },
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "177af201-fa0a-44b7-a20b-c22a01e455a7"
-      }
-    }
-  }
-}
+        "projectId": "177af201-fa0a-44b7-a20b-c22a01e455a7",
+      },
+      "apiUrl":
+        process.env.NODE_ENV === "production"
+          ? "https://fastmet-backend.onrender.com/api"
+          : "http://192.168.100.85:3000/api",
+    },
+  },
+};

@@ -1,38 +1,35 @@
 import axios from "axios";
+import Constants from "expo-constants";
 import {router} from "expo-router";
 import {getAuth, signOut} from "firebase/auth";
 
+const apiUrl =
+  Constants.expoConfig?.extra?.apiUrl ?? "http://192.168.100.85:3000/api";
+
 const api = axios.create({
-  baseURL: process.env.EXPO_PUBLIC_API_URL || "http://192.168.100.85:3000/api",
-  headers: {
-    "Content-Type": "application/json",
-  },
+  baseURL: apiUrl,
+  headers: {"Content-Type": "application/json"},
 });
 
-// Add token automatically for every request
 api.interceptors.request.use(async (config) => {
   const auth = getAuth();
   const user = auth.currentUser;
   if (user) {
-    const token = await user.getIdToken(); // get fresh Firebase ID token
+    const token = await user.getIdToken();
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
 });
 
 api.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const status = error.response?.status;
-
-    // Token expired or invalid → logout
-    if (status === 401) {
-      const auth = getAuth();
-      await signOut(auth);
+  (res) => res,
+  async (err) => {
+    if (err.response?.status === 401) {
+      await signOut(getAuth());
       router.replace("/(auth)/login");
     }
-
-    return Promise.reject(error);
+    return Promise.reject(err);
   }
 );
+
 export default api;
