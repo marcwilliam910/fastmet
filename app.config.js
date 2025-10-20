@@ -10,7 +10,7 @@ export default {
     "newArchEnabled": true,
     "ios": {
       "config": {
-        "googleMapsApiKey": "AIzaSyAoOVrcaGEkQ6UKWq0glKLpBRcjoPQJ97k",
+        "googleMapsApiKey": process.env.EXPO_PUBLIC_IOS_MAP_KEY,
       },
       "supportsTablet": true,
       "bundleIdentifier": "com.guildsman.fastmet",
@@ -22,7 +22,7 @@ export default {
     "android": {
       "config": {
         "googleMaps": {
-          "apiKey": "AIzaSyCohdfeYW7rt9iVKQZgkOomHnmjkLpM_no",
+          "apiKey": process.env.EXPO_PUBLIC_ANDROID_MAP_KEY,
         },
       },
       "adaptiveIcon": {
@@ -71,8 +71,8 @@ export default {
       },
       "apiUrl":
         process.env.NODE_ENV === "production"
-          ? "https://fastmet-backend.onrender.com/api"
-          : "http://192.168.100.85:3000/api",
+          ? process.env.EXPO_PUBLIC_API_URL_PROD
+          : process.env.EXPO_PUBLIC_API_URL_DEV,
     },
   },
 };

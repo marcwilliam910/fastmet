@@ -26,11 +26,12 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (fontsLoaded && !loading) {
+      // NOT WORKING
       // bypass TS check
-      (Text as any).defaultProps = (Text as any).defaultProps || {};
-      (Text as any).defaultProps.style = {
-        fontFamily: "Montserrat_400Regular",
-      };
+      // (Text as any).defaultProps = (Text as any).defaultProps || {};
+      // (Text as any).defaultProps.style = {
+      //   fontFamily: "Montserrat_400Regular",
+      // };
 
       SplashScreen.hideAsync();
     }
