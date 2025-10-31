@@ -1,14 +1,13 @@
 import axios from "axios";
-import Constants from "expo-constants";
-import {router} from "expo-router";
-import {getAuth, signOut} from "firebase/auth";
+import { router } from "expo-router";
+import { getAuth, signOut } from "firebase/auth";
 
-const apiUrl =
-  Constants.expoConfig?.extra?.apiUrl ?? "http://192.168.100.85:3000/api";
+const apiUrl = "http://192.168.100.125:3000/api";
+// const apiUrl = Constants.expoConfig?.extra?.apiUrl ?? "http://192.168.100.125:3000/api";
 
 const api = axios.create({
   baseURL: apiUrl,
-  headers: {"Content-Type": "application/json"},
+  headers: { "Content-Type": "application/json" },
 });
 
 api.interceptors.request.use(async (config) => {
