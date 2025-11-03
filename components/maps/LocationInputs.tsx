@@ -1,9 +1,16 @@
-import {useBookStore} from "@/store/useBookStore";
-import {isDateString} from "@/utils/date";
+import { useBookStore } from "@/store/useBookStore";
+import { isDateString } from "@/utils/date";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import React, {useRef} from "react";
-import {Animated, Easing, Pressable, Text, TextInput, View} from "react-native";
-import {useSafeAreaInsets} from "react-native-safe-area-context";
+import React, { useRef } from "react";
+import {
+  Animated,
+  Easing,
+  Pressable,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 function formatScheduleToText(schedule: string | null) {
   if (schedule === null) {
@@ -78,11 +85,11 @@ export default function LocationInputs({
   return (
     <View
       className="absolute left-0 right-0 z-10"
-      style={{marginTop: inset.top}}
+      style={{ marginTop: inset.top }}
     >
       <Animated.View
         style={{
-          transform: [{translateY: slideAnim}],
+          transform: [{ translateY: slideAnim }],
           opacity: slideAnim.interpolate({
             inputRange: [-150, 0],
             outputRange: [0, 1],
@@ -95,7 +102,7 @@ export default function LocationInputs({
           className="flex-row items-center px-2 py-1 bg-white rounded-md"
           style={{
             shadowColor: "#000",
-            shadowOffset: {width: 0, height: 2},
+            shadowOffset: { width: 0, height: 2 },
             shadowOpacity: 0.2,
             shadowRadius: 4,
             elevation: 15,
@@ -103,7 +110,7 @@ export default function LocationInputs({
         >
           <Ionicons name="location-sharp" size={24} color="green" />
           <TextInput
-            placeholder="Enter pick up point location"
+            placeholder="Pickup location"
             className="flex-1 text-base"
           />
         </View>
@@ -113,7 +120,7 @@ export default function LocationInputs({
           className="flex-row items-center px-2 py-1 bg-white rounded-md"
           style={{
             shadowColor: "#000",
-            shadowOffset: {width: 0, height: 2},
+            shadowOffset: { width: 0, height: 2 },
             shadowOpacity: 0.2,
             shadowRadius: 4,
             elevation: 15,
@@ -121,57 +128,25 @@ export default function LocationInputs({
         >
           <Ionicons name="location-sharp" size={24} color="red" />
           <TextInput
-            placeholder="Enter drop off point location"
+            placeholder="Drop point location"
             className="flex-1 text-base"
           />
         </View>
 
         {/* Action Row */}
-        <View className="flex-row justify-between">
-          <Pressable
-            className="items-center self-center justify-center bg-white rounded-full size-9 active:bg-gray-100"
-            style={{
-              shadowColor: "#000",
-              shadowOffset: {width: 0, height: 2},
-              shadowOpacity: 0.2,
-              shadowRadius: 4,
-              elevation: 15,
-            }}
-            onPress={toggleExpand}
-          >
-            <Ionicons name={"chevron-up"} size={22} color="#FFA840" />
-          </Pressable>
-
-          <View className="flex-row gap-2">
-            <Pressable
-              className="flex-row items-center gap-1 px-2 py-1.5 bg-white rounded-md active:bg-gray-100"
-              style={{
-                shadowColor: "#000",
-                shadowOffset: {width: 0, height: 2},
-                shadowOpacity: 0.2,
-                shadowRadius: 4,
-                elevation: 15,
-              }}
-            >
-              <Ionicons name="add" size={15} color="black" />
-              <Text className="text-sm font-semibold">Add Stop</Text>
-            </Pressable>
-
-            <Pressable
-              onPress={() => setModalVisible(true)}
-              className="flex-row items-center gap-2 px-2 py-1.5 bg-white rounded-md active:bg-gray-100"
-              style={{
-                shadowColor: "#000",
-                shadowOffset: {width: 0, height: 2},
-                shadowOpacity: 0.2,
-                shadowRadius: 4,
-                elevation: 15,
-              }}
-            >
-              {formatScheduleToText(selectedTime)}
-            </Pressable>
-          </View>
-        </View>
+        <Pressable
+          className="items-center self-end justify-center bg-white rounded-full size-9 active:bg-gray-100"
+          style={{
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.2,
+            shadowRadius: 4,
+            elevation: 15,
+          }}
+          onPress={toggleExpand}
+        >
+          <Ionicons name={"chevron-up"} size={22} color="#FFA840" />
+        </Pressable>
       </Animated.View>
 
       {/* Toggle Button when collapsed */}
@@ -181,7 +156,7 @@ export default function LocationInputs({
             className="items-center self-center justify-center bg-white rounded-full size-10 active:bg-gray-100"
             style={{
               shadowColor: "#000",
-              shadowOffset: {width: 0, height: 2},
+              shadowOffset: { width: 0, height: 2 },
               shadowOpacity: 0.2,
               shadowRadius: 4,
               elevation: 15,

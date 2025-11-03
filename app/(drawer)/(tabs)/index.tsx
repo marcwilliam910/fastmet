@@ -1,8 +1,8 @@
 import Carousel from "@/components/Carousel";
-import {Ionicons} from "@expo/vector-icons";
-import {router} from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 import React from "react";
-import {Pressable, ScrollView, Text, View} from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 
 const Home = () => {
   return (
@@ -10,40 +10,30 @@ const Home = () => {
       <ScrollView
         className="relative flex-1 bg-white"
         showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ gap: 16 }}
       >
         <Carousel />
+        <Text className="text-xl font-bold text-center">
+          Welcome to FastMet
+        </Text>
         <View className="gap-5 p-5 pb-20">
-          {/* FastMet Services */}
-          <View className="gap-3">
-            <View className="flex-row items-center justify-between">
-              <Text className="text-lg font-bold">FastMet Services</Text>
-              <View className="flex-row gap-5">
-                <Ionicons name="call" size={26} color="#FFA840" />
-                <Ionicons name="chatbubbles" size={26} color="#FFA840" />
-              </View>
-            </View>
-            <View className="w-full border rounded-md h-52 border-lightPrimary"></View>
-          </View>
-          {/* Company */}
-          <View className="gap-3">
-            <Text className="text-lg font-bold">Company</Text>
-
-            <View className="w-full border rounded-md h-52 border-lightPrimary"></View>
-          </View>
+          <Pressable className="flex-row items-center bg-gray-100 p-4 h-20 rounded-lg justify-between active:border-lightPrimary active:border">
+            <Text className="text-lg font-bold">Passenger</Text>
+            <Ionicons name="information-circle" size={24} color="#FFA840" />
+          </Pressable>
+          <Pressable className="flex-row items-center bg-gray-100 p-4 h-20 rounded-lg justify-between active:border-lightPrimary active:border">
+            <Text className="text-lg font-bold">Pasabay</Text>
+            <Ionicons name="information-circle" size={24} color="#FFA840" />
+          </Pressable>
         </View>
       </ScrollView>
       {/* buttons */}
-      <View className="absolute flex-row w-full bottom-3 justify-evenly">
-        <Pressable
-          className="px-10 py-4 rounded-md bg-lightPrimary active:bg-darkPrimary"
-          onPress={() => router.push("/(root_screens)/booking/book")}
-        >
-          <Text className="font-bold text-white">Book now</Text>
-        </Pressable>
-        <Pressable className="px-10 py-4 rounded-md bg-[#9FABB4] active:bg-gray-400">
-          <Text className="font-bold text-white">Schedule</Text>
-        </Pressable>
-      </View>
+      <Pressable
+        className="px-10 py-4 mx-8 rounded-md absolute bottom-3 left-0 right-0 bg-lightPrimary justify-center items-center active:bg-darkPrimary"
+        onPress={() => router.push("/(root_screens)/booking/book")}
+      >
+        <Text className="font-bold text-white">Book now</Text>
+      </Pressable>
     </View>
   );
 };
