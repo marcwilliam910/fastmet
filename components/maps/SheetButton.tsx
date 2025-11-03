@@ -2,14 +2,19 @@ import useAuth from "@/hooks/useAuth";
 import { useRegisterProfile } from "@/mutations/userMutations";
 import { signInWithGoogle } from "@/services/googleAuth";
 import { User } from "@/types/user";
-import { router } from "expo-router";
 import React, { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import LoadingModal from "../modals/loading";
 import NotLoggedInModal from "../modals/notLoggedInModal";
 
-const SheetButton = () => {
+const SheetButton = ({
+  isLast,
+  setStep,
+}: {
+  isLast: boolean;
+  setStep: (step: "ride" | "contact") => void;
+}) => {
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
   const [showModal, setShowModal] = useState(false);
@@ -18,7 +23,8 @@ const SheetButton = () => {
 
   const handleNext = () => {
     if (user === null) setShowModal(true);
-    else router.push("/(root_screens)/booking/services");
+    else if (isLast) return;
+    else setStep("contact");
   };
 
   const handleGoogleSignIn = async () => {
@@ -62,13 +68,14 @@ const SheetButton = () => {
 
   return (
     <View
-      className="px-5 py-2 bg-white"
+      className="px-5 py-2 bg-white z-30"
       style={{
         position: "absolute",
         left: 0,
         right: 0,
         // bottom: insets.bottom + 10, // respect safe area
         bottom: 0,
+
         paddingBottom: insets.bottom + 10,
       }}
     >
@@ -76,7 +83,9 @@ const SheetButton = () => {
         className="flex-1 py-3 rounded-md bg-lightPrimary active:bg-darkPrimary"
         onPress={handleNext}
       >
-        <Text className="font-bold text-center text-lg text-white">Next</Text>
+        <Text className="font-bold text-center text-lg text-white">
+          {isLast ? "Book now" : "Next"}
+        </Text>
       </Pressable>
       <NotLoggedInModal
         visible={showModal}

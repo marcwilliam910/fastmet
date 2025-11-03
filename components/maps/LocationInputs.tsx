@@ -1,76 +1,17 @@
-import { useBookStore } from "@/store/useBookStore";
-import { isDateString } from "@/utils/date";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import React, { useRef } from "react";
-import {
-  Animated,
-  Easing,
-  Pressable,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import { Animated, Easing, Pressable, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-
-function formatScheduleToText(schedule: string | null) {
-  if (schedule === null) {
-    return (
-      <>
-        <Ionicons name="cube" size={18} color="#FFA840" />
-        <Text className="text-sm font-semibold">Select Time</Text>
-      </>
-    );
-  }
-
-  if (schedule === "Pick up now") {
-    return (
-      <>
-        <Ionicons name="car" size={18} color="#ED8718" />
-        <Text className="text-sm font-bold text-darkPrimary">Pick up now</Text>
-      </>
-    );
-  }
-
-  if (!isNaN(Number(schedule))) {
-    return (
-      <>
-        <Ionicons name="time" size={18} color="#ED8718" />
-        <Text className="text-sm font-bold text-darkPrimary">
-          in {schedule} hour{schedule === "1" ? "" : "s"}
-        </Text>
-      </>
-    );
-  }
-
-  if (isDateString(schedule)) {
-    const formatted = new Date(schedule).toLocaleDateString("en-US", {
-      month: "long",
-      day: "numeric",
-      year: "numeric",
-    });
-    return (
-      <>
-        <Ionicons name="calendar" size={18} color="#ED8718" />
-        <Text className="text-sm font-bold text-darkPrimary">{formatted}</Text>
-      </>
-    );
-  }
-
-  return null;
-}
 
 export default function LocationInputs({
   isExpanded,
   setIsExpanded,
-  setModalVisible,
 }: {
   isExpanded: boolean;
   setIsExpanded: React.Dispatch<React.SetStateAction<boolean>>;
-  setModalVisible: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
   const inset = useSafeAreaInsets();
   const slideAnim = useRef(new Animated.Value(0)).current;
-  const selectedTime = useBookStore((state) => state.selectedTime);
 
   const toggleExpand = () => {
     Animated.timing(slideAnim, {
