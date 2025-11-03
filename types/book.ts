@@ -4,4 +4,5 @@ export type Vehicle = {
   img: string;
   desc: string;
   price?: number; //placeholder
+  capacity: string;
 };
