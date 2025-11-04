@@ -6,7 +6,13 @@ import BottomSheet, {
 } from "@gorhom/bottom-sheet";
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Dimensions, Keyboard, Pressable, Text, View } from "react-native";
 import { EdgeInsets, useSafeAreaInsets } from "react-native-safe-area-context";
 import { VehicleInfoModal } from "../modals/vehicleInfoModal";
@@ -41,9 +47,11 @@ const vehicles: Vehicle[] = [
 
 const BookSheet = ({
   isExpanded,
+  setIsExpanded,
   method,
 }: {
   isExpanded: boolean;
+  setIsExpanded: React.Dispatch<React.SetStateAction<boolean>>;
   method: "passenger" | "pasabay";
 }) => {
   const sheetRef = useRef<BottomSheet>(null);
@@ -53,25 +61,52 @@ const BookSheet = ({
   const [paymentMethod, setPaymentMethod] = useState("");
   const [step, setStep] = useState<"ride" | "contact">("ride");
 
+  const [isBig, setIsBig] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
 
   // Convert 40% to actual pixels, then subtract inset.bottom
   const snapPoints = useMemo(() => {
     const first = 0.17 * screenHeight + insets.bottom;
     const second = 0.5 * screenHeight + insets.bottom;
-    return [first, second];
+    const third = screenHeight * 0.95;
+
+    return [first, second, third];
   }, [insets.bottom, screenHeight]);
 
+  const fromSheet = useRef(false);
+
+  const handleSheetChange = useCallback(
+    (index: number) => {
+      if (index === 2) {
+        fromSheet.current = true;
+        setIsBig(true);
+        setIsExpanded(false);
+      } else {
+        setIsBig(false);
+      }
+    },
+    [setIsExpanded]
+  );
+
   useEffect(() => {
+    if (fromSheet.current) {
+      fromSheet.current = false;
+      return;
+    }
+
     if (isExpanded) sheetRef.current?.snapToIndex(1);
     else sheetRef.current?.snapToIndex(0);
   }, [isExpanded]);
 
   useEffect(() => {
+    const showSub = Keyboard.addListener("keyboardDidShow", () => {
+      setIsBig(true);
+    });
     const hideSub = Keyboard.addListener("keyboardDidHide", () => {
-      sheetRef.current?.snapToIndex(1); // reset
+      sheetRef.current?.snapToIndex(2); // reset
     });
     return () => {
+      showSub.remove();
       hideSub.remove();
     };
   }, []);
@@ -164,6 +199,7 @@ const BookSheet = ({
     <>
       <BottomSheet
         ref={sheetRef}
+        onChange={handleSheetChange}
         index={1}
         snapPoints={snapPoints}
         enableDynamicSizing={false}
@@ -171,7 +207,14 @@ const BookSheet = ({
         enableContentPanningGesture={false} // 👈 This is the key
         containerStyle={{ zIndex: 20 }}
       >
-        {handleDisplay()}
+        <View
+          style={{
+            paddingBottom: isBig ? 0 : 280,
+            flex: 1,
+          }}
+        >
+          {handleDisplay()}
+        </View>
       </BottomSheet>
 
       <SheetButton setStep={setStep} isLast={step === "contact"} />

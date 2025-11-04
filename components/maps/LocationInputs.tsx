@@ -1,5 +1,5 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
-import React, { useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import { Animated, Easing, Pressable, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -13,15 +13,16 @@ export default function LocationInputs({
   const inset = useSafeAreaInsets();
   const slideAnim = useRef(new Animated.Value(0)).current;
 
-  const toggleExpand = () => {
+  const toggleExpand = () => setIsExpanded((prev) => !prev);
+
+  useEffect(() => {
     Animated.timing(slideAnim, {
-      toValue: isExpanded ? -150 : 0, // adjust -150 based on height of inputs
+      toValue: isExpanded ? 0 : -150,
       duration: 300,
       easing: Easing.out(Easing.ease),
       useNativeDriver: true,
     }).start();
-    setIsExpanded(!isExpanded);
-  };
+  }, [isExpanded]);
 
   return (
     <View

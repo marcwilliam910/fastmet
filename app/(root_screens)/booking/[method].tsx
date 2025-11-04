@@ -31,7 +31,11 @@ const Book = () => {
         <MapScreen />
       </View>
 
-      <BookSheet isExpanded={isExpanded} method={method} />
+      <BookSheet
+        isExpanded={isExpanded}
+        setIsExpanded={setIsExpanded}
+        method={method}
+      />
     </SafeAreaView>
   );
 };
