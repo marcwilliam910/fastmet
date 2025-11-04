@@ -76,7 +76,7 @@ const BookSheet = ({
     };
   }, []);
 
-  const handlePassengerDisplay = () => {
+  const handleDisplay = () => {
     switch (step) {
       case "ride":
         return (
@@ -171,7 +171,7 @@ const BookSheet = ({
         enableContentPanningGesture={false} // 👈 This is the key
         containerStyle={{ zIndex: 20 }}
       >
-        {handlePassengerDisplay()}
+        {handleDisplay()}
       </BottomSheet>
 
       <SheetButton setStep={setStep} isLast={step === "contact"} />
