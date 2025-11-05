@@ -7,7 +7,7 @@ export type Vehicle = {
   capacity: string;
 };
 
-export type LocationData = {
+export type LocationDetails = {
   name: string;
   address: string;
   coords: { lat: number; lng: number };

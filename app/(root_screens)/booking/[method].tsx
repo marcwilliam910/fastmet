@@ -2,7 +2,6 @@ import BookSheet from "@/components/maps/BookSheet";
 import LocationInputs from "@/components/maps/LocationInputs";
 import MapScreen from "@/components/maps/MapScreen";
 import SearchModal from "@/components/modals/mapSearchModal";
-import { LocationData } from "@/types/book";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { View } from "react-native";
@@ -25,27 +24,6 @@ const Book = () => {
     null
   );
 
-  const [pickup, setPickup] = useState<LocationData>(null);
-  const [dropoff, setDropoff] = useState<LocationData>(null);
-
-  const handleSelect = (place: any) => {
-    const details = place.details;
-
-    const locationData: LocationData = {
-      name: details.displayName?.text || "Unknown location",
-      address: details?.formattedAddress || "Unknown address",
-      coords: {
-        lat: details.location.latitude,
-        lng: details.location.longitude,
-      },
-    };
-
-    console.log("Place selected:", JSON.stringify(locationData, null, 2));
-
-    if (searchType === "pickup") setPickup(locationData);
-    else setDropoff(locationData);
-  };
-
   return (
     <SafeAreaView
       style={{ flex: 1, backgroundColor: "white" }}
@@ -60,8 +38,6 @@ const Book = () => {
             setSearchType(type);
             setModalVisible(true);
           }}
-          pickup={pickup}
-          dropoff={dropoff}
         />
 
         <MapScreen />
@@ -78,7 +54,6 @@ const Book = () => {
           visible={modalVisible}
           type={searchType}
           onClose={() => setModalVisible(false)}
-          onSelect={handleSelect}
         />
       )}
     </SafeAreaView>

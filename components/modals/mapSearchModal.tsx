@@ -1,3 +1,5 @@
+import { useBookStore } from "@/store/useBookStore";
+import { LocationDetails } from "@/types/book";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
@@ -10,7 +12,9 @@ import {
   TextInput,
   View,
 } from "react-native";
-import GooglePlacesTextInput from "react-native-google-places-textinput";
+import GooglePlacesTextInput, {
+  Place,
+} from "react-native-google-places-textinput";
 
 import {
   SafeAreaView,
@@ -22,7 +26,6 @@ type SearchType = "pickup" | "dropoff";
 type SearchModalProps = {
   visible: boolean;
   onClose: () => void;
-  onSelect: (place: any) => void;
   type: SearchType;
 };
 
@@ -34,7 +37,6 @@ const GOOGLE_MAPS_API_KEY =
 const SearchModal: React.FC<SearchModalProps> = ({
   visible,
   onClose,
-  onSelect,
   type,
 }) => {
   const [recentPlaces] = useState([
@@ -58,6 +60,32 @@ const SearchModal: React.FC<SearchModalProps> = ({
     },
   ]);
   const inset = useSafeAreaInsets();
+  const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
+  const setPickUp = useBookStore((state) => state.setPickUp);
+  const setDropOff = useBookStore((state) => state.setDropOff);
+
+  const dropOff = useBookStore((state) => state.dropOff);
+  const pickUp = useBookStore((state) => state.pickUp);
+
+  const handleConfirm = () => {
+    if (!selectedPlace || !selectedPlace.details) return;
+
+    const details = selectedPlace.details;
+
+    const locationData: LocationDetails = {
+      name: details.displayName?.text || "Unknown location",
+      address: details?.formattedAddress || "Unknown address",
+      coords: {
+        lat: details.location.latitude,
+        lng: details.location.longitude,
+      },
+    };
+
+    if (type === "pickup") setPickUp(locationData);
+    else setDropOff(locationData);
+
+    onClose();
+  };
 
   const handleCurrentLocation = () => {
     console.log("Getting current location...");
@@ -114,7 +142,8 @@ const SearchModal: React.FC<SearchModalProps> = ({
             <View style={{ flex: 1, marginLeft: 20 }}>
               <GooglePlacesTextInput
                 apiKey={GOOGLE_MAPS_API_KEY ?? ""}
-                onPlaceSelect={onSelect}
+                onPlaceSelect={(place) => setSelectedPlace(place)}
+                value={type === "pickup" ? pickUp?.address : dropOff?.address}
                 style={customStyles}
                 languageCode="en"
                 includedRegionCodes={["ph"]}
@@ -190,7 +219,9 @@ const SearchModal: React.FC<SearchModalProps> = ({
         </View>
 
         <Pressable
-          className="items-center justify-center p-3.5 mx-8 bg-lightPrimary absolute left-0 right-0 active:bg-darkPrimary rounded-lg"
+          className={`items-center justify-center p-3.5 mx-8 bg-lightPrimary absolute left-0 right-0 active:bg-darkPrimary rounded-lg ${selectedPlace ? "active:bg-darkPrimary" : "opacity-80"}`}
+          onPress={handleConfirm}
+          disabled={!selectedPlace}
           style={{
             bottom: inset.bottom + 15,
           }}

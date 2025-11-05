@@ -1,3 +1,4 @@
+import { useBookStore } from "@/store/useBookStore";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import React, { useEffect, useRef } from "react";
 import { Animated, Easing, Pressable, Text, View } from "react-native";
@@ -7,19 +8,17 @@ export default function LocationInputs({
   isExpanded,
   setIsExpanded,
   onOpenSearch,
-  pickup,
-  dropoff,
 }: {
   isExpanded: boolean;
   setIsExpanded: React.Dispatch<React.SetStateAction<boolean>>;
   onOpenSearch: (type: "pickup" | "dropoff") => void;
-  pickup: any;
-  dropoff: any;
 }) {
   const inset = useSafeAreaInsets();
   const slideAnim = useRef(new Animated.Value(0)).current;
 
   const toggleExpand = () => setIsExpanded((prev) => !prev);
+  const pickUp = useBookStore((state) => state.pickUp);
+  const dropOff = useBookStore((state) => state.dropOff);
 
   useEffect(() => {
     Animated.timing(slideAnim, {
@@ -57,8 +56,11 @@ export default function LocationInputs({
           }}
         >
           <Ionicons name="location-sharp" size={24} color="green" />
-          <Text className="flex-1 text-base text-gray-700 ml-2">
-            {pickup?.name || "Pickup location"}
+          <Text
+            className="flex-1 text-base text-gray-700 ml-2"
+            numberOfLines={1}
+          >
+            {pickUp?.address || "Pickup location"}
           </Text>
         </Pressable>
 
@@ -75,8 +77,11 @@ export default function LocationInputs({
           }}
         >
           <Ionicons name="location-sharp" size={24} color="red" />
-          <Text className="flex-1 text-base text-gray-700 ml-2">
-            {dropoff?.name || "Drop point location"}
+          <Text
+            className="flex-1 text-base text-gray-700 ml-2"
+            numberOfLines={1}
+          >
+            {dropOff?.address || "Drop point location"}
           </Text>
         </Pressable>
 

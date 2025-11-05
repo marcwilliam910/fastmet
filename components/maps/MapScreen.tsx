@@ -1,10 +1,19 @@
-import * as Location from "expo-location";
-import { useEffect, useRef, useState } from "react";
-import { StatusBar, StyleSheet, View } from "react-native";
+import { useBookStore } from "@/store/useBookStore";
+import { router } from "expo-router";
+import React, { useEffect, useRef, useState } from "react";
+import { Platform, StyleSheet, View } from "react-native";
 import MapView, { Marker } from "react-native-maps";
+import MapViewDirections from "react-native-maps-directions";
 
 export default function MapScreen() {
   const mapRef = useRef<MapView>(null);
+  const pickUp = useBookStore((state) => state.pickUp);
+  const dropOff = useBookStore((state) => state.dropOff);
+
+  const GOOGLE_MAPS_API_KEY =
+    Platform.OS === "ios"
+      ? process.env.EXPO_PUBLIC_IOS_MAP_KEY
+      : process.env.EXPO_PUBLIC_ANDROID_MAP_KEY;
 
   const [region, setRegion] = useState({
     latitude: 14.676,
@@ -12,53 +21,76 @@ export default function MapScreen() {
     latitudeDelta: 0.05,
     longitudeDelta: 0.05,
   });
+
   useEffect(() => {
-    (async () => {
-      try {
-        const { status } = await Location.requestForegroundPermissionsAsync();
+    if (!GOOGLE_MAPS_API_KEY) router.back();
+  }, [GOOGLE_MAPS_API_KEY]);
 
-        if (status !== "granted") {
-          console.log("Location permission not granted");
-          setTimeout(() => StatusBar.setHidden(true), 200);
-          return;
-        }
-
-        const loc = await Location.getCurrentPositionAsync({});
-
-        const newRegion = {
-          ...region,
-          latitude: loc.coords.latitude,
-          longitude: loc.coords.longitude,
-        };
-        setRegion(newRegion);
-        mapRef.current?.animateToRegion(newRegion, 1000);
-      } catch (err) {
-        console.log("Location error:", err);
-      } finally {
-        // delay to ensure system dialog fully closes
-        setTimeout(() => StatusBar.setHidden(true), 200);
-      }
-    })();
-  }, []);
-
-  const handleMapPress = (e: any) => {
-    const { latitude, longitude } = e.nativeEvent.coordinate;
-    const newRegion = { ...region, latitude, longitude };
-    setRegion(newRegion);
-    mapRef.current?.animateToRegion(newRegion, 500); // 👈 smoothly move camera
-  };
+  useEffect(() => {
+    if (pickUp?.coords) {
+      const newRegion = {
+        latitude: pickUp.coords.lat,
+        longitude: pickUp.coords.lng,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      };
+      setRegion(newRegion);
+      mapRef.current?.animateToRegion(newRegion, 1000);
+    }
+  }, [pickUp]);
 
   return (
     <View className="flex-1">
       <MapView
         ref={mapRef}
-        showsUserLocation={true} // Show user blue dot
-        showsCompass={true} // Compass
         style={StyleSheet.absoluteFillObject}
+        showsUserLocation
+        showsCompass
+        mapType="standard"
         initialRegion={region}
-        onPress={handleMapPress}
       >
-        <Marker coordinate={region} title="Selected Location" />
+        {pickUp && (
+          <Marker
+            coordinate={{
+              latitude: pickUp.coords.lat,
+              longitude: pickUp.coords.lng,
+            }}
+            title="Pick Up"
+          />
+        )}
+
+        {dropOff && (
+          <Marker
+            coordinate={{
+              latitude: dropOff.coords.lat,
+              longitude: dropOff.coords.lng,
+            }}
+            title="Drop Off"
+          />
+        )}
+
+        {pickUp && dropOff && (
+          <MapViewDirections
+            origin={{
+              latitude: pickUp.coords.lat,
+              longitude: pickUp.coords.lng,
+            }}
+            destination={{
+              latitude: dropOff.coords.lat,
+              longitude: dropOff.coords.lng,
+            }}
+            apikey={GOOGLE_MAPS_API_KEY ?? ""}
+            strokeWidth={5}
+            strokeColor="#007AFF"
+            optimizeWaypoints
+            onReady={(result) => {
+              mapRef.current?.fitToCoordinates(result.coordinates, {
+                edgePadding: { top: 80, right: 80, bottom: 80, left: 80 },
+                animated: true,
+              });
+            }}
+          />
+        )}
       </MapView>
     </View>
   );
