@@ -132,6 +132,7 @@ const BookSheet = ({
                 selectedVehicle={selectedVehicle}
                 setSelectedVehicle={setSelectedVehicle}
                 insets={insets}
+                isBig={isBig}
                 paymentMethod={paymentMethod}
                 setPaymentMethod={setPaymentMethod}
               />
@@ -140,6 +141,7 @@ const BookSheet = ({
                 selectedVehicle={selectedVehicle}
                 setSelectedVehicle={setSelectedVehicle}
                 insets={insets}
+                isBig={isBig}
                 paymentMethod={paymentMethod}
                 setPaymentMethod={setPaymentMethod}
               />
@@ -207,14 +209,7 @@ const BookSheet = ({
         enableContentPanningGesture={false} // 👈 This is the key
         containerStyle={{ zIndex: 20 }}
       >
-        <View
-          style={{
-            paddingBottom: isBig ? 0 : 280,
-            flex: 1,
-          }}
-        >
-          {handleDisplay()}
-        </View>
+        {handleDisplay()}
       </BottomSheet>
 
       <SheetButton setStep={setStep} isLast={step === "contact"} />
@@ -236,47 +231,58 @@ const PassengerSheet = ({
   selectedVehicle,
   setSelectedVehicle,
   insets,
+  isBig,
   paymentMethod,
   setPaymentMethod,
 }: {
   insets: EdgeInsets;
   selectedVehicle: string;
   setSelectedVehicle: React.Dispatch<React.SetStateAction<string>>;
+  isBig: boolean;
   paymentMethod: string;
   setPaymentMethod: React.Dispatch<React.SetStateAction<string>>;
 }) => {
   return (
     <BottomSheetScrollView className="flex-1 px-3">
-      <Text className=" font-semibold text-gray-900 mb-4">Choose Vehicle</Text>
-      <View className="px-5 flex-row justify-between">
-        {vehicles.map((v) => (
-          <View key={v.id} className="relative items-center gap-1">
-            <Pressable
-              className={`items-center gap-3 px-4 py-2 rounded-lg ${
-                selectedVehicle === v.id ? "border-2 border-lightPrimary" : ""
-              }`}
-              onPress={() => setSelectedVehicle(v.id)}
-            >
-              <Text
-                className={`text-xs text-gray-500 ${selectedVehicle === v.id ? "font-semibold" : ""}`}
+      <View
+        style={{
+          paddingBottom: isBig ? 0 : 280,
+          flex: 1,
+        }}
+      >
+        <Text className=" font-semibold text-gray-900 mb-4">
+          Choose Vehicle
+        </Text>
+        <View className="px-5 flex-row justify-between">
+          {vehicles.map((v) => (
+            <View key={v.id} className="relative items-center gap-1">
+              <Pressable
+                className={`items-center gap-3 px-4 py-2 rounded-lg ${
+                  selectedVehicle === v.id ? "border-2 border-lightPrimary" : ""
+                }`}
+                onPress={() => setSelectedVehicle(v.id)}
               >
-                {v.name}
-              </Text>
-              <Image
-                source={v.img}
-                style={{ height: 40, width: 54 }}
-                contentFit="contain"
-              />
-              <Text className="text-xs text-gray-500">Php {v.price}</Text>
-            </Pressable>
-          </View>
-        ))}
-      </View>
-      <View style={{ paddingBottom: insets.bottom + 60, marginTop: 20 }}>
-        <PaymentBtn
-          paymentMethod={paymentMethod}
-          setPaymentMethod={setPaymentMethod}
-        />
+                <Text
+                  className={`text-xs text-gray-500 ${selectedVehicle === v.id ? "font-semibold" : ""}`}
+                >
+                  {v.name}
+                </Text>
+                <Image
+                  source={v.img}
+                  style={{ height: 40, width: 54 }}
+                  contentFit="contain"
+                />
+                <Text className="text-xs text-gray-500">Php {v.price}</Text>
+              </Pressable>
+            </View>
+          ))}
+        </View>
+        <View style={{ paddingBottom: insets.bottom + 60, marginTop: 20 }}>
+          <PaymentBtn
+            paymentMethod={paymentMethod}
+            setPaymentMethod={setPaymentMethod}
+          />
+        </View>
       </View>
     </BottomSheetScrollView>
   );
@@ -286,12 +292,14 @@ const PasabaySheet = ({
   selectedVehicle,
   setSelectedVehicle,
   insets,
+  isBig,
   paymentMethod,
   setPaymentMethod,
 }: {
   insets: EdgeInsets;
   selectedVehicle: string;
   setSelectedVehicle: React.Dispatch<React.SetStateAction<string>>;
+  isBig: boolean;
   paymentMethod: string;
   setPaymentMethod: React.Dispatch<React.SetStateAction<string>>;
 }) => {
@@ -300,65 +308,72 @@ const PasabaySheet = ({
       className="flex-1 px-4"
       showsVerticalScrollIndicator={false}
     >
-      {/* Vehicle Section */}
-      <Text className="font-semibold text-gray-900 mb-4">Choose Vehicle</Text>
+      <View
+        style={{
+          paddingBottom: isBig ? 0 : 280,
+          flex: 1,
+        }}
+      >
+        {/* Vehicle Section */}
+        <Text className="font-semibold text-gray-900 mb-4">Choose Vehicle</Text>
 
-      {vehicles.map((v) => (
-        <Pressable
-          key={v.id}
-          onPress={() => setSelectedVehicle(v.id)}
-          android_ripple={{ color: "#f2f2f2" }}
-          className={`flex-row items-center justify-between rounded-2xl border px-4 py-3 mb-3 ${
-            selectedVehicle === v.id
-              ? "border-[#FFA840] bg-[#FFF7EF]"
-              : "border-gray-200 bg-white"
-          }`}
-        >
-          <View className="flex-row items-center gap-4">
-            <View className="w-14 h-14 rounded-xl bg-gray-50 items-center justify-center">
-              <Image
-                source={v.img}
-                style={{ width: 56, height: 40 }}
-                contentFit="contain"
-              />
+        {vehicles.map((v) => (
+          <Pressable
+            key={v.id}
+            onPress={() => setSelectedVehicle(v.id)}
+            android_ripple={{ color: "#f2f2f2" }}
+            className={`flex-row items-center justify-between rounded-2xl border px-4 py-3 mb-3 ${
+              selectedVehicle === v.id
+                ? "border-[#FFA840] bg-[#FFF7EF]"
+                : "border-gray-200 bg-white"
+            }`}
+          >
+            <View className="flex-row items-center gap-4">
+              <View className="w-14 h-14 rounded-xl bg-gray-50 items-center justify-center">
+                <Image
+                  source={v.img}
+                  style={{ width: 56, height: 40 }}
+                  contentFit="contain"
+                />
+              </View>
+
+              <View>
+                <Text className="text-sm font-semibold text-gray-900">
+                  {v.name}
+                </Text>
+                <Text className="text-xs text-gray-500 mt-0.5">
+                  Max. {v.capacity} • Standard
+                </Text>
+              </View>
             </View>
 
-            <View>
-              <Text className="text-sm font-semibold text-gray-900">
-                {v.name}
-              </Text>
-              <Text className="text-xs text-gray-500 mt-0.5">
-                Max. {v.capacity} • Standard
-              </Text>
-            </View>
-          </View>
+            <Text className="text-sm font-semibold text-[#FFA840]">
+              Php {v.price}
+            </Text>
+          </Pressable>
+        ))}
 
-          <Text className="text-sm font-semibold text-[#FFA840]">
-            Php {v.price}
+        {/* Pasabay Type Input */}
+        <View className="mt-5">
+          <Text className="font-semibold text-gray-900 mb-3">
+            Item to Pasabay
           </Text>
-        </Pressable>
-      ))}
+          <BottomSheetTextInput
+            multiline
+            numberOfLines={4}
+            placeholder="Type here..."
+            style={{ height: 120, textAlignVertical: "top" }}
+            className="py-4 px-2 border rounded-lg border-lightPrimary"
+          />
+        </View>
 
-      {/* Pasabay Type Input */}
-      <View className="mt-5">
-        <Text className="font-semibold text-gray-900 mb-3">
-          Item to Pasabay
-        </Text>
-        <BottomSheetTextInput
-          multiline
-          numberOfLines={4}
-          placeholder="Type here..."
-          style={{ height: 120, textAlignVertical: "top" }}
-          className="py-4 px-2 border rounded-lg border-lightPrimary"
-        />
-      </View>
-
-      {/* Payment Section */}
-      <View style={{ paddingBottom: insets.bottom + 60, marginTop: 20 }}>
-        <PaymentBtn
-          paymentMethod={paymentMethod}
-          setPaymentMethod={setPaymentMethod}
-        />
+        {/* Payment Section */}
+        <View style={{ paddingBottom: insets.bottom + 60, marginTop: 20 }}>
+          <PaymentBtn
+            paymentMethod={paymentMethod}
+            setPaymentMethod={setPaymentMethod}
+          />
+        </View>
       </View>
     </BottomSheetScrollView>
   );

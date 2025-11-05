@@ -1,14 +1,20 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import React, { useEffect, useRef } from "react";
-import { Animated, Easing, Pressable, TextInput, View } from "react-native";
+import { Animated, Easing, Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function LocationInputs({
   isExpanded,
   setIsExpanded,
+  onOpenSearch,
+  pickup,
+  dropoff,
 }: {
   isExpanded: boolean;
   setIsExpanded: React.Dispatch<React.SetStateAction<boolean>>;
+  onOpenSearch: (type: "pickup" | "dropoff") => void;
+  pickup: any;
+  dropoff: any;
 }) {
   const inset = useSafeAreaInsets();
   const slideAnim = useRef(new Animated.Value(0)).current;
@@ -22,7 +28,7 @@ export default function LocationInputs({
       easing: Easing.out(Easing.ease),
       useNativeDriver: true,
     }).start();
-  }, [isExpanded]);
+  }, [isExpanded, slideAnim]);
 
   return (
     <View
@@ -39,9 +45,9 @@ export default function LocationInputs({
         }}
         className="gap-2 px-4"
       >
-        {/* Input 1 */}
-        <View
-          className="flex-row items-center px-2 py-1 bg-white rounded-md"
+        <Pressable
+          onPress={() => onOpenSearch("pickup")}
+          className="flex-row items-center px-2 py-3 bg-white rounded-md"
           style={{
             shadowColor: "#000",
             shadowOffset: { width: 0, height: 2 },
@@ -51,15 +57,15 @@ export default function LocationInputs({
           }}
         >
           <Ionicons name="location-sharp" size={24} color="green" />
-          <TextInput
-            placeholder="Pickup location"
-            className="flex-1 text-base"
-          />
-        </View>
+          <Text className="flex-1 text-base text-gray-700 ml-2">
+            {pickup?.name || "Pickup location"}
+          </Text>
+        </Pressable>
 
-        {/* Input 2 */}
-        <View
-          className="flex-row items-center px-2 py-1 bg-white rounded-md"
+        {/* Dropoff Field */}
+        <Pressable
+          onPress={() => onOpenSearch("dropoff")}
+          className="flex-row items-center px-2 py-3 bg-white rounded-md"
           style={{
             shadowColor: "#000",
             shadowOffset: { width: 0, height: 2 },
@@ -69,13 +75,12 @@ export default function LocationInputs({
           }}
         >
           <Ionicons name="location-sharp" size={24} color="red" />
-          <TextInput
-            placeholder="Drop point location"
-            className="flex-1 text-base"
-          />
-        </View>
+          <Text className="flex-1 text-base text-gray-700 ml-2">
+            {dropoff?.name || "Drop point location"}
+          </Text>
+        </Pressable>
 
-        {/* Action Row */}
+        {/* Expand Button */}
         <Pressable
           className="items-center self-end justify-center bg-white rounded-full size-9 active:bg-gray-100"
           style={{
