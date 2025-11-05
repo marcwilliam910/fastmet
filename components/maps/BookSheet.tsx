@@ -202,7 +202,7 @@ const BookSheet = ({
       <BottomSheet
         ref={sheetRef}
         onChange={handleSheetChange}
-        index={1}
+        index={0}
         snapPoints={snapPoints}
         enableDynamicSizing={false}
         handleIndicatorStyle={{ backgroundColor: "#FFA840" }}

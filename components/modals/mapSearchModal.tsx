@@ -1,24 +1,28 @@
 import { Ionicons } from "@expo/vector-icons";
-import React, { useState } from "react";
+import { router } from "expo-router";
+import React, { useEffect, useState } from "react";
 import {
   FlatList,
   Modal,
   Platform,
   Pressable,
   Text,
-  TouchableOpacity,
+  TextInput,
   View,
 } from "react-native";
 import GooglePlacesTextInput from "react-native-google-places-textinput";
 
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 type SearchType = "pickup" | "dropoff";
 
 type SearchModalProps = {
   visible: boolean;
   onClose: () => void;
-  onSelect: (type: SearchType, location: any) => void;
+  onSelect: (place: any) => void;
   type: SearchType;
 };
 
@@ -53,12 +57,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
       icon: "location-outline",
     },
   ]);
-
-  const handlePlaceSelect = (place: any) => {
-    console.log("Place selected:", place);
-    // Handle the selected place here
-    onClose();
-  };
+  const inset = useSafeAreaInsets();
 
   const handleCurrentLocation = () => {
     console.log("Getting current location...");
@@ -67,7 +66,6 @@ const SearchModal: React.FC<SearchModalProps> = ({
 
   const renderRecentPlace = ({ item }: any) => (
     <Pressable
-      onPress={() => handlePlaceSelect(item)}
       className="flex-row items-center px-4 py-3 border-b border-gray-100"
       style={({ pressed }) => [
         { backgroundColor: pressed ? "#F3F4F6" : "transparent" },
@@ -83,18 +81,9 @@ const SearchModal: React.FC<SearchModalProps> = ({
     </Pressable>
   );
 
-  if (!GOOGLE_MAPS_API_KEY) {
-    return (
-      <Modal visible={visible} animationType="slide" transparent>
-        <View className="flex-1 bg-white justify-center items-center">
-          <Text>Google Maps API key not configured</Text>
-          <TouchableOpacity onPress={onClose} className="mt-4">
-            <Text className="text-blue-500">Close</Text>
-          </TouchableOpacity>
-        </View>
-      </Modal>
-    );
-  }
+  useEffect(() => {
+    if (!GOOGLE_MAPS_API_KEY) router.back();
+  }, []);
 
   return (
     <Modal
@@ -105,65 +94,89 @@ const SearchModal: React.FC<SearchModalProps> = ({
     >
       <SafeAreaView className="flex-1 bg-white">
         {/* Header */}
-        <View className="flex-row items-center justify-center px-4 py-4 border-b border-gray-200">
-          <Pressable onPress={onClose} className="absolute left-3">
+        <View className="flex-row items-center justify-center px-4 pb-4 ">
+          <Pressable onPress={onClose} className="absolute left-4 -top-1">
             <Ionicons name="chevron-back-outline" size={28} color="#FFA840" />
           </Pressable>
           <Text className="ml-3 text-lg font-semibold capitalize">
             {type} location
           </Text>
         </View>
-
         {/* Search Input */}
-        <View className="px-4 py-3 border-b border-gray-200">
-          <View className="flex-row items-center rounded-lg px-3 py-2">
+        <View className="mx-4 bg-white border-b border-gray-200 pb-4">
+          <View className="flex-row items-center rounded-xl px-3 py-2">
             <Ionicons
               name="search-outline"
-              size={20}
-              color="#9CA3AF"
-              style={{ marginRight: 8 }}
+              size={24}
+              color="#4B5563"
+              className="absolute top-5 left-3"
             />
-            <View style={{ flex: 1 }}>
+            <View style={{ flex: 1, marginLeft: 20 }}>
               <GooglePlacesTextInput
-                apiKey={GOOGLE_MAPS_API_KEY}
-                onPlaceSelect={handlePlaceSelect}
+                apiKey={GOOGLE_MAPS_API_KEY ?? ""}
+                onPlaceSelect={onSelect}
                 style={customStyles}
                 languageCode="en"
                 includedRegionCodes={["ph"]}
                 minCharsToFetch={2}
                 fetchDetails={true}
+                placeHolderText={`Where to ${type === "pickup" ? "pick up" : "drop off"}?`}
+                returnKeyType="search"
+                textContentType="location"
+                clearElement={
+                  <Ionicons name="close" size={24} className="pt-3" />
+                }
+                showLoadingIndicator={false}
               />
             </View>
           </View>
         </View>
 
-        {/* Current Location Button */}
-        <Pressable
-          onPress={handleCurrentLocation}
-          className="flex-row items-center px-4 py-4 border-b border-gray-100 bg-white"
-          style={({ pressed }) => [
-            { backgroundColor: pressed ? "#F9FAFB" : "transparent" },
-          ]}
-        >
-          <View className="w-12 h-12 bg-blue-50 rounded-full items-center justify-center mr-4 border border-blue-100">
-            <Ionicons name="navigate" size={22} color="#3B82F6" />
-          </View>
-          <Text className="text-gray-900 font-semibold text-base">
-            Use current location
+        {/* Additional Details Input */}
+
+        <View className="mx-4 mt-7">
+          <Text className="text-gray-700 font-semibold mb-2">
+            Location details{" "}
+            <Text className="text-gray-400 text-sm">(optional)</Text>
           </Text>
-        </Pressable>
+
+          <TextInput
+            multiline
+            numberOfLines={4}
+            placeholder="e.g. In front of Jollibee or near gate 3"
+            placeholderTextColor="#9CA3AF"
+            style={{ height: 120, textAlignVertical: "top" }}
+            className="p-4 border border-gray-200 rounded-xl text-gray-800 text-base bg-white"
+          />
+        </View>
+
+        {/* Current Location Button */}
+        <View className="px-4 mb-2 mt-5">
+          <Pressable
+            onPress={handleCurrentLocation}
+            className="flex-row items-center px-4 py-4 bg-white rounded-2xl border border-gray-200 active:bg-gray-50"
+          >
+            <View className="w-11 h-11 bg-blue-500 rounded-full items-center justify-center mr-3">
+              <Ionicons name="navigate" size={20} color="#FFFFFF" />
+            </View>
+            <Text className="text-gray-900 font-semibold text-base flex-1">
+              Use current location
+            </Text>
+            <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+          </Pressable>
+        </View>
 
         {/* Recent Places */}
-        <View className="flex-1">
-          <View className="px-4 py-3 border-b border-gray-100 bg-gray-50">
+        <View className="flex-1 px-4">
+          <View className="px-4 py-3 mb-2">
             <View className="flex-row items-center">
               <Ionicons
                 name="time-outline"
-                size={20}
+                size={18}
                 color="#6B7280"
-                style={{ marginRight: 10 }}
+                style={{ marginRight: 8 }}
               />
-              <Text className="font-bold text-gray-900 text-sm uppercase tracking-wide">
+              <Text className="font-semibold text-gray-600 text-xs uppercase tracking-wider">
                 Recent Places
               </Text>
             </View>
@@ -172,8 +185,18 @@ const SearchModal: React.FC<SearchModalProps> = ({
             data={recentPlaces}
             renderItem={renderRecentPlace}
             keyExtractor={(item) => item.id}
+            showsVerticalScrollIndicator={false}
           />
         </View>
+
+        <Pressable
+          className="items-center justify-center p-3.5 mx-8 bg-lightPrimary absolute left-0 right-0 active:bg-darkPrimary rounded-lg"
+          style={{
+            bottom: inset.bottom + 15,
+          }}
+        >
+          <Text className="text-lg font-bold text-white">Confirm</Text>
+        </Pressable>
       </SafeAreaView>
     </Modal>
   );
@@ -184,17 +207,18 @@ export default SearchModal;
 const customStyles = {
   container: {
     marginHorizontal: 0,
-    flex: undefined,
   },
   input: {
-    height: 45,
-    borderColor: "#ccc",
+    minHeight: 45, // Use minHeight instead of height
+    borderColor: "red",
     borderRadius: 8,
-    color: "red",
+    borderWidth: 0,
+    paddingVertical: 12,
   },
   suggestionsContainer: {
-    backgroundColor: "#ffffff",
+    backgroundColor: "#f3f4f6",
     maxHeight: 250,
+    marginTop: 20,
   },
   suggestionItem: {
     padding: 15,
@@ -210,7 +234,8 @@ const customStyles = {
     },
   },
   loadingIndicator: {
-    color: "#999",
+    color: "red",
+    paddingTop: 10,
   },
   placeholder: {
     color: "#999",

@@ -6,3 +6,9 @@ export type Vehicle = {
   price?: number; //placeholder
   capacity: string;
 };
+
+export type LocationData = {
+  name: string;
+  address: string;
+  coords: { lat: number; lng: number };
+} | null;
