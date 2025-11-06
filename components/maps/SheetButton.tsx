@@ -8,7 +8,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import LoadingModal from "../modals/loading";
 import NotLoggedInModal from "../modals/notLoggedInModal";
 
-const SheetButton = () => {
+const SheetButton = ({ next }: { next: () => void }) => {
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
   const [showModal, setShowModal] = useState(false);
@@ -17,6 +17,7 @@ const SheetButton = () => {
 
   const handleNext = () => {
     if (user === null) setShowModal(true);
+    else next();
   };
 
   const handleGoogleSignIn = async () => {

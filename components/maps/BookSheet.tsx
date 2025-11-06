@@ -4,6 +4,7 @@ import { formatDate } from "@/utils/date";
 import { Ionicons } from "@expo/vector-icons";
 import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { Image } from "expo-image";
+import { router } from "expo-router";
 import React, { useMemo, useRef, useState } from "react";
 import { Dimensions, Pressable, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -90,8 +91,8 @@ const BookSheet = () => {
             onPress={() => setSelectTimeModalVisible(true)}
             className="flex-row items-center gap-2 px-4 relative py-2 border-2 border-lightPrimary bg-white rounded-full active:scale-95"
           >
-            <Text className="text-sm font-semibold pr-1 bg-white text-darkPrimary absolute -top-3 -left-2">
-              Options:
+            <Text className="text-sm font-semibold  bg-white text-darkPrimary absolute -top-3 -left-1">
+              Option:
             </Text>
 
             <Text className="text-sm font-bold text-gray-900">
@@ -163,7 +164,9 @@ const BookSheet = () => {
         </BottomSheetScrollView>
       </BottomSheet>
 
-      <SheetButton />
+      <SheetButton
+        next={() => router.push("/(root_screens)/booking/services")}
+      />
 
       {infoModalVisible && (
         <VehicleInfoModal

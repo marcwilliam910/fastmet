@@ -12,3 +12,10 @@ export type LocationDetails = {
   address: string;
   coords: { lat: number; lng: number };
 } | null;
+
+export type Service = {
+  id: string;
+  name: string;
+  price: string | null;
+  icon: string;
+};

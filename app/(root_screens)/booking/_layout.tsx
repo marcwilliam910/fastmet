@@ -1,14 +1,5 @@
-import {Stack} from "expo-router";
-import {useEffect} from "react";
-import {StatusBar} from "react-native";
+import { Stack } from "expo-router";
 
 export default function BookingLayout() {
-  useEffect(() => {
-    StatusBar.setHidden(true);
-    return () => {
-      StatusBar.setHidden(false); // restore on unmount
-    };
-  }, []);
-
-  return <Stack screenOptions={{headerShown: false}} />;
+  return <Stack screenOptions={{ headerShown: false }} />;
 }

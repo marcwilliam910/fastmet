@@ -99,7 +99,7 @@ export default function MapScreen() {
       {/* Floating burger */}
       <Pressable
         onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
-        className="absolute top-10 left-4 bg-white p-2 rounded-full shadow-lg"
+        className="absolute top-4 left-4 bg-white p-2 rounded-full shadow-lg"
         style={{
           shadowColor: "#000", // color of the shadow
           shadowOffset: { width: 2, height: 2 }, // x/y offset
