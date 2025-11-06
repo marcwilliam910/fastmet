@@ -1,124 +1,68 @@
 import { useBookStore } from "@/store/useBookStore";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import React, { useEffect, useRef } from "react";
-import { Animated, Easing, Pressable, Text, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import React from "react";
+import { Pressable, Text, View } from "react-native";
 
 export default function LocationInputs({
-  isExpanded,
-  setIsExpanded,
   onOpenSearch,
 }: {
-  isExpanded: boolean;
-  setIsExpanded: React.Dispatch<React.SetStateAction<boolean>>;
   onOpenSearch: (type: "pickup" | "dropoff") => void;
 }) {
-  const inset = useSafeAreaInsets();
-  const slideAnim = useRef(new Animated.Value(0)).current;
-
-  const toggleExpand = () => setIsExpanded((prev) => !prev);
   const pickUp = useBookStore((state) => state.pickUp);
   const dropOff = useBookStore((state) => state.dropOff);
 
-  useEffect(() => {
-    Animated.timing(slideAnim, {
-      toValue: isExpanded ? 0 : -150,
-      duration: 300,
-      easing: Easing.out(Easing.ease),
-      useNativeDriver: true,
-    }).start();
-  }, [isExpanded, slideAnim]);
-
   return (
-    <View
-      className="absolute left-0 right-0 z-10"
-      style={{ marginTop: inset.top }}
-    >
-      <Animated.View
-        style={{
-          transform: [{ translateY: slideAnim }],
-          opacity: slideAnim.interpolate({
-            inputRange: [-150, 0],
-            outputRange: [0, 1],
-          }),
-        }}
-        className="gap-2 px-4"
+    <View className="justify-between items-center pl-8 ml-4 mr-3 gap-4 border-l-2 border-dashed border-gray-400 relative">
+      {/* Pickup Field */}
+      <Pressable
+        onPress={() => onOpenSearch("pickup")}
+        className="flex-row items-center px-4 py-2 border-2 border-gray-200 bg-white rounded-xl  active:scale-[0.98] active:border-lightPrimary w-full"
       >
-        <Pressable
-          onPress={() => onOpenSearch("pickup")}
-          className="flex-row items-center px-2 py-3 bg-white rounded-md"
-          style={{
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.2,
-            shadowRadius: 4,
-            elevation: 15,
-          }}
-        >
-          <Ionicons name="location-sharp" size={24} color="green" />
+        <View className="flex-1 ml-1">
+          <Text className="text-xs text-gray-500 font-medium mb-0.5">
+            PICKUP
+          </Text>
           <Text
-            className="flex-1 text-base text-gray-700 ml-2"
+            className="text-base text-gray-900 font-medium"
             numberOfLines={1}
           >
-            {pickUp?.address || "Pickup location"}
+            {pickUp?.address || "Choose pickup location"}
           </Text>
-        </Pressable>
-
-        {/* Dropoff Field */}
-        <Pressable
-          onPress={() => onOpenSearch("dropoff")}
-          className="flex-row items-center px-2 py-3 bg-white rounded-md"
-          style={{
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.2,
-            shadowRadius: 4,
-            elevation: 15,
-          }}
-        >
-          <Ionicons name="location-sharp" size={24} color="red" />
-          <Text
-            className="flex-1 text-base text-gray-700 ml-2"
-            numberOfLines={1}
-          >
-            {dropOff?.address || "Drop point location"}
-          </Text>
-        </Pressable>
-
-        {/* Expand Button */}
-        <Pressable
-          className="items-center self-end justify-center bg-white rounded-full size-9 active:bg-gray-100"
-          style={{
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.2,
-            shadowRadius: 4,
-            elevation: 15,
-          }}
-          onPress={toggleExpand}
-        >
-          <Ionicons name={"chevron-up"} size={22} color="#FFA840" />
-        </Pressable>
-      </Animated.View>
-
-      {/* Toggle Button when collapsed */}
-      {!isExpanded && (
-        <View className="absolute top-0 left-0 right-0 z-20">
-          <Pressable
-            className="items-center self-center justify-center bg-white rounded-full size-10 active:bg-gray-100"
-            style={{
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.2,
-              shadowRadius: 4,
-              elevation: 15,
-            }}
-            onPress={toggleExpand}
-          >
-            <Ionicons name="chevron-down" size={24} color="#FFA840" />
-          </Pressable>
         </View>
-      )}
+        <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+      </Pressable>
+
+      {/* Dropoff Field */}
+      <Pressable
+        onPress={() => onOpenSearch("dropoff")}
+        className="flex-row items-center px-4 py-2 border-2 border-gray-200 bg-white rounded-xl active:scale-[0.98] active:border-lightPrimary w-full"
+      >
+        <View className="flex-1 ml-1">
+          <Text className="text-xs text-gray-500 font-medium mb-0.5">
+            DROP OFF
+          </Text>
+          <Text
+            className="text-base text-gray-900 font-medium"
+            numberOfLines={1}
+          >
+            {dropOff?.address || "Choose drop off location"}
+          </Text>
+        </View>
+        <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+      </Pressable>
+
+      {/* Location Markers */}
+      <View className="absolute -left-4 top-0 bg-white pt-4 rounded-full">
+        <View className="bg-blue-500 rounded-full p-1.5">
+          <Ionicons name="location-sharp" size={16} color="white" />
+        </View>
+      </View>
+
+      <View className="absolute -left-4 bottom-0 bg-white pb-4 rounded-full">
+        <View className="bg-red-500 rounded-full p-1.5">
+          <Ionicons name="locate-sharp" size={16} color="white" />
+        </View>
+      </View>
     </View>
   );
 }

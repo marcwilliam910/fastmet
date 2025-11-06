@@ -152,6 +152,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
                 placeHolderText={`Where to ${type === "pickup" ? "pick up" : "drop off"}?`}
                 returnKeyType="search"
                 textContentType="location"
+                textAlign="left"
                 clearElement={
                   <Ionicons name="close" size={24} className="pt-3" />
                 }
@@ -245,6 +246,7 @@ const customStyles = {
     borderRadius: 8,
     borderWidth: 0,
     paddingVertical: 12,
+    minWidth: 320,
   },
   suggestionsContainer: {
     backgroundColor: "#f3f4f6",
