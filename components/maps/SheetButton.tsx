@@ -73,7 +73,7 @@ const SheetButton = () => {
     >
       <View className="flex-row items-center justify-between">
         <Text className="font-semibold">Total Amount</Text>
-        <Text className="font-bold text-lightPrimary text-lg">Php 2,000</Text>
+        <Text className="font-bold text-lightPrimary text-lg">Php 0</Text>
       </View>
 
       <Pressable

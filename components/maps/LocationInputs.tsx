@@ -12,7 +12,7 @@ export default function LocationInputs({
   const dropOff = useBookStore((state) => state.dropOff);
 
   return (
-    <View className="justify-between items-center pl-8 ml-4 mr-3 gap-4 border-l-2 border-dashed border-gray-400 relative">
+    <View className="justify-between items-center pl-8 ml-4 mr-3 gap-2 border-l-2 border-dashed border-gray-400 relative">
       {/* Pickup Field */}
       <Pressable
         onPress={() => onOpenSearch("pickup")}

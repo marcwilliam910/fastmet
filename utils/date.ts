@@ -26,5 +26,5 @@ export function formatDate(dateString: string) {
 
   const formattedTime = date.toLocaleTimeString("en-US", timeOptions);
 
-  return `${formattedDate} \n ${formattedTime}`;
+  return `${formattedDate}, ${formattedTime}`;
 }

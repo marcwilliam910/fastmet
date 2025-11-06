@@ -1,19 +1,22 @@
 import { useBookStore } from "@/store/useBookStore";
-import { router } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { DrawerActions } from "@react-navigation/native";
+import { router, useNavigation } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
-import { Platform, StyleSheet, View } from "react-native";
+import { Platform, Pressable, StyleSheet, View } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import MapViewDirections from "react-native-maps-directions";
+
+const GOOGLE_MAPS_API_KEY =
+  Platform.OS === "ios"
+    ? process.env.EXPO_PUBLIC_IOS_MAP_KEY
+    : process.env.EXPO_PUBLIC_ANDROID_MAP_KEY;
 
 export default function MapScreen() {
   const mapRef = useRef<MapView>(null);
   const pickUp = useBookStore((state) => state.pickUp);
   const dropOff = useBookStore((state) => state.dropOff);
-
-  const GOOGLE_MAPS_API_KEY =
-    Platform.OS === "ios"
-      ? process.env.EXPO_PUBLIC_IOS_MAP_KEY
-      : process.env.EXPO_PUBLIC_ANDROID_MAP_KEY;
+  const navigation = useNavigation();
 
   const [region, setRegion] = useState({
     latitude: 14.676,
@@ -24,7 +27,7 @@ export default function MapScreen() {
 
   useEffect(() => {
     if (!GOOGLE_MAPS_API_KEY) router.back();
-  }, [GOOGLE_MAPS_API_KEY]);
+  }, []);
 
   useEffect(() => {
     if (pickUp?.coords) {
@@ -92,6 +95,21 @@ export default function MapScreen() {
           />
         )}
       </MapView>
+
+      {/* Floating burger */}
+      <Pressable
+        onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
+        className="absolute top-10 left-4 bg-white p-2 rounded-full shadow-lg"
+        style={{
+          shadowColor: "#000", // color of the shadow
+          shadowOffset: { width: 2, height: 2 }, // x/y offset
+          shadowOpacity: 0.25, // opacity 0–1
+          shadowRadius: 3.84, // blur radius
+          elevation: 5, // Android only
+        }}
+      >
+        <Ionicons name="menu" size={28} color="#FFA840" />
+      </Pressable>
     </View>
   );
 }

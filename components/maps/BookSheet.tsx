@@ -66,8 +66,8 @@ const BookSheet = () => {
 
   // take consideration the inset bottom
   const snapPoints = useMemo(() => {
-    const first = 0.17 * screenHeight + insets.bottom;
-    const second = 0.63 * screenHeight + insets.bottom;
+    const first = 0.23 * screenHeight + insets.bottom;
+    const second = 0.6 * screenHeight + insets.bottom;
 
     return [first, second];
   }, [insets.bottom, screenHeight]);
@@ -83,42 +83,31 @@ const BookSheet = () => {
         enableContentPanningGesture={false} // 👈 This is the key
         containerStyle={{ zIndex: 20 }}
       >
-        <View className="flex-row justify-between items-center pb-5 pt-2 px-3">
+        <View className="flex-row justify-between items-center pb-5 pt-1.5 px-3">
           <Text className="text-lg font-bold">Booking Type</Text>
 
           <Pressable
             onPress={() => setSelectTimeModalVisible(true)}
-            className="flex-row items-center gap-2 px-4 relative py-2 border-2 border-orange-400 bg-white rounded-full active:scale-95"
+            className="flex-row items-center gap-2 px-4 relative py-2 border-2 border-lightPrimary bg-white rounded-full active:scale-95"
           >
-            <Text className="text-sm font-semibold pr-1 bg-white text-orange-600 absolute -top-3 -left-2">
+            <Text className="text-sm font-semibold pr-1 bg-white text-darkPrimary absolute -top-3 -left-2">
               Options:
             </Text>
 
-            <View className="items-center gap-2 flex-row">
-              {bookingType?.type === "schedule" ? (
-                <>
-                  <Text className="text-sm font-bold text-gray-900">
-                    Schedule:
-                  </Text>
-                  <Text className="text-sm text-center text-gray-700">
-                    {formatDate(bookingType.value)}
-                  </Text>
-                </>
-              ) : (
-                <Text className="text-sm font-bold text-gray-900">
-                  {bookingType?.value}
-                </Text>
-              )}
-            </View>
+            <Text className="text-sm font-bold text-gray-900">
+              {bookingType?.type === "schedule"
+                ? formatDate(bookingType.value)
+                : bookingType?.value}
+            </Text>
 
             <Ionicons name="chevron-down" size={14} color="#9CA3AF" />
           </Pressable>
         </View>
 
         <BottomSheetScrollView className="flex-1 px-3">
-          <View className="gap-6 mb-48">
-            <View className=" items-center gap-2 justify-center">
-              <Text className="font-semibold text-gray-900 self-start">
+          <View className="gap-4 mb-40">
+            <View className=" items-center gap-1 justify-center">
+              <Text className="font-semibold text-sm text-gray-900 self-start">
                 Choose Vehicle
               </Text>
               <ScrollView
@@ -145,12 +134,11 @@ const BookSheet = () => {
                       </Text>
                       <Image
                         source={v.img}
-                        style={{ height: 40, width: 54 }}
+                        style={{ height: 35, width: 45 }}
                         contentFit="contain"
                       />
                     </Pressable>
 
-                    {/* Info icon spacing improved */}
                     <Pressable
                       onPress={() => setInfoModalVisible(true)}
                       className="absolute -right-2 -top-2 p-0.5  bg-white rounded-full"

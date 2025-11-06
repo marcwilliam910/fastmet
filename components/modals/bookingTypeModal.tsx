@@ -41,19 +41,19 @@ export default function BookingTypeModal({
     {
       id: "asap",
       name: "ASAP",
-      icon: "car-outline",
+      icon: "flash-outline", // fast or immediate booking
       onPress: () => handleConfirm("asap"),
     },
     {
       id: "pooling",
       name: "Pooling",
-      icon: "time-outline",
+      icon: "people-outline", // shared ride context
       onPress: () => handleConfirm("pooling"),
     },
     {
       id: "schedule",
       name: "Schedule",
-      icon: "calendar-outline",
+      icon: "calendar-outline", // planned ride
       onPress: () => {
         setShowCalendar(true);
         setStep("calendar");
@@ -85,25 +85,34 @@ export default function BookingTypeModal({
                 {OPTIONS.map((value) => (
                   <Pressable
                     key={value.id}
-                    className={`flex-row items-center gap-2 px-4 py-3 border rounded-lg ${
+                    className={`flex-row items-center justify-between px-4 py-3 border rounded-lg ${
                       value.id === bookingType?.type
                         ? " border-darkPrimary bg-orange-50"
                         : " border-gray-300"
                     }`}
                     onPress={value.onPress}
                   >
-                    <Ionicons
-                      name={value.icon as keyof typeof Ionicons.glyphMap}
-                      size={20}
-                      color={
-                        value.id === bookingType?.type ? "#FFA840" : "gray"
-                      }
-                    />
-                    <Text
-                      className={`text-base font-medium ${value.id === bookingType?.type ? "text-lightPrimary" : ""}`}
-                    >
-                      {value.name}
-                    </Text>
+                    <View className="flex-row gap-2 items-center">
+                      <Ionicons
+                        name={value.icon as keyof typeof Ionicons.glyphMap}
+                        size={20}
+                        color={
+                          value.id === bookingType?.type ? "#FFA840" : "gray"
+                        }
+                      />
+                      <Text
+                        className={`text-base font-medium ${value.id === bookingType?.type ? "text-lightPrimary" : ""}`}
+                      >
+                        {value.name}
+                      </Text>
+                    </View>
+                    <Pressable>
+                      <Ionicons
+                        name="information-circle"
+                        color="#FFA840"
+                        size={20}
+                      />
+                    </Pressable>
                   </Pressable>
                 ))}
               </View>

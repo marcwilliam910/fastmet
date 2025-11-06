@@ -1,7 +1,8 @@
+import NotLoggedIn from "@/components/notLoggedIn";
 import useAuth from "@/hooks/useAuth";
-import {Ionicons} from "@expo/vector-icons";
-import {Image, ImageBackground} from "expo-image";
-import {router} from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { Image, ImageBackground } from "expo-image";
+import { router } from "expo-router";
 import {
   ActivityIndicator,
   Pressable,
@@ -11,7 +12,7 @@ import {
 } from "react-native";
 
 const Wallet = () => {
-  const {user, loading} = useAuth();
+  const { user, loading } = useAuth();
 
   if (loading) {
     return (
@@ -20,17 +21,20 @@ const Wallet = () => {
       </View>
     );
   }
+  if (user === null) {
+    return <NotLoggedIn />;
+  }
 
   return (
     <ScrollView
       className="flex-1 px-3 pt-4 bg-white"
-      contentContainerStyle={{gap: 16}}
+      contentContainerStyle={{ gap: 16 }}
     >
       {/* Balance Card */}
       <ImageBackground
         source={require("@/assets/images/credit_card.png")}
-        style={{width: "100%", height: 180}}
-        imageStyle={{borderRadius: 16}}
+        style={{ width: "100%", height: 180 }}
+        imageStyle={{ borderRadius: 16 }}
         contentFit="fill"
       >
         <View className="justify-between flex-1 p-5">
@@ -41,7 +45,7 @@ const Wallet = () => {
             <View className="p-2 rounded-lg bg-secondary">
               <Image
                 source={require("@/assets/fastmet/logo.png")}
-                style={{width: 40, height: 25}}
+                style={{ width: 40, height: 25 }}
                 contentFit="contain"
               />
             </View>
@@ -84,7 +88,7 @@ const Wallet = () => {
           >
             <Image
               source={item.src}
-              style={{width: 30, height: 30}}
+              style={{ width: 30, height: 30 }}
               contentFit="contain"
             />
             <Text className="mt-1 font-semibold text-white">{item.label}</Text>
