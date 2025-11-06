@@ -1,10 +1,13 @@
+import { useBookStore } from "@/store/useBookStore";
 import { Vehicle } from "@/types/book";
+import { formatDate } from "@/utils/date";
 import { Ionicons } from "@expo/vector-icons";
 import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { Image } from "expo-image";
 import React, { useMemo, useRef, useState } from "react";
 import { Dimensions, Pressable, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import BookingTypeModal from "../modals/bookingTypeModal";
 import SearchModal from "../modals/mapSearchModal";
 import { VehicleInfoModal } from "../modals/vehicleInfoModal";
 import LocationInputs from "./LocationInputs";
@@ -55,9 +58,11 @@ const BookSheet = () => {
   const { height: screenHeight } = Dimensions.get("window");
   const [infoModalVisible, setInfoModalVisible] = useState(false);
   const [searchModalVisible, setSearchModalVisible] = useState(false);
+  const [selectTimeModalVisible, setSelectTimeModalVisible] = useState(false);
   const [searchType, setSearchType] = useState<"pickup" | "dropoff" | null>(
     null
   );
+  const bookingType = useBookStore((state) => state.bookingType);
 
   // take consideration the inset bottom
   const snapPoints = useMemo(() => {
@@ -78,26 +83,40 @@ const BookSheet = () => {
         enableContentPanningGesture={false} // 👈 This is the key
         containerStyle={{ zIndex: 20 }}
       >
-        <View className="flex-row justify-between items-center pb-5 px-3">
+        <View className="flex-row justify-between items-center pb-5 pt-2 px-3">
           <Text className="text-lg font-bold">Booking Type</Text>
 
           <Pressable
-            onPress={() => {
-              // Open your booking type modal/sheet here
-              // e.g., setShowBookingTypeModal(true)
-            }}
-            className="flex-row items-center gap-2 px-4 py-2 border-2 border-orange-400 bg-white rounded-full active:scale-95"
+            onPress={() => setSelectTimeModalVisible(true)}
+            className="flex-row items-center gap-2 px-4 relative py-2 border-2 border-orange-400 bg-white rounded-full active:scale-95"
           >
-            <Text className="text-sm font-semibold text-orange-600">
-              Option:
+            <Text className="text-sm font-semibold pr-1 bg-white text-orange-600 absolute -top-3 -left-2">
+              Options:
             </Text>
-            <Text className="text-sm font-bold text-gray-900">ASAP</Text>
+
+            <View className="items-center gap-2 flex-row">
+              {bookingType?.type === "schedule" ? (
+                <>
+                  <Text className="text-sm font-bold text-gray-900">
+                    Schedule:
+                  </Text>
+                  <Text className="text-sm text-center text-gray-700">
+                    {formatDate(bookingType.value)}
+                  </Text>
+                </>
+              ) : (
+                <Text className="text-sm font-bold text-gray-900">
+                  {bookingType?.value}
+                </Text>
+              )}
+            </View>
+
             <Ionicons name="chevron-down" size={14} color="#9CA3AF" />
           </Pressable>
         </View>
 
         <BottomSheetScrollView className="flex-1 px-3">
-          <View className="gap-6">
+          <View className="gap-6 mb-48">
             <View className=" items-center gap-2 justify-center">
               <Text className="font-semibold text-gray-900 self-start">
                 Choose Vehicle
@@ -171,6 +190,13 @@ const BookSheet = () => {
           visible={searchModalVisible}
           type={searchType}
           onClose={() => setSearchModalVisible(false)}
+        />
+      )}
+
+      {selectTimeModalVisible && (
+        <BookingTypeModal
+          visible={selectTimeModalVisible}
+          onClose={() => setSelectTimeModalVisible(false)}
         />
       )}
     </>
