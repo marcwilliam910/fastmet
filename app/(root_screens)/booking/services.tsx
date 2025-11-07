@@ -84,9 +84,9 @@ const Services = () => {
                     <Text className="text-sm font-semibold text-gray-600">
                       {service.name}
                     </Text>
-                    {service.price && (
+                    {service.price > 0 && (
                       <Text className="text-sm font-semibold text-darkPrimary">
-                        {service.price}
+                        Php {service.price}
                       </Text>
                     )}
                   </View>
@@ -174,7 +174,7 @@ export const ServiceCard = ({
           <Text className="text-sm font-semibold">{service.name}</Text>
           {service.price && (
             <Text className="text-sm font-semibold text-darkPrimary">
-              {service.price}
+              Php {service.price}
             </Text>
           )}
         </View>

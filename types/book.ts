@@ -16,6 +16,6 @@ export type LocationDetails = {
 export type Service = {
   id: string;
   name: string;
-  price: string | null;
+  price: number;
   icon: string;
 };

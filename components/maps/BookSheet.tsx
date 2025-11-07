@@ -1,5 +1,5 @@
 import { useBookStore } from "@/store/useBookStore";
-import { Vehicle } from "@/types/book";
+import { vehicles } from "@/utils/constants";
 import { formatDate } from "@/utils/date";
 import { Ionicons } from "@expo/vector-icons";
 import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
@@ -14,48 +14,9 @@ import { VehicleInfoModal } from "../modals/vehicleInfoModal";
 import LocationInputs from "./LocationInputs";
 import SheetButton from "./SheetButton";
 
-const vehicles: Vehicle[] = [
-  {
-    id: "1",
-    name: "Motorcycle",
-    img: require("@/assets/vehicle/motor.png"),
-    desc: "Ideal for fast solo rides or small deliveries. Carries 1 passenger.",
-    capacity: "20kg",
-  },
-  {
-    id: "2",
-    name: "Sedan",
-    img: require("@/assets/vehicle/car.png"),
-    desc: "Perfect for city trips and comfortable rides. Fits up to 4 passengers.",
-    capacity: "100kg",
-  },
-  {
-    id: "3",
-    name: "MPV/SUV",
-    img: require("@/assets/vehicle/suv.png"),
-    desc: "Spacious and powerful for long trips or groups. Fits up to 6 passengers.",
-    capacity: "300kg",
-  },
-  {
-    id: "4",
-    name: "Truck",
-    img: require("@/assets/vehicle/truck.png"),
-    desc: "Spacious and powerful for long trips or groups. Fits up to 6 passengers.",
-    capacity: "300kg",
-  },
-  {
-    id: "5",
-    name: "FastMet Truck",
-    img: require("@/assets/vehicle/fastmet_truck.png"),
-    desc: "Spacious and powerful for long trips or groups. Fits up to 6 passengers.",
-    capacity: "300kg",
-  },
-];
-
 const BookSheet = () => {
   const sheetRef = useRef<BottomSheet>(null);
   const insets = useSafeAreaInsets();
-  const [selectedVehicle, setSelectedVehicle] = useState(vehicles[0].id);
   const { height: screenHeight } = Dimensions.get("window");
   const [infoModalVisible, setInfoModalVisible] = useState(false);
   const [searchModalVisible, setSearchModalVisible] = useState(false);
@@ -64,6 +25,8 @@ const BookSheet = () => {
     null
   );
   const bookingType = useBookStore((state) => state.bookingType);
+  const selectedVehicle = useBookStore((state) => state.selectedVehicle);
+  const setSelectedVehicle = useBookStore((state) => state.setSelectedVehicle);
 
   // take consideration the inset bottom
   const snapPoints = useMemo(() => {
@@ -120,15 +83,15 @@ const BookSheet = () => {
                   <View key={v.id} className="relative items-center gap-1 mr-3">
                     <Pressable
                       className={`items-center gap-3 px-4 py-2 rounded-lg ${
-                        selectedVehicle === v.id
+                        selectedVehicle?.id === v.id
                           ? "border-2 border-lightPrimary"
                           : ""
                       }`}
-                      onPress={() => setSelectedVehicle(v.id)}
+                      onPress={() => setSelectedVehicle(v)}
                     >
                       <Text
                         className={`text-xs text-gray-500 ${
-                          selectedVehicle === v.id ? "font-semibold" : ""
+                          selectedVehicle?.id === v.id ? "font-semibold" : ""
                         }`}
                       >
                         {v.name}

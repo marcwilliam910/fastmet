@@ -34,8 +34,9 @@ export default function LocationInputs({
 
       {/* Dropoff Field */}
       <Pressable
+        disabled={!pickUp}
         onPress={() => onOpenSearch("dropoff")}
-        className="flex-row items-center px-4 py-2 border-2 border-gray-200 bg-white rounded-xl active:scale-[0.98] active:border-lightPrimary w-full"
+        className={`flex-row items-center px-4 py-2 border-2 border-gray-200 bg-white rounded-xl active:scale-[0.98] active:border-lightPrimary w-full ${!pickUp ? "opacity-50" : ""}`}
       >
         <View className="flex-1 ml-1">
           <Text className="text-xs text-gray-500 font-medium mb-0.5">
@@ -59,7 +60,9 @@ export default function LocationInputs({
       </View>
 
       <View className="absolute -left-4 bottom-0 bg-white pb-4 rounded-full">
-        <View className="bg-red-500 rounded-full p-1.5">
+        <View
+          className={`bg-red-500 rounded-full p-1.5 ${!pickUp ? "opacity-50" : ""}`}
+        >
           <Ionicons name="locate-sharp" size={16} color="white" />
         </View>
       </View>

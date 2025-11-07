@@ -1,7 +1,7 @@
 import BookSheet from "@/components/maps/BookSheet";
 import MapScreen from "@/components/maps/MapScreen";
 import React from "react";
-import { View } from "react-native";
+import { StatusBar, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const Book = () => {
@@ -15,6 +15,8 @@ const Book = () => {
       </View>
 
       <BookSheet />
+
+      <StatusBar hidden />
     </SafeAreaView>
   );
 };

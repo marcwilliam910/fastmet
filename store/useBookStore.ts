@@ -1,4 +1,5 @@
-import type { LocationDetails, Service } from "@/types/book";
+import type { LocationDetails, Service, Vehicle } from "@/types/book";
+import { calculateAccuratePrice } from "@/utils/calculatePrice";
 import { defaultService } from "@/utils/constants";
 import { create } from "zustand";
 
@@ -9,10 +10,18 @@ type BookingType = {
   value: string;
 };
 
+type RouteData = {
+  distance: number;
+  price: number;
+  duration: number;
+};
+
 interface BookState {
   pickUp: LocationDetails;
   dropOff: LocationDetails;
   bookingType: BookingType | null;
+  selectedVehicle: Vehicle | null;
+  routeData: RouteData;
 
   // not sure
   addedServices: Service[];
@@ -21,24 +30,79 @@ interface BookState {
   setPickUp: (details: LocationDetails) => void;
   setDropOff: (details: LocationDetails) => void;
   setBookingType: (type: BookingType | null) => void;
+  setSelectedVehicle: (vehicle: Vehicle) => void;
+  setPrice: (p: number) => void;
+  calculatePrice: () => void;
 }
 
-export const useBookStore = create<BookState>((set) => ({
+export const useBookStore = create<BookState>((set, get) => ({
   pickUp: null,
   dropOff: null,
   bookingType: { type: "asap", value: "ASAP" },
+  selectedVehicle: null,
+  routeData: {
+    distance: 0,
+    duration: 0,
+    price: 0,
+  },
 
   // not sure
   addedServices: [...defaultService],
 
   toggleService: (service: Service) =>
-    set((state) => ({
-      addedServices: state.addedServices.find((s) => s.id === service.id)
-        ? state.addedServices.filter((s) => s.id !== service.id)
-        : [...state.addedServices, service],
-    })),
+    set((state) => {
+      const exists = state.addedServices.find((s) => s.id === service.id);
+
+      let updatedServices;
+      let updatedPrice = state.routeData.price;
+
+      if (exists) {
+        // Remove service and subtract its price
+        updatedServices = state.addedServices.filter(
+          (s) => s.id !== service.id
+        );
+        updatedPrice -= service.price;
+      } else {
+        // Add service and add its price
+        updatedServices = [...state.addedServices, service];
+        updatedPrice += service.price;
+      }
+
+      return {
+        addedServices: updatedServices,
+        routeData: { ...state.routeData, price: updatedPrice },
+      };
+    }),
 
   setPickUp: (details: LocationDetails) => set({ pickUp: details }),
   setDropOff: (details: LocationDetails) => set({ dropOff: details }),
   setBookingType: (type) => set({ bookingType: type }),
+  setSelectedVehicle: (vehicle) => set({ selectedVehicle: vehicle }),
+  setPrice: (p) =>
+    set((state) => ({
+      routeData: { ...state.routeData, price: p },
+    })),
+
+  calculatePrice: async () => {
+    const { pickUp, dropOff } = get();
+    if (!pickUp || !dropOff) return;
+
+    try {
+      const { total, distanceKm, durationMin } = await calculateAccuratePrice(
+        pickUp,
+        dropOff
+      );
+
+      set((state) => ({
+        routeData: {
+          ...state.routeData,
+          price: total,
+          distance: distanceKm,
+          duration: durationMin,
+        },
+      }));
+    } catch (e) {
+      console.error("Failed to calculate price", e);
+    }
+  },
 }));

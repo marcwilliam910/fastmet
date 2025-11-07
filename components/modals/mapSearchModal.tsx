@@ -1,12 +1,12 @@
 import { useBookStore } from "@/store/useBookStore";
 import { LocationDetails } from "@/types/book";
+import { GOOGLE_MAPS_API_KEY } from "@/utils/constants";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   FlatList,
   Modal,
-  Platform,
   Pressable,
   Text,
   TextInput,
@@ -28,11 +28,6 @@ type SearchModalProps = {
   onClose: () => void;
   type: SearchType;
 };
-
-const GOOGLE_MAPS_API_KEY =
-  Platform.OS === "ios"
-    ? process.env.EXPO_PUBLIC_IOS_MAP_KEY
-    : process.env.EXPO_PUBLIC_ANDROID_MAP_KEY;
 
 const SearchModal: React.FC<SearchModalProps> = ({
   visible,

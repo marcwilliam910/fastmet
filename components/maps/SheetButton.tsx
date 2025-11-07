@@ -1,8 +1,9 @@
 import useAuth from "@/hooks/useAuth";
 import { useRegisterProfile } from "@/mutations/userMutations";
 import { signInWithGoogle } from "@/services/googleAuth";
+import { useBookStore } from "@/store/useBookStore";
 import { User } from "@/types/user";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import LoadingModal from "../modals/loading";
@@ -14,6 +15,12 @@ const SheetButton = ({ next }: { next: () => void }) => {
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const { mutate } = useRegisterProfile();
+
+  const selectedVehicle = useBookStore((state) => state.selectedVehicle);
+  const pickUp = useBookStore((state) => state.pickUp);
+  const dropOff = useBookStore((state) => state.dropOff);
+  const routeData = useBookStore((state) => state.routeData);
+  const calculatePrice = useBookStore((state) => state.calculatePrice);
 
   const handleNext = () => {
     if (user === null) setShowModal(true);
@@ -59,6 +66,13 @@ const SheetButton = ({ next }: { next: () => void }) => {
     }
   };
 
+  const isDisable = !selectedVehicle || !pickUp || !dropOff;
+
+  useEffect(() => {
+    if (pickUp && dropOff) calculatePrice();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pickUp, dropOff]);
+
   return (
     <View
       className="px-5 py-3 gap-3 bg-white z-30"
@@ -74,11 +88,14 @@ const SheetButton = ({ next }: { next: () => void }) => {
     >
       <View className="flex-row items-center justify-between">
         <Text className="font-semibold">Total Amount</Text>
-        <Text className="font-bold text-lightPrimary text-lg">Php 0</Text>
+        <Text className="font-bold text-lightPrimary text-lg">
+          Php {routeData.price.toFixed(2)}
+        </Text>
       </View>
 
       <Pressable
-        className="flex-1 py-3 rounded-md bg-lightPrimary active:bg-darkPrimary"
+        disabled={isDisable}
+        className={`flex-1 py-3 rounded-md bg-lightPrimary active:bg-darkPrimary ${isDisable ? "opacity-60" : ""}`}
         onPress={handleNext}
       >
         <Text className="font-bold text-center text-lg text-white">Next</Text>
