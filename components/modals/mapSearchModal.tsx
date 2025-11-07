@@ -66,6 +66,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
     if (!selectedPlace || !selectedPlace.details) return;
 
     const details = selectedPlace.details;
+    console.log(JSON.stringify(details, null, 2));
 
     const locationData: LocationDetails = {
       name: details.displayName?.text || "Unknown location",
@@ -138,7 +139,11 @@ const SearchModal: React.FC<SearchModalProps> = ({
               <GooglePlacesTextInput
                 apiKey={GOOGLE_MAPS_API_KEY ?? ""}
                 onPlaceSelect={(place) => setSelectedPlace(place)}
-                value={type === "pickup" ? pickUp?.address : dropOff?.address}
+                value={
+                  type === "pickup"
+                    ? pickUp?.name + ", " + pickUp?.address
+                    : dropOff?.name + ", " + dropOff?.address
+                }
                 style={customStyles}
                 languageCode="en"
                 includedRegionCodes={["ph"]}

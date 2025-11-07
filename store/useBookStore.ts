@@ -84,7 +84,7 @@ export const useBookStore = create<BookState>((set, get) => ({
     })),
 
   calculatePrice: async () => {
-    const { pickUp, dropOff } = get();
+    const { pickUp, dropOff, addedServices } = get();
     if (!pickUp || !dropOff) return;
 
     try {
@@ -93,14 +93,16 @@ export const useBookStore = create<BookState>((set, get) => ({
         dropOff
       );
 
-      set((state) => ({
+      // compute total added services price
+      const servicesTotal = addedServices.reduce((acc, s) => acc + s.price, 0);
+
+      set({
         routeData: {
-          ...state.routeData,
-          price: total,
           distance: distanceKm,
           duration: durationMin,
+          price: total + servicesTotal, // base + services
         },
-      }));
+      });
     } catch (e) {
       console.error("Failed to calculate price", e);
     }

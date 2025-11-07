@@ -111,3 +111,17 @@ const SheetButton = ({ next }: { next: () => void }) => {
 };
 
 export default SheetButton;
+
+{
+  /* Distance and Duration */
+}
+{
+  /* <View className="flex-row justify-between items-center">
+<Text className="text-gray-500 text-sm">
+  Distance: {routeData.distance.toFixed(2)} km
+</Text>
+<Text className="text-gray-500 text-sm">
+  Duration: {Math.round(routeData.duration)} min
+</Text>
+</View> */
+}

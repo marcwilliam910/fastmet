@@ -26,7 +26,7 @@ export default function LocationInputs({
             className="text-base text-gray-900 font-medium"
             numberOfLines={1}
           >
-            {pickUp?.address || "Choose pickup location"}
+            {pickUp?.name + ", " + pickUp?.address || "Choose pickup location"}
           </Text>
         </View>
         <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
@@ -46,7 +46,8 @@ export default function LocationInputs({
             className="text-base text-gray-900 font-medium"
             numberOfLines={1}
           >
-            {dropOff?.address || "Choose drop off location"}
+            {dropOff?.name + ", " + dropOff?.address ||
+              "Choose drop off location"}
           </Text>
         </View>
         <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />

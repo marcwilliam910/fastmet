@@ -5,13 +5,7 @@ import { defaultService, serviceAddons } from "@/utils/constants";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React from "react";
-import {
-  KeyboardAvoidingView,
-  Pressable,
-  ScrollView,
-  Text,
-  View,
-} from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -33,19 +27,18 @@ const Services = () => {
         </Pressable>
         <Text className="text-lg font-semibold">Services</Text>
         <Text className="absolute text-sm font-semibold right-5 top-3.5">
-          Step 2/3
+          Step 2/4
         </Text>
       </View>
-      <KeyboardAvoidingView className="flex-1" behavior="padding">
-        <ScrollView
-          className="flex-1 px-6"
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{
-            paddingBottom: insets.bottom + (insets.bottom === 0 ? 120 : 70),
-          }}
-        >
-          {/* Summary Card */}
-          {/* <View className="flex-row justify-around py-4 mt-4 border-2 rounded-lg border-lightPrimary">
+      <ScrollView
+        className="flex-1 px-6"
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{
+          paddingBottom: insets.bottom + (insets.bottom === 0 ? 120 : 70),
+        }}
+      >
+        {/* Summary Card */}
+        {/* <View className="flex-row justify-around py-4 mt-4 border-2 rounded-lg border-lightPrimary">
             <View className="items-center">
               <Text className="mb-1 text-xs font-semibold text-lightPrimary">
                 Price:
@@ -66,53 +59,53 @@ const Services = () => {
             </View>
           </View> */}
 
-          {/* Services Add's on */}
-          <Text className="mb-4 text-lg font-bold">Services Add-Ons</Text>
+        {/* Services Add's on */}
+        <Text className="mb-4 text-lg font-bold">Services Add-Ons</Text>
 
-          {/* Service Items */}
-          <View className="gap-3 mb-6">
-            {defaultService.map((service) => (
-              <View
-                key={service.id}
-                className="flex-row items-center justify-between p-3 border border-gray-200 rounded-lg bg-gray-50"
-              >
-                <View className="flex-row items-center flex-1 gap-3">
-                  <View className="items-center justify-center w-10 h-10 bg-gray-100 rounded-lg">
-                    <Text className="text-xl">{service.icon}</Text>
-                  </View>
-                  <View className="flex-1 gap-1">
-                    <Text className="text-sm font-semibold text-gray-600">
-                      {service.name}
-                    </Text>
-                    {service.price > 0 && (
-                      <Text className="text-sm font-semibold text-darkPrimary">
-                        Php {service.price}
-                      </Text>
-                    )}
-                  </View>
+        {/* Service Items */}
+        <View className="gap-3 mb-6">
+          {defaultService.map((service) => (
+            <View
+              key={service.id}
+              className="flex-row items-center justify-between p-3 border border-gray-200 rounded-lg bg-gray-50"
+            >
+              <View className="flex-row items-center flex-1 gap-3">
+                <View className="items-center justify-center w-10 h-10 bg-gray-100 rounded-lg">
+                  <Text className="text-xl">{service.icon}</Text>
                 </View>
-                <View className="items-center justify-center w-6 h-6 rounded bg-lightPrimary">
-                  <Ionicons name="checkmark" size={16} color="white" />
+                <View className="flex-1 gap-1">
+                  <Text className="text-sm font-semibold text-gray-600">
+                    {service.name}
+                  </Text>
+                  {service.price > 0 && (
+                    <Text className="text-sm font-semibold text-darkPrimary">
+                      Php {service.price}
+                    </Text>
+                  )}
                 </View>
               </View>
-            ))}
+              <View className="items-center justify-center w-6 h-6 rounded bg-lightPrimary">
+                <Ionicons name="checkmark" size={16} color="white" />
+              </View>
+            </View>
+          ))}
 
-            {serviceAddons.map((service) => {
-              const isSelected = addedServices.some((s) => s.id === service.id);
+          {serviceAddons.map((service) => {
+            const isSelected = addedServices.some((s) => s.id === service.id);
 
-              return (
-                <ServiceCard
-                  key={service.id}
-                  service={service}
-                  isSelected={isSelected}
-                  toggleService={toggleService}
-                />
-              );
-            })}
-          </View>
+            return (
+              <ServiceCard
+                key={service.id}
+                service={service}
+                isSelected={isSelected}
+                toggleService={toggleService}
+              />
+            );
+          })}
+        </View>
 
-          {/* Note and attachment */}
-          {/* <View className="gap-5">
+        {/* Note and attachment */}
+        {/* <View className="gap-5">
             <View className="gap-2">
               <Text className="text-lg font-bold">Note and attachment</Text>
               <TextInput
@@ -139,8 +132,7 @@ const Services = () => {
               </View>
             </View>
           </View> */}
-        </ScrollView>
-      </KeyboardAvoidingView>
+      </ScrollView>
 
       <SheetButton
         next={() => router.push("/(root_screens)/booking/contactInfo")}
