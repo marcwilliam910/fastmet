@@ -1,10 +1,105 @@
+import {Ionicons} from "@expo/vector-icons";
 import React from "react";
-import { Text, View } from "react-native";
+import {Pressable, ScrollView, Text, View} from "react-native";
 
 export default function CompleteRoute() {
   return (
-    <View className="flex-1 items-center justify-center bg-white">
-      <Text>Completed Requests</Text>
-    </View>
+    <ScrollView
+      showsVerticalScrollIndicator={false}
+      className="flex-1 p-4 bg-white"
+      contentContainerStyle={{
+        paddingBottom: 40,
+        gap: 15,
+      }}
+    >
+      <CompleteCard
+        vehicle="Motorcycle"
+        bookedTime="3:30 PM"
+        pickup="13, Allen Street Village, San Isidro hagonoy Bulacan sfsd ddfg"
+        drop="Hernandez Street"
+        distance="3KM"
+        paymentType="Cash Payment"
+        amount="Php 100"
+      />
+    </ScrollView>
   );
 }
+
+type CompleteCardProps = {
+  vehicle: string;
+  bookedTime: string;
+  pickup: string;
+  drop: string;
+  distance: string;
+  paymentType: string;
+  amount: string;
+};
+
+const CompleteCard = ({
+  vehicle,
+  bookedTime,
+  pickup,
+  drop,
+  distance,
+  paymentType,
+  amount,
+}: CompleteCardProps) => {
+  return (
+    <View
+      className="overflow-hidden bg-white rounded-2xl"
+      style={{
+        shadowColor: "#000",
+        shadowOffset: {
+          width: 0,
+          height: 4,
+        },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+        elevation: 8, // for Android
+      }}
+    >
+      {/* Header */}
+      <View className="flex-row items-center justify-between px-5 py-3 bg-lightPrimary">
+        <Text className="text-lg font-semibold text-white">{vehicle}</Text>
+        <Text className="text-sm text-white">Booked at {bookedTime}</Text>
+      </View>
+
+      {/* Body */}
+      <View className="px-3 py-5">
+        {/* Pickup & Drop */}
+        <View className="relative flex-row items-center justify-between ml-5 mr-2 border-l border-dashed pl-7">
+          <View className="gap-4">
+            <Text className="font-medium max-w-60" numberOfLines={2}>
+              {pickup}
+            </Text>
+            <Text className="font-medium max-w-60" numberOfLines={2}>
+              {drop}
+            </Text>
+          </View>
+          <Text className="font-bold">{distance}</Text>
+
+          <Ionicons
+            name="location-sharp"
+            size={24}
+            className="absolute -left-3.5 -top-1 bg-white"
+          />
+          <Ionicons
+            name="locate-sharp"
+            size={24}
+            className="absolute -left-3.5 -bottom-1 bg-white"
+          />
+        </View>
+        {/* Payment */}
+        <View className="flex-row items-center justify-between p-4 mt-6 bg-gray-100 rounded-lg">
+          <Text className="text-base text-gray-600">{paymentType}</Text>
+          <Text className="text-lg font-semibold text-darkPrimary">
+            {amount}
+          </Text>
+        </View>
+        <Pressable className="items-center justify-center mt-6">
+          <Text className="text-sm font-medium">+ See more</Text>
+        </Pressable>
+      </View>
+    </View>
+  );
+};
