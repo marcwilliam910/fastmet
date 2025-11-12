@@ -1,23 +1,23 @@
-import { useBookStore } from "@/store/useBookStore";
-import { vehicles } from "@/utils/constants";
-import { formatDate } from "@/utils/date";
-import { Ionicons } from "@expo/vector-icons";
-import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
-import { Image } from "expo-image";
-import { router } from "expo-router";
-import React, { useMemo, useRef, useState } from "react";
-import { Dimensions, Pressable, ScrollView, Text, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import {useBookStore} from "@/store/useBookStore";
+import {vehicles} from "@/utils/constants";
+import {formatDate} from "@/utils/date";
+import {Ionicons} from "@expo/vector-icons";
+import BottomSheet, {BottomSheetScrollView} from "@gorhom/bottom-sheet";
+import {Image} from "expo-image";
+import {router} from "expo-router";
+import React, {useMemo, useRef, useState} from "react";
+import {Dimensions, Pressable, ScrollView, Text, View} from "react-native";
+import {useSafeAreaInsets} from "react-native-safe-area-context";
 import BookingTypeModal from "../modals/bookingTypeModal";
 import SearchModal from "../modals/mapSearchModal";
-import { VehicleInfoModal } from "../modals/vehicleInfoModal";
+import {VehicleInfoModal} from "../modals/vehicleInfoModal";
 import LocationInputs from "./LocationInputs";
 import SheetButton from "./SheetButton";
 
 const BookSheet = () => {
   const sheetRef = useRef<BottomSheet>(null);
   const insets = useSafeAreaInsets();
-  const { height: screenHeight } = Dimensions.get("window");
+  const {height: screenHeight} = Dimensions.get("window");
   const [infoModalVisible, setInfoModalVisible] = useState(false);
   const [searchModalVisible, setSearchModalVisible] = useState(false);
   const [selectTimeModalVisible, setSelectTimeModalVisible] = useState(false);
@@ -43,18 +43,18 @@ const BookSheet = () => {
         index={1}
         snapPoints={snapPoints}
         enableDynamicSizing={false}
-        handleIndicatorStyle={{ backgroundColor: "#FFA840" }}
+        handleIndicatorStyle={{backgroundColor: "#FFA840"}}
         enableContentPanningGesture={false} // 👈 This is the key
-        containerStyle={{ zIndex: 20 }}
+        containerStyle={{zIndex: 20}}
       >
         <View className="flex-row justify-between items-center pb-5 pt-1.5 px-3">
           <Text className="text-lg font-bold">Booking Type</Text>
 
           <Pressable
             onPress={() => setSelectTimeModalVisible(true)}
-            className="flex-row items-center gap-2 px-4 relative py-2 border-2 border-lightPrimary bg-white rounded-full active:scale-95"
+            className="relative flex-row items-center gap-2 px-4 py-2 bg-white border-2 rounded-full border-lightPrimary active:scale-95"
           >
-            <Text className="text-sm font-semibold  bg-white text-darkPrimary absolute -top-3 -left-1">
+            <Text className="absolute text-sm font-semibold bg-white text-darkPrimary -top-3 -left-1">
               Option:
             </Text>
 
@@ -70,8 +70,8 @@ const BookSheet = () => {
 
         <BottomSheetScrollView className="flex-1 px-3">
           <View className="gap-4 mb-40">
-            <View className=" items-center gap-1 justify-center">
-              <Text className="font-semibold text-sm text-gray-900 self-start">
+            <View className="items-center justify-center gap-1 ">
+              <Text className="self-start text-sm font-semibold text-gray-900">
                 Choose Vehicle
               </Text>
               <ScrollView
@@ -98,7 +98,7 @@ const BookSheet = () => {
                       </Text>
                       <Image
                         source={v.img}
-                        style={{ height: 35, width: 45 }}
+                        style={{height: 35, width: 45}}
                         contentFit="contain"
                       />
                     </Pressable>
@@ -158,81 +158,3 @@ const BookSheet = () => {
 };
 
 export default BookSheet;
-
-/*
-    <View style={{ paddingBottom: insets.bottom + 60, marginTop: 20 }}>
-              <PaymentBtn
-                paymentMethod={paymentMethod}
-                setPaymentMethod={setPaymentMethod}
-              />
-            </View>
-*/
-
-// const PaymentBtn = ({
-//   setPaymentMethod,
-//   paymentMethod,
-// }: {
-//   paymentMethod: string;
-//   setPaymentMethod: React.Dispatch<React.SetStateAction<string>>;
-// }) => {
-//   return (
-//     <>
-//       {/* Section Header */}
-//       <Text className="text-base font-semibold text-gray-800 mb-3">
-//         Payment Method
-//       </Text>
-
-//       {/* Cash Payment Option */}
-//       <Pressable
-//         onPress={() => setPaymentMethod("cash")}
-//         className={`flex-row items-center justify-between rounded-xl border px-4 py-3 mb-3 ${
-//           paymentMethod === "cash"
-//             ? "border-[#FFA840] bg-[#FFF6EB]"
-//             : "border-gray-300 bg-white"
-//         }`}
-//       >
-//         <View className="flex-row items-center gap-3">
-//           <View className="h-6 w-6 bg-lightPrimary/20 rounded-full items-center justify-center">
-//             <Text className="text-lightPrimary font-bold">₱</Text>
-//           </View>
-//           <View>
-//             <Text className="text-sm font-medium text-gray-800">
-//               Cash Payment
-//             </Text>
-//             <Text className="text-xs text-gray-500">
-//               Pay directly to driver
-//             </Text>
-//           </View>
-//         </View>
-//         {paymentMethod === "cash" && (
-//           <Ionicons name="checkmark-sharp" size={24} color="#FFA840" />
-//         )}
-//       </Pressable>
-
-//       {/* Online Payment Option (Disabled for now) */}
-//       <Pressable
-//         onPress={() => setPaymentMethod("xendit")}
-//         className={`flex-row items-center justify-between rounded-xl border px-4 py-3 mb-3 ${
-//           paymentMethod === "xendit"
-//             ? "border-[#FFA840] bg-[#FFF6EB]"
-//             : "border-gray-300 bg-white"
-//         }`}
-//       >
-//         <View className="flex-row items-center gap-3">
-//           <View className="h-6 w-6 bg-lightPrimary/20 rounded-full items-center justify-center">
-//             <Text className="text-lightPrimary font-bold">💳</Text>
-//           </View>
-//           <View>
-//             <Text className="text-sm font-medium text-gray-800">
-//               Online Payment
-//             </Text>
-//             <Text className="text-xs text-gray-500">Pay online</Text>
-//           </View>
-//         </View>
-//         {paymentMethod === "xendit" && (
-//           <Ionicons name="checkmark-sharp" size={24} color="#FFA840" />
-//         )}
-//       </Pressable>
-//     </>
-//   );
-// };

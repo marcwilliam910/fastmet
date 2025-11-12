@@ -1,25 +1,15 @@
-import { useBookStore } from "@/store/useBookStore";
-import { LocationDetails } from "@/types/book";
-import { GOOGLE_MAPS_API_KEY } from "@/utils/constants";
-import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
-import React, { useEffect, useState } from "react";
-import {
-  FlatList,
-  Modal,
-  Pressable,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
+import {useBookStore} from "@/store/useBookStore";
+import {LocationDetails} from "@/types/book";
+import {GOOGLE_MAPS_API_KEY} from "@/utils/constants";
+import {Ionicons} from "@expo/vector-icons";
+import {router} from "expo-router";
+import React, {useEffect, useState} from "react";
+import {FlatList, Modal, Pressable, Text, TextInput, View} from "react-native";
 import GooglePlacesTextInput, {
   Place,
 } from "react-native-google-places-textinput";
 
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from "react-native-safe-area-context";
+import {SafeAreaView, useSafeAreaInsets} from "react-native-safe-area-context";
 
 type SearchType = "pickup" | "dropoff";
 
@@ -29,11 +19,7 @@ type SearchModalProps = {
   type: SearchType;
 };
 
-const SearchModal: React.FC<SearchModalProps> = ({
-  visible,
-  onClose,
-  type,
-}) => {
+const SearchModal: React.FC<SearchModalProps> = ({visible, onClose, type}) => {
   const [recentPlaces] = useState([
     {
       id: "1",
@@ -66,7 +52,6 @@ const SearchModal: React.FC<SearchModalProps> = ({
     if (!selectedPlace || !selectedPlace.details) return;
 
     const details = selectedPlace.details;
-    console.log(JSON.stringify(details, null, 2));
 
     const locationData: LocationDetails = {
       name: details.displayName?.text || "Unknown location",
@@ -88,14 +73,14 @@ const SearchModal: React.FC<SearchModalProps> = ({
     // Get user's current location
   };
 
-  const renderRecentPlace = ({ item }: any) => (
+  const renderRecentPlace = ({item}: any) => (
     <Pressable
       className="flex-row items-center px-4 py-3 border-b border-gray-100"
-      style={({ pressed }) => [
-        { backgroundColor: pressed ? "#F3F4F6" : "transparent" },
+      style={({pressed}) => [
+        {backgroundColor: pressed ? "#F3F4F6" : "transparent"},
       ]}
     >
-      <View className="w-10 h-10 bg-gray-100 rounded-full items-center justify-center mr-3">
+      <View className="items-center justify-center w-10 h-10 mr-3 bg-gray-100 rounded-full">
         <Ionicons name={item.icon} size={20} color="#6B7280" />
       </View>
       <View className="flex-1">
@@ -108,6 +93,13 @@ const SearchModal: React.FC<SearchModalProps> = ({
   useEffect(() => {
     if (!GOOGLE_MAPS_API_KEY) router.back();
   }, []);
+
+  const searchValue =
+    type === "pickup"
+      ? pickUp?.name + ", " + pickUp?.address
+      : dropOff?.name + ", " + dropOff?.address;
+
+  const haveValue = type === "pickup" ? pickUp : dropOff;
 
   return (
     <Modal
@@ -127,23 +119,19 @@ const SearchModal: React.FC<SearchModalProps> = ({
           </Text>
         </View>
         {/* Search Input */}
-        <View className="mx-4 bg-white border-b border-gray-200 pb-4">
-          <View className="flex-row items-center rounded-xl px-3 py-2">
+        <View className="pb-4 mx-4 bg-white border-b border-gray-200">
+          <View className="flex-row items-center px-3 py-2 rounded-xl">
             <Ionicons
               name="search-outline"
               size={24}
               color="#4B5563"
               className="absolute top-5 left-3"
             />
-            <View style={{ flex: 1, marginLeft: 20 }}>
+            <View style={{flex: 1, marginLeft: 20}}>
               <GooglePlacesTextInput
                 apiKey={GOOGLE_MAPS_API_KEY ?? ""}
                 onPlaceSelect={(place) => setSelectedPlace(place)}
-                value={
-                  type === "pickup"
-                    ? pickUp?.name + ", " + pickUp?.address
-                    : dropOff?.name + ", " + dropOff?.address
-                }
+                value={haveValue ? searchValue : undefined}
                 style={customStyles}
                 languageCode="en"
                 includedRegionCodes={["ph"]}
@@ -165,9 +153,9 @@ const SearchModal: React.FC<SearchModalProps> = ({
         {/* Additional Details Input */}
 
         <View className="mx-4 mt-7">
-          <Text className="text-gray-700 font-semibold mb-2">
+          <Text className="mb-2 font-semibold text-gray-700">
             Location details{" "}
-            <Text className="text-gray-400 text-sm">(optional)</Text>
+            <Text className="text-sm text-gray-400">(optional)</Text>
           </Text>
 
           <TextInput
@@ -175,21 +163,21 @@ const SearchModal: React.FC<SearchModalProps> = ({
             numberOfLines={4}
             placeholder="e.g. In front of Jollibee or near gate 3"
             placeholderTextColor="#9CA3AF"
-            style={{ height: 120, textAlignVertical: "top" }}
-            className="p-4 border border-gray-200 rounded-xl text-gray-800 text-base bg-white"
+            style={{height: 120, textAlignVertical: "top"}}
+            className="p-4 text-base text-gray-800 bg-white border border-gray-200 rounded-xl"
           />
         </View>
 
         {/* Current Location Button */}
-        <View className="px-4 mb-2 mt-5">
+        <View className="px-4 mt-5 mb-2">
           <Pressable
             onPress={handleCurrentLocation}
-            className="flex-row items-center px-4 py-4 bg-white rounded-2xl border border-gray-200 active:bg-gray-50"
+            className="flex-row items-center px-4 py-4 bg-white border border-gray-200 rounded-2xl active:bg-gray-50"
           >
-            <View className="w-11 h-11 bg-blue-500 rounded-full items-center justify-center mr-3">
+            <View className="items-center justify-center mr-3 bg-blue-500 rounded-full w-11 h-11">
               <Ionicons name="navigate" size={20} color="#FFFFFF" />
             </View>
-            <Text className="text-gray-900 font-semibold text-base flex-1">
+            <Text className="flex-1 text-base font-semibold text-gray-900">
               Use current location
             </Text>
             <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
@@ -204,9 +192,9 @@ const SearchModal: React.FC<SearchModalProps> = ({
                 name="time-outline"
                 size={18}
                 color="#6B7280"
-                style={{ marginRight: 8 }}
+                style={{marginRight: 8}}
               />
-              <Text className="font-semibold text-gray-600 text-xs uppercase tracking-wider">
+              <Text className="text-xs font-semibold tracking-wider text-gray-600 uppercase">
                 Recent Places
               </Text>
             </View>
