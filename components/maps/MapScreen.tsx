@@ -1,12 +1,10 @@
 import {RouteData} from "@/store/useBookStore";
 import {LocationDetails} from "@/types/book";
 import {GOOGLE_MAPS_API_KEY, STATIC_IMAGES} from "@/utils/constants";
-import {Ionicons} from "@expo/vector-icons";
-import {DrawerActions} from "@react-navigation/native";
 import * as Location from "expo-location";
-import {useNavigation} from "expo-router";
-import React, {useEffect, useRef} from "react";
-import {Alert, Pressable, StyleSheet, Text, View} from "react-native";
+import {useFocusEffect} from "expo-router";
+import React, {useCallback, useEffect, useRef} from "react";
+import {Alert, StatusBar, StyleSheet, Text, View} from "react-native";
 import MapView, {Marker} from "react-native-maps";
 import MapViewDirections from "react-native-maps-directions";
 
@@ -34,7 +32,12 @@ export default function MapScreen({
 }: Props) {
   const mapRef = useRef<MapView>(null);
 
-  const navigation = useNavigation();
+  useFocusEffect(
+    useCallback(() => {
+      StatusBar.setHidden(true);
+      return () => StatusBar.setHidden(false);
+    }, [])
+  );
 
   useEffect(() => {
     if (!GOOGLE_MAPS_API_KEY) return;
@@ -134,21 +137,6 @@ export default function MapScreen({
           )}
         </MapView>
       )}
-
-      {/* Floating burger */}
-      <Pressable
-        onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
-        className="absolute p-2 bg-white rounded-full shadow-lg top-6 left-4 active:scale-105 active:opacity-80"
-        style={{
-          shadowColor: "#000",
-          shadowOffset: {width: 2, height: 2},
-          shadowOpacity: 0.25,
-          shadowRadius: 3.84,
-          elevation: 5,
-        }}
-      >
-        <Ionicons name="menu" size={28} color="#FFA840" />
-      </Pressable>
 
       {routeData.distance > 0 && routeData.duration > 0 && (
         <DistanceBubble routeData={routeData} />

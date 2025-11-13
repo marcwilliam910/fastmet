@@ -30,7 +30,7 @@ export default function SeeMoreModal({
           <Pressable onPress={onClose} className="absolute left-4 -top-1">
             <Ionicons name="chevron-back-outline" size={28} color="#FFA840" />
           </Pressable>
-          <Text className="ml-3 text-lg font-semibold capitalize">{type}</Text>
+          <Text className="text-lg font-semibold capitalize">{type}</Text>
         </View>
 
         {/* Content - Scrollable */}

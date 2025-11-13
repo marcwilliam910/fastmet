@@ -1,6 +1,7 @@
 import useSeeMoreDetails from "@/hooks/useSeeMoreDetails";
 import {serviceAddons} from "@/utils/constants";
 import {Ionicons} from "@expo/vector-icons";
+import {router} from "expo-router";
 import {FlatList, Pressable, Text, View} from "react-native";
 import SeeMoreModal from "../modals/seeMoreModal";
 
@@ -103,7 +104,10 @@ const ActiveCard = ({
       {/* Header */}
       <View className="flex-row items-center justify-between px-5 py-3 bg-lightPrimary">
         <Text className="text-lg font-semibold text-white">{vehicle}</Text>
-        <Pressable className="flex-row items-center gap-2">
+        <Pressable
+          className="flex-row items-center gap-2 active:scale-105"
+          onPress={() => router.push("/(root_screens)/booking/viewOnMap")}
+        >
           <Text className="text-sm font-semibold text-white underline">
             View on Map
           </Text>
