@@ -1,6 +1,6 @@
+import useSeeMoreDetails from "@/hooks/useSeeMoreDetails";
 import {serviceAddons} from "@/utils/constants";
 import {Ionicons} from "@expo/vector-icons";
-import React, {useState} from "react";
 import {FlatList, Pressable, Text, View} from "react-native";
 import SeeMoreModal from "../modals/seeMoreModal";
 
@@ -10,10 +10,10 @@ const DUMMY_DATA = [
     vehicle: "Motorcycle",
     bookedTime: "3:30 PM",
     pickup: "13, Allen Street Village, San Isidro hagonoy Bulacan sfsd ddfg",
-    drop: "Hernandez Street",
+    dropoff: "Hernandez Street",
     distance: "3KM",
     isCash: true,
-    amount: "Php 100",
+    amount: 6100,
     selectedServices: serviceAddons,
     note: " Please handle with care.",
     images: [1, 2],
@@ -21,13 +21,8 @@ const DUMMY_DATA = [
 ];
 
 export default function RequestRoute() {
-  const [modalVisible, setModalVisible] = useState(false);
-  const [selectedRequest, setSelectedRequest] = useState(null);
-
-  const handleSeeMorePress = (request: any) => {
-    setSelectedRequest(request);
-    setModalVisible(true);
-  };
+  const {modalVisible, setModalVisible, selectedRequest, handleSeeMorePress} =
+    useSeeMoreDetails();
 
   return (
     <>
@@ -38,7 +33,7 @@ export default function RequestRoute() {
             vehicle={item.vehicle}
             bookedTime={item.bookedTime}
             pickup={item.pickup}
-            drop={item.drop}
+            dropoff={item.dropoff}
             distance={item.distance}
             isCash={item.isCash}
             amount={item.amount}
@@ -70,10 +65,10 @@ type RequestCardProps = {
   vehicle: string;
   bookedTime: string;
   pickup: string;
-  drop: string;
+  dropoff: string;
   distance: string;
   isCash: boolean;
-  amount: string;
+  amount: number;
   onCancel: () => void;
   onUpdateNote: () => void;
   onPressSeeMore: () => void;
@@ -83,7 +78,7 @@ const RequestCard = ({
   vehicle,
   bookedTime,
   pickup,
-  drop,
+  dropoff,
   distance,
   isCash,
   amount,
@@ -121,7 +116,7 @@ const RequestCard = ({
               {pickup}
             </Text>
             <Text className="font-medium max-w-60" numberOfLines={2}>
-              {drop}
+              {dropoff}
             </Text>
           </View>
           <Text className="font-bold">{distance}</Text>
@@ -143,7 +138,7 @@ const RequestCard = ({
             {isCash ? "Cash Payment" : "Online Payment"}
           </Text>
           <Text className="text-lg font-semibold text-darkPrimary">
-            {amount}
+            Php {amount.toLocaleString("en-US")}
           </Text>
         </View>
 

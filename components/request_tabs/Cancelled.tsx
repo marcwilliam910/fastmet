@@ -1,28 +1,62 @@
+import useSeeMoreDetails from "@/hooks/useSeeMoreDetails";
+import {serviceAddons} from "@/utils/constants";
 import {Ionicons} from "@expo/vector-icons";
-import React from "react";
-import {Pressable, ScrollView, Text, View} from "react-native";
+import {FlatList, Pressable, Text, View} from "react-native";
+import SeeMoreModal from "../modals/seeMoreModal";
+
+const DUMMY_DATA = [
+  {
+    id: "1",
+    vehicle: "Motorcycle",
+    bookedTime: "3:30 PM",
+    pickup: "13, Allen Street Village, San Isidro hagonoy Bulacan sfsd ddfg",
+    dropoff: "Hernandez Street",
+    distance: "3KM",
+    isCash: true,
+    amount: 1000,
+    selectedServices: serviceAddons,
+    note: " Please handle with care.",
+    images: [1, 2],
+  },
+];
 
 export default function CancelledRoute() {
+  const {modalVisible, setModalVisible, selectedRequest, handleSeeMorePress} =
+    useSeeMoreDetails();
+
   return (
-    <ScrollView
-      showsVerticalScrollIndicator={false}
-      className="flex-1 p-4 bg-white"
-      contentContainerStyle={{
-        paddingBottom: 40,
-        gap: 15,
-      }}
-    >
-      <CancelledCard
-        vehicle="Motorcycle"
-        bookedTime="3:30 PM"
-        pickup="13, Allen Street Village, San Isidro hagonoy Bulacan sfsd ddfg"
-        drop="Hernandez Street"
-        distance="3KM"
-        paymentType="Cash Payment"
-        amount="Php 100"
-        date="June 10, 2024"
+    <>
+      <FlatList
+        data={DUMMY_DATA}
+        renderItem={({item}) => (
+          <CancelledCard
+            vehicle={item.vehicle}
+            bookedTime={item.bookedTime}
+            pickup={item.pickup}
+            dropoff={item.dropoff}
+            distance={item.distance}
+            isCash={item.isCash}
+            amount={item.amount}
+            onPressSeeMore={() => handleSeeMorePress(item)}
+            date="August 25, 2023"
+          />
+        )}
+        keyExtractor={(item) => item.id}
+        showsVerticalScrollIndicator={false}
+        className="flex-1 p-4 bg-white"
+        contentContainerStyle={{
+          paddingBottom: 40,
+          gap: 15,
+        }}
       />
-    </ScrollView>
+
+      <SeeMoreModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        type="Cancelled Booking"
+        data={selectedRequest}
+      />
+    </>
   );
 }
 
@@ -30,26 +64,29 @@ type CancelledCardProps = {
   vehicle: string;
   bookedTime: string;
   pickup: string;
-  drop: string;
+  dropoff: string;
   distance: string;
-  paymentType: string;
-  amount: string;
+  isCash: boolean;
+  amount: number;
   date: string;
+  onPressSeeMore: () => void;
 };
 
 const CancelledCard = ({
   vehicle,
   bookedTime,
   pickup,
-  drop,
+  dropoff,
   distance,
-  paymentType,
+  isCash,
   amount,
   date,
+  onPressSeeMore,
 }: CancelledCardProps) => {
   return (
-    <View
-      className="overflow-hidden bg-white rounded-2xl"
+    <Pressable
+      onPress={onPressSeeMore}
+      className="overflow-hidden bg-white rounded-2xl active:scale-95"
       style={{
         shadowColor: "#000",
         shadowOffset: {
@@ -76,7 +113,7 @@ const CancelledCard = ({
               {pickup}
             </Text>
             <Text className="font-medium max-w-60" numberOfLines={2}>
-              {drop}
+              {dropoff}
             </Text>
           </View>
           <Text className="font-bold">{distance}</Text>
@@ -94,12 +131,13 @@ const CancelledCard = ({
         </View>
         {/* Payment */}
         <View className="flex-row items-center justify-between p-4 mt-6 bg-gray-100 rounded-lg">
-          <Text className="text-base text-gray-600">{paymentType}</Text>
+          <Text className="text-base text-gray-600">
+            {isCash ? "Cash Payment" : "Online Payment"}
+          </Text>
           <Text className="text-lg font-semibold text-darkPrimary">
-            {amount}
+            Php {amount.toLocaleString("en-US")}
           </Text>
         </View>
-
         <View className="flex-row items-center justify-between px-2 mt-6">
           <Text className="text-sm font-semibold text-red-500">
             Cancelled Request
@@ -107,10 +145,13 @@ const CancelledCard = ({
           <Text className="text-sm font-semibold">{date}</Text>
         </View>
 
-        <Pressable className="items-center justify-center mt-6">
+        <Pressable
+          className="items-center justify-center mt-6 active:scale-105"
+          onPress={onPressSeeMore}
+        >
           <Text className="text-sm font-medium">+ See more</Text>
         </Pressable>
       </View>
-    </View>
+    </Pressable>
   );
 };

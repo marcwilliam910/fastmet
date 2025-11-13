@@ -1,10 +1,11 @@
-import {RouteData, useBookStore} from "@/store/useBookStore";
+import {RouteData} from "@/store/useBookStore";
+import {LocationDetails} from "@/types/book";
 import {GOOGLE_MAPS_API_KEY, STATIC_IMAGES} from "@/utils/constants";
 import {Ionicons} from "@expo/vector-icons";
 import {DrawerActions} from "@react-navigation/native";
 import * as Location from "expo-location";
-import {router, useNavigation} from "expo-router";
-import React, {useEffect, useRef, useState} from "react";
+import {useNavigation} from "expo-router";
+import React, {useEffect, useRef} from "react";
 import {Alert, Pressable, StyleSheet, Text, View} from "react-native";
 import MapView, {Marker} from "react-native-maps";
 import MapViewDirections from "react-native-maps-directions";
@@ -16,17 +17,27 @@ type Region = {
   longitudeDelta: number;
 };
 
-export default function MapScreen() {
+type Props = {
+  pickUp: LocationDetails;
+  dropOff: LocationDetails;
+  routeData: RouteData;
+  region: Region | null;
+  setRegion: React.Dispatch<React.SetStateAction<Region | null>>;
+};
+
+export default function MapScreen({
+  pickUp,
+  dropOff,
+  routeData,
+  region,
+  setRegion,
+}: Props) {
   const mapRef = useRef<MapView>(null);
-  const pickUp = useBookStore((state) => state.pickUp);
-  const dropOff = useBookStore((state) => state.dropOff);
-  const routeData = useBookStore((state) => state.routeData);
+
   const navigation = useNavigation();
 
-  const [region, setRegion] = useState<Region | null>(null);
-
   useEffect(() => {
-    if (!GOOGLE_MAPS_API_KEY) router.back();
+    if (!GOOGLE_MAPS_API_KEY) return;
 
     (async () => {
       const {status} = await Location.requestForegroundPermissionsAsync();
@@ -127,7 +138,7 @@ export default function MapScreen() {
       {/* Floating burger */}
       <Pressable
         onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
-        className="absolute p-2 bg-white rounded-full shadow-lg top-6 left-4"
+        className="absolute p-2 bg-white rounded-full shadow-lg top-6 left-4 active:scale-105 active:opacity-80"
         style={{
           shadowColor: "#000",
           shadowOffset: {width: 2, height: 2},

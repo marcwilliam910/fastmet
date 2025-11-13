@@ -1,58 +1,94 @@
+import useSeeMoreDetails from "@/hooks/useSeeMoreDetails";
+import {serviceAddons} from "@/utils/constants";
 import {Ionicons} from "@expo/vector-icons";
-import React from "react";
-import {Pressable, ScrollView, Text, View} from "react-native";
+import {FlatList, Pressable, Text, View} from "react-native";
+import SeeMoreModal from "../modals/seeMoreModal";
+
+const DUMMY_DATA = [
+  {
+    id: "1",
+    driverName: "John Doe",
+    rating: 4.5,
+    vehicle: "Motorcycle",
+    bookedTime: "3:30 PM",
+    pickup: "13, Allen Street Village, San Isidro hagonoy Bulacan sfsd ddfg",
+    dropoff: "Hernandez Street",
+    distance: "3KM",
+    isCash: true,
+    amount: 100,
+    selectedServices: serviceAddons,
+    note: " Please handle with care.",
+    images: [1, 2],
+  },
+];
 
 export default function ActiveRoute() {
+  const {modalVisible, setModalVisible, selectedRequest, handleSeeMorePress} =
+    useSeeMoreDetails();
+
   return (
-    <ScrollView
-      showsVerticalScrollIndicator={false}
-      className="flex-1 p-4 bg-white"
-      contentContainerStyle={{
-        paddingBottom: 40,
-        gap: 15,
-      }}
-    >
-      <ActiveCard
-        vehicle="Truck"
-        driverName="John Doe"
-        rating={4.5}
-        bookedTime="3:30 PM"
-        pickup="13, Allen Street Village, San Isidro hagonoy Bulacan"
-        drop="Hernandez Street"
-        distance="3KM"
-        paymentType="Cash Payment"
-        amount="Php 100"
+    <>
+      <FlatList
+        data={DUMMY_DATA}
+        renderItem={({item}) => (
+          <ActiveCard
+            vehicle={item.vehicle}
+            pickup={item.pickup}
+            dropoff={item.dropoff}
+            distance={item.distance}
+            isCash={item.isCash}
+            amount={item.amount}
+            driverName={item.driverName}
+            rating={item.rating}
+            onPressSeeMore={() => handleSeeMorePress(item)}
+          />
+        )}
+        keyExtractor={(item) => item.id}
+        showsVerticalScrollIndicator={false}
+        className="flex-1 p-4 bg-white"
+        contentContainerStyle={{
+          paddingBottom: 40,
+          gap: 15,
+        }}
       />
-    </ScrollView>
+
+      <SeeMoreModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        type="Active Booking"
+        data={selectedRequest}
+      />
+    </>
   );
 }
 
 type ActiveCardProps = {
   vehicle: string;
-  bookedTime: string;
   pickup: string;
-  drop: string;
+  dropoff: string;
   distance: string;
-  paymentType: string;
-  amount: string;
+  amount: number;
   driverName: string;
   rating: number;
+  isCash: boolean;
+  onPressSeeMore: () => void;
 };
 
 const ActiveCard = ({
   vehicle,
-  bookedTime,
   pickup,
-  drop,
+  dropoff,
   distance,
-  paymentType,
+  isCash,
   amount,
   driverName,
   rating,
+  onPressSeeMore,
 }: ActiveCardProps) => {
   return (
-    <View
-      className="overflow-hidden bg-white rounded-2xl"
+    <Pressable
+      onPress={onPressSeeMore}
+      className="overflow-hidden bg-white rounded-2xl active:scale-95"
       style={{
         shadowColor: "#000",
         shadowOffset: {
@@ -67,12 +103,12 @@ const ActiveCard = ({
       {/* Header */}
       <View className="flex-row items-center justify-between px-5 py-3 bg-lightPrimary">
         <Text className="text-lg font-semibold text-white">{vehicle}</Text>
-        <View className="flex-row items-center gap-2">
+        <Pressable className="flex-row items-center gap-2">
           <Text className="text-sm font-semibold text-white underline">
-            On the way
+            View on Map
           </Text>
           <Ionicons name="arrow-forward" size={16} color="white" />
-        </View>
+        </Pressable>
       </View>
       <View className="px-4 py-3">
         <Text className="mb-1 text-sm font-semibold text-gray-500">Driver</Text>
@@ -119,7 +155,7 @@ const ActiveCard = ({
               {pickup}
             </Text>
             <Text className="font-medium max-w-60" numberOfLines={2}>
-              {drop}
+              {dropoff}
             </Text>
           </View>
           <Text className="font-bold">{distance}</Text>
@@ -137,15 +173,21 @@ const ActiveCard = ({
         </View>
         {/* Payment */}
         <View className="flex-row items-center justify-between p-4 mt-6 bg-gray-100 rounded-lg">
-          <Text className="text-base text-gray-600">{paymentType}</Text>
+          <Text className="text-base text-gray-600">
+            {isCash ? "Cash Payment" : "Online Payment"}
+          </Text>
           <Text className="text-lg font-semibold text-darkPrimary">
-            {amount}
+            Php {amount.toLocaleString("en-US")}
           </Text>
         </View>
-        <Pressable className="items-center justify-center mt-6">
+
+        <Pressable
+          className="items-center justify-center mt-6 active:scale-105"
+          onPress={onPressSeeMore}
+        >
           <Text className="text-sm font-medium">+ See more</Text>
         </Pressable>
       </View>
-    </View>
+    </Pressable>
   );
 };

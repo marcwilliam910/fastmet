@@ -3,7 +3,6 @@ export const isDateString = (value: string): boolean => {
   return !isNaN(date.getTime());
 };
 
-// utils/formatDate.js
 export function formatDate(dateString: string) {
   const date = new Date(dateString);
 
@@ -28,3 +27,16 @@ export function formatDate(dateString: string) {
 
   return `${formattedDate}, ${formattedTime}`;
 }
+
+// // ex output "Nov 13, 1:59 PM"
+// export function formatDateOnly(dateString: string) {
+//   const date = new Date(dateString);
+//   return date.toLocaleString("en-US", {
+//   month: "short", // "Nov"
+//   day: "numeric", // "13"
+//   hour: "numeric", // "1"
+//   minute: "2-digit",
+//   hour12: true,
+// });
+
+// }
