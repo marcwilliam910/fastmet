@@ -1,7 +1,8 @@
 import BookSheet from "@/components/maps/BookSheet";
 import MapScreen from "@/components/maps/MapScreen";
 import {useBookStore} from "@/store/useBookStore";
-import React, {useState} from "react";
+import {useFocusEffect} from "expo-router";
+import React, {useCallback, useState} from "react";
 import {StatusBar, View} from "react-native";
 import {Region} from "react-native-maps";
 import {SafeAreaView} from "react-native-safe-area-context";
@@ -11,6 +12,13 @@ const Book = () => {
   const dropOff = useBookStore((state) => state.dropOff);
   const routeData = useBookStore((state) => state.routeData);
   const [region, setRegion] = useState<Region | null>(null);
+
+  useFocusEffect(
+    useCallback(() => {
+      StatusBar.setHidden(true);
+      return () => StatusBar.setHidden(false);
+    }, [])
+  );
 
   return (
     <SafeAreaView
@@ -28,8 +36,6 @@ const Book = () => {
       </View>
 
       <BookSheet />
-
-      <StatusBar hidden />
     </SafeAreaView>
   );
 };

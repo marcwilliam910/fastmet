@@ -11,7 +11,6 @@ const HeaderDrawer = ({title}: {title: string}) => {
     "My Profile": "person",
     "Settings": "settings",
     "About": "information-circle",
-    "Apply as Driver": "car",
     "Favorite": "heart",
   };
 
