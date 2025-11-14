@@ -97,7 +97,7 @@ export default function ProfileRegistration() {
     mutate(dataToSave, {
       onSuccess: () => {
         console.log("Profile registered successfully");
-        router.push("/(drawer)/(tabs)");
+        router.push("/(drawer)/book");
       },
     });
   };
@@ -283,7 +283,7 @@ export default function ProfileRegistration() {
             </Pressable>
             {/* secondary button */}
             <Pressable
-              onPress={() => router.push("/(drawer)/(tabs)")}
+              onPress={() => router.push("/(drawer)/book")}
               className="items-center py-4 my-2 border rounded-lg border-lightPrimary active:border-darkPrimary"
             >
               <Text className="text-base font-bold text-lightPrimary">
