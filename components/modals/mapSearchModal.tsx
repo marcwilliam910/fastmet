@@ -1,14 +1,24 @@
+import {useShake} from "@/hooks/useShakeAnimation";
 import {useBookStore} from "@/store/useBookStore";
 import {LocationDetails} from "@/types/book";
 import {GOOGLE_MAPS_API_KEY} from "@/utils/constants";
 import {Ionicons} from "@expo/vector-icons";
 import {router} from "expo-router";
+import {isPointInPolygon} from "geolib";
 import React, {useEffect, useState} from "react";
-import {FlatList, Modal, Pressable, Text, TextInput, View} from "react-native";
+import {
+  FlatList,
+  Modal,
+  Pressable,
+  Text,
+  TextInput,
+  ToastAndroid,
+  View,
+} from "react-native";
 import GooglePlacesTextInput, {
   Place,
 } from "react-native-google-places-textinput";
-
+import Animated from "react-native-reanimated";
 import {SafeAreaView, useSafeAreaInsets} from "react-native-safe-area-context";
 
 type SearchType = "pickup" | "dropoff";
@@ -18,6 +28,31 @@ type SearchModalProps = {
   onClose: () => void;
   type: SearchType;
 };
+
+export const METRO_MANILA_POLYGON = [
+  [14.70648, 120.93651], // Valenzuela
+  [14.73961, 121.01657], // Caloocan North
+  [14.76975, 121.06935], // QC North
+  [14.75648, 121.10142], // Marikina North
+  [14.68642, 121.14092], // Marikina East
+  [14.60782, 121.15832], // Pasig East
+  [14.53795, 121.16447], // Taguig SE
+  [14.45487, 121.07852], // Muntinlupa
+  [14.44812, 120.98634], // Las Piñas
+  [14.51013, 120.97281], // Parañaque
+  [14.54686, 120.97241], // Pasay
+  [14.57582, 121.00068], // Manila
+  [14.62438, 120.96531], // Navotas
+  [14.67312, 120.94242], // Malabon
+  [14.70648, 120.93651], // Back to start
+];
+
+function isWithinMetroManila(lat: number, lng: number) {
+  return isPointInPolygon(
+    {latitude: lat, longitude: lng},
+    METRO_MANILA_POLYGON.map(([lat, lng]) => ({latitude: lat, longitude: lng}))
+  );
+}
 
 const SearchModal: React.FC<SearchModalProps> = ({visible, onClose, type}) => {
   const [recentPlaces] = useState([
@@ -47,6 +82,7 @@ const SearchModal: React.FC<SearchModalProps> = ({visible, onClose, type}) => {
 
   const dropOff = useBookStore((state) => state.dropOff);
   const pickUp = useBookStore((state) => state.pickUp);
+  const {shake, animatedStyle} = useShake();
 
   const handleConfirm = () => {
     if (!selectedPlace || !selectedPlace.details) return;
@@ -72,6 +108,28 @@ const SearchModal: React.FC<SearchModalProps> = ({visible, onClose, type}) => {
     console.log("Getting current location...");
     // Get user's current location
   };
+
+  const handleOnPlaceSelect = (place: Place) => {
+    setSelectedPlace(null); // Reset first
+    const loc = place.details?.location;
+    if (!loc) return;
+
+    const allowed = isWithinMetroManila(loc.latitude, loc.longitude);
+
+    if (!allowed) {
+      ToastAndroid.showWithGravity(
+        "Services are only available within Metro Manila.",
+        ToastAndroid.LONG,
+        ToastAndroid.TOP // appears at the top for more visibility
+      );
+      shake();
+      return;
+    }
+
+    setSelectedPlace(place);
+  };
+
+  console.log(selectedPlace);
 
   const renderRecentPlace = ({item}: any) => (
     <Pressable
@@ -125,12 +183,15 @@ const SearchModal: React.FC<SearchModalProps> = ({visible, onClose, type}) => {
               name="search-outline"
               size={24}
               color="#4B5563"
-              className="absolute top-5 left-3"
+              className="absolute z-50 bg-white top-5 left-3"
             />
-            <View style={{flex: 1, marginLeft: 20}}>
+            <Animated.View
+              className="flex-1 ml-6" // all static styling here
+              style={animatedStyle} // only animated transforms here
+            >
               <GooglePlacesTextInput
                 apiKey={GOOGLE_MAPS_API_KEY ?? ""}
-                onPlaceSelect={(place) => setSelectedPlace(place)}
+                onPlaceSelect={handleOnPlaceSelect}
                 value={haveValue ? searchValue : undefined}
                 style={customStyles}
                 languageCode="en"
@@ -146,7 +207,7 @@ const SearchModal: React.FC<SearchModalProps> = ({visible, onClose, type}) => {
                 }
                 showLoadingIndicator={false}
               />
-            </View>
+            </Animated.View>
           </View>
         </View>
 
@@ -208,7 +269,7 @@ const SearchModal: React.FC<SearchModalProps> = ({visible, onClose, type}) => {
         </View>
 
         <Pressable
-          className={`items-center justify-center p-3.5 mx-8 bg-lightPrimary absolute left-0 right-0 active:bg-darkPrimary rounded-lg ${selectedPlace ? "active:bg-darkPrimary" : "opacity-80"}`}
+          className={`items-center justify-center p-3.5 mx-6 bg-lightPrimary absolute left-0 right-0 active:bg-darkPrimary rounded-lg ${selectedPlace ? "active:bg-darkPrimary" : "opacity-80"}`}
           onPress={handleConfirm}
           disabled={!selectedPlace}
           style={{
