@@ -1,11 +1,11 @@
-import {useShake} from "@/hooks/useShakeAnimation";
-import {useBookStore} from "@/store/useBookStore";
-import {LocationDetails} from "@/types/book";
-import {GOOGLE_MAPS_API_KEY} from "@/utils/constants";
-import {Ionicons} from "@expo/vector-icons";
-import {router} from "expo-router";
-import {isPointInPolygon} from "geolib";
-import React, {useEffect, useState} from "react";
+import { useShake } from "@/hooks/useShakeAnimation";
+import { useBookStore } from "@/store/useBookStore";
+import { LocationDetails } from "@/types/book";
+import { GOOGLE_MAPS_API_KEY } from "@/utils/constants";
+import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
+import { isPointInPolygon } from "geolib";
+import React, { useEffect, useState } from "react";
 import {
   FlatList,
   Modal,
@@ -19,7 +19,10 @@ import GooglePlacesTextInput, {
   Place,
 } from "react-native-google-places-textinput";
 import Animated from "react-native-reanimated";
-import {SafeAreaView, useSafeAreaInsets} from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 type SearchType = "pickup" | "dropoff";
 
@@ -49,12 +52,19 @@ export const METRO_MANILA_POLYGON = [
 
 function isWithinMetroManila(lat: number, lng: number) {
   return isPointInPolygon(
-    {latitude: lat, longitude: lng},
-    METRO_MANILA_POLYGON.map(([lat, lng]) => ({latitude: lat, longitude: lng}))
+    { latitude: lat, longitude: lng },
+    METRO_MANILA_POLYGON.map(([lat, lng]) => ({
+      latitude: lat,
+      longitude: lng,
+    }))
   );
 }
 
-const SearchModal: React.FC<SearchModalProps> = ({visible, onClose, type}) => {
+const SearchModal: React.FC<SearchModalProps> = ({
+  visible,
+  onClose,
+  type,
+}) => {
   const [recentPlaces] = useState([
     {
       id: "1",
@@ -82,7 +92,7 @@ const SearchModal: React.FC<SearchModalProps> = ({visible, onClose, type}) => {
 
   const dropOff = useBookStore((state) => state.dropOff);
   const pickUp = useBookStore((state) => state.pickUp);
-  const {shake, animatedStyle} = useShake();
+  const { shake, animatedStyle } = useShake();
 
   const handleConfirm = () => {
     if (!selectedPlace || !selectedPlace.details) return;
@@ -131,11 +141,11 @@ const SearchModal: React.FC<SearchModalProps> = ({visible, onClose, type}) => {
 
   console.log(selectedPlace);
 
-  const renderRecentPlace = ({item}: any) => (
+  const renderRecentPlace = ({ item }: any) => (
     <Pressable
       className="flex-row items-center px-4 py-3 border-b border-gray-100"
-      style={({pressed}) => [
-        {backgroundColor: pressed ? "#F3F4F6" : "transparent"},
+      style={({ pressed }) => [
+        { backgroundColor: pressed ? "#F3F4F6" : "transparent" },
       ]}
     >
       <View className="items-center justify-center w-10 h-10 mr-3 bg-gray-100 rounded-full">
@@ -172,7 +182,7 @@ const SearchModal: React.FC<SearchModalProps> = ({visible, onClose, type}) => {
           <Pressable onPress={onClose} className="absolute left-4 -top-1">
             <Ionicons name="chevron-back-outline" size={28} color="#FFA840" />
           </Pressable>
-          <Text className="ml-3 text-lg font-semibold capitalize">
+          <Text className="text-lg font-semibold capitalize">
             {type} location
           </Text>
         </View>
@@ -224,7 +234,7 @@ const SearchModal: React.FC<SearchModalProps> = ({visible, onClose, type}) => {
             numberOfLines={4}
             placeholder="e.g. In front of Jollibee or near gate 3"
             placeholderTextColor="#9CA3AF"
-            style={{height: 120, textAlignVertical: "top"}}
+            style={{ height: 120, textAlignVertical: "top" }}
             className="p-4 text-base text-gray-800 bg-white border border-gray-200 rounded-xl"
           />
         </View>
@@ -253,7 +263,7 @@ const SearchModal: React.FC<SearchModalProps> = ({visible, onClose, type}) => {
                 name="time-outline"
                 size={18}
                 color="#6B7280"
-                style={{marginRight: 8}}
+                style={{ marginRight: 8 }}
               />
               <Text className="text-xs font-semibold tracking-wider text-gray-600 uppercase">
                 Recent Places
