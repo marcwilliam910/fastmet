@@ -1,61 +1,107 @@
+import useAuth from "@/hooks/useAuth";
 import useSeeMoreDetails from "@/hooks/useSeeMoreDetails";
-import {serviceAddons} from "@/utils/constants";
-import {Ionicons} from "@expo/vector-icons";
-import {FlatList, Pressable, Text, View} from "react-native";
+import { useUserBookings } from "@/queries/bookingQueries";
+import { useBookStore } from "@/store/useBookStore";
+import { formatDate } from "@/utils/date";
+import { Ionicons } from "@expo/vector-icons";
+import {
+  ActivityIndicator,
+  FlatList,
+  Pressable,
+  Text,
+  View,
+} from "react-native";
 import SeeMoreModal from "../modals/seeMoreModal";
-
-const DUMMY_DATA = [
-  {
-    id: "1",
-    vehicle: "Motorcycle",
-    bookedTime: "3:30 PM",
-    pickup: "13, Allen Street Village, San Isidro hagonoy Bulacan sfsd ddfg",
-    dropoff: "Hernandez Street",
-    distance: "3KM",
-    isCash: true,
-    amount: 6100,
-    selectedServices: serviceAddons,
-    note: " Please handle with care.",
-    images: [1, 2],
-  },
-];
+import SuccessModal from "../modals/successModal";
 
 export default function RequestRoute() {
-  const {modalVisible, setModalVisible, selectedRequest, handleSeeMorePress} =
+  const { modalVisible, setModalVisible, selectedRequest, handleSeeMorePress } =
     useSeeMoreDetails();
+
+  const success = useBookStore((state) => state.success);
+  const setSuccess = useBookStore((state) => state.setSuccess);
+
+  const { user } = useAuth();
+
+  const {
+    data: bookings,
+    isPending,
+    error,
+    refetch,
+  } = useUserBookings(user?.uid || "");
+
+  if (isPending)
+    return (
+      <View className="flex-1 items-center justify-center">
+        <ActivityIndicator size="large" color="#FFA840" />
+      </View>
+    );
+  if (error)
+    return (
+      <View className="flex-1 items-center justify-center">
+        <Text className="text-lg font-semibold text-gray-500">
+          {error.message}
+        </Text>
+      </View>
+    );
+
+  const pendingBookings = bookings.filter((b) => b.status === "pending");
 
   return (
     <>
       <FlatList
-        data={DUMMY_DATA}
-        renderItem={({item}) => (
+        data={pendingBookings}
+        renderItem={({ item }) => (
           <RequestCard
-            vehicle={item.vehicle}
-            bookedTime={item.bookedTime}
-            pickup={item.pickup}
-            dropoff={item.dropoff}
-            distance={item.distance}
-            isCash={item.isCash}
-            amount={item.amount}
+            vehicle={item.selectedVehicle.name}
+            bookingType={item.bookingType}
+            pickup={item.pickUp.address}
+            dropoff={item.dropOff.address}
+            distance={item.routeData.distance}
+            amount={item.routeData.price}
+            isCash={item.paymentMethod === "cash"}
             onCancel={() => setModalVisible(true)}
             onUpdateNote={() => {}}
             onPressSeeMore={() => handleSeeMorePress(item)}
           />
         )}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item._id}
         showsVerticalScrollIndicator={false}
         className="flex-1 p-4 bg-white"
         contentContainerStyle={{
           paddingBottom: 40,
           gap: 15,
         }}
+        ListEmptyComponent={() => (
+          <View className=" items-center justify-center px-8 py-12">
+            <View className="items-center">
+              <Ionicons name="alert-circle-outline" size={80} color="#9CA3AF" />
+              <Text className="text-2xl font-bold text-gray-800 mt-6 text-center">
+                No Requests Yet
+              </Text>
+              <Text className="text-base text-gray-500 text-center mt-2">
+                You currently don&apos;t have any active requests.
+              </Text>
+            </View>
+          </View>
+        )}
+        refreshing={isPending}
+        onRefresh={refetch}
       />
 
-      <SeeMoreModal
-        visible={modalVisible}
-        onClose={() => setModalVisible(false)}
-        type="Request Booking"
-        data={selectedRequest}
+      {selectedRequest && (
+        <SeeMoreModal
+          visible={modalVisible}
+          onClose={() => setModalVisible(false)}
+          type="Request Booking"
+          data={selectedRequest}
+        />
+      )}
+
+      <SuccessModal
+        visible={success}
+        text="Booking Successful!"
+        setVisible={setSuccess}
       />
     </>
   );
@@ -63,10 +109,13 @@ export default function RequestRoute() {
 
 type RequestCardProps = {
   vehicle: string;
-  bookedTime: string;
+  bookingType: {
+    type: string; // "asap" | "schedule"
+    value: string | null;
+  };
   pickup: string;
   dropoff: string;
-  distance: string;
+  distance: number;
   isCash: boolean;
   amount: number;
   onCancel: () => void;
@@ -76,7 +125,7 @@ type RequestCardProps = {
 
 const RequestCard = ({
   vehicle,
-  bookedTime,
+  bookingType,
   pickup,
   dropoff,
   distance,
@@ -89,7 +138,7 @@ const RequestCard = ({
   return (
     <Pressable
       onPress={onPressSeeMore}
-      className="overflow-hidden bg-white rounded-2xl active:scale-95"
+      className="overflow-hidden bg-white rounded-2xl active:opacity-80"
       style={{
         shadowColor: "#000",
         shadowOffset: {
@@ -104,7 +153,11 @@ const RequestCard = ({
       {/* Header */}
       <View className="flex-row items-center justify-between px-5 py-3 bg-lightPrimary">
         <Text className="text-lg font-semibold text-white">{vehicle}</Text>
-        <Text className="text-sm text-white">Booked at {bookedTime}</Text>
+        <Text className="text-sm text-white capitalize">
+          {bookingType.type === "schedule"
+            ? `Scheduled: ${formatDate(bookingType.value || "")}`
+            : bookingType.value}
+        </Text>
       </View>
 
       {/* Body */}
@@ -112,14 +165,14 @@ const RequestCard = ({
         {/* Pickup & Drop */}
         <View className="relative flex-row items-center justify-between ml-5 mr-2 border-l border-dashed pl-7">
           <View className="gap-4">
-            <Text className="font-medium max-w-60" numberOfLines={2}>
+            <Text className="font-medium max-w-56" numberOfLines={2}>
               {pickup}
             </Text>
-            <Text className="font-medium max-w-60" numberOfLines={2}>
+            <Text className="font-medium max-w-56" numberOfLines={2}>
               {dropoff}
             </Text>
           </View>
-          <Text className="font-bold">{distance}</Text>
+          <Text className="font-bold">{distance.toFixed(1)}km</Text>
 
           <Ionicons
             name="location-sharp"
@@ -138,7 +191,11 @@ const RequestCard = ({
             {isCash ? "Cash Payment" : "Online Payment"}
           </Text>
           <Text className="text-lg font-semibold text-darkPrimary">
-            Php {amount.toLocaleString("en-US")}
+            Php{" "}
+            {amount.toLocaleString("en-US", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}
           </Text>
         </View>
 

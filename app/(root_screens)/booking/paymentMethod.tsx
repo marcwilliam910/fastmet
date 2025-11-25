@@ -1,14 +1,67 @@
 import SheetButton from "@/components/maps/SheetButton";
-import {Ionicons} from "@expo/vector-icons";
-import {router} from "expo-router";
-import React, {useState} from "react";
-import {Pressable, Text, View} from "react-native";
-import {SafeAreaView} from "react-native-safe-area-context";
+import LoadingModal from "@/components/modals/loading";
+import useAuth from "@/hooks/useAuth";
+import { useSocket } from "@/sockets/context/SocketProvider";
+import { handleBookingSaved, requestBooking } from "@/sockets/handlers/booking";
+import { useBookStore } from "@/store/useBookStore";
+import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
+import React, { useEffect, useState } from "react";
+import { Pressable, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function PaymentMethod() {
-  const [paymentMethod, setPaymentMethod] = useState("cash");
+  const book = useBookStore.getState();
+  const paymentMethod = useBookStore((state) => state.paymentMethod);
+  const setPaymentMethod = useBookStore((state) => state.setPaymentMethod);
+
+  const [loading, setLoading] = useState(false);
+
+  const { user } = useAuth();
+
+  const socket = useSocket();
+
+  const submitRequest = async () => {
+    setLoading(true);
+    const payload = {
+      userId: user?.uid,
+      pickUp: book.pickUp,
+      dropOff: book.dropOff,
+      bookingType: book.bookingType,
+      selectedVehicle: {
+        id: book.selectedVehicle?.id,
+        name: book.selectedVehicle?.name,
+        capacity: book.selectedVehicle?.capacity,
+      },
+      routeData: book.routeData,
+      paymentMethod: book.paymentMethod,
+      addedServices: book.addedServices,
+    };
+
+    requestBooking(socket, payload);
+  };
+
+  useEffect(() => {
+    const bookingSaved = (data: { success: boolean }) => {
+      setLoading(false);
+      if (data.success) {
+        book.clearStates();
+        book.setSuccess(true);
+        router.push("/(drawer)/(tabs)/request");
+      }
+    };
+
+    handleBookingSaved(socket, bookingSaved);
+
+    return () => {
+      socket.off("booking_request_saved", bookingSaved);
+    };
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
-    <SafeAreaView style={{flex: 1, backgroundColor: "white"}}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
       {/* header */}
       <View className="relative flex-row items-center justify-center px-6 pt-2 pb-8">
         <Pressable
@@ -53,9 +106,9 @@ export default function PaymentMethod() {
 
         {/* Online Payment Option (Disabled for now) */}
         <Pressable
-          onPress={() => setPaymentMethod("xendit")}
+          onPress={() => setPaymentMethod("online")}
           className={`flex-row items-center justify-between rounded-xl border px-4 py-3 ${
-            paymentMethod === "xendit"
+            paymentMethod === "online"
               ? "border-[#FFA840] bg-[#FFF6EB]"
               : "border-gray-300 bg-white"
           }`}
@@ -71,12 +124,13 @@ export default function PaymentMethod() {
               <Text className="text-xs text-gray-500">by Xendit</Text>
             </View>
           </View>
-          {paymentMethod === "xendit" && (
+          {paymentMethod === "online" && (
             <Ionicons name="checkmark-sharp" size={24} color="#FFA840" />
           )}
         </Pressable>
       </View>
-      <SheetButton next={() => {}} />
+      <SheetButton next={submitRequest} isLast={true} />
+      <LoadingModal visible={loading} />
     </SafeAreaView>
   );
 }

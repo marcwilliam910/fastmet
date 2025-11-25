@@ -19,3 +19,60 @@ export type Service = {
   price: number;
   icon: string;
 };
+
+export type RouteData = {
+  distance: number;
+  price: number;
+  duration: number;
+};
+
+export type Booking = {
+  _id: string;
+  userId: string;
+  pickUp: {
+    name: string;
+    address: string;
+    coords: {
+      lat: number;
+      lng: number;
+    };
+  };
+  dropOff: {
+    name: string;
+    address: string;
+    coords: {
+      lat: number;
+      lng: number;
+    };
+  };
+  bookingType: {
+    type: string; // "asap" | "schedule"
+    value: string | null;
+  };
+  selectedVehicle: {
+    id: string;
+    name: string;
+    capacity: string;
+  };
+  routeData: {
+    distance: number;
+    duration: number;
+    price: number;
+  };
+  paymentMethod: string; // "cash" | "online"
+  addedServices: {
+    id: string;
+    name: string;
+    price: number;
+    icon: string;
+  }[];
+  note: string;
+  images: string[];
+  createdAt: string;
+  status: string;
+  driver?: {
+    id: string;
+    name: string;
+    rating: number;
+  };
+};

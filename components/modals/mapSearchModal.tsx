@@ -139,8 +139,6 @@ const SearchModal: React.FC<SearchModalProps> = ({
     setSelectedPlace(place);
   };
 
-  console.log(selectedPlace);
-
   const renderRecentPlace = ({ item }: any) => (
     <Pressable
       className="flex-row items-center px-4 py-3 border-b border-gray-100"

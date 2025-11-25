@@ -1,11 +1,18 @@
 import useSeeMoreDetails from "@/hooks/useSeeMoreDetails";
-import {Service} from "@/types/book";
-import {serviceAddons} from "@/utils/constants";
-import {formatDate} from "@/utils/date";
-import {Ionicons} from "@expo/vector-icons";
-import {useState} from "react";
-import {FlatList, Modal, Pressable, ScrollView, Text, View} from "react-native";
-import {SafeAreaView} from "react-native-safe-area-context";
+import { Service } from "@/types/book";
+import { serviceAddons } from "@/utils/constants";
+import { formatDate } from "@/utils/date";
+import { Ionicons } from "@expo/vector-icons";
+import { useState } from "react";
+import {
+  FlatList,
+  Modal,
+  Pressable,
+  ScrollView,
+  Text,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const DUMMY_DATA = [
   {
@@ -29,14 +36,15 @@ const DUMMY_DATA = [
 ];
 
 export default function CompleteRoute() {
-  const {modalVisible, setModalVisible, selectedRequest, handleSeeMorePress} =
+  const { modalVisible, setModalVisible, selectedRequest, handleSeeMorePress } =
     useSeeMoreDetails();
+  const [customerRating, setCustomerRating] = useState(0);
 
   return (
     <>
       <FlatList
         data={DUMMY_DATA}
-        renderItem={({item}) => (
+        renderItem={({ item }) => (
           <CompleteCard
             vehicle={item.vehicle}
             pickup={item.pickup}
@@ -57,6 +65,8 @@ export default function CompleteRoute() {
         }}
       />
       <SeeMoreModal
+        customerRating={customerRating}
+        setCustomerRating={setCustomerRating}
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
         data={selectedRequest}
@@ -164,13 +174,16 @@ function SeeMoreModal({
   visible,
   onClose,
   data,
+  customerRating,
+  setCustomerRating,
 }: {
   visible: boolean;
   onClose: () => void;
   data: any;
+  customerRating: number;
+  setCustomerRating: React.Dispatch<React.SetStateAction<number>>;
 }) {
   if (!data) return null;
-  const [customerRating, setCustomerRating] = useState(0);
 
   return (
     <Modal
@@ -194,7 +207,7 @@ function SeeMoreModal({
         <ScrollView
           className="flex-1 px-4"
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{gap: 20, paddingBottom: 30}}
+          contentContainerStyle={{ gap: 20, paddingBottom: 30 }}
         >
           <View className="p-5 rounded-2xl bg-lightPrimary">
             <View className="flex-row items-center justify-between">
@@ -291,7 +304,7 @@ function SeeMoreModal({
                   <View
                     key={index}
                     className="items-center justify-center bg-gray-200 rounded-xl"
-                    style={{width: 90, height: 90}}
+                    style={{ width: 90, height: 90 }}
                   >
                     <Text className="text-gray-500">Photo {index + 1}</Text>
                   </View>
@@ -453,7 +466,7 @@ function SeeMoreModal({
                   <View
                     key={index}
                     className="items-center justify-center bg-gray-200 rounded-xl"
-                    style={{width: 90, height: 90}}
+                    style={{ width: 90, height: 90 }}
                   >
                     <Text className="text-gray-500">Image {index + 1}</Text>
                   </View>

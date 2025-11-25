@@ -1,16 +1,16 @@
 import HeaderDrawer from "@/components/headers/HeaderDrawer";
 import LogoutModal from "@/components/modals/logoutModal";
 import useAuth from "@/hooks/useAuth";
-import {Ionicons} from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import {
   DrawerContentScrollView,
   DrawerItemList,
 } from "@react-navigation/drawer";
-import {Drawer} from "expo-router/drawer";
-import {useState} from "react";
-import {Pressable, Text, View} from "react-native";
-import {GestureHandlerRootView} from "react-native-gesture-handler";
-import {useSafeAreaInsets} from "react-native-safe-area-context";
+import { Drawer } from "expo-router/drawer";
+import { useState } from "react";
+import { Pressable, Text, View } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const CustomDrawerContent = (props: any) => {
   const inset = useSafeAreaInsets();
@@ -38,7 +38,7 @@ const CustomDrawerContent = (props: any) => {
       </DrawerContentScrollView>
 
       {/* Footer */}
-      <View style={{marginBottom: inset.bottom + 10}}>
+      <View style={{ marginBottom: inset.bottom + 10 }}>
         <Text className="text-sm tracking-widest text-center text-gray-400">
           www.fastmet.com
         </Text>
@@ -49,10 +49,10 @@ const CustomDrawerContent = (props: any) => {
 
 export default function DrawerLayout() {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const {user} = useAuth();
+  const { user } = useAuth();
 
   return (
-    <GestureHandlerRootView style={{flex: 1}}>
+    <GestureHandlerRootView style={{ flex: 1 }}>
       <Drawer
         drawerContent={(props) => (
           <CustomDrawerContent
@@ -73,21 +73,21 @@ export default function DrawerLayout() {
             borderRadius: 8,
           },
 
-          headerStyle: {backgroundColor: "#0F2535"},
+          headerStyle: { backgroundColor: "#0F2535" },
           headerLeft: () => null,
-          headerTitle: ({children}) => <HeaderDrawer title={children} />,
+          headerTitle: ({ children }) => <HeaderDrawer title={children} />,
         }}
       >
         <Drawer.Screen
           name="index"
-          options={{drawerItemStyle: {display: "none"}}}
+          options={{ drawerItemStyle: { display: "none" } }}
         />
         <Drawer.Screen
           name="book"
           options={{
             drawerLabel: "Book Now",
             title: "Book",
-            drawerIcon: ({focused}) => (
+            drawerIcon: ({ focused }) => (
               <Ionicons
                 name={focused ? "navigate" : "navigate-outline"}
                 size={24}
@@ -101,7 +101,7 @@ export default function DrawerLayout() {
           options={{
             drawerLabel: "Dashboard",
             title: "Home",
-            drawerIcon: ({focused}) => (
+            drawerIcon: ({ focused }) => (
               <Ionicons
                 name={focused ? "speedometer" : "speedometer-outline"}
                 size={24}
@@ -116,7 +116,7 @@ export default function DrawerLayout() {
             drawerLabel: "My Profile",
             title: "My Profile",
             // headerShown: true,
-            drawerIcon: ({focused}) => (
+            drawerIcon: ({ focused }) => (
               <Ionicons
                 name={focused ? "person" : "person-outline"}
                 size={24}
@@ -131,7 +131,7 @@ export default function DrawerLayout() {
             drawerLabel: "Settings",
             title: "Settings",
             headerShown: true,
-            drawerIcon: ({focused}) => (
+            drawerIcon: ({ focused }) => (
               <Ionicons
                 name={focused ? "settings" : "settings-outline"}
                 size={24}
@@ -146,7 +146,7 @@ export default function DrawerLayout() {
             drawerLabel: "About",
             title: "About",
             headerShown: true,
-            drawerIcon: ({focused}) => (
+            drawerIcon: ({ focused }) => (
               <Ionicons
                 name={
                   focused ? "information-circle" : "information-circle-outline"
@@ -164,7 +164,7 @@ export default function DrawerLayout() {
             drawerLabel: "Favorite",
             title: "Favorite",
             headerShown: true,
-            drawerIcon: ({focused}) => (
+            drawerIcon: ({ focused }) => (
               <Ionicons
                 name={focused ? "heart" : "heart-outline"}
                 size={24}

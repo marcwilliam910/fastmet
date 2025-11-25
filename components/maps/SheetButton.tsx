@@ -9,7 +9,13 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import LoadingModal from "../modals/loading";
 import NotLoggedInModal from "../modals/notLoggedInModal";
 
-const SheetButton = ({ next }: { next: () => void }) => {
+const SheetButton = ({
+  next,
+  isLast,
+}: {
+  next: () => void;
+  isLast?: boolean;
+}) => {
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
   const [showModal, setShowModal] = useState(false);
@@ -98,7 +104,9 @@ const SheetButton = ({ next }: { next: () => void }) => {
         className={`flex-1 py-3 rounded-md bg-lightPrimary active:bg-darkPrimary ${isDisable ? "opacity-60" : ""}`}
         onPress={handleNext}
       >
-        <Text className="font-bold text-center text-lg text-white">Next</Text>
+        <Text className="font-bold text-center text-lg text-white">
+          {isLast ? "Book Now" : "Next"}
+        </Text>
       </Pressable>
       <NotLoggedInModal
         visible={showModal}

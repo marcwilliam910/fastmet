@@ -1,7 +1,7 @@
-import {Ionicons} from "@expo/vector-icons";
-import {Image} from "expo-image";
-import React, {useEffect} from "react";
-import {Modal, Text, View} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { Image } from "expo-image";
+import React, { useEffect } from "react";
+import { Modal, Text, View } from "react-native";
 
 const SuccessModal = ({
   visible,
@@ -10,7 +10,7 @@ const SuccessModal = ({
 }: {
   visible: boolean;
   text: string;
-  setVisible: React.Dispatch<React.SetStateAction<boolean>>;
+  setVisible: (visible: boolean) => void;
 }) => {
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -33,7 +33,7 @@ const SuccessModal = ({
           <View className="flex-row items-center">
             <Image
               source={require("@/assets/fastmet/logo.png")}
-              style={{width: 50, height: 50}}
+              style={{ width: 50, height: 50 }}
               contentFit="contain"
             />
             <Text className="text-xl font-bold tracking-widest text-secondary">

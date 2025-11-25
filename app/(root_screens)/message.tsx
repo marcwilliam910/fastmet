@@ -1,9 +1,9 @@
-import {openGallery} from "@/utils/imagePicker";
-import {Ionicons} from "@expo/vector-icons";
-import {Image} from "expo-image";
+import { openGallery } from "@/utils/imagePicker";
+import { Ionicons } from "@expo/vector-icons";
+import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
-import {router} from "expo-router";
-import React, {useCallback, useEffect, useState} from "react";
+import { router } from "expo-router";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   Keyboard,
   KeyboardAvoidingView,
@@ -13,8 +13,8 @@ import {
   TextInput,
   View,
 } from "react-native";
-import {Bubble, GiftedChat, IMessage} from "react-native-gifted-chat";
-import {SafeAreaView} from "react-native-safe-area-context";
+import { Bubble, GiftedChat, IMessage } from "react-native-gifted-chat";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const Message = () => {
   const [keyboardVisible, setKeyboardVisible] = useState(false);
@@ -83,7 +83,7 @@ const Message = () => {
 
   // Take photo with camera
   const takePhoto = async () => {
-    const {status} = await ImagePicker.requestCameraPermissionsAsync();
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
 
     if (status !== "granted") {
       alert("Sorry, we need camera permissions!");
@@ -151,7 +151,7 @@ const Message = () => {
                     _id: Date.now(),
                     text,
                     createdAt: new Date(),
-                    user: {_id: 1},
+                    user: { _id: 1 },
                   },
                 ]);
                 setText("");
@@ -195,7 +195,7 @@ const Message = () => {
   return (
     <SafeAreaView className="flex-1 bg-secondary">
       <KeyboardAvoidingView
-        style={{flex: 1}}
+        style={{ flex: 1 }}
         behavior={
           Platform.OS === "ios"
             ? "padding"
@@ -214,13 +214,13 @@ const Message = () => {
 
             <Image
               source={require("@/assets/images/user.png")}
-              style={{width: 40, height: 40, borderRadius: 999}}
+              style={{ width: 40, height: 40, borderRadius: 999 }}
               contentFit="contain"
             />
 
             <View className="flex-1">
               <Text className="text-base font-bold text-white">
-                Driver's Name
+                Driver&apos;s Name
               </Text>
               <View className="flex-row items-center gap-1">
                 <View className="w-2 h-2 bg-green-500 rounded-full" />

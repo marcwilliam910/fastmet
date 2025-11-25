@@ -1,9 +1,15 @@
 import NotLoggedIn from "@/components/notLoggedIn";
 import useAuth from "@/hooks/useAuth";
-import {Image} from "expo-image";
-import {router} from "expo-router";
+import { Image } from "expo-image";
+import { router } from "expo-router";
 import React from "react";
-import {ActivityIndicator, FlatList, Pressable, Text, View} from "react-native";
+import {
+  ActivityIndicator,
+  FlatList,
+  Pressable,
+  Text,
+  View,
+} from "react-native";
 
 const DUMMYNOTIFICATIONS = [
   {
@@ -37,7 +43,7 @@ const DUMMYNOTIFICATIONS = [
 ];
 
 const Notification = () => {
-  const {user, loading} = useAuth();
+  const { user, loading } = useAuth();
 
   if (loading) {
     return (
@@ -56,9 +62,9 @@ const Notification = () => {
       <FlatList
         data={DUMMYNOTIFICATIONS}
         showsVerticalScrollIndicator={false}
-        renderItem={({item}) => <NotificationCard item={item} />}
+        renderItem={({ item }) => <NotificationCard item={item} />}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={{gap: 3, paddingBottom: 60}}
+        contentContainerStyle={{ gap: 3, paddingBottom: 60 }}
       />
     </View>
   );
@@ -66,7 +72,7 @@ const Notification = () => {
 
 export default Notification;
 
-const NotificationCard = ({item}: any) => {
+const NotificationCard = ({ item }: any) => {
   return (
     <Pressable
       className="flex-row items-center gap-4 px-4 py-2 active:bg-ctaSecondary"
@@ -74,7 +80,7 @@ const NotificationCard = ({item}: any) => {
     >
       <Image
         source={item.image}
-        style={{width: 50, height: 50, borderRadius: 999}}
+        style={{ width: 50, height: 50, borderRadius: 999 }}
         contentFit="contain"
       />
       <View className="flex-1 gap-1">

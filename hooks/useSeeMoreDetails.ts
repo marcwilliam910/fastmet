@@ -1,13 +1,14 @@
-import {useState} from "react";
+import { Booking } from "@/types/book";
+import { useState } from "react";
 
 export default function useSeeMoreDetails() {
   const [modalVisible, setModalVisible] = useState(false);
-  const [selectedRequest, setSelectedRequest] = useState(null);
+  const [selectedRequest, setSelectedRequest] = useState<Booking | null>(null);
 
   const handleSeeMorePress = (request: any) => {
     setSelectedRequest(request);
     setModalVisible(true);
   };
 
-  return {modalVisible, setModalVisible, selectedRequest, handleSeeMorePress};
+  return { modalVisible, setModalVisible, selectedRequest, handleSeeMorePress };
 }

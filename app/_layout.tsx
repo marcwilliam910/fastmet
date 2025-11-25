@@ -1,23 +1,26 @@
 import useAuth from "@/hooks/useAuth";
-import {queryClient} from "@/lib/queryClient";
+import { queryClient } from "@/lib/queryClient";
 import {
   Montserrat_400Regular,
   Montserrat_700Bold,
   useFonts,
 } from "@expo-google-fonts/montserrat";
-import {QueryClientProvider} from "@tanstack/react-query";
-import {SplashScreen, Stack} from "expo-router";
-import {useEffect} from "react";
-import {StatusBar} from "react-native";
-import {GestureHandlerRootView} from "react-native-gesture-handler";
-import {SafeAreaProvider} from "react-native-safe-area-context";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { SplashScreen, Stack } from "expo-router";
+import { useEffect } from "react";
+import { StatusBar } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
+import { toastConfig } from "@/config/toastConfig";
+import SocketProvider from "@/sockets/context/SocketProvider";
+import Toast from "react-native-toast-message";
 import "../global.css";
 
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const {loading} = useAuth();
+  const { loading } = useAuth();
 
   const [fontsLoaded] = useFonts({
     Montserrat_400Regular,
@@ -42,12 +45,13 @@ export default function RootLayout() {
   }
 
   return (
-    <GestureHandlerRootView style={{flex: 1}}>
+    <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
         {/* <FontWrapper> */}
         <QueryClientProvider client={queryClient}>
-          <Stack screenOptions={{headerShown: false}}>
-            {/* <Stack.Protected guard={!user}>
+          <SocketProvider>
+            <Stack screenOptions={{ headerShown: false }}>
+              {/* <Stack.Protected guard={!user}>
           <Stack.Screen name="(auth)" />
         </Stack.Protected>
 
@@ -55,11 +59,13 @@ export default function RootLayout() {
           <Stack.Screen name="(drawer)" />
           <Stack.Screen name="(root_screens)" />
         </Stack.Protected> */}
-            <Stack.Screen name="(drawer)" />
-            <Stack.Screen name="(auth)" />
-            <Stack.Screen name="(root_screens)" />
-            <Stack.Screen name="(public_screens)" />
-          </Stack>
+              <Stack.Screen name="(drawer)" />
+              <Stack.Screen name="(auth)" />
+              <Stack.Screen name="(root_screens)" />
+              <Stack.Screen name="(public_screens)" />
+            </Stack>
+            <Toast config={toastConfig} />
+          </SocketProvider>
         </QueryClientProvider>
 
         {/* </FontWrapper> */}

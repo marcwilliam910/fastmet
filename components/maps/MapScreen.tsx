@@ -1,11 +1,10 @@
-import {RouteData} from "@/store/useBookStore";
-import {LocationDetails} from "@/types/book";
-import {GOOGLE_MAPS_API_KEY, STATIC_IMAGES} from "@/utils/constants";
+import { LocationDetails, RouteData } from "@/types/book";
+import { GOOGLE_MAPS_API_KEY, STATIC_IMAGES } from "@/utils/constants";
 import * as Location from "expo-location";
-import {useFocusEffect} from "expo-router";
-import React, {useCallback, useEffect, useRef} from "react";
-import {Alert, StatusBar, StyleSheet, Text, View} from "react-native";
-import MapView, {Marker} from "react-native-maps";
+import { useFocusEffect } from "expo-router";
+import React, { useCallback, useEffect, useRef } from "react";
+import { Alert, StatusBar, StyleSheet, Text, View } from "react-native";
+import MapView, { Marker } from "react-native-maps";
 import MapViewDirections from "react-native-maps-directions";
 
 type Region = {
@@ -43,7 +42,7 @@ export default function MapScreen({
     if (!GOOGLE_MAPS_API_KEY) return;
 
     (async () => {
-      const {status} = await Location.requestForegroundPermissionsAsync();
+      const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
         Alert.alert(
           "Permission Required",
@@ -62,7 +61,7 @@ export default function MapScreen({
       setRegion(userRegion);
       mapRef.current?.animateToRegion(userRegion, 1000);
     })();
-  }, []);
+  }, [setRegion]);
 
   useEffect(() => {
     if (pickUp?.coords) {
@@ -75,7 +74,7 @@ export default function MapScreen({
       setRegion(newRegion);
       mapRef.current?.animateToRegion(newRegion, 1000);
     }
-  }, [pickUp]);
+  }, [pickUp, setRegion]);
 
   return (
     <View className="flex-1">
@@ -128,7 +127,7 @@ export default function MapScreen({
                 optimizeWaypoints
                 onReady={(result) => {
                   mapRef.current?.fitToCoordinates(result.coordinates, {
-                    edgePadding: {top: 80, right: 80, bottom: 80, left: 80},
+                    edgePadding: { top: 80, right: 80, bottom: 80, left: 80 },
                     animated: true,
                   });
                 }}
@@ -145,7 +144,7 @@ export default function MapScreen({
   );
 }
 
-export function DistanceBubble({routeData}: {routeData: RouteData}) {
+export function DistanceBubble({ routeData }: { routeData: RouteData }) {
   return (
     <View className="absolute z-50 self-center px-4 py-2 top-10 bg-black/60 rounded-2xl">
       <Text className="text-sm font-semibold text-white">

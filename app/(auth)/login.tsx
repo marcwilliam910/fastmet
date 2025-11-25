@@ -1,19 +1,25 @@
 import CustomKeyAvoidingView from "@/components/CustomKeyAvoid";
 import LogoWithText from "@/components/LogoWithText";
 import LoadingModal from "@/components/modals/loading";
-import {login} from "@/lib/firebase/auth";
-import {useRegisterProfile} from "@/mutations/userMutations";
-import {LoginSchema} from "@/schemas/authSchema";
-import {signInWithGoogle} from "@/services/googleAuth";
-import {useProfileStore} from "@/store/useProfileStore";
-import {User} from "@/types/user";
-import {validateForm} from "@/utils/validateForm";
-import {Ionicons} from "@expo/vector-icons";
-import {Image} from "expo-image";
-import {Link, router} from "expo-router";
-import React, {useRef, useState} from "react";
-import {Pressable, Text, TextInput, TouchableOpacity, View} from "react-native";
-import {SafeAreaView} from "react-native-safe-area-context";
+import { login } from "@/lib/firebase/auth";
+import { useRegisterProfile } from "@/mutations/userMutations";
+import { LoginSchema } from "@/schemas/authSchema";
+import { signInWithGoogle } from "@/services/googleAuth";
+import { useProfileStore } from "@/store/useProfileStore";
+import { User } from "@/types/user";
+import { validateForm } from "@/utils/validateForm";
+import { Ionicons } from "@expo/vector-icons";
+import { Image } from "expo-image";
+import { Link, router } from "expo-router";
+import React, { useRef, useState } from "react";
+import {
+  Pressable,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const Login = () => {
   const [form, setForm] = useState({
@@ -25,8 +31,8 @@ const Login = () => {
 
   const [showPassword, setShowPassword] = useState(false);
   const passwordRef = useRef<TextInput>(null);
-  const {setProfile} = useProfileStore();
-  const {mutate, isPending} = useRegisterProfile();
+  const { setProfile } = useProfileStore();
+  const { mutate, isPending } = useRegisterProfile();
 
   const handleLogin = async () => {
     const result = validateForm(LoginSchema, form);
@@ -42,7 +48,7 @@ const Login = () => {
       const res = await login(form.email, form.password);
       console.log("Login success:", res.user.uid);
 
-      router.push("/(drawer)/(tabs)");
+      router.push("/(drawer)/book");
     } catch (err: any) {
       console.log(JSON.stringify(err, null, 2));
 
@@ -67,7 +73,7 @@ const Login = () => {
           break;
       }
 
-      setErrors({form: message});
+      setErrors({ form: message });
     } finally {
       setLoading(false);
     }
@@ -103,7 +109,7 @@ const Login = () => {
         onSuccess: () => {
           setProfile(dataToSave);
           console.log("Profile registered successfully");
-          router.push("/(drawer)/(tabs)");
+          router.push("/(drawer)/book");
         },
       });
 
@@ -113,7 +119,7 @@ const Login = () => {
     } catch (error: any) {
       // Don't show error if user cancelled
       if (error.message !== "Sign in was cancelled") {
-        setErrors({form: error.message});
+        setErrors({ form: error.message });
       }
     } finally {
       setLoading(false);
@@ -121,7 +127,7 @@ const Login = () => {
   };
 
   return (
-    <SafeAreaView style={{flex: 1, backgroundColor: "#fff"}}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
       <CustomKeyAvoidingView>
         <View className="justify-center flex-1 gap-6 px-6">
           {/* Logo and Title */}
@@ -132,7 +138,7 @@ const Login = () => {
             <Text className="text-sm font-medium text-gray-700 ">Email</Text>
             <TextInput
               value={form.email}
-              onChangeText={(text) => setForm({...form, email: text})}
+              onChangeText={(text) => setForm({ ...form, email: text })}
               autoCapitalize="none"
               placeholder="Email"
               keyboardType="email-address"
@@ -155,7 +161,7 @@ const Login = () => {
             <View className="relative">
               <TextInput
                 value={form.password}
-                onChangeText={(text) => setForm({...form, password: text})}
+                onChangeText={(text) => setForm({ ...form, password: text })}
                 autoCapitalize="none"
                 ref={passwordRef}
                 placeholder="Password"
@@ -190,7 +196,7 @@ const Login = () => {
           {/* Forgot Password */}
           <Link asChild href="/(auth)/forgot-pass">
             <Pressable className="self-end">
-              {({pressed}) => (
+              {({ pressed }) => (
                 <Text
                   className={`text-sm font-semibold text-gray-600 ${pressed ? "underline" : ""}`}
                 >
@@ -231,7 +237,7 @@ const Login = () => {
             >
               <Image
                 source={require("@/assets/images/google.png")}
-                style={{width: 20, height: 20}}
+                style={{ width: 20, height: 20 }}
                 contentFit="contain"
               />
             </TouchableOpacity>
@@ -248,7 +254,7 @@ const Login = () => {
           <Pressable
             className="items-center py-4 mt-2 border rounded-lg border-lightPrimary active:bg-gray-50"
             onPress={() => {
-              setErrors({form: ""});
+              setErrors({ form: "" });
               router.push("/(auth)/register");
             }}
           >
@@ -259,7 +265,7 @@ const Login = () => {
 
           <Link
             className="text-base font-semibold text-center text-gray-800 underline"
-            href="/(drawer)/(tabs)"
+            href="/(drawer)/book"
           >
             Continue as Guest
           </Link>

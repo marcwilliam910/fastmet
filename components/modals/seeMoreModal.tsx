@@ -1,8 +1,9 @@
-import {Service} from "@/types/book";
-import {Ionicons} from "@expo/vector-icons";
+import { Booking, Service } from "@/types/book";
+import { formatDate } from "@/utils/date";
+import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import {Modal, Pressable, ScrollView, Text, View} from "react-native";
-import {SafeAreaView} from "react-native-safe-area-context";
+import { Modal, Pressable, ScrollView, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function SeeMoreModal({
   visible,
@@ -13,9 +14,14 @@ export default function SeeMoreModal({
   visible: boolean;
   onClose: () => void;
   type: string;
-  data: any;
+  data: Booking;
 }) {
   if (!data) return null;
+
+  const totalServicesPrice = data.addedServices.reduce(
+    (total, service) => total + service.price,
+    0
+  );
 
   return (
     <Modal
@@ -37,7 +43,7 @@ export default function SeeMoreModal({
         <ScrollView
           className="flex-1 px-4"
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{gap: 20, paddingBottom: 30}}
+          contentContainerStyle={{ gap: 20, paddingBottom: 30 }}
         >
           {/* Vehicle & Time Card */}
           <View
@@ -49,21 +55,22 @@ export default function SeeMoreModal({
                   Vehicle Type
                 </Text>
                 <Text className="text-xl font-bold text-white">
-                  {data.vehicle}
+                  {data.selectedVehicle.name}
                 </Text>
               </View>
               <View className="items-end">
                 <Text className="mb-1 text-sm text-white opacity-90">
                   {type === "Cancelled Booking" ? "Cancelled At" : "Booked At"}
                 </Text>
-                <Text className="text-lg font-semibold text-white">
-                  {data.bookedTime}
+                <Text className="text-sm font-semibold text-white">
+                  {formatDate(data.createdAt)}
                 </Text>
               </View>
             </View>
           </View>
 
-          {data.driverName && data.rating && (
+          {/* Driver Card */}
+          {data.driver?.name && data.driver.rating && (
             <View className="px-4 py-3">
               <Text className="mb-1 text-sm font-semibold text-gray-500">
                 Driver
@@ -73,25 +80,29 @@ export default function SeeMoreModal({
                   <Ionicons name="person-circle" size={44} color="#F7931E" />
                   <View>
                     <Text className="text-lg font-semibold text-gray-800">
-                      {data.driverName}
+                      {data.driver.name}
                     </Text>
                     <View className="flex-row">
-                      {[...Array(Math.floor(data.rating))].map((_, i) => (
-                        <Ionicons
-                          key={i}
-                          name="star"
-                          size={18}
-                          color="#FFD700"
-                        />
-                      ))}
-                      {[...Array(5 - Math.floor(data.rating))].map((_, i) => (
-                        <Ionicons
-                          key={i}
-                          name="star-outline"
-                          size={18}
-                          color="#FFD700"
-                        />
-                      ))}
+                      {[...Array(Math.floor(data.driver.rating))].map(
+                        (_, i) => (
+                          <Ionicons
+                            key={i}
+                            name="star"
+                            size={18}
+                            color="#FFD700"
+                          />
+                        )
+                      )}
+                      {[...Array(5 - Math.floor(data.driver.rating))].map(
+                        (_, i) => (
+                          <Ionicons
+                            key={i}
+                            name="star-outline"
+                            size={18}
+                            color="#FFD700"
+                          />
+                        )
+                      )}
                     </View>
                   </View>
                 </View>
@@ -122,17 +133,15 @@ export default function SeeMoreModal({
 
             <View className="relative flex-row items-center justify-between ml-5 mr-2 border-l border-dashed border-lightPrimary pl-7">
               <View className="gap-4">
-                <Text
-                  className="text-sm font-medium max-w-60"
-                  numberOfLines={2}
-                >
-                  {data.pickup}
+                <Text className="text-sm font-medium max-w-60">
+                  {data.pickUp.address.includes(data.pickUp.name)
+                    ? data.pickUp.address
+                    : data.pickUp.name + ", " + data.pickUp.address}
                 </Text>
-                <Text
-                  className="text-sm font-medium max-w-60"
-                  numberOfLines={2}
-                >
-                  {data.dropoff}
+                <Text className="text-sm font-medium max-w-60">
+                  {data.dropOff.address.includes(data.dropOff.name)
+                    ? data.dropOff.address
+                    : data.dropOff.name + ", " + data.dropOff.address}
                 </Text>
               </View>
 
@@ -153,8 +162,22 @@ export default function SeeMoreModal({
             <View className="flex-row items-center justify-between p-3 mt-4 bg-white rounded-lg">
               <Text className="text-sm text-gray-600">Distance</Text>
               <Text className="text-lg font-bold text-lightPrimary">
-                {data.distance}
+                {data.routeData.distance} km
               </Text>
+            </View>
+
+            {/* Booking Type */}
+            <View className="flex-row items-center justify-between p-3 mt-0 bg-white rounded-lg">
+              <Text className="text-sm font-bold text-gray-600">
+                {data.bookingType.type === "schedule"
+                  ? "Schedule"
+                  : data.bookingType.value}
+              </Text>
+              {data.bookingType.type === "schedule" && (
+                <Text className="text-sm font-bold text-gray-600">
+                  {formatDate(data.bookingType.value || "")}
+                </Text>
+              )}
             </View>
           </View>
 
@@ -166,28 +189,38 @@ export default function SeeMoreModal({
             <View className="flex-row items-center justify-between p-4 bg-white rounded-xl">
               <View className="flex-row items-center">
                 <Ionicons
-                  name={data.isCash ? "cash-outline" : "card-outline"}
+                  name={
+                    data.paymentMethod === "cash"
+                      ? "cash-outline"
+                      : "card-outline"
+                  }
                   size={22}
                   color="#666"
                 />
                 <Text className="ml-3 text-base text-gray-600">
-                  {data.isCash ? "Cash Payment" : "Online Payment"}
+                  {data.paymentMethod === "cash"
+                    ? "Cash Payment"
+                    : "Online Payment"}
                 </Text>
               </View>
               <Text className="text-xl font-bold text-darkPrimary">
-                Php {data.amount.toLocaleString("en-US")}
+                Php{" "}
+                {data.routeData.price.toLocaleString("en-US", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
               </Text>
             </View>
           </View>
 
           {/* Selected Services */}
-          {data.selectedServices && data.selectedServices.length > 0 && (
+          {data.addedServices && data.addedServices.length > 0 && (
             <View className="p-5 bg-gray-50 rounded-2xl">
               <Text className="mb-3 text-base font-semibold text-gray-800">
-                Selected Services ({data.selectedServices.length})
+                Selected Services ({data.addedServices.length})
               </Text>
               <View className="gap-2">
-                {data.selectedServices.map((service: Service) => (
+                {data.addedServices.map((service: Service) => (
                   <View
                     key={service.id}
                     className="flex-row items-center justify-between p-4 bg-white rounded-xl"
@@ -203,6 +236,20 @@ export default function SeeMoreModal({
                     </Text>
                   </View>
                 ))}
+              </View>
+
+              <View className="flex-row items-center justify-between p-4 rounded-xl">
+                <Text className="text-base font-semibold text-gray-800">
+                  Total
+                </Text>
+                <Text className="font-semibold text-lightPrimary">
+                  {totalServicesPrice > 0
+                    ? `Php ${totalServicesPrice.toLocaleString("en-US", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}`
+                    : "FREE"}
+                </Text>
               </View>
             </View>
           )}
@@ -238,7 +285,7 @@ export default function SeeMoreModal({
                   <View
                     key={index}
                     className="items-center justify-center bg-gray-200 rounded-xl"
-                    style={{width: 100, height: 100}}
+                    style={{ width: 100, height: 100 }}
                   >
                     <Text className="text-gray-500">Image {index + 1}</Text>
                   </View>
@@ -247,12 +294,12 @@ export default function SeeMoreModal({
             </View>
           )}
 
-          {data.driverName && data.rating && (
+          {/* {data.driverName && data.rating && (
             <Pressable className="flex-row items-center justify-center gap-1 py-3 rounded-md active:bg-darkPrimary bg-lightPrimary">
               <Text className="text-lg font-bold text-white">View on Map</Text>
               <Ionicons name="arrow-forward" size={18} color="white" />
             </Pressable>
-          )}
+          )} */}
         </ScrollView>
       </SafeAreaView>
     </Modal>

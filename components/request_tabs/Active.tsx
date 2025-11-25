@@ -1,64 +1,83 @@
+import useAuth from "@/hooks/useAuth";
 import useSeeMoreDetails from "@/hooks/useSeeMoreDetails";
-import {serviceAddons} from "@/utils/constants";
-import {Ionicons} from "@expo/vector-icons";
-import {router} from "expo-router";
-import {FlatList, Pressable, Text, View} from "react-native";
+import { useUserBookings } from "@/queries/bookingQueries";
+import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
+import {
+  ActivityIndicator,
+  FlatList,
+  Pressable,
+  Text,
+  View,
+} from "react-native";
 import SeeMoreModal from "../modals/seeMoreModal";
 
-const DUMMY_DATA = [
-  {
-    id: "1",
-    driverName: "John Doe",
-    rating: 4.5,
-    vehicle: "Motorcycle",
-    bookedTime: "3:30 PM",
-    pickup: "13, Allen Street Village, San Isidro hagonoy Bulacan sfsd ddfg",
-    dropoff: "Hernandez Street",
-    distance: "3KM",
-    isCash: true,
-    amount: 100,
-    selectedServices: serviceAddons,
-    note: " Please handle with care.",
-    images: [1, 2],
-  },
-];
-
 export default function ActiveRoute() {
-  const {modalVisible, setModalVisible, selectedRequest, handleSeeMorePress} =
+  const { modalVisible, setModalVisible, selectedRequest, handleSeeMorePress } =
     useSeeMoreDetails();
+
+  const { user } = useAuth();
+
+  const {
+    data: bookings,
+    isPending,
+    error,
+    refetch,
+  } = useUserBookings(user?.uid || "");
+
+  if (isPending)
+    return (
+      <View className="flex-1 items-center justify-center">
+        <ActivityIndicator size="large" color="#FFA840" />
+      </View>
+    );
+  if (error)
+    return (
+      <View className="flex-1 items-center justify-center">
+        <Text className="text-lg font-semibold text-gray-500">
+          {error.message}
+        </Text>
+      </View>
+    );
+
+  const activeBookings = bookings.filter((b) => b.status === "active");
 
   return (
     <>
       <FlatList
-        data={DUMMY_DATA}
-        renderItem={({item}) => (
+        data={activeBookings}
+        renderItem={({ item }) => (
           <ActiveCard
-            vehicle={item.vehicle}
-            pickup={item.pickup}
-            dropoff={item.dropoff}
-            distance={item.distance}
-            isCash={item.isCash}
-            amount={item.amount}
-            driverName={item.driverName}
-            rating={item.rating}
+            vehicle={item.selectedVehicle.name}
+            pickup={item.pickUp.address}
+            dropoff={item.dropOff.address}
+            distance={item.routeData.distance}
+            amount={item.routeData.price}
+            isCash={item.paymentMethod === "cash"}
+            driverName={item.driver?.name || ""}
+            rating={item.driver?.rating || 0}
             onPressSeeMore={() => handleSeeMorePress(item)}
           />
         )}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item._id}
         showsVerticalScrollIndicator={false}
         className="flex-1 p-4 bg-white"
         contentContainerStyle={{
           paddingBottom: 40,
           gap: 15,
         }}
+        refreshing={isPending}
+        onRefresh={refetch}
       />
 
-      <SeeMoreModal
-        visible={modalVisible}
-        onClose={() => setModalVisible(false)}
-        type="Active Booking"
-        data={selectedRequest}
-      />
+      {selectedRequest && (
+        <SeeMoreModal
+          visible={modalVisible}
+          onClose={() => setModalVisible(false)}
+          type="Active Booking"
+          data={selectedRequest}
+        />
+      )}
     </>
   );
 }
@@ -67,7 +86,7 @@ type ActiveCardProps = {
   vehicle: string;
   pickup: string;
   dropoff: string;
-  distance: string;
+  distance: number;
   amount: number;
   driverName: string;
   rating: number;
@@ -162,7 +181,7 @@ const ActiveCard = ({
               {dropoff}
             </Text>
           </View>
-          <Text className="font-bold">{distance}</Text>
+          <Text className="font-bold">{distance.toFixed(1)}km</Text>
 
           <Ionicons
             name="location-sharp"

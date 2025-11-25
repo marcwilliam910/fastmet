@@ -1,7 +1,12 @@
-import type {LocationDetails, Service, Vehicle} from "@/types/book";
-import {calculateAccuratePrice} from "@/utils/calculatePrice";
-import {defaultService} from "@/utils/constants";
-import {create} from "zustand";
+import type {
+  LocationDetails,
+  RouteData,
+  Service,
+  Vehicle,
+} from "@/types/book";
+import { calculateAccuratePrice } from "@/utils/calculatePrice";
+import { defaultService } from "@/utils/constants";
+import { create } from "zustand";
 
 export type Type = "asap" | "pooling" | "schedule";
 
@@ -10,18 +15,13 @@ type BookingType = {
   value: string;
 };
 
-export type RouteData = {
-  distance: number;
-  price: number;
-  duration: number;
-};
-
 interface BookState {
   pickUp: LocationDetails;
   dropOff: LocationDetails;
-  bookingType: BookingType | null;
+  bookingType: BookingType;
   selectedVehicle: Vehicle | null;
   routeData: RouteData;
+  paymentMethod: "cash" | "online";
 
   // not sure
   addedServices: Service[];
@@ -29,22 +29,29 @@ interface BookState {
 
   setPickUp: (details: LocationDetails) => void;
   setDropOff: (details: LocationDetails) => void;
-  setBookingType: (type: BookingType | null) => void;
+  setBookingType: (type: BookingType) => void;
   setSelectedVehicle: (vehicle: Vehicle) => void;
   setPrice: (p: number) => void;
   calculatePrice: () => void;
+  setPaymentMethod: (method: "cash" | "online") => void;
+  clearStates: () => void;
+
+  success: boolean;
+  setSuccess: (success: boolean) => void;
 }
 
 export const useBookStore = create<BookState>((set, get) => ({
   pickUp: null,
   dropOff: null,
-  bookingType: {type: "asap", value: "ASAP"},
+  bookingType: { type: "asap", value: "ASAP" },
   selectedVehicle: null,
   routeData: {
     distance: 0,
     duration: 0,
     price: 0,
   },
+  paymentMethod: "cash",
+  success: false,
 
   // not sure
   addedServices: [...defaultService],
@@ -70,25 +77,27 @@ export const useBookStore = create<BookState>((set, get) => ({
 
       return {
         addedServices: updatedServices,
-        routeData: {...state.routeData, price: updatedPrice},
+        routeData: { ...state.routeData, price: updatedPrice },
       };
     }),
 
-  setPickUp: (details: LocationDetails) => set({pickUp: details}),
-  setDropOff: (details: LocationDetails) => set({dropOff: details}),
-  setBookingType: (type) => set({bookingType: type}),
-  setSelectedVehicle: (vehicle) => set({selectedVehicle: vehicle}),
+  setPickUp: (details: LocationDetails) => set({ pickUp: details }),
+  setDropOff: (details: LocationDetails) => set({ dropOff: details }),
+  setBookingType: (type) => set({ bookingType: type }),
+  setSelectedVehicle: (vehicle) => set({ selectedVehicle: vehicle }),
   setPrice: (p) =>
     set((state) => ({
-      routeData: {...state.routeData, price: p},
+      routeData: { ...state.routeData, price: p },
     })),
+  setPaymentMethod: (method: "cash" | "online") =>
+    set({ paymentMethod: method }),
 
   calculatePrice: async () => {
-    const {pickUp, dropOff, addedServices} = get();
+    const { pickUp, dropOff, addedServices } = get();
     if (!pickUp || !dropOff) return;
 
     try {
-      const {total, distanceKm, durationMin} = await calculateAccuratePrice(
+      const { total, distanceKm, durationMin } = await calculateAccuratePrice(
         pickUp,
         dropOff
       );
@@ -107,4 +116,23 @@ export const useBookStore = create<BookState>((set, get) => ({
       console.error("Failed to calculate price", e);
     }
   },
+
+  clearStates: () =>
+    set({
+      pickUp: null,
+      dropOff: null,
+      bookingType: { type: "asap", value: "ASAP" },
+      selectedVehicle: null,
+      routeData: {
+        distance: 0,
+        duration: 0,
+        price: 0,
+      },
+      paymentMethod: "cash",
+
+      // not sure
+      addedServices: [...defaultService],
+    }),
+
+  setSuccess: (success) => set({ success }),
 }));
