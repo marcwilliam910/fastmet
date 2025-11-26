@@ -1,5 +1,5 @@
 import SheetButton from "@/components/maps/SheetButton";
-import { useBookStore } from "@/store/useBookStore";
+import { useAppStore } from "@/store/useAppStore";
 import { Service } from "@/types/book";
 import { defaultService, serviceAddons } from "@/utils/constants";
 import { Ionicons } from "@expo/vector-icons";
@@ -13,8 +13,8 @@ import {
 
 const Services = () => {
   const insets = useSafeAreaInsets();
-  const addedServices = useBookStore((state) => state.addedServices);
-  const toggleService = useBookStore((state) => state.toggleService);
+  const addedServices = useAppStore((state) => state.addedServices);
+  const toggleService = useAppStore((state) => state.toggleService);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>

@@ -1,5 +1,5 @@
 import { useShake } from "@/hooks/useShakeAnimation";
-import { useBookStore } from "@/store/useBookStore";
+import { useAppStore } from "@/store/useAppStore";
 import { LocationDetails } from "@/types/book";
 import { GOOGLE_MAPS_API_KEY } from "@/utils/constants";
 import { Ionicons } from "@expo/vector-icons";
@@ -87,11 +87,11 @@ const SearchModal: React.FC<SearchModalProps> = ({
   ]);
   const inset = useSafeAreaInsets();
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
-  const setPickUp = useBookStore((state) => state.setPickUp);
-  const setDropOff = useBookStore((state) => state.setDropOff);
+  const setPickUp = useAppStore((state) => state.setPickUp);
+  const setDropOff = useAppStore((state) => state.setDropOff);
 
-  const dropOff = useBookStore((state) => state.dropOff);
-  const pickUp = useBookStore((state) => state.pickUp);
+  const dropOff = useAppStore((state) => state.dropOff);
+  const pickUp = useAppStore((state) => state.pickUp);
   const { shake, animatedStyle } = useShake();
 
   const handleConfirm = () => {

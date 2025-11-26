@@ -1,13 +1,13 @@
-import {getUserProfile} from "@/api/user";
-import {useProfileStore} from "@/store/useProfileStore";
-import {onAuthStateChanged, User} from "firebase/auth";
-import {useEffect, useState} from "react";
-import {auth} from "../lib/firebase/firebaseConfig";
+import { getUserProfile } from "@/api/user";
+import { useAppStore } from "@/store/useAppStore";
+import { onAuthStateChanged, User } from "firebase/auth";
+import { useEffect, useState } from "react";
+import { auth } from "../lib/firebase/firebaseConfig";
 
 export default function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const setProfile = useProfileStore((state) => state.setProfile);
+  const setProfile = useAppStore((state) => state.setProfile);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -26,5 +26,5 @@ export default function useAuth() {
     return unsubscribe;
   }, []);
 
-  return {user, loading};
+  return { user, loading };
 }

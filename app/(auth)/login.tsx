@@ -5,7 +5,7 @@ import { login } from "@/lib/firebase/auth";
 import { useRegisterProfile } from "@/mutations/userMutations";
 import { LoginSchema } from "@/schemas/authSchema";
 import { signInWithGoogle } from "@/services/googleAuth";
-import { useProfileStore } from "@/store/useProfileStore";
+import { useAppStore } from "@/store/useAppStore";
 import { User } from "@/types/user";
 import { validateForm } from "@/utils/validateForm";
 import { Ionicons } from "@expo/vector-icons";
@@ -31,7 +31,7 @@ const Login = () => {
 
   const [showPassword, setShowPassword] = useState(false);
   const passwordRef = useRef<TextInput>(null);
-  const { setProfile } = useProfileStore();
+  const setProfile = useAppStore((state) => state.setProfile);
   const { mutate, isPending } = useRegisterProfile();
 
   const handleLogin = async () => {

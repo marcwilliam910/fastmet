@@ -1,15 +1,15 @@
-import {useBookStore} from "@/store/useBookStore";
+import { useAppStore } from "@/store/useAppStore";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import React from "react";
-import {Pressable, Text, View} from "react-native";
+import { Pressable, Text, View } from "react-native";
 
 export default function LocationInputs({
   onOpenSearch,
 }: {
   onOpenSearch: (type: "pickup" | "dropoff") => void;
 }) {
-  const pickUp = useBookStore((state) => state.pickUp);
-  const dropOff = useBookStore((state) => state.dropOff);
+  const pickUp = useAppStore((state) => state.pickUp);
+  const dropOff = useAppStore((state) => state.dropOff);
 
   return (
     <View className="relative items-center justify-between gap-2 pl-8 ml-4 mr-3 border-l-2 border-gray-400 border-dashed">

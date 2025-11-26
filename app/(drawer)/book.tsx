@@ -1,6 +1,6 @@
 import BookSheet from "@/components/maps/BookSheet";
 import MapScreen from "@/components/maps/MapScreen";
-import { useBookStore } from "@/store/useBookStore";
+import { useAppStore } from "@/store/useAppStore";
 import { Ionicons } from "@expo/vector-icons";
 import { DrawerActions } from "@react-navigation/native";
 import { useNavigation } from "expo-router";
@@ -10,9 +10,9 @@ import { Region } from "react-native-maps";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const Book = () => {
-  const pickUp = useBookStore((state) => state.pickUp);
-  const dropOff = useBookStore((state) => state.dropOff);
-  const routeData = useBookStore((state) => state.routeData);
+  const pickUp = useAppStore((state) => state.pickUp);
+  const dropOff = useAppStore((state) => state.dropOff);
+  const routeData = useAppStore((state) => state.routeData);
   const [region, setRegion] = useState<Region | null>(null);
   const navigation = useNavigation();
 

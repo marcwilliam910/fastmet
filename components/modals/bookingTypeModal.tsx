@@ -1,4 +1,5 @@
-import { Type, useBookStore } from "@/store/useBookStore";
+import { Type } from "@/store/slices/bookSlice";
+import { useAppStore } from "@/store/useAppStore";
 import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useState } from "react";
@@ -16,8 +17,8 @@ export default function BookingTypeModal({
   const [selectedTime, setSelectedTime] = useState(new Date());
   const [showCalendar, setShowCalendar] = useState(true);
   const [showTimePicker, setShowTimePicker] = useState(false);
-  const bookingType = useBookStore((state) => state.bookingType);
-  const setBookingType = useBookStore((state) => state.setBookingType);
+  const bookingType = useAppStore((state) => state.bookingType);
+  const setBookingType = useAppStore((state) => state.setBookingType);
 
   const handleConfirm = (type: Type) => {
     if (type === "schedule") {

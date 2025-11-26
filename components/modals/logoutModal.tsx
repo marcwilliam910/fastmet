@@ -1,10 +1,10 @@
-import {logout} from "@/lib/firebase/auth";
-import {useProfileStore} from "@/store/useProfileStore";
-import {Ionicons} from "@expo/vector-icons";
-import {Image} from "expo-image";
-import {router} from "expo-router";
-import React, {useState} from "react";
-import {ActivityIndicator, Modal, Pressable, Text, View} from "react-native";
+import { logout } from "@/lib/firebase/auth";
+import { useAppStore } from "@/store/useAppStore";
+import { Ionicons } from "@expo/vector-icons";
+import { Image } from "expo-image";
+import { router } from "expo-router";
+import React, { useState } from "react";
+import { ActivityIndicator, Modal, Pressable, Text, View } from "react-native";
 
 const LogoutModal = ({
   isOpen,
@@ -14,7 +14,7 @@ const LogoutModal = ({
   setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }) => {
   const [isLoading, setIsLoading] = useState(false);
-  const clearProfile = useProfileStore((state) => state.clearProfile);
+  const clearProfile = useAppStore((state) => state.clearProfile);
 
   const handleLogout = async () => {
     setIsLoading(true);
@@ -38,7 +38,7 @@ const LogoutModal = ({
           <View className="flex-row items-center">
             <Image
               source={require("@/assets/fastmet/logo.png")}
-              style={{width: 50, height: 50}}
+              style={{ width: 50, height: 50 }}
               contentFit="contain"
             />
             <Text className="text-xl font-bold tracking-widest text-secondary">

@@ -15,7 +15,7 @@ export const bookingAccepted = (socket: Socket) => {
       text1: "Driver Found! 🎉",
       text2: "Your driver is on the way",
       position: "top",
-      visibilityTime: 7000,
+      visibilityTime: 10_000,
       swipeable: true,
       topOffset: 50,
     });

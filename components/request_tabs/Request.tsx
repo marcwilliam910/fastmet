@@ -1,7 +1,7 @@
 import useAuth from "@/hooks/useAuth";
 import useSeeMoreDetails from "@/hooks/useSeeMoreDetails";
 import { useUserBookings } from "@/queries/bookingQueries";
-import { useBookStore } from "@/store/useBookStore";
+import { useAppStore } from "@/store/useAppStore";
 import { formatDate } from "@/utils/date";
 import { Ionicons } from "@expo/vector-icons";
 import {
@@ -18,8 +18,8 @@ export default function RequestRoute() {
   const { modalVisible, setModalVisible, selectedRequest, handleSeeMorePress } =
     useSeeMoreDetails();
 
-  const success = useBookStore((state) => state.success);
-  const setSuccess = useBookStore((state) => state.setSuccess);
+  const success = useAppStore((state) => state.success);
+  const setSuccess = useAppStore((state) => state.setSuccess);
 
   const { user } = useAuth();
 

@@ -6,7 +6,7 @@ import type {
 } from "@/types/book";
 import { calculateAccuratePrice } from "@/utils/calculatePrice";
 import { defaultService } from "@/utils/constants";
-import { create } from "zustand";
+import { StateCreator } from "zustand";
 
 export type Type = "asap" | "pooling" | "schedule";
 
@@ -15,7 +15,7 @@ type BookingType = {
   value: string;
 };
 
-interface BookState {
+export interface BookSlice {
   pickUp: LocationDetails;
   dropOff: LocationDetails;
   bookingType: BookingType;
@@ -40,7 +40,7 @@ interface BookState {
   setSuccess: (success: boolean) => void;
 }
 
-export const useBookStore = create<BookState>((set, get) => ({
+export const createBookSlice: StateCreator<BookSlice> = (set, get) => ({
   pickUp: null,
   dropOff: null,
   bookingType: { type: "asap", value: "ASAP" },
@@ -135,4 +135,4 @@ export const useBookStore = create<BookState>((set, get) => ({
     }),
 
   setSuccess: (success) => set({ success }),
-}));
+});

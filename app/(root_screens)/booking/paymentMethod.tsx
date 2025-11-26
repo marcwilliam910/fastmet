@@ -3,7 +3,7 @@ import LoadingModal from "@/components/modals/loading";
 import useAuth from "@/hooks/useAuth";
 import { useSocket } from "@/sockets/context/SocketProvider";
 import { handleBookingSaved, requestBooking } from "@/sockets/handlers/booking";
-import { useBookStore } from "@/store/useBookStore";
+import { useAppStore } from "@/store/useAppStore";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
@@ -11,9 +11,9 @@ import { Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function PaymentMethod() {
-  const book = useBookStore.getState();
-  const paymentMethod = useBookStore((state) => state.paymentMethod);
-  const setPaymentMethod = useBookStore((state) => state.setPaymentMethod);
+  const book = useAppStore.getState();
+  const paymentMethod = useAppStore((state) => state.paymentMethod);
+  const setPaymentMethod = useAppStore((state) => state.setPaymentMethod);
 
   const [loading, setLoading] = useState(false);
 

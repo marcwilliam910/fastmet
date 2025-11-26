@@ -1,32 +1,32 @@
-import {useBookStore} from "@/store/useBookStore";
-import {vehicles} from "@/utils/constants";
-import {formatDate} from "@/utils/date";
-import {Ionicons} from "@expo/vector-icons";
-import BottomSheet, {BottomSheetScrollView} from "@gorhom/bottom-sheet";
-import {Image} from "expo-image";
-import {router} from "expo-router";
-import React, {useMemo, useRef, useState} from "react";
-import {Dimensions, Pressable, ScrollView, Text, View} from "react-native";
-import {useSafeAreaInsets} from "react-native-safe-area-context";
+import { useAppStore } from "@/store/useAppStore";
+import { vehicles } from "@/utils/constants";
+import { formatDate } from "@/utils/date";
+import { Ionicons } from "@expo/vector-icons";
+import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
+import { Image } from "expo-image";
+import { router } from "expo-router";
+import React, { useMemo, useRef, useState } from "react";
+import { Dimensions, Pressable, ScrollView, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import BookingTypeModal from "../modals/bookingTypeModal";
 import SearchModal from "../modals/mapSearchModal";
-import {VehicleInfoModal} from "../modals/vehicleInfoModal";
+import { VehicleInfoModal } from "../modals/vehicleInfoModal";
 import LocationInputs from "./LocationInputs";
 import SheetButton from "./SheetButton";
 
 const BookSheet = () => {
   const sheetRef = useRef<BottomSheet>(null);
   const insets = useSafeAreaInsets();
-  const {height: screenHeight} = Dimensions.get("window");
+  const { height: screenHeight } = Dimensions.get("window");
   const [infoModalVisible, setInfoModalVisible] = useState(false);
   const [searchModalVisible, setSearchModalVisible] = useState(false);
   const [selectTimeModalVisible, setSelectTimeModalVisible] = useState(false);
   const [searchType, setSearchType] = useState<"pickup" | "dropoff" | null>(
     null
   );
-  const bookingType = useBookStore((state) => state.bookingType);
-  const selectedVehicle = useBookStore((state) => state.selectedVehicle);
-  const setSelectedVehicle = useBookStore((state) => state.setSelectedVehicle);
+  const bookingType = useAppStore((state) => state.bookingType);
+  const selectedVehicle = useAppStore((state) => state.selectedVehicle);
+  const setSelectedVehicle = useAppStore((state) => state.setSelectedVehicle);
 
   // take consideration the inset bottom
   const snapPoints = useMemo(() => {
@@ -43,9 +43,9 @@ const BookSheet = () => {
         index={1}
         snapPoints={snapPoints}
         enableDynamicSizing={false}
-        handleIndicatorStyle={{backgroundColor: "#FFA840"}}
+        handleIndicatorStyle={{ backgroundColor: "#FFA840" }}
         enableContentPanningGesture={false} // 👈 This is the key
-        containerStyle={{zIndex: 20}}
+        containerStyle={{ zIndex: 20 }}
       >
         <View className="flex-row justify-between items-center pb-5 pt-1.5 px-3">
           <Text className="text-lg font-bold">Booking Type</Text>
@@ -98,7 +98,7 @@ const BookSheet = () => {
                       </Text>
                       <Image
                         source={v.img}
-                        style={{height: 35, width: 45}}
+                        style={{ height: 35, width: 45 }}
                         contentFit="contain"
                       />
                     </Pressable>

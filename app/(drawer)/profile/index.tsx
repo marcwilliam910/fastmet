@@ -1,9 +1,9 @@
 import NotLoggedIn from "@/components/notLoggedIn";
 import useAuth from "@/hooks/useAuth";
-import {useProfileStore} from "@/store/useProfileStore";
-import {Ionicons} from "@expo/vector-icons";
-import {Image} from "expo-image";
-import {router} from "expo-router";
+import { useAppStore } from "@/store/useAppStore";
+import { Ionicons } from "@expo/vector-icons";
+import { Image } from "expo-image";
+import { router } from "expo-router";
 import React from "react";
 import {
   ActivityIndicator,
@@ -14,8 +14,8 @@ import {
 } from "react-native";
 
 export default function MyProfile() {
-  const profile = useProfileStore((state) => state.profile);
-  const {user, loading} = useAuth();
+  const profile = useAppStore((state) => state.profile);
+  const { user, loading } = useAuth();
 
   // profile?.fromOAuth && menuItems.push({icon: "log-out", label: "Logout", onPress: () => {}});
   const fromEmailAndPassOptions = [
@@ -71,10 +71,10 @@ export default function MyProfile() {
           <Image
             source={
               profile.profilePictureUrl
-                ? {uri: profile.profilePictureUrl}
+                ? { uri: profile.profilePictureUrl }
                 : require("@/assets/images/user.png")
             }
-            style={{width: 120, height: 120, borderRadius: 999}}
+            style={{ width: 120, height: 120, borderRadius: 999 }}
             contentFit="contain"
           />
         </View>

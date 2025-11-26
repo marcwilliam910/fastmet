@@ -1,23 +1,28 @@
-import {Ionicons} from "@expo/vector-icons";
-import {router} from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 import React from "react";
-import {Pressable, Text, View} from "react-native";
+import { Platform, Pressable, Text, View } from "react-native";
 
-const HeaderProfile = ({title}: {title: string}) => {
+const HeaderProfile = ({ title }: { title: string }) => {
   return (
-    <View className="flex-row items-center justify-between w-full">
+    <View className="flex-row items-center justify-center">
       {/* Left: Hamburger Menu */}
-      <Pressable onPress={() => router.back()}>
-        <Ionicons name="chevron-back" size={28} color="#FFA840" />
+      <Pressable
+        className="absolute top-0 left-0"
+        onPress={() => router.back()}
+        hitSlop={{ top: 20, left: 20, bottom: 20, right: 20 }}
+      >
+        <Ionicons
+          name="chevron-back"
+          size={Platform.OS === "ios" ? 34 : 28}
+          color="#FFA840"
+        />
       </Pressable>
 
       {/* Center: Icon + Title */}
-      <View className="absolute left-0 right-0 flex-row items-center justify-center gap-2">
+      <View className="w-full flex-row items-center justify-center gap-2">
         <Text className="text-lg font-bold text-white">{title}</Text>
       </View>
-
-      {/* Right: Empty spacer to balance layout */}
-      <View className="w-7" />
     </View>
   );
 };

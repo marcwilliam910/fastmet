@@ -1,7 +1,7 @@
 import useAuth from "@/hooks/useAuth";
 import { useRegisterProfile } from "@/mutations/userMutations";
 import { signInWithGoogle } from "@/services/googleAuth";
-import { useBookStore } from "@/store/useBookStore";
+import { useAppStore } from "@/store/useAppStore";
 import { User } from "@/types/user";
 import React, { useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
@@ -22,11 +22,11 @@ const SheetButton = ({
   const [loading, setLoading] = useState(false);
   const { mutate } = useRegisterProfile();
 
-  const selectedVehicle = useBookStore((state) => state.selectedVehicle);
-  const pickUp = useBookStore((state) => state.pickUp);
-  const dropOff = useBookStore((state) => state.dropOff);
-  const routeData = useBookStore((state) => state.routeData);
-  const calculatePrice = useBookStore((state) => state.calculatePrice);
+  const selectedVehicle = useAppStore((state) => state.selectedVehicle);
+  const pickUp = useAppStore((state) => state.pickUp);
+  const dropOff = useAppStore((state) => state.dropOff);
+  const routeData = useAppStore((state) => state.routeData);
+  const calculatePrice = useAppStore((state) => state.calculatePrice);
 
   const handleNext = () => {
     if (user === null) setShowModal(true);

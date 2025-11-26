@@ -162,7 +162,7 @@ export default function SeeMoreModal({
             <View className="flex-row items-center justify-between p-3 mt-4 bg-white rounded-lg">
               <Text className="text-sm text-gray-600">Distance</Text>
               <Text className="text-lg font-bold text-lightPrimary">
-                {data.routeData.distance} km
+                {data.routeData.distance.toFixed(2)} km
               </Text>
             </View>
 
