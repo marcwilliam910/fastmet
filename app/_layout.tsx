@@ -12,6 +12,7 @@ import { StatusBar } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
+import LoadingModal from "@/components/modals/loading";
 import { toastConfig } from "@/config/toastConfig";
 import SocketProvider from "@/sockets/context/SocketProvider";
 import Toast from "react-native-toast-message";
@@ -65,6 +66,7 @@ export default function RootLayout() {
               <Stack.Screen name="(public_screens)" />
             </Stack>
             <Toast config={toastConfig} />
+            <LoadingModal />
           </SocketProvider>
         </QueryClientProvider>
 

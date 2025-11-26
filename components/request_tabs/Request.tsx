@@ -1,7 +1,6 @@
 import useAuth from "@/hooks/useAuth";
 import useSeeMoreDetails from "@/hooks/useSeeMoreDetails";
 import { useUserBookings } from "@/queries/bookingQueries";
-import { useAppStore } from "@/store/useAppStore";
 import { formatDate } from "@/utils/date";
 import { Ionicons } from "@expo/vector-icons";
 import {
@@ -12,23 +11,22 @@ import {
   View,
 } from "react-native";
 import SeeMoreModal from "../modals/seeMoreModal";
-import SuccessModal from "../modals/successModal";
 
 export default function RequestRoute() {
   const { modalVisible, setModalVisible, selectedRequest, handleSeeMorePress } =
     useSeeMoreDetails();
 
-  const success = useAppStore((state) => state.success);
-  const setSuccess = useAppStore((state) => state.setSuccess);
-
   const { user } = useAuth();
 
   const {
-    data: bookings,
+    data,
     isPending,
     error,
     refetch,
-  } = useUserBookings(user?.uid || "");
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useUserBookings(user?.uid!, "pending", 5);
 
   if (isPending)
     return (
@@ -45,7 +43,7 @@ export default function RequestRoute() {
       </View>
     );
 
-  const pendingBookings = bookings.filter((b) => b.status === "pending");
+  const pendingBookings = data?.pages.flatMap((page) => page.bookings) ?? [];
 
   return (
     <>
@@ -85,8 +83,27 @@ export default function RequestRoute() {
             </View>
           </View>
         )}
+        // pull to refresh
         refreshing={isPending}
         onRefresh={refetch}
+        // infinite scroll
+        onEndReached={() => {
+          if (hasNextPage && !isFetchingNextPage) {
+            fetchNextPage();
+          }
+        }}
+        onEndReachedThreshold={0.5} // Trigger when 50% from bottom
+        // Loading indicator at bottom
+        ListFooterComponent={() => {
+          if (isFetchingNextPage) {
+            return (
+              <View className="py-4">
+                <ActivityIndicator size="small" color="#FFA840" />
+              </View>
+            );
+          }
+          return null;
+        }}
       />
 
       {selectedRequest && (
@@ -97,12 +114,6 @@ export default function RequestRoute() {
           data={selectedRequest}
         />
       )}
-
-      <SuccessModal
-        visible={success}
-        text="Booking Successful!"
-        setVisible={setSuccess}
-      />
     </>
   );
 }

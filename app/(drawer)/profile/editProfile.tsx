@@ -1,5 +1,4 @@
 import CustomKeyAvoidingView from "@/components/CustomKeyAvoid";
-import LoadingModal from "@/components/modals/loading";
 import SuccessModal from "@/components/modals/successModal";
 import useAuth from "@/hooks/useAuth";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
@@ -46,7 +45,14 @@ const EditProfile = () => {
   const [isSuccess, setIsSuccess] = useState(false);
 
   const { mutate, isPending } = useUpdateProfile();
-  const [loading, setLoading] = useState(false);
+
+  const setLoading = useAppStore((state) => state.setLoading);
+
+  useEffect(() => {
+    if (isPending) setLoading(true);
+    else setLoading(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isPending]);
 
   useEffect(() => {
     if (profile) {
@@ -307,7 +313,6 @@ const EditProfile = () => {
           </View>
         </View>
       </CustomKeyAvoidingView>
-      <LoadingModal visible={isPending || loading} />
       <SuccessModal
         visible={isSuccess}
         text="Profile successfully updated!"

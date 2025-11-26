@@ -1,21 +1,21 @@
 import SheetButton from "@/components/maps/SheetButton";
-import LoadingModal from "@/components/modals/loading";
 import useAuth from "@/hooks/useAuth";
 import { useSocket } from "@/sockets/context/SocketProvider";
 import { handleBookingSaved, requestBooking } from "@/sockets/handlers/booking";
 import { useAppStore } from "@/store/useAppStore";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { Pressable, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Toast from "react-native-toast-message";
 
 export default function PaymentMethod() {
   const book = useAppStore.getState();
   const paymentMethod = useAppStore((state) => state.paymentMethod);
   const setPaymentMethod = useAppStore((state) => state.setPaymentMethod);
 
-  const [loading, setLoading] = useState(false);
+  const setLoading = useAppStore((state) => state.setLoading);
 
   const { user } = useAuth();
 
@@ -46,7 +46,17 @@ export default function PaymentMethod() {
       setLoading(false);
       if (data.success) {
         book.clearStates();
-        book.setSuccess(true);
+
+        Toast.show({
+          type: "success",
+          text1: "Booking Request Saved",
+          text2: "You will be notified when a driver accepts your request",
+          position: "top",
+          visibilityTime: 5_000,
+          swipeable: true,
+          topOffset: 50,
+        });
+
         router.push("/(drawer)/(tabs)/request");
       }
     };
@@ -130,7 +140,6 @@ export default function PaymentMethod() {
         </Pressable>
       </View>
       <SheetButton next={submitRequest} isLast={true} />
-      <LoadingModal visible={loading} />
     </SafeAreaView>
   );
 }

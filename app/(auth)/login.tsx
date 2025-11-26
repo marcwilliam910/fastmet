@@ -1,6 +1,5 @@
 import CustomKeyAvoidingView from "@/components/CustomKeyAvoid";
 import LogoWithText from "@/components/LogoWithText";
-import LoadingModal from "@/components/modals/loading";
 import { login } from "@/lib/firebase/auth";
 import { useRegisterProfile } from "@/mutations/userMutations";
 import { LoginSchema } from "@/schemas/authSchema";
@@ -11,7 +10,7 @@ import { validateForm } from "@/utils/validateForm";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { Link, router } from "expo-router";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Pressable,
   Text,
@@ -27,12 +26,12 @@ const Login = () => {
     password: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [loading, setLoading] = useState(false);
 
   const [showPassword, setShowPassword] = useState(false);
   const passwordRef = useRef<TextInput>(null);
   const setProfile = useAppStore((state) => state.setProfile);
   const { mutate, isPending } = useRegisterProfile();
+  const setLoading = useAppStore((state) => state.setLoading);
 
   const handleLogin = async () => {
     const result = validateForm(LoginSchema, form);
@@ -126,6 +125,13 @@ const Login = () => {
     }
   };
 
+  useEffect(() => {
+    if (isPending) setLoading(true);
+    else setLoading(false);
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isPending]);
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
       <CustomKeyAvoidingView>
@@ -210,7 +216,6 @@ const Login = () => {
           <Pressable
             className="items-center py-4 rounded-lg bg-lightPrimary active:bg-darkPrimary"
             onPress={handleLogin}
-            disabled={loading}
           >
             <Text className="text-base font-bold text-white">Sign In</Text>
           </Pressable>
@@ -232,7 +237,6 @@ const Login = () => {
             <TouchableOpacity
               className="items-center justify-center bg-gray-100 rounded-lg size-12"
               onPress={handleGoogleSignIn}
-              disabled={loading}
               activeOpacity={0.8}
             >
               <Image
@@ -271,7 +275,6 @@ const Login = () => {
           </Link>
         </View>
       </CustomKeyAvoidingView>
-      <LoadingModal visible={loading || isPending} />
     </SafeAreaView>
   );
 };

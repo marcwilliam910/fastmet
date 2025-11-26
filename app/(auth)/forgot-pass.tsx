@@ -1,22 +1,16 @@
 import CustomKeyAvoidingView from "@/components/CustomKeyAvoid";
 import LogoWithText from "@/components/LogoWithText";
-import LoadingModal from "@/components/modals/loading";
 import ResetPassModal from "@/components/modals/resetPassModal";
-import {forgotPassword} from "@/lib/firebase/auth";
-import {ResetPassSchema} from "@/schemas/authSchema";
-import {validateForm} from "@/utils/validateForm";
-import {Ionicons} from "@expo/vector-icons";
+import { forgotPassword } from "@/lib/firebase/auth";
+import { ResetPassSchema } from "@/schemas/authSchema";
+import { useAppStore } from "@/store/useAppStore";
+import { validateForm } from "@/utils/validateForm";
+import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import {useRouter} from "expo-router";
-import React, {useEffect, useState} from "react";
-import {
-  ActivityIndicator,
-  Pressable,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
-import {SafeAreaView} from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
+import React, { useEffect, useState } from "react";
+import { Pressable, Text, TextInput, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 // Cooldown duration in seconds
 const COOLDOWN_DURATION = 60;
@@ -27,7 +21,8 @@ const ForgotPass = () => {
   const [resetPassModal, setResetPassModal] = useState<boolean>(false);
   const [email, setEmail] = useState<string>("");
   const [error, setError] = useState<Record<string, string>>({});
-  const [loading, setLoading] = useState<boolean>(false);
+
+  const setLoading = useAppStore((state) => state.setLoading);
 
   // New state variables for the timer
   const [cooldownTime, setCooldownTime] = useState(0);
@@ -79,7 +74,7 @@ const ForgotPass = () => {
       return;
     }
 
-    const result = validateForm(ResetPassSchema, {email});
+    const result = validateForm(ResetPassSchema, { email });
     if (!result.success) {
       setError(result.errors);
       return;
@@ -121,14 +116,14 @@ const ForgotPass = () => {
         }
       }
 
-      setError({email: message});
+      setError({ email: message });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <SafeAreaView style={{flex: 1, backgroundColor: "#fff"}}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
       <CustomKeyAvoidingView>
         <View className="justify-center flex-1 gap-6 px-6">
           <Pressable
@@ -166,26 +161,19 @@ const ForgotPass = () => {
 
           <Pressable
             className={`items-center py-3.5 rounded-lg  ${
-              !canResend || loading
+              !canResend
                 ? "bg-gray-300"
                 : "bg-lightPrimary active:bg-darkPrimary "
             }`}
             onPress={handleResetPass}
-            disabled={loading || !canResend}
+            disabled={!canResend}
           >
             <Text className="text-base font-bold text-white">
-              {loading ? (
-                <ActivityIndicator size="small" color="#fff" />
-              ) : !canResend ? (
-                `Resend in ${cooldownTime}s`
-              ) : (
-                "Reset Password"
-              )}
+              {!canResend ? `Resend in ${cooldownTime}s` : "Reset Password"}
             </Text>
           </Pressable>
         </View>
       </CustomKeyAvoidingView>
-      <LoadingModal visible={loading} />
       <ResetPassModal
         visible={resetPassModal}
         onClose={() => setResetPassModal(false)}

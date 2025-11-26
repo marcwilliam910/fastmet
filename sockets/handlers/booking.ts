@@ -20,7 +20,9 @@ export const bookingAccepted = (socket: Socket) => {
       topOffset: 50,
     });
 
-    queryClient.invalidateQueries({ queryKey: ["userBookings", data.userId] });
+    queryClient.invalidateQueries({
+      queryKey: ["userBookings", data.userId, "active"],
+    });
   };
 
   socket.on("bookingAccepted", callback);

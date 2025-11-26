@@ -19,11 +19,14 @@ export default function ActiveRoute() {
   const { user } = useAuth();
 
   const {
-    data: bookings,
+    data,
     isPending,
     error,
     refetch,
-  } = useUserBookings(user?.uid || "");
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useUserBookings(user?.uid || "", "active", 5);
 
   if (isPending)
     return (
@@ -40,7 +43,7 @@ export default function ActiveRoute() {
       </View>
     );
 
-  const activeBookings = bookings.filter((b) => b.status === "active");
+  const activeBookings = data?.pages.flatMap((page) => page.bookings) ?? [];
 
   return (
     <>
@@ -66,8 +69,27 @@ export default function ActiveRoute() {
           paddingBottom: 40,
           gap: 15,
         }}
+        // pull to refresh
         refreshing={isPending}
         onRefresh={refetch}
+        // infinite scroll
+        onEndReached={() => {
+          if (hasNextPage && !isFetchingNextPage) {
+            fetchNextPage();
+          }
+        }}
+        onEndReachedThreshold={0.5} // Trigger when 50% from bottom
+        // Loading indicator at bottom
+        ListFooterComponent={() => {
+          if (isFetchingNextPage) {
+            return (
+              <View className="py-4">
+                <ActivityIndicator size="small" color="#FFA840" />
+              </View>
+            );
+          }
+          return null;
+        }}
       />
 
       {selectedRequest && (

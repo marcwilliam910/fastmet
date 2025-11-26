@@ -6,7 +6,6 @@ import { User } from "@/types/user";
 import React, { useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import LoadingModal from "../modals/loading";
 import NotLoggedInModal from "../modals/notLoggedInModal";
 
 const SheetButton = ({
@@ -19,8 +18,9 @@ const SheetButton = ({
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
   const [showModal, setShowModal] = useState(false);
-  const [loading, setLoading] = useState(false);
   const { mutate } = useRegisterProfile();
+
+  const setLoading = useAppStore((state) => state.setLoading);
 
   const selectedVehicle = useAppStore((state) => state.selectedVehicle);
   const pickUp = useAppStore((state) => state.pickUp);
@@ -113,7 +113,6 @@ const SheetButton = ({
         onGooglePress={handleGoogleSignIn}
         setVisible={setShowModal}
       />
-      <LoadingModal visible={loading} />
     </View>
   );
 };

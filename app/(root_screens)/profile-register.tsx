@@ -1,19 +1,19 @@
 import CustomKeyAvoidingView from "@/components/CustomKeyAvoid";
-import LoadingModal from "@/components/modals/loading";
 import useAuth from "@/hooks/useAuth";
-import {useAuthGuard} from "@/hooks/useAuthGuard";
-import {useRegisterProfile} from "@/mutations/userMutations";
-import {ProfileSchema} from "@/schemas/authSchema";
-import {User} from "@/types/user";
-import {openGallery} from "@/utils/imagePicker";
-import {validateForm} from "@/utils/validateForm";
-import {Ionicons} from "@expo/vector-icons";
+import { useAuthGuard } from "@/hooks/useAuthGuard";
+import { useRegisterProfile } from "@/mutations/userMutations";
+import { ProfileSchema } from "@/schemas/authSchema";
+import { useAppStore } from "@/store/useAppStore";
+import { User } from "@/types/user";
+import { openGallery } from "@/utils/imagePicker";
+import { validateForm } from "@/utils/validateForm";
+import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import {Image} from "expo-image";
-import {useRouter} from "expo-router";
-import React, {useRef, useState} from "react";
-import {Pressable, Text, TextInput, View} from "react-native";
-import {SafeAreaView} from "react-native-safe-area-context";
+import { Image } from "expo-image";
+import { useRouter } from "expo-router";
+import React, { useEffect, useRef, useState } from "react";
+import { Pressable, Text, TextInput, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function ProfileRegistration() {
   const router = useRouter();
@@ -27,24 +27,32 @@ export default function ProfileRegistration() {
     profilePictureUrl: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const {isAuthenticated} = useAuthGuard();
-  const {user} = useAuth();
-  const {mutate, isPending} = useRegisterProfile();
+  const { isAuthenticated } = useAuthGuard();
+  const { user } = useAuth();
+  const { mutate, isPending } = useRegisterProfile();
+
+  const setLoading = useAppStore((state) => state.setLoading);
 
   const middleNameRef = useRef<TextInput | null>(null);
   const lastNameRef = useRef<TextInput | null>(null);
   const contactNumberRef = useRef<TextInput | null>(null);
 
+  useEffect(() => {
+    if (isPending) setLoading(true);
+    else setLoading(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isPending]);
+
   const pickProfilePic = async () => {
     const result = await openGallery();
     if (result && !result.canceled && result.assets[0]) {
       console.log(result.assets[0].uri);
-      setForm({...form, profilePictureUrl: result.assets[0].uri});
+      setForm({ ...form, profilePictureUrl: result.assets[0].uri });
     }
   };
 
   const onFormChange = (name: string, value: string) => {
-    setForm({...form, [name]: value});
+    setForm({ ...form, [name]: value });
   };
 
   const onSubmit = async () => {
@@ -103,7 +111,7 @@ export default function ProfileRegistration() {
   };
 
   return (
-    <SafeAreaView style={{flex: 1, backgroundColor: "#fff"}}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
       <CustomKeyAvoidingView>
         <View className="justify-center flex-1 gap-6 p-6">
           <Pressable
@@ -114,7 +122,7 @@ export default function ProfileRegistration() {
           </Pressable>
 
           {/* profile picture */}
-          <View className="items-center gap-3 jusctify-center">
+          <View className="items-center gap-3 justify-center">
             <Pressable
               className="items-center justify-center border rounded-full size-48 border-lightPrimary active:border-2"
               onPress={pickProfilePic}
@@ -122,14 +130,14 @@ export default function ProfileRegistration() {
               {form.profilePictureUrl ? (
                 <View className="items-center justify-center bg-gray-100 rounded-full size-40">
                   <Image
-                    source={{uri: form.profilePictureUrl}}
-                    style={{width: 140, height: 140, borderRadius: 999}}
+                    source={{ uri: form.profilePictureUrl }}
+                    style={{ width: 140, height: 140, borderRadius: 999 }}
                     contentFit="cover"
                   />
                   <Pressable
                     className="absolute right-0 p-1 bg-white rounded-full top-2"
                     onPress={() =>
-                      setForm((prev) => ({...prev, profilePictureUrl: ""}))
+                      setForm((prev) => ({ ...prev, profilePictureUrl: "" }))
                     }
                   >
                     <Ionicons
@@ -293,7 +301,6 @@ export default function ProfileRegistration() {
           </View>
         </View>
       </CustomKeyAvoidingView>
-      <LoadingModal visible={isPending} />
     </SafeAreaView>
   );
 }

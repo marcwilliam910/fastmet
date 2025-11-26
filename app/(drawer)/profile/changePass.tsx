@@ -1,13 +1,13 @@
 import CustomKeyAvoidingView from "@/components/CustomKeyAvoid";
-import LoadingModal from "@/components/modals/loading";
 import SuccessModal from "@/components/modals/successModal";
-import {changePassword} from "@/lib/firebase/auth";
-import {ChangePassSchema, ChangePassSchemaType} from "@/schemas/authSchema";
-import {validateForm} from "@/utils/validateForm";
-import {Ionicons} from "@expo/vector-icons";
-import {router} from "expo-router";
-import React, {useRef, useState} from "react";
-import {Pressable, Text, TextInput, View} from "react-native";
+import { changePassword } from "@/lib/firebase/auth";
+import { ChangePassSchema, ChangePassSchemaType } from "@/schemas/authSchema";
+import { useAppStore } from "@/store/useAppStore";
+import { validateForm } from "@/utils/validateForm";
+import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
+import React, { useRef, useState } from "react";
+import { Pressable, Text, TextInput, View } from "react-native";
 
 const ChangePass = () => {
   const [showOldPassword, setShowOldPassword] = useState(false);
@@ -21,11 +21,12 @@ const ChangePass = () => {
     confirmPassword: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [loading, setLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
+  const setLoading = useAppStore((state) => state.setLoading);
+
   const handleChange = (value: string, name: string) => {
-    setForm({...form, [name]: value});
+    setForm({ ...form, [name]: value });
   };
 
   const onSubmit = async () => {
@@ -43,7 +44,7 @@ const ChangePass = () => {
       setIsSuccess(true);
       console.log("Password changed successfully");
 
-      setForm({oldPassword: "", newPassword: "", confirmPassword: ""});
+      setForm({ oldPassword: "", newPassword: "", confirmPassword: "" });
     } catch (error: any) {
       console.log(error);
       let message = "Failed to change password.";
@@ -54,7 +55,7 @@ const ChangePass = () => {
       else if (error.code === "auth/requires-recent-login")
         message = "Please log in again to change your password.";
 
-      setErrors({oldPassword: message});
+      setErrors({ oldPassword: message });
     } finally {
       setLoading(false);
     }
@@ -174,7 +175,6 @@ const ChangePass = () => {
           <Pressable
             className="items-center py-4 rounded-lg bg-lightPrimary active:bg-darkPrimary"
             onPress={onSubmit}
-            disabled={loading}
           >
             <Text className="text-base font-bold text-white">
               Change Password
@@ -188,7 +188,6 @@ const ChangePass = () => {
           </Pressable>
         </View>
       </View>
-      <LoadingModal visible={loading} />
       <SuccessModal
         visible={isSuccess}
         text="Password changed successfully!"

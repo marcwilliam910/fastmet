@@ -1,20 +1,14 @@
 import CustomKeyAvoidingView from "@/components/CustomKeyAvoid";
 import LogoWithText from "@/components/LogoWithText";
-import LoadingModal from "@/components/modals/loading";
-import {signup, updateDisplayName} from "@/lib/firebase/auth";
-import {RegisterSchema} from "@/schemas/authSchema";
-import {validateForm} from "@/utils/validateForm";
-import {Ionicons} from "@expo/vector-icons";
-import {Link, useRouter} from "expo-router";
-import React, {useRef, useState} from "react";
-import {
-  ActivityIndicator,
-  Pressable,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
-import {SafeAreaView} from "react-native-safe-area-context";
+import { signup, updateDisplayName } from "@/lib/firebase/auth";
+import { RegisterSchema } from "@/schemas/authSchema";
+import { useAppStore } from "@/store/useAppStore";
+import { validateForm } from "@/utils/validateForm";
+import { Ionicons } from "@expo/vector-icons";
+import { Link, useRouter } from "expo-router";
+import React, { useRef, useState } from "react";
+import { Pressable, Text, TextInput, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const Register = () => {
   const [form, setForm] = useState({
@@ -24,10 +18,10 @@ const Register = () => {
     confirmPassword: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [loading, setLoading] = useState(false);
-
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const setLoading = useAppStore((state) => state.setLoading);
 
   const router = useRouter();
   const emailRef = useRef<TextInput | null>(null);
@@ -64,18 +58,18 @@ const Register = () => {
           message = "Network error. Please try again.";
           break;
       }
-      setErrors({form: message});
+      setErrors({ form: message });
     } finally {
       setLoading(false);
     }
   };
 
   const onFormChange = (field: string, value: string) => {
-    setForm({...form, [field]: value});
+    setForm({ ...form, [field]: value });
   };
 
   return (
-    <SafeAreaView style={{flex: 1, backgroundColor: "#fff"}}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
       <CustomKeyAvoidingView>
         <View className="justify-center flex-1 gap-6 px-6">
           <Pressable
@@ -232,15 +226,13 @@ const Register = () => {
           <Pressable
             className="items-center py-4 my-2 rounded-lg bg-lightPrimary active:bg-darkPrimary"
             onPress={handleSignup}
-            disabled={loading}
           >
             <Text className="text-base font-bold text-white">
-              {loading ? <ActivityIndicator color="#fff" /> : "Create Account"}
+              Create Account
             </Text>
           </Pressable>
         </View>
       </CustomKeyAvoidingView>
-      <LoadingModal visible={loading} />
     </SafeAreaView>
   );
 };
