@@ -70,9 +70,12 @@ export type Booking = {
   images: string[];
   createdAt: string;
   status: string;
-  driver?: {
-    id: string;
-    name: string;
-    rating: number;
-  };
+};
+
+export type ActiveBooking = Booking & { driver: Driver };
+
+export type Driver = {
+  id: string;
+  name: string;
+  rating: number;
 };

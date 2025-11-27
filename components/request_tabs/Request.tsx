@@ -1,6 +1,7 @@
 import useAuth from "@/hooks/useAuth";
 import useSeeMoreDetails from "@/hooks/useSeeMoreDetails";
 import { useUserBookings } from "@/queries/bookingQueries";
+import { Booking } from "@/types/book";
 import { formatDate } from "@/utils/date";
 import { Ionicons } from "@expo/vector-icons";
 import {
@@ -26,7 +27,7 @@ export default function RequestRoute() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useUserBookings(user?.uid!, "pending", 5);
+  } = useUserBookings<Booking>(user?.uid!, "pending", 5);
 
   if (isPending)
     return (

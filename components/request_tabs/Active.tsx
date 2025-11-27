@@ -1,6 +1,7 @@
 import useAuth from "@/hooks/useAuth";
 import useSeeMoreDetails from "@/hooks/useSeeMoreDetails";
 import { useUserBookings } from "@/queries/bookingQueries";
+import { ActiveBooking } from "@/types/book";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import {
@@ -26,7 +27,7 @@ export default function ActiveRoute() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useUserBookings(user?.uid || "", "active", 5);
+  } = useUserBookings<ActiveBooking>(user?.uid || "", "active", 5);
 
   if (isPending)
     return (
@@ -51,14 +52,15 @@ export default function ActiveRoute() {
         data={activeBookings}
         renderItem={({ item }) => (
           <ActiveCard
+            id={item._id}
             vehicle={item.selectedVehicle.name}
             pickup={item.pickUp.address}
             dropoff={item.dropOff.address}
             distance={item.routeData.distance}
             amount={item.routeData.price}
             isCash={item.paymentMethod === "cash"}
-            driverName={item.driver?.name || ""}
-            rating={item.driver?.rating || 0}
+            driverName={item.driver.name}
+            rating={item.driver.rating}
             onPressSeeMore={() => handleSeeMorePress(item)}
           />
         )}
@@ -105,6 +107,7 @@ export default function ActiveRoute() {
 }
 
 type ActiveCardProps = {
+  id: string;
   vehicle: string;
   pickup: string;
   dropoff: string;
@@ -117,6 +120,7 @@ type ActiveCardProps = {
 };
 
 const ActiveCard = ({
+  id,
   vehicle,
   pickup,
   dropoff,
@@ -147,7 +151,12 @@ const ActiveCard = ({
         <Text className="text-lg font-semibold text-white">{vehicle}</Text>
         <Pressable
           className="flex-row items-center gap-2 active:scale-105"
-          onPress={() => router.push("/(root_screens)/booking/viewOnMap")}
+          onPress={() =>
+            router.push({
+              pathname: "/(root_screens)/booking/viewOnMap",
+              params: { bookingId: id },
+            })
+          }
         >
           <Text className="text-sm font-semibold text-white underline">
             View on Map

@@ -9,7 +9,7 @@ import { useState } from "react";
 import { ActivityIndicator, useWindowDimensions, View } from "react-native";
 import { TabBar, TabView } from "react-native-tab-view";
 
-export default function TabViewExample() {
+export default function Request() {
   const { user, loading } = useAuth();
   const layout = useWindowDimensions();
   const [index, setIndex] = useState(0);

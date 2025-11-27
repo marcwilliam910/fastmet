@@ -1,20 +1,15 @@
-import {Ionicons} from "@expo/vector-icons";
+import { Driver } from "@/types/book";
+import { Ionicons } from "@expo/vector-icons";
 import BottomSheet from "@gorhom/bottom-sheet";
-import {router} from "expo-router";
-import React, {useMemo, useRef} from "react";
-import {Dimensions, Pressable, Text, View} from "react-native";
-import {useSafeAreaInsets} from "react-native-safe-area-context";
+import { router } from "expo-router";
+import React, { useMemo, useRef } from "react";
+import { Dimensions, Pressable, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-export default function ViewOnMapSheet({
-  driverName,
-  rating,
-}: {
-  driverName: string;
-  rating: number;
-}) {
+export default function ViewOnMapSheet({ driver }: { driver: Driver }) {
   const sheetRef = useRef<BottomSheet>(null);
   const insets = useSafeAreaInsets();
-  const {height: screenHeight} = Dimensions.get("window");
+  const { height: screenHeight } = Dimensions.get("window");
 
   // take consideration the inset bottom
   const snapPoints = useMemo(() => {
@@ -28,9 +23,9 @@ export default function ViewOnMapSheet({
       ref={sheetRef}
       snapPoints={snapPoints}
       enableDynamicSizing={false}
-      handleIndicatorStyle={{backgroundColor: "#FFA840"}}
+      handleIndicatorStyle={{ backgroundColor: "#FFA840" }}
       enableContentPanningGesture={false} // 👈 This is the key
-      containerStyle={{zIndex: 20}}
+      containerStyle={{ zIndex: 20 }}
     >
       <View className="flex-row items-center justify-center px-4 ">
         <Pressable
@@ -49,13 +44,13 @@ export default function ViewOnMapSheet({
             <Ionicons name="person-circle" size={54} color="#F7931E" />
             <View>
               <Text className="text-lg font-semibold text-gray-800">
-                {driverName}
+                {driver.name}
               </Text>
               <View className="flex-row">
-                {[...Array(Math.floor(rating))].map((_, i) => (
+                {[...Array(Math.floor(driver.rating))].map((_, i) => (
                   <Ionicons key={i} name="star" size={20} color="#FFD700" />
                 ))}
-                {[...Array(5 - Math.floor(rating))].map((_, i) => (
+                {[...Array(5 - Math.floor(driver.rating))].map((_, i) => (
                   <Ionicons
                     key={i}
                     name="star-outline"

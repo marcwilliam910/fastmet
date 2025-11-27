@@ -31,6 +31,8 @@ export default function MapScreen({
 }: Props) {
   const mapRef = useRef<MapView>(null);
 
+  console.log(routeData);
+
   useFocusEffect(
     useCallback(() => {
       StatusBar.setHidden(true);
