@@ -25,11 +25,16 @@ export default function TabLayout() {
         options={{
           title: "Request",
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons
-              name={focused ? "calendar-clear" : "calendar-clear-outline"}
-              size={24}
-              color={color}
-            />
+            <View>
+              <Ionicons
+                name={focused ? "calendar" : "calendar-outline"}
+                size={24}
+                color={color}
+              />
+              <View className="absolute flex items-center justify-center bg-red-500 rounded-full size-4 -top-1 -right-2">
+                <Text className="text-xs font-semibold text-white">4</Text>
+              </View>
+            </View>
           ),
         }}
       />
@@ -57,9 +62,9 @@ export default function TabLayout() {
                 size={24}
                 color={color}
               />
-              <View className="absolute flex items-center justify-center bg-red-500 rounded-full size-4 -top-1 -right-2">
+              {/* <View className="absolute flex items-center justify-center bg-red-500 rounded-full size-4 -top-1 -right-2">
                 <Text className="text-xs font-semibold text-white">4</Text>
-              </View>
+              </View> */}
             </View>
           ),
         }}
@@ -75,9 +80,9 @@ export default function TabLayout() {
                 size={24}
                 color={color}
               />
-              <View className="absolute flex items-center justify-center bg-red-500 rounded-full -top-1 -right-1 size-4">
+              {/* <View className="absolute flex items-center justify-center bg-red-500 rounded-full -top-1 -right-1 size-4">
                 <Text className="text-xs font-semibold text-white">4</Text>
-              </View>
+              </View> */}
             </View>
           ),
         }}

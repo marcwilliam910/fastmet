@@ -33,7 +33,7 @@ const Book = () => {
         {/* Floating burger */}
         <Pressable
           onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
-          className="absolute p-2 bg-white rounded-full shadow-lg top-6 left-4 active:scale-105 active:opacity-80"
+          className="absolute p-2 bg-white rounded-full shadow-lg top-8 left-6 active:scale-105 active:opacity-80"
           style={{
             shadowColor: "#000",
             shadowOffset: { width: 2, height: 2 },

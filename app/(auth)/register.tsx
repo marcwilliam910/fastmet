@@ -7,7 +7,7 @@ import { validateForm } from "@/utils/validateForm";
 import { Ionicons } from "@expo/vector-icons";
 import { Link, useRouter } from "expo-router";
 import React, { useRef, useState } from "react";
-import { Pressable, Text, TextInput, View } from "react-native";
+import { Platform, Pressable, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const Register = () => {
@@ -77,9 +77,14 @@ const Register = () => {
               setErrors({});
               router.back();
             }}
-            className="absolute top-5 left-5"
+            className="absolute top-3 left-5"
+            hitSlop={20}
           >
-            <Ionicons name="chevron-back-outline" size={28} color="#FFA840" />
+            <Ionicons
+              name="chevron-back-outline"
+              size={Platform.OS === "ios" ? 34 : 28}
+              color="#FFA840"
+            />
           </Pressable>
           {/* Logo and Title */}
           <LogoWithText />
@@ -156,10 +161,11 @@ const Register = () => {
               <Pressable
                 onPress={() => setShowPassword(!showPassword)}
                 className="absolute right-4 top-3.5"
+                hitSlop={20}
               >
                 <Ionicons
                   name={showPassword ? "eye-outline" : "eye-off-outline"}
-                  size={22}
+                  size={Platform.OS === "ios" ? 24 : 22}
                   color="#9CA3AF"
                 />
               </Pressable>
@@ -193,10 +199,11 @@ const Register = () => {
               <Pressable
                 onPress={() => setShowConfirmPassword(!showConfirmPassword)}
                 className="absolute right-4 top-3.5"
+                hitSlop={20}
               >
                 <Ionicons
-                  name={showPassword ? "eye-outline" : "eye-off-outline"}
-                  size={22}
+                  name={showConfirmPassword ? "eye-outline" : "eye-off-outline"}
+                  size={Platform.OS === "ios" ? 24 : 22}
                   color="#9CA3AF"
                 />
               </Pressable>

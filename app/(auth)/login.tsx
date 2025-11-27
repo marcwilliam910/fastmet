@@ -12,6 +12,7 @@ import { Image } from "expo-image";
 import { Link, router } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
+  Platform,
   Pressable,
   Text,
   TextInput,
@@ -180,10 +181,11 @@ const Login = () => {
               <Pressable
                 onPress={() => setShowPassword(!showPassword)}
                 className="absolute right-4 top-3.5"
+                hitSlop={20}
               >
                 <Ionicons
                   name={showPassword ? "eye-outline" : "eye-off-outline"}
-                  size={22}
+                  size={Platform.OS === "ios" ? 24 : 22}
                   color="#9CA3AF"
                 />
               </Pressable>

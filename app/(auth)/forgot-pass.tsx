@@ -9,7 +9,7 @@ import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { Pressable, Text, TextInput, View } from "react-native";
+import { Platform, Pressable, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 // Cooldown duration in seconds
@@ -128,9 +128,14 @@ const ForgotPass = () => {
         <View className="justify-center flex-1 gap-6 px-6">
           <Pressable
             onPress={() => router.back()}
-            className="absolute top-5 left-5"
+            className="absolute top-3 left-5"
+            hitSlop={20}
           >
-            <Ionicons name="chevron-back-outline" size={28} color="#FFA840" />
+            <Ionicons
+              name="chevron-back-outline"
+              size={Platform.OS === "ios" ? 34 : 28}
+              color="#FFA840"
+            />
           </Pressable>
           {/* Logo and Title */}
           <LogoWithText />

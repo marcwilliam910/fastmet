@@ -107,7 +107,7 @@ const CompleteCard = ({
   return (
     <Pressable
       onPress={onPressSeeMore}
-      className="overflow-hidden bg-white rounded-2xl active:scale-95"
+      className="overflow-hidden bg-white rounded-2xl active:opacity-80"
       style={{
         shadowColor: "#000",
         shadowOffset: {

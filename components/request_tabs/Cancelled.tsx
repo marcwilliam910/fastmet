@@ -1,7 +1,8 @@
 import useSeeMoreDetails from "@/hooks/useSeeMoreDetails";
-import {serviceAddons} from "@/utils/constants";
-import {Ionicons} from "@expo/vector-icons";
-import {FlatList, Pressable, Text, View} from "react-native";
+import { Booking } from "@/types/book";
+import { serviceAddons } from "@/utils/constants";
+import { Ionicons } from "@expo/vector-icons";
+import { FlatList, Pressable, Text, View } from "react-native";
 import SeeMoreModal from "../modals/seeMoreModal";
 
 const DUMMY_DATA = [
@@ -21,14 +22,14 @@ const DUMMY_DATA = [
 ];
 
 export default function CancelledRoute() {
-  const {modalVisible, setModalVisible, selectedRequest, handleSeeMorePress} =
-    useSeeMoreDetails();
+  const { modalVisible, setModalVisible, selectedRequest, handleSeeMorePress } =
+    useSeeMoreDetails<Booking>();
 
   return (
     <>
       <FlatList
         data={DUMMY_DATA}
-        renderItem={({item}) => (
+        renderItem={({ item }) => (
           <CancelledCard
             vehicle={item.vehicle}
             bookedTime={item.bookedTime}
@@ -50,12 +51,14 @@ export default function CancelledRoute() {
         }}
       />
 
-      <SeeMoreModal
-        visible={modalVisible}
-        onClose={() => setModalVisible(false)}
-        type="Cancelled Booking"
-        data={selectedRequest}
-      />
+      {selectedRequest && (
+        <SeeMoreModal
+          visible={modalVisible}
+          onClose={() => setModalVisible(false)}
+          type="Cancelled Booking"
+          data={selectedRequest}
+        />
+      )}
     </>
   );
 }
@@ -86,7 +89,7 @@ const CancelledCard = ({
   return (
     <Pressable
       onPress={onPressSeeMore}
-      className="overflow-hidden bg-white rounded-2xl active:scale-95"
+      className="overflow-hidden bg-white rounded-2xl active:opacity-80"
       style={{
         shadowColor: "#000",
         shadowOffset: {

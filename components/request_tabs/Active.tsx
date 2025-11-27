@@ -15,7 +15,7 @@ import SeeMoreModal from "../modals/seeMoreModal";
 
 export default function ActiveRoute() {
   const { modalVisible, setModalVisible, selectedRequest, handleSeeMorePress } =
-    useSeeMoreDetails();
+    useSeeMoreDetails<ActiveBooking>();
 
   const { user } = useAuth();
 
@@ -31,7 +31,7 @@ export default function ActiveRoute() {
 
   if (isPending)
     return (
-      <View className="flex-1 items-center justify-center">
+      <View className="flex-1 items-center bg-white justify-center">
         <ActivityIndicator size="large" color="#FFA840" />
       </View>
     );

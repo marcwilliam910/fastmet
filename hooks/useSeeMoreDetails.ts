@@ -1,9 +1,8 @@
-import { Booking } from "@/types/book";
 import { useState } from "react";
 
-export default function useSeeMoreDetails() {
+export default function useSeeMoreDetails<T>() {
   const [modalVisible, setModalVisible] = useState(false);
-  const [selectedRequest, setSelectedRequest] = useState<Booking | null>(null);
+  const [selectedRequest, setSelectedRequest] = useState<T | null>(null);
 
   const handleSeeMorePress = (request: any) => {
     setSelectedRequest(request);

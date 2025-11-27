@@ -6,7 +6,14 @@ import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import React, { useMemo, useRef, useState } from "react";
-import { Dimensions, Pressable, ScrollView, Text, View } from "react-native";
+import {
+  Dimensions,
+  Platform,
+  Pressable,
+  ScrollView,
+  Text,
+  View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import BookingTypeModal from "../modals/bookingTypeModal";
 import SearchModal from "../modals/mapSearchModal";
@@ -30,8 +37,10 @@ const BookSheet = () => {
 
   // take consideration the inset bottom
   const snapPoints = useMemo(() => {
-    const first = 0.23 * screenHeight + insets.bottom;
-    const second = 0.6 * screenHeight + insets.bottom;
+    const first =
+      (Platform.OS === "ios" ? 0.2 : 0.23) * screenHeight + insets.bottom;
+    const second =
+      (Platform.OS === "ios" ? 0.5 : 0.6) * screenHeight + insets.bottom;
 
     return [first, second];
   }, [insets.bottom, screenHeight]);

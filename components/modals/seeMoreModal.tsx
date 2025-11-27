@@ -1,9 +1,15 @@
-import { Booking, Service } from "@/types/book";
+import { ActiveBooking, Booking, Service } from "@/types/book";
 import { formatDate } from "@/utils/date";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { Modal, Pressable, ScrollView, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+function isActiveBooking(
+  booking: Booking | ActiveBooking
+): booking is ActiveBooking {
+  return "driver" in booking;
+}
 
 export default function SeeMoreModal({
   visible,
@@ -14,8 +20,10 @@ export default function SeeMoreModal({
   visible: boolean;
   onClose: () => void;
   type: string;
-  data: Booking;
+  data: Booking | ActiveBooking;
 }) {
+  const insets = useSafeAreaInsets();
+
   if (!data) return null;
 
   const totalServicesPrice = data.addedServices.reduce(
@@ -30,7 +38,14 @@ export default function SeeMoreModal({
       transparent
       onRequestClose={onClose}
     >
-      <SafeAreaView className="flex-1 bg-white">
+      <View
+        style={{
+          flex: 1,
+          paddingTop: insets.top, // respect status bar / notch
+          paddingBottom: insets.bottom,
+          backgroundColor: "white",
+        }}
+      >
         {/* Header */}
         <View className="flex-row items-center justify-center px-4 pb-4">
           <Pressable onPress={onClose} className="absolute left-4 -top-1">
@@ -70,60 +85,62 @@ export default function SeeMoreModal({
           </View>
 
           {/* Driver Card */}
-          {data.driver?.name && data.driver.rating && (
-            <View className="px-4 py-3">
-              <Text className="mb-1 text-sm font-semibold text-gray-500">
-                Driver
-              </Text>
-              <View className="flex-row items-center justify-between">
-                <View className="flex-row items-center justify-center gap-2">
-                  <Ionicons name="person-circle" size={44} color="#F7931E" />
-                  <View>
-                    <Text className="text-lg font-semibold text-gray-800">
-                      {data.driver.name}
-                    </Text>
-                    <View className="flex-row">
-                      {[...Array(Math.floor(data.driver.rating))].map(
-                        (_, i) => (
-                          <Ionicons
-                            key={i}
-                            name="star"
-                            size={18}
-                            color="#FFD700"
-                          />
-                        )
-                      )}
-                      {[...Array(5 - Math.floor(data.driver.rating))].map(
-                        (_, i) => (
-                          <Ionicons
-                            key={i}
-                            name="star-outline"
-                            size={18}
-                            color="#FFD700"
-                          />
-                        )
-                      )}
+          {isActiveBooking(data) &&
+            data.driver?.name &&
+            data.driver?.rating && (
+              <View className="px-4 py-3">
+                <Text className="mb-1 text-sm font-semibold text-gray-500">
+                  Driver
+                </Text>
+                <View className="flex-row items-center justify-between">
+                  <View className="flex-row items-center justify-center gap-2">
+                    <Ionicons name="person-circle" size={44} color="#F7931E" />
+                    <View>
+                      <Text className="text-lg font-semibold text-gray-800">
+                        {data.driver.name}
+                      </Text>
+                      <View className="flex-row">
+                        {[...Array(Math.floor(data.driver.rating))].map(
+                          (_, i) => (
+                            <Ionicons
+                              key={i}
+                              name="star"
+                              size={18}
+                              color="#FFD700"
+                            />
+                          )
+                        )}
+                        {[...Array(5 - Math.floor(data.driver.rating))].map(
+                          (_, i) => (
+                            <Ionicons
+                              key={i}
+                              name="star-outline"
+                              size={18}
+                              color="#FFD700"
+                            />
+                          )
+                        )}
+                      </View>
                     </View>
                   </View>
-                </View>
 
-                <View className="flex-row gap-5">
-                  <Pressable className="items-center active:scale-110">
-                    <Ionicons name="call" size={26} color="#F7931E" />
-                    <Text className="text-xs text-gray-600">Call</Text>
-                  </Pressable>
-                  <Pressable className="items-center active:scale-110">
-                    <Ionicons
-                      name="chatbubble-ellipses"
-                      size={26}
-                      color="#F7931E"
-                    />
-                    <Text className="text-xs text-gray-600">Chat</Text>
-                  </Pressable>
+                  <View className="flex-row gap-5">
+                    <Pressable className="items-center active:scale-110">
+                      <Ionicons name="call" size={26} color="#F7931E" />
+                      <Text className="text-xs text-gray-600">Call</Text>
+                    </Pressable>
+                    <Pressable className="items-center active:scale-110">
+                      <Ionicons
+                        name="chatbubble-ellipses"
+                        size={26}
+                        color="#F7931E"
+                      />
+                      <Text className="text-xs text-gray-600">Chat</Text>
+                    </Pressable>
+                  </View>
                 </View>
               </View>
-            </View>
-          )}
+            )}
 
           {/* Location Details */}
           <View className="p-5 bg-gray-50 rounded-2xl">
@@ -301,7 +318,7 @@ export default function SeeMoreModal({
             </Pressable>
           )} */}
         </ScrollView>
-      </SafeAreaView>
+      </View>
     </Modal>
   );
 }

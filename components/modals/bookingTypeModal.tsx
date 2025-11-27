@@ -3,7 +3,7 @@ import { useAppStore } from "@/store/useAppStore";
 import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useState } from "react";
-import { Modal, Pressable, StatusBar, Text, View } from "react-native";
+import { Modal, Platform, Pressable, Text, View } from "react-native";
 
 export default function BookingTypeModal({
   visible,
@@ -14,26 +14,44 @@ export default function BookingTypeModal({
 }) {
   const [step, setStep] = useState<"main" | "calendar">("main");
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [selectedTime, setSelectedTime] = useState(new Date());
-  const [showCalendar, setShowCalendar] = useState(true);
+  const [selectedTime, setSelectedTime] = useState(() => {
+    const time = new Date();
+    time.setHours(9, 0, 0, 0);
+    return time;
+  });
+  const [showCalendar, setShowCalendar] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const bookingType = useAppStore((state) => state.bookingType);
   const setBookingType = useAppStore((state) => state.setBookingType);
 
   const handleConfirm = (type: Type) => {
     if (type === "schedule") {
-      const combined = new Date(
-        selectedDate.getFullYear(),
-        selectedDate.getMonth(),
-        selectedDate.getDate(),
-        selectedTime.getHours(),
-        selectedTime.getMinutes()
-      );
+      let combined: Date;
+
+      if (Platform.OS === "ios") {
+        // On iOS, selectedDate already contains both date and time
+        combined = selectedDate;
+      } else {
+        // On Android, combine separate date and time
+        combined = new Date(
+          selectedDate.getFullYear(),
+          selectedDate.getMonth(),
+          selectedDate.getDate(),
+          selectedTime.getHours(),
+          selectedTime.getMinutes()
+        );
+      }
 
       setBookingType({ type, value: combined.toISOString() });
     } else setBookingType({ type, value: type.toUpperCase() });
 
+    const resetTime = new Date();
+    resetTime.setHours(9, 0, 0, 0);
+
     setSelectedDate(new Date());
+    setSelectedTime(resetTime);
+    setShowCalendar(false);
+    setShowTimePicker(false);
     setStep("main");
     onClose();
   };
@@ -42,30 +60,34 @@ export default function BookingTypeModal({
     {
       id: "asap",
       name: "ASAP",
-      icon: "flash-outline", // fast or immediate booking
+      icon: "flash-outline",
       onPress: () => handleConfirm("asap"),
     },
     {
       id: "pooling",
       name: "Pooling",
-      icon: "people-outline", // shared ride context
+      icon: "people-outline",
       onPress: () => handleConfirm("pooling"),
     },
     {
       id: "schedule",
       name: "Schedule",
-      icon: "calendar-outline", // planned ride
+      icon: "calendar-outline",
       onPress: () => {
-        setShowCalendar(true);
         setStep("calendar");
       },
     },
   ];
 
   const handleCancel = () => {
+    const resetTime = new Date();
+    resetTime.setHours(9, 0, 0, 0);
+
     onClose();
     setSelectedDate(new Date());
-    setSelectedTime(new Date());
+    setSelectedTime(resetTime);
+    setShowCalendar(false);
+    setShowTimePicker(false);
     setStep("main");
   };
 
@@ -120,74 +142,20 @@ export default function BookingTypeModal({
             </>
           )}
 
-          {/* {step === "hours" && (
-            <View className="gap-6">
-              <View className="relative flex-row items-center justify-center">
-                <Pressable
-                  className="absolute top-0 left-1"
-                  onPress={() => {
-                    setStep("main");
-                    setSelectedHour(1);
-                  }}
-                >
-                  <Ionicons
-                    name="chevron-back-outline"
-                    color="#FFA840"
-                    size={24}
-                  />
-                </Pressable>
-                <Text className="text-lg font-bold">
-                  Pick up next few hours
-                </Text>
-              </View>
-
-              <View className="gap-3">
-                {[1, 2].map((hour) => (
-                  <Pressable
-                    key={hour}
-                    onPress={() => setSelectedHour(hour)}
-                    className={`flex-row items-center gap-2 border rounded-lg px-4 py-3 ${
-                      selectedHour === hour
-                        ? "border-darkPrimary bg-orange-50"
-                        : "border-gray-300"
-                    }`}
-                  >
-                    <Ionicons
-                      name="time-outline"
-                      size={20}
-                      color={selectedHour === hour ? "#FFA840" : "gray"}
-                    />
-                    <Text
-                      className={`text-base ${
-                        selectedHour === hour ? "text-orange-500" : ""
-                      }`}
-                    >
-                      Pick up in {hour} hour{hour > 1 ? "s" : ""}
-                    </Text>
-                  </Pressable>
-                ))}
-              </View>
-
-              <Pressable
-                onPress={() => handleConfirm("hour")}
-                className="py-4 bg-lightPrimary rounded-xl"
-              >
-                <Text className="font-semibold text-center text-white">
-                  Confirm
-                </Text>
-              </Pressable>
-            </View>
-          )} */}
-
           {step === "calendar" && (
             <View className="gap-6">
               <View className="relative flex-row items-center justify-center">
                 <Pressable
                   className="absolute top-0 left-1"
                   onPress={() => {
+                    const resetTime = new Date();
+                    resetTime.setHours(9, 0, 0, 0);
+
                     setStep("main");
                     setSelectedDate(new Date());
-                    setSelectedTime(new Date());
+                    setSelectedTime(resetTime);
+                    setShowCalendar(false);
+                    setShowTimePicker(false);
                   }}
                 >
                   <Ionicons
@@ -199,77 +167,160 @@ export default function BookingTypeModal({
                 <Text className="text-lg font-bold">Max schedule: 1 month</Text>
               </View>
 
-              {/* DATE PICKER */}
-              <View className="gap-1">
-                <Text className="ml-1 font-semibold text-lg">Date:</Text>
-                <Pressable
-                  onPress={() => setShowCalendar(true)}
-                  className="items-center py-3 border border-gray-300 rounded-xl"
-                >
-                  <Text className="text-base font-semibold text-gray-800">
-                    {selectedDate.toDateString()}
-                  </Text>
-                </Pressable>
-              </View>
-
-              {showCalendar && (
-                <DateTimePicker
-                  value={selectedDate}
-                  mode="date"
-                  display="calendar"
-                  onChange={(event, date) => {
-                    setShowCalendar(false);
-                    if (event.type === "set" && date) setSelectedDate(date);
-                    setTimeout(() => StatusBar.setHidden(true), 120);
-                    setShowTimePicker(true);
-                  }}
-                  minimumDate={new Date()}
-                  maximumDate={
-                    new Date(new Date().setMonth(new Date().getMonth() + 1))
-                  }
-                />
-              )}
-
-              {/* TIME PICKER */}
-              <View className="gap-1">
-                <Text className="ml-1 font-semibold text-lg">Time:</Text>
-                <Pressable
-                  onPress={() => setShowTimePicker(true)}
-                  className="items-center py-3 border border-gray-300 rounded-xl"
-                >
-                  <Text className="text-base font-semibold text-gray-800">
-                    {selectedTime
-                      ? selectedTime.toLocaleTimeString([], {
+              {Platform.OS === "ios" ? (
+                // iOS: Combined Date & Time Picker
+                <>
+                  <View className="gap-1">
+                    <Text className="ml-1 font-semibold text-lg">
+                      Date & Time:
+                    </Text>
+                    <Pressable
+                      onPress={() => setShowCalendar(true)}
+                      className="items-center py-3 border border-gray-300 rounded-xl"
+                    >
+                      <Text className="text-base font-semibold text-gray-800">
+                        {selectedDate.toLocaleDateString([], {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                        })}{" "}
+                        at{" "}
+                        {selectedDate.toLocaleTimeString([], {
                           hour: "2-digit",
                           minute: "2-digit",
-                        })
-                      : "Select Time"}
-                  </Text>
-                </Pressable>
-              </View>
+                        })}
+                      </Text>
+                    </Pressable>
+                  </View>
 
-              {showTimePicker && (
-                <DateTimePicker
-                  value={selectedTime}
-                  mode="time"
-                  display="clock"
-                  onChange={(event, time) => {
-                    setShowTimePicker(false);
-                    if (event.type === "set" && time) setSelectedTime(time);
-                    setTimeout(() => StatusBar.setHidden(true), 120);
-                  }}
-                />
+                  {showCalendar && (
+                    <>
+                      <DateTimePicker
+                        value={selectedDate}
+                        mode="datetime"
+                        display="spinner"
+                        onChange={(event, date) => {
+                          if (date) {
+                            setSelectedDate(date);
+                          }
+                        }}
+                        minimumDate={new Date()}
+                        maximumDate={
+                          new Date(
+                            new Date().setMonth(new Date().getMonth() + 1)
+                          )
+                        }
+                        textColor="#000000"
+                        themeVariant="light"
+                      />
+
+                      <Pressable
+                        onPress={() => setShowCalendar(false)}
+                        className="py-3 bg-lightPrimary rounded-xl"
+                      >
+                        <Text className="font-semibold text-center text-white">
+                          Done
+                        </Text>
+                      </Pressable>
+                    </>
+                  )}
+
+                  {!showCalendar && (
+                    <Pressable
+                      onPress={() => handleConfirm("schedule")}
+                      className="py-3 bg-lightPrimary rounded-xl"
+                    >
+                      <Text className="font-semibold text-center text-white">
+                        Confirm
+                      </Text>
+                    </Pressable>
+                  )}
+                </>
+              ) : (
+                // Android: Separate Date & Time Pickers
+                <>
+                  {/* DATE PICKER */}
+                  <View className="gap-1">
+                    <Text className="ml-1 font-semibold text-lg">Date:</Text>
+                    <Pressable
+                      onPress={() => {
+                        setShowCalendar(true);
+                        setShowTimePicker(false);
+                      }}
+                      className="items-center py-3 border border-gray-300 rounded-xl"
+                    >
+                      <Text className="text-base font-semibold text-gray-800">
+                        {selectedDate.toDateString()}
+                      </Text>
+                    </Pressable>
+                  </View>
+
+                  {showCalendar && (
+                    <DateTimePicker
+                      value={selectedDate}
+                      mode="date"
+                      display="calendar"
+                      onChange={(event, date) => {
+                        setShowCalendar(false);
+                        if (date) {
+                          setSelectedDate(date);
+                          setShowTimePicker(true);
+                        }
+                      }}
+                      minimumDate={new Date()}
+                      maximumDate={
+                        new Date(new Date().setMonth(new Date().getMonth() + 1))
+                      }
+                    />
+                  )}
+
+                  {/* TIME PICKER */}
+                  <View className="gap-1">
+                    <Text className="ml-1 font-semibold text-lg">Time:</Text>
+                    <Pressable
+                      onPress={() => {
+                        setShowCalendar(false);
+                        setShowTimePicker(true);
+                      }}
+                      className="items-center py-3 border border-gray-300 rounded-xl"
+                    >
+                      <Text className="text-base font-semibold text-gray-800">
+                        {selectedTime.toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </Text>
+                    </Pressable>
+                  </View>
+
+                  {showTimePicker && (
+                    <DateTimePicker
+                      value={selectedTime}
+                      mode="time"
+                      display="clock"
+                      onChange={(event, time) => {
+                        setShowTimePicker(false);
+                        if (time) {
+                          setSelectedTime(time);
+                        }
+                      }}
+                      is24Hour={false}
+                    />
+                  )}
+
+                  {/* CONFIRM BUTTON */}
+                  {!showCalendar && !showTimePicker && (
+                    <Pressable
+                      onPress={() => handleConfirm("schedule")}
+                      className="py-3 bg-lightPrimary rounded-xl"
+                    >
+                      <Text className="font-semibold text-center text-white">
+                        Confirm
+                      </Text>
+                    </Pressable>
+                  )}
+                </>
               )}
-
-              {/* CONFIRM BUTTON */}
-              <Pressable
-                onPress={() => handleConfirm("schedule")}
-                className="py-3 bg-lightPrimary rounded-xl"
-              >
-                <Text className="font-semibold text-center text-white">
-                  Confirm
-                </Text>
-              </Pressable>
             </View>
           )}
         </View>

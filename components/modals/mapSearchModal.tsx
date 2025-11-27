@@ -1,14 +1,16 @@
 import { useShake } from "@/hooks/useShakeAnimation";
 import { useAppStore } from "@/store/useAppStore";
 import { LocationDetails } from "@/types/book";
-import { GOOGLE_MAPS_API_KEY } from "@/utils/constants";
+import { GOOGLE_MAPS_API_KEY, METRO_MANILA_POLYGON } from "@/utils/constants";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { isPointInPolygon } from "geolib";
 import React, { useEffect, useState } from "react";
 import {
+  Alert,
   FlatList,
   Modal,
+  Platform,
   Pressable,
   Text,
   TextInput,
@@ -19,10 +21,7 @@ import GooglePlacesTextInput, {
   Place,
 } from "react-native-google-places-textinput";
 import Animated from "react-native-reanimated";
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type SearchType = "pickup" | "dropoff";
 
@@ -31,24 +30,6 @@ type SearchModalProps = {
   onClose: () => void;
   type: SearchType;
 };
-
-export const METRO_MANILA_POLYGON = [
-  [14.70648, 120.93651], // Valenzuela
-  [14.73961, 121.01657], // Caloocan North
-  [14.76975, 121.06935], // QC North
-  [14.75648, 121.10142], // Marikina North
-  [14.68642, 121.14092], // Marikina East
-  [14.60782, 121.15832], // Pasig East
-  [14.53795, 121.16447], // Taguig SE
-  [14.45487, 121.07852], // Muntinlupa
-  [14.44812, 120.98634], // Las Piñas
-  [14.51013, 120.97281], // Parañaque
-  [14.54686, 120.97241], // Pasay
-  [14.57582, 121.00068], // Manila
-  [14.62438, 120.96531], // Navotas
-  [14.67312, 120.94242], // Malabon
-  [14.70648, 120.93651], // Back to start
-];
 
 function isWithinMetroManila(lat: number, lng: number) {
   return isPointInPolygon(
@@ -89,6 +70,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
   const setPickUp = useAppStore((state) => state.setPickUp);
   const setDropOff = useAppStore((state) => state.setDropOff);
+  const insets = useSafeAreaInsets();
 
   const dropOff = useAppStore((state) => state.dropOff);
   const pickUp = useAppStore((state) => state.pickUp);
@@ -120,18 +102,31 @@ const SearchModal: React.FC<SearchModalProps> = ({
   };
 
   const handleOnPlaceSelect = (place: Place) => {
-    setSelectedPlace(null); // Reset first
+    setSelectedPlace(null);
+
     const loc = place.details?.location;
     if (!loc) return;
+
+    console.log("Selected location:", {
+      lat: loc.latitude,
+      lng: loc.longitude,
+    });
 
     const allowed = isWithinMetroManila(loc.latitude, loc.longitude);
 
     if (!allowed) {
-      ToastAndroid.showWithGravity(
-        "Services are only available within Metro Manila.",
-        ToastAndroid.LONG,
-        ToastAndroid.TOP // appears at the top for more visibility
-      );
+      const message = "Services are only available within Metro Manila.";
+
+      if (Platform.OS === "android") {
+        ToastAndroid.showWithGravity(
+          message,
+          ToastAndroid.LONG,
+          ToastAndroid.TOP
+        );
+      } else {
+        Alert.alert("Not Available", message);
+      }
+
       shake();
       return;
     }
@@ -174,11 +169,29 @@ const SearchModal: React.FC<SearchModalProps> = ({
       transparent
       onRequestClose={onClose}
     >
-      <SafeAreaView className="flex-1 bg-white">
+      <View
+        style={{
+          flex: 1,
+          paddingTop: insets.top, // respect status bar / notch
+          paddingBottom: insets.bottom,
+          backgroundColor: "white",
+        }}
+      >
         {/* Header */}
-        <View className="flex-row items-center justify-center px-4 pb-4 ">
-          <Pressable onPress={onClose} className="absolute left-4 -top-1">
-            <Ionicons name="chevron-back-outline" size={28} color="#FFA840" />
+        <View
+          className="flex-row items-center justify-center px-4"
+          style={{ paddingBottom: Platform.OS === "ios" ? 25 : 16 }}
+        >
+          <Pressable
+            onPress={onClose}
+            className="absolute left-4 -top-1"
+            hitSlop={20}
+          >
+            <Ionicons
+              name="chevron-back-outline"
+              size={Platform.OS === "ios" ? 34 : 28}
+              color="#FFA840"
+            />
           </Pressable>
           <Text className="text-lg font-semibold capitalize">
             {type} location
@@ -286,7 +299,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
         >
           <Text className="text-lg font-bold text-white">Confirm</Text>
         </Pressable>
-      </SafeAreaView>
+      </View>
     </Modal>
   );
 };

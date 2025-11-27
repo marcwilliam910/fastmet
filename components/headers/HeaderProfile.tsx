@@ -8,9 +8,9 @@ const HeaderProfile = ({ title }: { title: string }) => {
     <View className="flex-row items-center justify-center">
       {/* Left: Hamburger Menu */}
       <Pressable
-        className="absolute top-0 left-0"
+        className={`absolute ${Platform.OS === "ios" ? "-top-2 -left-2" : "-top-1 left-0"}`}
         onPress={() => router.back()}
-        hitSlop={{ top: 20, left: 20, bottom: 20, right: 20 }}
+        hitSlop={20}
       >
         <Ionicons
           name="chevron-back"
