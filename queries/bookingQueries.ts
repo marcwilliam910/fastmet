@@ -1,4 +1,4 @@
-import { getBookingById, getUserBookings } from "@/api/book";
+import { getBookingById, getBookingsCounts, getUserBookings } from "@/api/book";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 
 export const useUserBookings = <T>(
@@ -19,5 +19,12 @@ export const useBooking = (bookingId: string) => {
   return useQuery({
     queryKey: ["userBooking", bookingId],
     queryFn: () => getBookingById(bookingId),
+  });
+};
+
+export const useBookingCounts = (userId: string) => {
+  return useQuery({
+    queryKey: ["userBookingCounts", userId],
+    queryFn: () => getBookingsCounts(userId),
   });
 };

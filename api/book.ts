@@ -21,3 +21,8 @@ export const getBookingById = async (
   const res = await api.get(`/booking/live/${bookingId}`);
   return res.data;
 };
+
+export const getBookingsCounts = async (userId: string) => {
+  const res = await api.get(`/booking/counts/${userId}`);
+  return res.data;
+};
