@@ -7,7 +7,7 @@ export const requestBooking = (socket: Socket, bookingData: any) => {
 };
 
 export const bookingAccepted = (socket: Socket) => {
-  const callback = (data: { userId: string }) => {
+  const bookingAcceptedHandler = (data: { userId: string }) => {
     console.log("✅ Booking accepted:", data);
 
     Toast.show({
@@ -25,8 +25,8 @@ export const bookingAccepted = (socket: Socket) => {
     });
   };
 
-  socket.on("bookingAccepted", callback);
-  return callback; // return for cleanup
+  socket.on("bookingAccepted", bookingAcceptedHandler);
+  return () => socket.off("bookingAccepted", bookingAcceptedHandler); // return for cleanup
 };
 
 export const handleBookingSaved = (

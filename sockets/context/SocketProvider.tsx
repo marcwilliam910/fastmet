@@ -18,17 +18,10 @@ export default function SocketProvider({
   useEffect(() => {
     socket.connect();
 
-    // // Always-on listeners (like messaging)
-    socket.on("connect", () => {
-      console.log("Socket connected:", socket.id);
-
-      // Register listener after connection
-      bookingAccepted(socket);
-    });
+    const cleanupBookingAccepted = bookingAccepted(socket);
 
     return () => {
-      // socket.off("receive_message", onNewMessage);
-      socket.off("bookingAccepted"); // remove all for safety
+      cleanupBookingAccepted();
 
       socket.disconnect();
     };

@@ -172,7 +172,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
       <View
         style={{
           flex: 1,
-          paddingTop: insets.top, // respect status bar / notch
+          paddingTop: insets.top + 5, // respect status bar / notch
           paddingBottom: insets.bottom,
           backgroundColor: "white",
         }}

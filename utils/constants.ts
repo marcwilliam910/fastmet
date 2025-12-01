@@ -73,6 +73,7 @@ export const vehicles: Vehicle[] = [
 export const STATIC_IMAGES = {
   pickup: require("@/assets/images/pickup.png"),
   dropoff: require("@/assets/images/dropoff.png"),
+  driver: require("@/assets/images/driverIcon.png"),
 };
 
 export const GOOGLE_MAPS_API_KEY =

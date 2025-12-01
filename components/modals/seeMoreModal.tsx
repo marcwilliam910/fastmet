@@ -1,6 +1,7 @@
 import { ActiveBooking, Booking, Service } from "@/types/book";
 import { formatDate } from "@/utils/date";
 import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 import React from "react";
 import { Modal, Pressable, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -41,7 +42,7 @@ export default function SeeMoreModal({
       <View
         style={{
           flex: 1,
-          paddingTop: insets.top, // respect status bar / notch
+          paddingTop: insets.top + 10, // respect status bar / notch
           paddingBottom: insets.bottom,
           backgroundColor: "white",
         }}
@@ -317,6 +318,20 @@ export default function SeeMoreModal({
               <Ionicons name="arrow-forward" size={18} color="white" />
             </Pressable>
           )} */}
+
+          {type === "Active Booking" && (
+            <Pressable
+              className="items-center justify-center py-3 mx-4 rounded-lg bg-lightPrimary active:bg-darkPrimary"
+              onPress={() =>
+                router.push({
+                  pathname: "/(root_screens)/booking/viewOnMap",
+                  params: { bookingId: data._id },
+                })
+              }
+            >
+              <Text className="text-lg font-bold text-white">View on Map</Text>
+            </Pressable>
+          )}
         </ScrollView>
       </View>
     </Modal>

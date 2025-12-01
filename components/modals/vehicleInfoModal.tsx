@@ -1,8 +1,15 @@
 import { Vehicle } from "@/types/book";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
-import { Modal, Pressable, ScrollView, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  Modal,
+  Platform,
+  Pressable,
+  ScrollView,
+  Text,
+  View,
+} from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export const VehicleInfoModal = ({
   visible,
@@ -13,6 +20,7 @@ export const VehicleInfoModal = ({
   setModalVisible: (visible: boolean) => void;
   vehicles: Vehicle[];
 }) => {
+  const insets = useSafeAreaInsets();
   return (
     <Modal
       visible={visible}
@@ -20,14 +28,25 @@ export const VehicleInfoModal = ({
       animationType="slide"
       presentationStyle="fullScreen"
     >
-      <SafeAreaView className="flex-1 bg-white px-4">
+      <View
+        style={{
+          flex: 1,
+          paddingTop: insets.top + 10, // respect status bar / notch
+          paddingBottom: insets.bottom,
+          backgroundColor: "white",
+        }}
+      >
         {/* Header */}
         <View className="flex-row items-center justify-between mb-4">
           <Text className="text-lg font-semibold text-[#1E1E1E]">
             FastMet Services
           </Text>
-          <Pressable onPress={() => setModalVisible(false)}>
-            <Ionicons name="close" size={28} color="#FFA840" />
+          <Pressable onPress={() => setModalVisible(false)} hitSlop={20}>
+            <Ionicons
+              name="close"
+              size={Platform.OS === "ios" ? 34 : 28}
+              color="#FFA840"
+            />
           </Pressable>
         </View>
 
@@ -64,7 +83,7 @@ export const VehicleInfoModal = ({
             Done
           </Text>
         </Pressable>
-      </SafeAreaView>
+      </View>
     </Modal>
   );
 };
