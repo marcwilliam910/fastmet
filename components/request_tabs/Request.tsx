@@ -37,7 +37,7 @@ export default function RequestRoute() {
     );
   if (error)
     return (
-      <View className="flex-1 items-center justify-center">
+      <View className="flex-1 items-center justify-center bg-white">
         <Text className="text-lg font-semibold text-gray-500">
           {error.message}
         </Text>

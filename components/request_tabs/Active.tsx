@@ -37,7 +37,7 @@ export default function ActiveRoute() {
     );
   if (error)
     return (
-      <View className="flex-1 items-center justify-center">
+      <View className="flex-1 items-center justify-center bg-white">
         <Text className="text-lg font-semibold text-gray-500">
           {error.message}
         </Text>
@@ -231,7 +231,11 @@ const ActiveCard = ({
             {isCash ? "Cash Payment" : "Online Payment"}
           </Text>
           <Text className="text-lg font-semibold text-darkPrimary">
-            Php {amount.toLocaleString("en-US")}
+            Php{" "}
+            {amount.toLocaleString("en-US", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}
           </Text>
         </View>
 

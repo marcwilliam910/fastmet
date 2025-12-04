@@ -50,7 +50,7 @@ export default function LiveTrackingMapScreen({
     }, [])
   );
 
-  // In LiveTrackingMapScreen component HERE
+  // request driver location
   useFocusEffect(
     useCallback(() => {
       if (!socket || !bookingId) return;
@@ -130,7 +130,7 @@ export default function LiveTrackingMapScreen({
                 longitude: driverLocation.lng,
               }}
               title={driver.name ? `Driver - ${driver.name}` : "Your Driver"}
-              rotation={driverLocation.heading}
+              // rotation={driverLocation.heading}
               anchor={{ x: 0.5, y: 0.5 }}
             />
           )}
