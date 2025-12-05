@@ -1,21 +1,29 @@
-import React, { createContext, useContext, useEffect } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import { DefaultEventsMap } from "@socket.io/component-emitter";
+import React, { createContext, useContext, useEffect, useMemo } from "react";
+import { Socket } from "socket.io-client";
 import { bookingAccepted } from "../handlers/booking";
 import { getSocket } from "../socket";
 
-interface SocketContextType {
-  socket: ReturnType<typeof getSocket>;
+interface SocketContextValue {
+  socket: Socket<DefaultEventsMap, DefaultEventsMap> | null;
 }
 
-const SocketContext = createContext<SocketContextType | undefined>(undefined);
+export const SocketContext = createContext<SocketContextValue>({
+  socket: null,
+});
 
 export default function SocketProvider({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  // const { user, token } = useAuth(); // Get from auth context
-  const socket = getSocket("4UIcFUjHf4NngY1OJhcrUdp46Fe2", "client", "token");
+  const { token } = useAuth();
+  const socket = useMemo(() => (token ? getSocket(token) : null), [token]);
+
   useEffect(() => {
+    if (!socket) return;
+
     socket.connect();
 
     const cleanupBookingAccepted = bookingAccepted(socket);
@@ -26,7 +34,7 @@ export default function SocketProvider({
       socket.disconnect();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [token]);
 
   return (
     <SocketContext.Provider value={{ socket }}>
@@ -38,5 +46,7 @@ export default function SocketProvider({
 export const useSocket = () => {
   const context = useContext(SocketContext);
   if (!context) throw new Error("useSocket must be used within SocketProvider");
+  if (!context.socket) throw new Error("Socket is not connected");
+
   return context.socket;
 };

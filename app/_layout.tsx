@@ -1,4 +1,3 @@
-import useAuth from "@/hooks/useAuth";
 import { queryClient } from "@/lib/queryClient";
 import {
   Montserrat_400Regular,
@@ -14,22 +13,19 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import LoadingModal from "@/components/modals/loading";
 import { toastConfig } from "@/config/toastConfig";
-import SocketProvider from "@/sockets/context/SocketProvider";
 import Toast from "react-native-toast-message";
 import "../global.css";
 
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const { loading } = useAuth();
-
   const [fontsLoaded] = useFonts({
     Montserrat_400Regular,
     Montserrat_700Bold,
   });
 
   useEffect(() => {
-    if (fontsLoaded && !loading) {
+    if (fontsLoaded) {
       // NOT WORKING
       // bypass TS check
       // (Text as any).defaultProps = (Text as any).defaultProps || {};
@@ -39,9 +35,9 @@ export default function RootLayout() {
 
       SplashScreen.hideAsync();
     }
-  }, [fontsLoaded, loading]);
+  }, [fontsLoaded]);
 
-  if (!fontsLoaded || loading) {
+  if (!fontsLoaded) {
     return null;
   }
 
@@ -50,9 +46,8 @@ export default function RootLayout() {
       <SafeAreaProvider>
         {/* <FontWrapper> */}
         <QueryClientProvider client={queryClient}>
-          <SocketProvider>
-            <Stack screenOptions={{ headerShown: false }}>
-              {/* <Stack.Protected guard={!user}>
+          <Stack screenOptions={{ headerShown: false }}>
+            {/* <Stack.Protected guard={!user}>
           <Stack.Screen name="(auth)" />
         </Stack.Protected>
 
@@ -60,14 +55,13 @@ export default function RootLayout() {
           <Stack.Screen name="(drawer)" />
           <Stack.Screen name="(root_screens)" />
         </Stack.Protected> */}
-              <Stack.Screen name="(drawer)" />
-              <Stack.Screen name="(auth)" />
-              <Stack.Screen name="(root_screens)" />
-              <Stack.Screen name="(public_screens)" />
-            </Stack>
-            <Toast config={toastConfig} />
-            <LoadingModal />
-          </SocketProvider>
+            <Stack.Screen name="(drawer)" />
+            <Stack.Screen name="(auth)" />
+            <Stack.Screen name="(root_screens)" />
+            <Stack.Screen name="(public_screens)" />
+          </Stack>
+          <Toast config={toastConfig} />
+          <LoadingModal />
         </QueryClientProvider>
 
         {/* </FontWrapper> */}

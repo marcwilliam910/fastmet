@@ -1,13 +1,13 @@
-import {registerUserProfile, updateUserProfile} from "@/api/user";
-import {queryClient} from "@/lib/queryClient";
-import {User} from "@/types/user";
-import {useMutation} from "@tanstack/react-query";
+import { registerUserProfile, updateUserProfile } from "@/api/user";
+import { queryClient } from "@/lib/queryClient";
+import { User } from "@/types/user";
+import { useMutation } from "@tanstack/react-query";
 
 export const useRegisterProfile = () => {
   return useMutation({
     mutationFn: registerUserProfile,
     onSuccess: () => {
-      queryClient.invalidateQueries({queryKey: ["userProfile"]});
+      queryClient.invalidateQueries({ queryKey: ["userProfile"] });
     },
     onError: (error: any) => {
       console.error(
@@ -20,10 +20,10 @@ export const useRegisterProfile = () => {
 
 export const useUpdateProfile = () => {
   return useMutation({
-    mutationFn: ({uid, user}: {uid: string; user: Partial<User>}) =>
-      updateUserProfile(uid, user),
+    mutationFn: ({ id, user }: { id: string; user: Partial<User> }) =>
+      updateUserProfile(id, user),
     onSuccess: () => {
-      queryClient.invalidateQueries({queryKey: ["userProfile"]});
+      queryClient.invalidateQueries({ queryKey: ["userProfile"] });
     },
     onError: (error: any) => {
       console.error(

@@ -6,6 +6,7 @@ import React, { useCallback, useEffect, useRef } from "react";
 import { Alert, StatusBar, StyleSheet, Text, View } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import MapViewDirections from "react-native-maps-directions";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type Region = {
   latitude: number;
@@ -145,8 +146,12 @@ export default function MapScreen({
 }
 
 export function DistanceBubble({ routeData }: { routeData: RouteData }) {
+  const inset = useSafeAreaInsets();
   return (
-    <View className="absolute z-50 self-center px-4 py-2 top-10 bg-black/60 rounded-2xl">
+    <View
+      className="absolute z-50 self-center px-4 py-2 bg-black/60 rounded-2xl"
+      style={{ top: inset.top + 10 }}
+    >
       <Text className="text-sm font-semibold text-white">
         {routeData.distance.toFixed(1)} km • {routeData.duration.toFixed(0)} min
       </Text>

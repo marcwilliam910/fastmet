@@ -1,4 +1,3 @@
-import { logout } from "@/lib/firebase/auth";
 import { useAppStore } from "@/store/useAppStore";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
@@ -14,15 +13,14 @@ const LogoutModal = ({
   setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }) => {
   const [isLoading, setIsLoading] = useState(false);
-  const clearProfile = useAppStore((state) => state.clearProfile);
+  const logout = useAppStore((state) => state.logout);
 
   const handleLogout = async () => {
     setIsLoading(true);
-    await logout();
+    logout();
     setIsLoading(false);
     setIsOpen(false);
-    clearProfile();
-    router.push("/(auth)/login");
+    router.push("/(auth)/auth");
   };
 
   return (
@@ -64,7 +62,7 @@ const LogoutModal = ({
               </Text>
             </Pressable>
             <Pressable
-              className="items-center py-4 my-2 border border-gray-300 rounded-lg bg-ctaSecondary active:bg-ctaSecondaryActive"
+              className="items-center py-4 my-2 border border-gray-200 rounded-lg bg-ctaSecondary active:bg-ctaSecondaryActive"
               onPress={() => setIsOpen(false)}
             >
               <Text className="text-base font-bold ">Cancel</Text>

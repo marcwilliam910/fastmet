@@ -99,8 +99,12 @@ export default function BookingTypeModal({
             <>
               <View className="flex-row items-center justify-between mb-4">
                 <Text className="text-lg font-bold">Booking Type</Text>
-                <Pressable onPress={handleCancel}>
-                  <Ionicons name="close" size={20} color="black" />
+                <Pressable onPress={handleCancel} hitSlop={20}>
+                  <Ionicons
+                    name="close"
+                    size={Platform.OS === "ios" ? 28 : 24}
+                    color="black"
+                  />
                 </Pressable>
               </View>
 

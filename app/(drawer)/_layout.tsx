@@ -1,6 +1,7 @@
 import HeaderDrawer from "@/components/headers/HeaderDrawer";
 import LogoutModal from "@/components/modals/logoutModal";
-import useAuth from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/useAuth";
+import SocketProvider from "@/sockets/context/SocketProvider";
 import { Ionicons } from "@expo/vector-icons";
 import {
   DrawerContentScrollView,
@@ -14,10 +15,12 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const CustomDrawerContent = (props: any) => {
   const inset = useSafeAreaInsets();
-  const isAuthenticated = !!props.user;
-  const action = isAuthenticated
+  const { isLoggedIn } = useAuth();
+
+  const action = isLoggedIn
     ? () => props.setIsOpen(true)
     : () => props.navigation.navigate("(auth)");
+
   return (
     <View className="flex-1">
       <DrawerContentScrollView {...props}>
@@ -27,12 +30,12 @@ const CustomDrawerContent = (props: any) => {
           onPress={action}
         >
           <Ionicons
-            name={isAuthenticated ? "log-out-outline" : "log-in-outline"}
+            name={isLoggedIn ? "log-in-outline" : "log-out-outline"}
             size={24}
             color="white"
           />
           <Text className="font-semibold text-white">
-            {isAuthenticated ? "Logout" : "Register / Login"}
+            {isLoggedIn ? "Logout" : "Register / Login"}
           </Text>
         </Pressable>
       </DrawerContentScrollView>
@@ -49,131 +52,130 @@ const CustomDrawerContent = (props: any) => {
 
 export default function DrawerLayout() {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const { user } = useAuth();
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <Drawer
-        drawerContent={(props) => (
-          <CustomDrawerContent
-            {...props}
-            setIsOpen={setShowLogoutModal}
-            user={user}
+      <SocketProvider>
+        <Drawer
+          drawerContent={(props) => (
+            <CustomDrawerContent {...props} setIsOpen={setShowLogoutModal} />
+          )}
+          screenOptions={{
+            headerShown: false,
+            drawerStyle: {
+              backgroundColor: "#0F2535",
+            },
+            drawerActiveTintColor: "#FFA840",
+            drawerInactiveTintColor: "#FFFFFF",
+            drawerActiveBackgroundColor: "#1a3a4f",
+            drawerItemStyle: {
+              borderRadius: 8,
+            },
+
+            headerStyle: { backgroundColor: "#0F2535" },
+            headerLeft: () => null,
+            headerTitle: ({ children }) => <HeaderDrawer title={children} />,
+          }}
+        >
+          <Drawer.Screen
+            name="index"
+            options={{ drawerItemStyle: { display: "none" } }}
           />
-        )}
-        screenOptions={{
-          headerShown: false,
-          drawerStyle: {
-            backgroundColor: "#0F2535",
-          },
-          drawerActiveTintColor: "#FFA840",
-          drawerInactiveTintColor: "#FFFFFF",
-          drawerActiveBackgroundColor: "#1a3a4f",
-          drawerItemStyle: {
-            borderRadius: 8,
-          },
+          <Drawer.Screen
+            name="book"
+            options={{
+              drawerLabel: "Book Now",
+              title: "Book",
+              drawerIcon: ({ focused }) => (
+                <Ionicons
+                  name={focused ? "navigate" : "navigate-outline"}
+                  size={24}
+                  color={focused ? "#FFA840" : "#FFFFFF"}
+                />
+              ),
+            }}
+          />
+          <Drawer.Screen
+            name="(tabs)"
+            options={{
+              drawerLabel: "Dashboard",
+              title: "Home",
+              drawerIcon: ({ focused }) => (
+                <Ionicons
+                  name={focused ? "speedometer" : "speedometer-outline"}
+                  size={24}
+                  color={focused ? "#FFA840" : "#FFFFFF"}
+                />
+              ),
+            }}
+          />
+          <Drawer.Screen
+            name="profile"
+            options={{
+              drawerLabel: "My Profile",
+              title: "My Profile",
+              // headerShown: true,
+              drawerIcon: ({ focused }) => (
+                <Ionicons
+                  name={focused ? "person" : "person-outline"}
+                  size={24}
+                  color={focused ? "#FFA840" : "#FFFFFF"}
+                />
+              ),
+            }}
+          />
+          <Drawer.Screen
+            name="settings"
+            options={{
+              drawerLabel: "Settings",
+              title: "Settings",
+              headerShown: true,
+              drawerIcon: ({ focused }) => (
+                <Ionicons
+                  name={focused ? "settings" : "settings-outline"}
+                  size={24}
+                  color={focused ? "#FFA840" : "#FFFFFF"}
+                />
+              ),
+            }}
+          />
+          <Drawer.Screen
+            name="about"
+            options={{
+              drawerLabel: "About",
+              title: "About",
+              headerShown: true,
+              drawerIcon: ({ focused }) => (
+                <Ionicons
+                  name={
+                    focused
+                      ? "information-circle"
+                      : "information-circle-outline"
+                  }
+                  size={24}
+                  color={focused ? "#FFA840" : "#FFFFFF"}
+                />
+              ),
+            }}
+          />
 
-          headerStyle: { backgroundColor: "#0F2535" },
-          headerLeft: () => null,
-          headerTitle: ({ children }) => <HeaderDrawer title={children} />,
-        }}
-      >
-        <Drawer.Screen
-          name="index"
-          options={{ drawerItemStyle: { display: "none" } }}
-        />
-        <Drawer.Screen
-          name="book"
-          options={{
-            drawerLabel: "Book Now",
-            title: "Book",
-            drawerIcon: ({ focused }) => (
-              <Ionicons
-                name={focused ? "navigate" : "navigate-outline"}
-                size={24}
-                color={focused ? "#FFA840" : "#FFFFFF"}
-              />
-            ),
-          }}
-        />
-        <Drawer.Screen
-          name="(tabs)"
-          options={{
-            drawerLabel: "Dashboard",
-            title: "Home",
-            drawerIcon: ({ focused }) => (
-              <Ionicons
-                name={focused ? "speedometer" : "speedometer-outline"}
-                size={24}
-                color={focused ? "#FFA840" : "#FFFFFF"}
-              />
-            ),
-          }}
-        />
-        <Drawer.Screen
-          name="profile"
-          options={{
-            drawerLabel: "My Profile",
-            title: "My Profile",
-            // headerShown: true,
-            drawerIcon: ({ focused }) => (
-              <Ionicons
-                name={focused ? "person" : "person-outline"}
-                size={24}
-                color={focused ? "#FFA840" : "#FFFFFF"}
-              />
-            ),
-          }}
-        />
-        <Drawer.Screen
-          name="settings"
-          options={{
-            drawerLabel: "Settings",
-            title: "Settings",
-            headerShown: true,
-            drawerIcon: ({ focused }) => (
-              <Ionicons
-                name={focused ? "settings" : "settings-outline"}
-                size={24}
-                color={focused ? "#FFA840" : "#FFFFFF"}
-              />
-            ),
-          }}
-        />
-        <Drawer.Screen
-          name="about"
-          options={{
-            drawerLabel: "About",
-            title: "About",
-            headerShown: true,
-            drawerIcon: ({ focused }) => (
-              <Ionicons
-                name={
-                  focused ? "information-circle" : "information-circle-outline"
-                }
-                size={24}
-                color={focused ? "#FFA840" : "#FFFFFF"}
-              />
-            ),
-          }}
-        />
-
-        <Drawer.Screen
-          name="favorite"
-          options={{
-            drawerLabel: "Favorite",
-            title: "Favorite",
-            headerShown: true,
-            drawerIcon: ({ focused }) => (
-              <Ionicons
-                name={focused ? "heart" : "heart-outline"}
-                size={24}
-                color={focused ? "#FFA840" : "#FFFFFF"}
-              />
-            ),
-          }}
-        />
-      </Drawer>
+          <Drawer.Screen
+            name="favorite"
+            options={{
+              drawerLabel: "Favorite",
+              title: "Favorite",
+              headerShown: true,
+              drawerIcon: ({ focused }) => (
+                <Ionicons
+                  name={focused ? "heart" : "heart-outline"}
+                  size={24}
+                  color={focused ? "#FFA840" : "#FFFFFF"}
+                />
+              ),
+            }}
+          />
+        </Drawer>
+      </SocketProvider>
       <LogoutModal isOpen={showLogoutModal} setIsOpen={setShowLogoutModal} />
     </GestureHandlerRootView>
   );

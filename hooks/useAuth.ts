@@ -1,30 +1,13 @@
-import { getUserProfile } from "@/api/user";
 import { useAppStore } from "@/store/useAppStore";
-import { onAuthStateChanged, User } from "firebase/auth";
-import { useEffect, useState } from "react";
-import { auth } from "../lib/firebase/firebaseConfig";
 
-export default function useAuth() {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const setProfile = useAppStore((state) => state.setProfile);
+export const useAuth = () => {
+  const id = useAppStore((state) => state.id);
+  const token = useAppStore((state) => state.token);
+  const phoneNumber = useAppStore((state) => state.phoneNumber);
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        setUser(firebaseUser);
-        const profile = await getUserProfile(firebaseUser.uid);
-        if (profile.success && profile.user) setProfile(profile.user);
-        else setProfile(null);
-        setLoading(false); // only after profile fetched
-      } else {
-        setUser(null);
-        setProfile(null);
-        setLoading(false);
-      }
-    });
-    return unsubscribe;
-  }, []);
-
-  return { user, loading };
-}
+  return {
+    isLoggedIn: !!id && !!token && !!phoneNumber,
+    id,
+    token,
+  };
+};

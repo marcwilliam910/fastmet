@@ -1,11 +1,11 @@
 import NotLoggedIn from "@/components/notLoggedIn";
-import useAuth from "@/hooks/useAuth";
-import {Ionicons} from "@expo/vector-icons";
-import {Image} from "expo-image";
-import {router} from "expo-router";
+import { useAuth } from "@/hooks/useAuth";
+import { Ionicons } from "@expo/vector-icons";
+import { Image } from "expo-image";
+import { router } from "expo-router";
 import React from "react";
-import {ActivityIndicator, FlatList, Pressable, Text, View} from "react-native";
-import {TextInput} from "react-native-gesture-handler";
+import { FlatList, Platform, Pressable, Text, View } from "react-native";
+import { TextInput } from "react-native-gesture-handler";
 
 const DUMMYMESSAGES = [
   {
@@ -83,42 +83,59 @@ const DUMMYMESSAGES = [
 ];
 
 const Chat = () => {
-  const {user, loading} = useAuth();
+  const { isLoggedIn } = useAuth();
 
-  if (loading) {
-    return (
-      <View className="items-center justify-center flex-1 bg-white">
-        <ActivityIndicator size="large" color="#FFA840" />
-      </View>
-    );
-  }
-  if (user === null) {
+  if (!isLoggedIn) {
     return <NotLoggedIn />;
   }
 
   return (
     <View className="flex-1 gap-6 py-6 bg-white">
-      <View className="flex-row items-center px-4 py-1 mx-4 rounded-full bg-ctaSecondary">
-        <TextInput placeholder="Search..." className="flex-1" />
-        <Ionicons name="search" size={24} color="#9FABB4" />
-      </View>
+      {true ? (
+        <View className="flex-1 items-center justify-center">
+          {/* show no message screen */}
+          <Text className="text-center text-lg text-gray-400">
+            You have no messages
+          </Text>
+        </View>
+      ) : (
+        <>
+          <View
+            className="flex-row items-center bg-ctaSecondary mx-4 px-4 rounded-full"
+            style={{
+              height: Platform.OS === "ios" ? 54 : 46,
+            }}
+          >
+            <TextInput
+              placeholder="Search..."
+              placeholderTextColor="#9FABB4"
+              className="flex-1 text-base leading-[18px]"
+            />
+            <Ionicons
+              name="search"
+              size={Platform.OS === "ios" ? 24 : 20}
+              color="#9FABB4"
+            />
+          </View>
 
-      <View>
-        <FlatList
-          data={DUMMYMESSAGES}
-          showsVerticalScrollIndicator={false}
-          renderItem={({item}) => <MessageCard item={item} />}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={{gap: 3, paddingBottom: 60}}
-        />
-      </View>
+          <View>
+            <FlatList
+              data={DUMMYMESSAGES}
+              showsVerticalScrollIndicator={false}
+              renderItem={({ item }) => <MessageCard item={item} />}
+              keyExtractor={(item) => item.id}
+              contentContainerStyle={{ gap: 3, paddingBottom: 60 }}
+            />
+          </View>
+        </>
+      )}
     </View>
   );
 };
 
 export default Chat;
 
-const MessageCard = ({item}: any) => {
+const MessageCard = ({ item }: any) => {
   return (
     <Pressable
       className="flex-row items-center gap-4 px-4 py-2 active:bg-ctaSecondary"
@@ -126,7 +143,7 @@ const MessageCard = ({item}: any) => {
     >
       <Image
         source={item.image}
-        style={{width: 50, height: 50, borderRadius: 999}}
+        style={{ width: 50, height: 50, borderRadius: 999 }}
         contentFit="contain"
       />
       <View className="flex-1 gap-1">

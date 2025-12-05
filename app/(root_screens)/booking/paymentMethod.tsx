@@ -1,5 +1,5 @@
 import SheetButton from "@/components/maps/SheetButton";
-import useAuth from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/useAuth";
 import { useSocket } from "@/sockets/context/SocketProvider";
 import { handleBookingSaved, requestBooking } from "@/sockets/handlers/booking";
 import { useAppStore } from "@/store/useAppStore";
@@ -17,14 +17,14 @@ export default function PaymentMethod() {
 
   const setLoading = useAppStore((state) => state.setLoading);
 
-  const { user } = useAuth();
+  const { id } = useAuth();
 
   const socket = useSocket();
 
   const submitRequest = async () => {
     setLoading(true);
     const payload = {
-      userId: user?.uid,
+      userId: id,
       pickUp: book.pickUp,
       dropOff: book.dropOff,
       bookingType: book.bookingType,

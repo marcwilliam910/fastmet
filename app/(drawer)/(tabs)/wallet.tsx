@@ -1,27 +1,14 @@
 import NotLoggedIn from "@/components/notLoggedIn";
-import useAuth from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/useAuth";
 import { Ionicons } from "@expo/vector-icons";
 import { Image, ImageBackground } from "expo-image";
 import { router } from "expo-router";
-import {
-  ActivityIndicator,
-  Pressable,
-  ScrollView,
-  Text,
-  View,
-} from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 
 const Wallet = () => {
-  const { user, loading } = useAuth();
+  const { isLoggedIn } = useAuth();
 
-  if (loading) {
-    return (
-      <View className="items-center justify-center flex-1 bg-white">
-        <ActivityIndicator size="large" color="#FFA840" />
-      </View>
-    );
-  }
-  if (user === null) {
+  if (!isLoggedIn) {
     return <NotLoggedIn />;
   }
 

@@ -9,3 +9,11 @@ export type User = {
   profilePictureUrl?: string;
   fromOAuth: boolean;
 };
+
+export type NewUser = {
+  fullName: string;
+  address?: string;
+  gender?: string;
+  phoneNumber?: string;
+  profilePictureUrl?: string;
+};

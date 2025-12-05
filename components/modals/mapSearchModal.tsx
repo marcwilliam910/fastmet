@@ -7,14 +7,12 @@ import { router } from "expo-router";
 import { isPointInPolygon } from "geolib";
 import React, { useEffect, useState } from "react";
 import {
-  Alert,
   FlatList,
   Modal,
   Platform,
   Pressable,
   Text,
   TextInput,
-  ToastAndroid,
   View,
 } from "react-native";
 import GooglePlacesTextInput, {
@@ -112,24 +110,24 @@ const SearchModal: React.FC<SearchModalProps> = ({
       lng: loc.longitude,
     });
 
-    const allowed = isWithinMetroManila(loc.latitude, loc.longitude);
+    // const allowed = isWithinMetroManila(loc.latitude, loc.longitude);
 
-    if (!allowed) {
-      const message = "Services are only available within Metro Manila.";
+    // if (!allowed) {
+    //   const message = "Services are only available within Metro Manila.";
 
-      if (Platform.OS === "android") {
-        ToastAndroid.showWithGravity(
-          message,
-          ToastAndroid.LONG,
-          ToastAndroid.TOP
-        );
-      } else {
-        Alert.alert("Not Available", message);
-      }
+    //   if (Platform.OS === "android") {
+    //     ToastAndroid.showWithGravity(
+    //       message,
+    //       ToastAndroid.LONG,
+    //       ToastAndroid.TOP
+    //     );
+    //   } else {
+    //     Alert.alert("Not Available", message);
+    //   }
 
-      shake();
-      return;
-    }
+    //   shake();
+    //   return;
+    // }
 
     setSelectedPlace(place);
   };

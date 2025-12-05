@@ -1,43 +1,16 @@
 import NotLoggedIn from "@/components/notLoggedIn";
-import useAuth from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/useAuth";
 import { useAppStore } from "@/store/useAppStore";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import React from "react";
-import {
-  ActivityIndicator,
-  Pressable,
-  ScrollView,
-  Text,
-  View,
-} from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 
 export default function MyProfile() {
-  const profile = useAppStore((state) => state.profile);
-  const { user, loading } = useAuth();
+  const { isLoggedIn } = useAuth();
 
-  // profile?.fromOAuth && menuItems.push({icon: "log-out", label: "Logout", onPress: () => {}});
-  const fromEmailAndPassOptions = [
-    {
-      icon: "person",
-      label: "Edit Profile",
-      onPress: () => router.push("/(drawer)/profile/editProfile"),
-    },
-    // {icon: "call", label: "Contact Number", onPress: () => {}},
-    // {icon: "mail", label: "Email address", onPress: () => {}},
-    {
-      icon: "lock-closed",
-      label: "Change Password",
-      onPress: () => router.push("/(drawer)/profile/changePass"),
-    },
-    {
-      icon: "settings",
-      label: "Settings",
-      onPress: () => router.push("/(drawer)/settings"),
-    },
-  ];
-  const fromOAuthOptions = [
+  const options = [
     {
       icon: "person",
       label: "Edit Profile",
@@ -49,19 +22,8 @@ export default function MyProfile() {
       onPress: () => router.push("/(drawer)/settings"),
     },
   ];
-  const menuItems = profile?.fromOAuth
-    ? fromOAuthOptions
-    : fromEmailAndPassOptions;
 
-  if (loading) {
-    return (
-      <View className="items-center justify-center flex-1">
-        <ActivityIndicator size="large" color="#FFA840" />
-      </View>
-    );
-  }
-
-  if (!user || !profile) return <NotLoggedIn />;
+  if (!isLoggedIn) return <NotLoggedIn />;
 
   return (
     <ScrollView className="flex-1 bg-white">
@@ -69,11 +31,7 @@ export default function MyProfile() {
         {/* Profile Image with Border */}
         <View className="border border-[#FFA840] rounded-full p-2">
           <Image
-            source={
-              profile.profilePictureUrl
-                ? { uri: profile.profilePictureUrl }
-                : require("@/assets/images/user.png")
-            }
+            source={require("@/assets/images/user.png")}
             style={{ width: 120, height: 120, borderRadius: 999 }}
             contentFit="contain"
           />
@@ -82,15 +40,17 @@ export default function MyProfile() {
         {/* User Info */}
         <View className="items-center gap-1">
           <Text className="text-xl font-bold text-gray-800">
-            {profile?.firstName} {profile?.lastName}
+            {useAppStore.getState().name || "User"}
           </Text>
-          <Text className="text-base text-gray-400">{profile?.email}</Text>
+          <Text className="text-base text-gray-400">
+            0{useAppStore.getState().phoneNumber}
+          </Text>
         </View>
       </View>
 
       {/* Menu Items */}
       <View className="gap-3 px-4">
-        {menuItems.map((item, index) => (
+        {options.map((item, index) => (
           <Pressable
             key={index}
             onPress={item.onPress}

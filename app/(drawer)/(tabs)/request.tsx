@@ -3,8 +3,9 @@ import ActiveRoute from "@/components/request_tabs/Active";
 import CancelledRoute from "@/components/request_tabs/Cancelled";
 import CompleteRoute from "@/components/request_tabs/Complete";
 import RequestRoute from "@/components/request_tabs/Request";
-import useAuth from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/useAuth";
 import { useBookingCounts } from "@/queries/bookingQueries";
+import { useAppStore } from "@/store/useAppStore";
 import { useState } from "react";
 import {
   ActivityIndicator,
@@ -82,7 +83,8 @@ function CustomTabBar({ navigationState, jumpTo, counts }: CustomTabBarProps) {
 }
 
 export default function Request() {
-  const { user, loading } = useAuth();
+  const { isLoggedIn } = useAuth();
+  const id = useAppStore((state) => state.id);
   const layout = useWindowDimensions();
   const [index, setIndex] = useState(0);
   const [routes] = useState<TabRoute[]>([
@@ -92,7 +94,7 @@ export default function Request() {
     { key: "canceled", title: "Cancelled" },
   ]);
 
-  const { data: counts, isPending, error } = useBookingCounts(user?.uid!);
+  const { data: counts, isPending, error } = useBookingCounts(id!);
 
   // Lazy render - only renders the active tab
   const renderScene = ({ route }: { route: TabRoute }) => {
@@ -110,7 +112,11 @@ export default function Request() {
     }
   };
 
-  if (isPending || loading)
+  if (!isLoggedIn) {
+    return <NotLoggedIn />;
+  }
+
+  if (isPending)
     return (
       <View className="flex-1 items-center bg-white justify-center">
         <ActivityIndicator size="large" color="#FFA840" />
@@ -124,10 +130,6 @@ export default function Request() {
         </Text>
       </View>
     );
-
-  if (user === null) {
-    return <NotLoggedIn />;
-  }
 
   return (
     <TabView

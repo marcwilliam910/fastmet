@@ -34,6 +34,7 @@ export const VehicleInfoModal = ({
           paddingTop: insets.top + 10, // respect status bar / notch
           paddingBottom: insets.bottom,
           backgroundColor: "white",
+          paddingHorizontal: 20,
         }}
       >
         {/* Header */}

@@ -14,7 +14,6 @@ export default {
       },
       supportsTablet: true,
       bundleIdentifier: "com.guildsman.fastmet",
-      googleServicesFile: process.env.GOOGLE_SERVICE_INFO_PLIST,
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
       },
@@ -32,7 +31,6 @@ export default {
       edgeToEdgeEnabled: true,
       predictiveBackGestureEnabled: false,
       package: "com.guildsman.fastmet",
-      googleServicesFile: process.env.GOOGLE_SERVICES_JSON,
     },
     web: {
       bundler: "metro",
@@ -50,15 +48,9 @@ export default {
           imageWidth: 200,
         },
       ],
-      [
-        "@react-native-google-signin/google-signin",
-        {
-          iosUrlScheme:
-            "com.googleusercontent.apps.657062346189-9uo7mfoih186nsrih5c6cr4q36uvpoe8",
-        },
-      ],
       "expo-font",
       "expo-web-browser",
+      "expo-secure-store",
     ],
     experiments: {
       typedRoutes: true,
@@ -69,10 +61,6 @@ export default {
       eas: {
         projectId: "177af201-fa0a-44b7-a20b-c22a01e455a7",
       },
-      apiUrl:
-        process.env.NODE_ENV === "production"
-          ? process.env.EXPO_PUBLIC_API_URL_PROD
-          : process.env.EXPO_PUBLIC_API_URL_DEV,
     },
   },
 };

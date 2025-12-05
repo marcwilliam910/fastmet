@@ -87,74 +87,75 @@ const CancelledCard = ({
   onPressSeeMore,
 }: CancelledCardProps) => {
   return (
-    <Pressable
-      onPress={onPressSeeMore}
-      className="overflow-hidden bg-white rounded-2xl active:opacity-80"
+    <View
       style={{
         shadowColor: "#000",
-        shadowOffset: {
-          width: 0,
-          height: 4,
-        },
+        shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 8,
         elevation: 8, // for Android
       }}
+      className="rounded-2xl"
     >
-      {/* Header */}
-      <View className="flex-row items-center justify-between px-5 py-3 bg-red-500">
-        <Text className="text-lg font-semibold text-white">{vehicle}</Text>
-        <Text className="text-sm text-white">Cancelled at {bookedTime}</Text>
-      </View>
+      <Pressable
+        onPress={onPressSeeMore}
+        className="overflow-hidden bg-white rounded-2xl active:opacity-80"
+      >
+        {/* Header */}
+        <View className="flex-row items-center justify-between px-5 py-3 bg-red-500">
+          <Text className="text-lg font-semibold text-white">{vehicle}</Text>
+          <Text className="text-sm text-white">Cancelled at {bookedTime}</Text>
+        </View>
 
-      {/* Body */}
-      <View className="px-3 py-5">
-        {/* Pickup & Drop */}
-        <View className="relative flex-row items-center justify-between ml-5 mr-2 border-l border-dashed pl-7">
-          <View className="gap-4">
-            <Text className="font-medium max-w-60" numberOfLines={2}>
-              {pickup}
+        {/* Body */}
+        <View className="px-3 py-5">
+          {/* Pickup & Drop */}
+          <View className="relative flex-row items-center justify-between ml-5 mr-2 border-l border-dashed pl-7">
+            <View className="gap-4">
+              <Text className="font-medium max-w-60" numberOfLines={2}>
+                {pickup}
+              </Text>
+              <Text className="font-medium max-w-60" numberOfLines={2}>
+                {dropoff}
+              </Text>
+            </View>
+            <Text className="font-bold">{distance}</Text>
+
+            <Ionicons
+              name="location-sharp"
+              size={24}
+              className="absolute -left-3.5 -top-1 bg-white"
+            />
+            <Ionicons
+              name="locate-sharp"
+              size={24}
+              className="absolute -left-3.5 -bottom-1 bg-white"
+            />
+          </View>
+          {/* Payment */}
+          <View className="flex-row items-center justify-between p-4 mt-6 bg-gray-100 rounded-lg">
+            <Text className="text-base text-gray-600">
+              {isCash ? "Cash Payment" : "Online Payment"}
             </Text>
-            <Text className="font-medium max-w-60" numberOfLines={2}>
-              {dropoff}
+            <Text className="text-lg font-semibold text-darkPrimary">
+              Php {amount.toLocaleString("en-US")}
             </Text>
           </View>
-          <Text className="font-bold">{distance}</Text>
+          <View className="flex-row items-center justify-between px-2 mt-6">
+            <Text className="text-sm font-semibold text-red-500">
+              Cancelled Request
+            </Text>
+            <Text className="text-sm font-semibold">{date}</Text>
+          </View>
 
-          <Ionicons
-            name="location-sharp"
-            size={24}
-            className="absolute -left-3.5 -top-1 bg-white"
-          />
-          <Ionicons
-            name="locate-sharp"
-            size={24}
-            className="absolute -left-3.5 -bottom-1 bg-white"
-          />
+          <Pressable
+            className="items-center justify-center mt-6 active:scale-105"
+            onPress={onPressSeeMore}
+          >
+            <Text className="text-sm font-medium">+ See more</Text>
+          </Pressable>
         </View>
-        {/* Payment */}
-        <View className="flex-row items-center justify-between p-4 mt-6 bg-gray-100 rounded-lg">
-          <Text className="text-base text-gray-600">
-            {isCash ? "Cash Payment" : "Online Payment"}
-          </Text>
-          <Text className="text-lg font-semibold text-darkPrimary">
-            Php {amount.toLocaleString("en-US")}
-          </Text>
-        </View>
-        <View className="flex-row items-center justify-between px-2 mt-6">
-          <Text className="text-sm font-semibold text-red-500">
-            Cancelled Request
-          </Text>
-          <Text className="text-sm font-semibold">{date}</Text>
-        </View>
-
-        <Pressable
-          className="items-center justify-center mt-6 active:scale-105"
-          onPress={onPressSeeMore}
-        >
-          <Text className="text-sm font-medium">+ See more</Text>
-        </Pressable>
-      </View>
-    </Pressable>
+      </Pressable>
+    </View>
   );
 };

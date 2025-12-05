@@ -1,11 +1,11 @@
 import CustomKeyAvoidingView from "@/components/CustomKeyAvoid";
 import SuccessModal from "@/components/modals/successModal";
-import useAuth from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/useAuth";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
 import { useUpdateProfile } from "@/mutations/userMutations";
 import { ProfileSchema } from "@/schemas/authSchema";
 import { useAppStore } from "@/store/useAppStore";
-import { User } from "@/types/user";
+import { NewUser } from "@/types/user";
 import { openGallery } from "@/utils/imagePicker";
 import { validateForm } from "@/utils/validateForm";
 import { Ionicons } from "@expo/vector-icons";
@@ -24,21 +24,19 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const EditProfile = () => {
-  const profile = useAppStore((state) => state.profile);
-  const setProfile = useAppStore((state) => state.setProfile);
+  const name = useAppStore((state) => state.name);
+  const phoneNumber = useAppStore((state) => state.phoneNumber);
+  const profilePictureUrl = useAppStore((state) => state.profilePictureUrl);
 
-  const { user } = useAuth();
+  const { id } = useAuth();
+
   const { isAuthenticated } = useAuthGuard();
 
-  const mnameRef = useRef<TextInput>(null);
-  const lnameRef = useRef<TextInput>(null);
   const numRef = useRef<TextInput>(null);
   const scrollRef = useRef<ScrollView>(null);
-  const [form, setForm] = useState<Partial<User>>({
-    firstName: "",
-    middleName: "",
-    lastName: "",
-    contactNumber: "",
+  const [form, setForm] = useState<Partial<NewUser>>({
+    fullName: "",
+    phoneNumber: "",
     profilePictureUrl: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -55,16 +53,12 @@ const EditProfile = () => {
   }, [isPending]);
 
   useEffect(() => {
-    if (profile) {
-      setForm({
-        firstName: profile.firstName,
-        middleName: profile.middleName || "",
-        lastName: profile.lastName,
-        contactNumber: profile.contactNumber || "",
-        profilePictureUrl: profile.profilePictureUrl || "",
-      });
-    }
-  }, [profile]);
+    setForm({
+      fullName: name,
+      phoneNumber: phoneNumber,
+      profilePictureUrl: profilePictureUrl,
+    });
+  }, [name, phoneNumber, profilePictureUrl]);
 
   const onFormChange = (name: string, value: string) => {
     setForm({ ...form, [name]: value });
@@ -111,13 +105,17 @@ const EditProfile = () => {
 
     mutate(
       {
-        uid: user!.uid,
+        id: id!,
         user: form,
       },
       {
         onSuccess: () => {
           setIsSuccess(true);
-          setProfile({ ...profile!, ...form });
+          useAppStore.getState().setAuthData({
+            name: form.fullName,
+            phoneNumber: form.phoneNumber,
+            profilePictureUrl: form.profilePictureUrl,
+          });
           console.log("Profile updated successfully");
         },
       }
@@ -130,7 +128,7 @@ const EditProfile = () => {
       edges={["bottom"]}
     >
       <CustomKeyAvoidingView ref={scrollRef}>
-        <View className="gap-6 px-6 pt-6 ">
+        <View className="gap-6 px-6 pt-6 flex-1">
           {/* profile picture */}
           <Pressable
             className="border border-[#FFA840] rounded-full p-2 self-center active:bg-gray-100"
@@ -179,79 +177,32 @@ const EditProfile = () => {
           {/* first name */}
           <View className="gap-2">
             <Text className="text-sm font-medium text-gray-700 ">
-              First Name
+              Full Name
             </Text>
             <TextInput
-              value={form.firstName}
-              onChangeText={(text) => onFormChange("firstName", text)}
-              onSubmitEditing={() => mnameRef.current?.focus()}
-              returnKeyType="next"
-              submitBehavior="submit"
-              placeholder="Enter First Name"
-              placeholderTextColor="#9CA3AF"
-              className={`p-4 text-base bg-gray-100 rounded-lg ${
-                errors.firstName ? "border border-red-500" : ""
-              }`}
-            />
-            {errors.firstName && (
-              <Text className="text-xs text-red-500">{errors.firstName}</Text>
-            )}
-          </View>
-
-          {/* middle name */}
-          <View className="gap-2">
-            <Text className="text-sm font-medium text-gray-700 ">
-              Middle Name
-            </Text>
-            <TextInput
-              value={form.middleName}
-              onChangeText={(text) => onFormChange("middleName", text)}
-              ref={mnameRef}
-              onSubmitEditing={() => lnameRef.current?.focus()}
-              onFocus={() =>
-                scrollToInput(mnameRef as React.RefObject<TextInput>)
-              }
-              submitBehavior="submit"
-              returnKeyType="next"
-              placeholder="Enter Middle Name"
-              placeholderTextColor="#9CA3AF"
-              className="p-4 text-base bg-gray-100 rounded-lg"
-            />
-          </View>
-
-          {/* last name */}
-          <View className="gap-2">
-            <Text className="text-sm font-medium text-gray-700 ">
-              Last Name
-            </Text>
-            <TextInput
-              value={form.lastName}
-              onChangeText={(text) => onFormChange("lastName", text)}
-              ref={lnameRef}
+              value={form.fullName}
+              onChangeText={(text) => onFormChange("fullName", text)}
               onSubmitEditing={() => numRef.current?.focus()}
-              onFocus={() =>
-                scrollToInput(lnameRef as React.RefObject<TextInput>)
-              }
-              submitBehavior="submit"
               returnKeyType="next"
-              placeholder="Enter Last Name"
+              submitBehavior="submit"
+              placeholder="Enter Name"
               placeholderTextColor="#9CA3AF"
               className={`p-4 text-base bg-gray-100 rounded-lg ${
-                errors.lastName ? "border border-red-500" : ""
+                errors.fullName ? "border border-red-500" : ""
               }`}
             />
-            {errors.lastName && (
-              <Text className="text-xs text-red-500">{errors.lastName}</Text>
+            {errors.fullName && (
+              <Text className="text-xs text-red-500">{errors.fullName}</Text>
             )}
           </View>
 
           <View className="gap-2">
             <Text className="text-sm font-medium text-gray-700 ">
-              Contact Number
+              Phone Number
             </Text>
             <TextInput
-              value={form.contactNumber}
-              onChangeText={(text) => onFormChange("contactNumber", text)}
+              value={form.phoneNumber}
+              onChangeText={(text) => onFormChange("phoneNumber", text)}
               ref={numRef}
               onFocus={() =>
                 scrollToInput(numRef as React.RefObject<TextInput>)
@@ -294,7 +245,7 @@ const EditProfile = () => {
           </View> */}
 
           {/*  Button */}
-          <View className="my-5 ">
+          <View className="absolute bottom-6 left-0 right-0 mx-6">
             <Pressable
               className="items-center py-4 rounded-lg bg-lightPrimary active:bg-darkPrimary"
               disabled={isPending}
@@ -305,7 +256,7 @@ const EditProfile = () => {
               </Text>
             </Pressable>
             <Pressable
-              className="items-center py-4 my-2 border border-gray-300 rounded-lg bg-ctaSecondary active:bg-ctaSecondaryActive"
+              className="items-center py-4 my-2 border border-gray-200 rounded-lg bg-ctaSecondary active:bg-ctaSecondaryActive"
               onPress={() => router.back()}
             >
               <Text className="text-base font-bold ">Back</Text>

@@ -1,14 +1,14 @@
 import LogoutModal from "@/components/modals/logoutModal";
-import useAuth from "@/hooks/useAuth";
-import {Ionicons} from "@expo/vector-icons";
-import {router} from "expo-router";
-import React, {useMemo, useState} from "react";
-import {Pressable, Text, View} from "react-native";
-import {SafeAreaView} from "react-native-safe-area-context";
+import { useAuth } from "@/hooks/useAuth";
+import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
+import React, { useMemo, useState } from "react";
+import { Pressable, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const Settings = () => {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const {user} = useAuth();
+  const { isLoggedIn } = useAuth();
 
   const menuItems = useMemo(
     () => [
@@ -28,14 +28,17 @@ const Settings = () => {
         label: "File a Report",
         onPress: () => router.push("/(root_screens)/fileReport"),
       },
-      {label: "About Us", onPress: () => router.push("/(root_screens)/about")},
       {
-        label: user ? "Sign Out" : "Register / Login",
+        label: "About Us",
+        onPress: () => router.push("/(root_screens)/about"),
+      },
+      {
+        label: isLoggedIn ? "Sign Out" : "Register / Login",
         onPress: () =>
-          user ? setShowLogoutModal(true) : router.push("/(auth)/login"),
+          isLoggedIn ? setShowLogoutModal(true) : router.push("/(auth)/auth"),
       },
     ],
-    [router, user]
+    [isLoggedIn]
   );
 
   return (

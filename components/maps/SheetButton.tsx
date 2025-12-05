@@ -1,8 +1,5 @@
-import useAuth from "@/hooks/useAuth";
-import { useRegisterProfile } from "@/mutations/userMutations";
-import { signInWithGoogle } from "@/services/googleAuth";
+import { useAuth } from "@/hooks/useAuth";
 import { useAppStore } from "@/store/useAppStore";
-import { User } from "@/types/user";
 import React, { useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -16,11 +13,8 @@ const SheetButton = ({
   isLast?: boolean;
 }) => {
   const insets = useSafeAreaInsets();
-  const { user } = useAuth();
   const [showModal, setShowModal] = useState(false);
-  const { mutate } = useRegisterProfile();
-
-  const setLoading = useAppStore((state) => state.setLoading);
+  const { isLoggedIn } = useAuth();
 
   const selectedVehicle = useAppStore((state) => state.selectedVehicle);
   const pickUp = useAppStore((state) => state.pickUp);
@@ -29,47 +23,8 @@ const SheetButton = ({
   const calculatePrice = useAppStore((state) => state.calculatePrice);
 
   const handleNext = () => {
-    if (user === null) setShowModal(true);
+    if (!isLoggedIn) setShowModal(true);
     else next();
-  };
-
-  const handleGoogleSignIn = async () => {
-    setLoading(true);
-    try {
-      const user = await signInWithGoogle();
-
-      if (!user) {
-        // User cancelled — exit silently
-        return;
-      }
-
-      // Optional: Split displayName into name parts
-      const nameParts = user.displayName?.split(" ") ?? [];
-      const firstName = nameParts[0] ?? "";
-      const lastName = nameParts.length > 1 ? nameParts.slice(1).join(" ") : "";
-
-      const dataToSave: User = {
-        uid: user.uid,
-        email: user.email ?? "",
-        firstName,
-        middleName: "", // Google doesn't provide this
-        lastName,
-        birthDate: "", // Google doesn't provide this
-        profilePictureUrl: user.photoURL ?? "",
-        fromOAuth: true,
-      };
-
-      mutate(dataToSave, {
-        onSuccess: () => {
-          setShowModal(false);
-          console.log("Profile registered successfully");
-        },
-      });
-    } catch (error: any) {
-      console.log(error);
-    } finally {
-      setLoading(false);
-    }
   };
 
   const isDisable = !selectedVehicle || !pickUp || !dropOff;
@@ -108,11 +63,7 @@ const SheetButton = ({
           {isLast ? "Book Now" : "Next"}
         </Text>
       </Pressable>
-      <NotLoggedInModal
-        visible={showModal}
-        onGooglePress={handleGoogleSignIn}
-        setVisible={setShowModal}
-      />
+      <NotLoggedInModal visible={showModal} setVisible={setShowModal} />
     </View>
   );
 };

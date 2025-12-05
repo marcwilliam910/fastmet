@@ -1,4 +1,4 @@
-import useAuth from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/useAuth";
 import useSeeMoreDetails from "@/hooks/useSeeMoreDetails";
 import { useUserBookings } from "@/queries/bookingQueries";
 import { Booking } from "@/types/book";
@@ -17,7 +17,7 @@ export default function RequestRoute() {
   const { modalVisible, setModalVisible, selectedRequest, handleSeeMorePress } =
     useSeeMoreDetails<Booking>();
 
-  const { user } = useAuth();
+  const { id } = useAuth();
 
   const {
     data,
@@ -27,7 +27,7 @@ export default function RequestRoute() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useUserBookings<Booking>(user?.uid!, "pending", 5);
+  } = useUserBookings<Booking>(id!, "pending", 5);
 
   if (isPending)
     return (
@@ -93,7 +93,7 @@ export default function RequestRoute() {
             fetchNextPage();
           }
         }}
-        onEndReachedThreshold={0.5} // Trigger when 50% from bottom
+        onEndReachedThreshold={0.3}
         // Loading indicator at bottom
         ListFooterComponent={() => {
           if (isFetchingNextPage) {
@@ -148,88 +148,93 @@ const RequestCard = ({
   onPressSeeMore,
 }: RequestCardProps) => {
   return (
-    <Pressable
-      onPress={onPressSeeMore}
-      className="overflow-hidden bg-white rounded-2xl active:opacity-80"
+    <View
       style={{
         shadowColor: "#000",
-        shadowOffset: {
-          width: 0,
-          height: 4,
-        },
+        shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 8,
         elevation: 8, // for Android
       }}
+      className="rounded-2xl"
     >
-      {/* Header */}
-      <View className="flex-row items-center justify-between px-5 py-3 bg-lightPrimary">
-        <Text className="text-lg font-semibold text-white">{vehicle}</Text>
-        <Text className="text-sm text-white capitalize">
-          {bookingType.type === "schedule"
-            ? `Scheduled: ${formatDate(bookingType.value || "")}`
-            : bookingType.value}
-        </Text>
-      </View>
+      <Pressable
+        onPress={onPressSeeMore}
+        className="overflow-hidden bg-white rounded-2xl active:opacity-80"
+      >
+        {/* Header */}
+        <View className="flex-row items-center justify-between px-5 py-3 bg-lightPrimary">
+          <Text className="text-lg font-semibold text-white">{vehicle}</Text>
+          <Text className="text-sm text-white capitalize">
+            {bookingType.type === "schedule"
+              ? `Scheduled: ${formatDate(bookingType.value || "")}`
+              : bookingType.value}
+          </Text>
+        </View>
 
-      {/* Body */}
-      <View className="px-3 py-5">
-        {/* Pickup & Drop */}
-        <View className="relative flex-row items-center justify-between ml-5 mr-2 border-l border-dashed pl-7">
-          <View className="gap-4">
-            <Text className="font-medium max-w-56" numberOfLines={2}>
-              {pickup}
+        {/* Body */}
+        <View className="px-3 py-5">
+          {/* Pickup & Drop */}
+          <View className="relative flex-row items-center justify-between ml-5 mr-2 border-l border-dashed pl-7">
+            <View className="gap-4">
+              <Text className="font-medium max-w-56" numberOfLines={2}>
+                {pickup}
+              </Text>
+              <Text className="font-medium max-w-56" numberOfLines={2}>
+                {dropoff}
+              </Text>
+            </View>
+            <Text className="font-bold">{distance.toFixed(1)}km</Text>
+
+            <Ionicons
+              name="location-sharp"
+              size={24}
+              className="absolute -left-3.5 -top-1 bg-white"
+            />
+            <Ionicons
+              name="locate-sharp"
+              size={24}
+              className="absolute -left-3.5 -bottom-1 bg-white"
+            />
+          </View>
+          {/* Payment */}
+          <View className="flex-row items-center justify-between p-4 mt-6 bg-gray-100 rounded-lg">
+            <Text className="text-base text-gray-600">
+              {isCash ? "Cash Payment" : "Online Payment"}
             </Text>
-            <Text className="font-medium max-w-56" numberOfLines={2}>
-              {dropoff}
+            <Text className="text-lg font-semibold text-darkPrimary">
+              Php{" "}
+              {amount.toLocaleString("en-US", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
             </Text>
           </View>
-          <Text className="font-bold">{distance.toFixed(1)}km</Text>
 
-          <Ionicons
-            name="location-sharp"
-            size={24}
-            className="absolute -left-3.5 -top-1 bg-white"
-          />
-          <Ionicons
-            name="locate-sharp"
-            size={24}
-            className="absolute -left-3.5 -bottom-1 bg-white"
-          />
-        </View>
-        {/* Payment */}
-        <View className="flex-row items-center justify-between p-4 mt-6 bg-gray-100 rounded-lg">
-          <Text className="text-base text-gray-600">
-            {isCash ? "Cash Payment" : "Online Payment"}
-          </Text>
-          <Text className="text-lg font-semibold text-darkPrimary">
-            Php{" "}
-            {amount.toLocaleString("en-US", {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}
-          </Text>
-        </View>
+          {/* Buttons */}
+          <View className="flex-row justify-between mt-6">
+            <Pressable
+              className="flex-row items-center justify-center flex-1 py-3 mr-2 border border-lightPrimary rounded-xl"
+              onPress={onCancel}
+            >
+              <Ionicons name="close" size={18} color="#333" />
+              <Text className="ml-2 font-medium text-gray-700">
+                Cancel Book
+              </Text>
+            </Pressable>
 
-        {/* Buttons */}
-        <View className="flex-row justify-between mt-6">
-          <Pressable
-            className="flex-row items-center justify-center flex-1 py-3 mr-2 border border-lightPrimary rounded-xl"
-            onPress={onCancel}
-          >
-            <Ionicons name="close" size={18} color="#333" />
-            <Text className="ml-2 font-medium text-gray-700">Cancel Book</Text>
-          </Pressable>
-
-          <Pressable
-            className="flex-row items-center justify-center flex-1 py-3 ml-2 border border-lightPrimary rounded-xl"
-            onPress={onUpdateNote}
-          >
-            <Ionicons name="create-outline" size={18} color="#333" />
-            <Text className="ml-2 font-medium text-gray-700">Update Note</Text>
-          </Pressable>
+            <Pressable
+              className="flex-row items-center justify-center flex-1 py-3 ml-2 border border-lightPrimary rounded-xl"
+              onPress={onUpdateNote}
+            >
+              <Ionicons name="create-outline" size={18} color="#333" />
+              <Text className="ml-2 font-medium text-gray-700">
+                Update Note
+              </Text>
+            </Pressable>
+          </View>
         </View>
-      </View>
-    </Pressable>
+      </Pressable>
+    </View>
   );
 };

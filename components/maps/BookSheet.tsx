@@ -80,9 +80,18 @@ const BookSheet = () => {
         <BottomSheetScrollView className="flex-1 px-3">
           <View className="gap-4 mb-40">
             <View className="items-center justify-center gap-1 ">
-              <Text className="self-start text-sm font-semibold text-gray-900">
-                Choose Vehicle
-              </Text>
+              <View className="flex-row items-center justify-center self-start gap-1">
+                <Text className="text-sm font-semibold text-gray-900">
+                  Choose Vehicle
+                </Text>
+                <Pressable onPress={() => setInfoModalVisible(true)}>
+                  <Ionicons
+                    name="information-circle"
+                    color="#FFA840"
+                    size={20}
+                  />
+                </Pressable>
+              </View>
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
@@ -109,17 +118,6 @@ const BookSheet = () => {
                         source={v.img}
                         style={{ height: 35, width: 45 }}
                         contentFit="contain"
-                      />
-                    </Pressable>
-
-                    <Pressable
-                      onPress={() => setInfoModalVisible(true)}
-                      className="absolute -right-2 -top-2 p-0.5  bg-white rounded-full"
-                    >
-                      <Ionicons
-                        name="information-circle"
-                        color="#FFA840"
-                        size={20}
                       />
                     </Pressable>
                   </View>
