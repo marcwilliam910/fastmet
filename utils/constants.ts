@@ -34,40 +34,40 @@ export const serviceAddons: Service[] = [
 
 export const vehicles: Vehicle[] = [
   {
-    id: "1",
+    id: "motorcycle",
     name: "Motorcycle",
     img: require("@/assets/vehicle/motor.png"),
     desc: "Ideal for fast solo rides or small deliveries. Carries 1 passenger.",
     capacity: "20kg",
   },
   {
-    id: "2",
-    name: "Sedan",
+    id: "car",
+    name: "Car",
     img: require("@/assets/vehicle/car.png"),
     desc: "Perfect for city trips and comfortable rides. Fits up to 4 passengers.",
     capacity: "100kg",
   },
   {
-    id: "3",
-    name: "MPV/SUV",
+    id: "suv",
+    name: "SUV",
     img: require("@/assets/vehicle/suv.png"),
     desc: "Spacious and powerful for long trips or groups. Fits up to 6 passengers.",
     capacity: "300kg",
   },
   {
-    id: "4",
+    id: "truck",
     name: "Truck",
     img: require("@/assets/vehicle/truck.png"),
     desc: "Spacious and powerful for long trips or groups. Fits up to 6 passengers.",
     capacity: "300kg",
   },
-  {
-    id: "5",
-    name: "FastMet Truck",
-    img: require("@/assets/vehicle/fastmet_truck.png"),
-    desc: "Spacious and powerful for long trips or groups. Fits up to 6 passengers.",
-    capacity: "300kg",
-  },
+  // {
+  //   id: "5",
+  //   name: "FastMet Truck",
+  //   img: require("@/assets/vehicle/fastmet_truck.png"),
+  //   desc: "Spacious and powerful for long trips or groups. Fits up to 6 passengers.",
+  //   capacity: "300kg",
+  // },
 ];
 
 export const STATIC_IMAGES = {

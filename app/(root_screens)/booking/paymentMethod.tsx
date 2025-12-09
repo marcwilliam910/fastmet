@@ -3,6 +3,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useSocket } from "@/sockets/context/SocketProvider";
 import { handleBookingSaved, requestBooking } from "@/sockets/handlers/booking";
 import { useAppStore } from "@/store/useAppStore";
+import { RequestBooking } from "@/types/book";
+import { generateBookingRef } from "@/utils/helper";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useEffect } from "react";
@@ -11,31 +13,45 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 
 export default function PaymentMethod() {
-  const book = useAppStore.getState();
+  const {
+    bookingType,
+    selectedVehicle,
+    pickUp,
+    dropOff,
+    routeData,
+    addedServices,
+    clearStates,
+  } = useAppStore.getState();
+
   const paymentMethod = useAppStore((state) => state.paymentMethod);
   const setPaymentMethod = useAppStore((state) => state.setPaymentMethod);
 
   const setLoading = useAppStore((state) => state.setLoading);
 
   const { id } = useAuth();
-
   const socket = useSocket();
 
   const submitRequest = async () => {
     setLoading(true);
-    const payload = {
-      userId: id,
-      pickUp: book.pickUp,
-      dropOff: book.dropOff,
-      bookingType: book.bookingType,
+
+    const bookingRef = generateBookingRef(
+      bookingType.type,
+      selectedVehicle?.name || ""
+    );
+    const payload: RequestBooking = {
+      userId: id!,
+      bookingRef,
+      pickUp: pickUp,
+      dropOff: dropOff,
+      bookingType: bookingType,
       selectedVehicle: {
-        id: book.selectedVehicle?.id,
-        name: book.selectedVehicle?.name,
-        capacity: book.selectedVehicle?.capacity,
+        id: selectedVehicle?.id,
+        name: selectedVehicle?.name,
+        capacity: selectedVehicle?.capacity,
       },
-      routeData: book.routeData,
-      paymentMethod: book.paymentMethod,
-      addedServices: book.addedServices,
+      routeData: routeData,
+      paymentMethod: paymentMethod,
+      addedServices: addedServices,
     };
 
     requestBooking(socket, payload);
@@ -45,7 +61,7 @@ export default function PaymentMethod() {
     const bookingSaved = (data: { success: boolean }) => {
       setLoading(false);
       if (data.success) {
-        book.clearStates();
+        clearStates();
 
         Toast.show({
           type: "success",

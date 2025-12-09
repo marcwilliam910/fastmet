@@ -1,3 +1,5 @@
+import { BookingType } from "@/store/slices/bookSlice";
+
 export type Vehicle = {
   id: string;
   name: string;
@@ -28,6 +30,7 @@ export type RouteData = {
 
 export type Booking = {
   _id: string;
+  bookingRef: string;
   userId: string;
   pickUp: {
     name: string;
@@ -78,4 +81,20 @@ export type Driver = {
   id: string;
   name: string;
   rating: number;
+};
+
+export type RequestBooking = {
+  userId: string;
+  bookingRef: string;
+  pickUp: LocationDetails;
+  dropOff: LocationDetails;
+  bookingType: BookingType;
+  selectedVehicle: {
+    id: string | undefined;
+    name: string | undefined;
+    capacity: string | undefined;
+  };
+  routeData: RouteData;
+  paymentMethod: "cash" | "online";
+  addedServices: Service[];
 };

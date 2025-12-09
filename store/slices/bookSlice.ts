@@ -10,7 +10,7 @@ import { StateCreator } from "zustand";
 
 export type Type = "asap" | "pooling" | "schedule";
 
-type BookingType = {
+export type BookingType = {
   type: Type;
   value: string;
 };

@@ -1,8 +1,9 @@
 import { queryClient } from "@/lib/queryClient";
+import { RequestBooking } from "@/types/book";
 import Toast from "react-native-toast-message";
 import { Socket } from "socket.io-client";
 
-export const requestBooking = (socket: Socket, bookingData: any) => {
+export const requestBooking = (socket: Socket, bookingData: RequestBooking) => {
   socket.emit("request_booking", bookingData);
 };
 
