@@ -64,6 +64,8 @@ export default function PhoneOTPScreen() {
           token: res.data.token,
           id: res.data.client.id,
           isProfileComplete: res.data.client.isProfileComplete,
+          name: res.data.client.fullName,
+          profilePictureUrl: res.data.client.profilePictureUrl,
         });
 
         if (res.data.status === "existing" && res.data.client.isProfileComplete)

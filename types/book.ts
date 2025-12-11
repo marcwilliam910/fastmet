@@ -31,7 +31,7 @@ export type RouteData = {
 export type Booking = {
   _id: string;
   bookingRef: string;
-  userId: string;
+  customerId: string;
   pickUp: {
     name: string;
     address: string;
@@ -84,7 +84,7 @@ export type Driver = {
 };
 
 export type RequestBooking = {
-  userId: string;
+  customerId: string;
   bookingRef: string;
   pickUp: LocationDetails;
   dropOff: LocationDetails;

@@ -13,7 +13,6 @@ export interface AuthSlice {
   setAuthData: (
     data: Partial<Omit<AuthSlice, "setAuthData" | "clearAuthData" | "logout">>
   ) => void;
-  clearAuthData: () => void;
   logout: () => void;
 }
 
@@ -32,15 +31,6 @@ export const createAuthSlice: StateCreator<AuthSlice> = (set) => ({
       ...data,
     })),
 
-  clearAuthData: () =>
-    set({
-      phoneNumber: "",
-      id: undefined,
-      name: "",
-      token: undefined,
-      email: "",
-    }),
-
   logout: () =>
     set({
       phoneNumber: "",
@@ -48,5 +38,7 @@ export const createAuthSlice: StateCreator<AuthSlice> = (set) => ({
       name: "",
       token: null,
       email: "",
+      isProfileComplete: false,
+      profilePictureUrl: "",
     }),
 });

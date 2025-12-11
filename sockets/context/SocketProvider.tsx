@@ -3,6 +3,7 @@ import { DefaultEventsMap } from "@socket.io/component-emitter";
 import React, { createContext, useContext, useEffect, useMemo } from "react";
 import { Socket } from "socket.io-client";
 import { bookingAccepted } from "../handlers/booking";
+import { receiveMessage } from "../handlers/chat";
 import { getSocket } from "../socket";
 
 interface SocketContextValue {
@@ -22,19 +23,21 @@ export default function SocketProvider({
   const socket = useMemo(() => (token ? getSocket(token) : null), [token]);
 
   useEffect(() => {
-    if (!socket) return;
+    if (!socket || !token) return;
 
     socket.connect();
 
     const cleanupBookingAccepted = bookingAccepted(socket);
+    const cleanupReceiveMessage = receiveMessage(socket); // NEW
+    socket.emit("get_unread_conversations_count");
 
     return () => {
       cleanupBookingAccepted();
+      cleanupReceiveMessage(); // NEW
 
       socket.disconnect();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token]);
+  }, [socket, token]);
 
   return (
     <SocketContext.Provider value={{ socket }}>

@@ -26,6 +26,30 @@ export const toastConfig = {
       </Pressable>
     </View>
   ),
+
+  newMessage: ({ text1, text2 }: any) => (
+    <View className="bg-white mx-4 rounded-2xl shadow-lg border border-gray-200 p-4 flex-row items-center justify-between">
+      <View className="flex-1">
+        <View className="flex-row items-center gap-2 mb-1">
+          <Ionicons name="chatbubble-ellipses" size={20} color="#3B82F6" />
+          <Text className="font-bold text-gray-800">{text1}</Text>
+        </View>
+        <Text className="text-gray-600 text-sm" numberOfLines={2}>
+          {text2}
+        </Text>
+      </View>
+
+      <Pressable
+        onPress={() => {
+          Toast.hide();
+          router.push("/(drawer)/(tabs)/chats");
+        }}
+        className="bg-blue-500 px-4 py-2 rounded-lg ml-3"
+      >
+        <Text className="text-white font-semibold">Reply</Text>
+      </Pressable>
+    </View>
+  ),
   success: ({ text1, text2 }: any) => (
     <View className="bg-white mx-4 rounded-2xl shadow-lg border border-gray-200 p-4 ">
       <View className="flex-row items-center gap-2 mb-1">

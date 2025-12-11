@@ -1,10 +1,15 @@
+import { queryClient } from "@/lib/queryClient";
+import { useConversationById } from "@/queries/conversation";
+import { useSocket } from "@/sockets/context/SocketProvider";
+import { useAppStore } from "@/store/useAppStore";
 import { openGallery } from "@/utils/imagePicker";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   Keyboard,
   KeyboardAvoidingView,
   Platform,
@@ -16,38 +21,170 @@ import {
 import { Bubble, GiftedChat, IMessage } from "react-native-gifted-chat";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+interface MessagesLoadedData {
+  messages: any[];
+  skip: number;
+  hasMore: boolean;
+}
+
 const Message = () => {
+  const params = useLocalSearchParams();
+  const conversationId = params.conversationId as string;
+  const { data: conversation, isPending } = useConversationById(conversationId);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
 
-  const [messages, setMessages] = useState<IMessage[]>([
-    {
-      _id: 2,
-      text: "Address Location brgy 21",
-      createdAt: new Date(),
-      user: {
-        _id: 1,
-        name: "Me",
-      },
-    },
-    {
-      _id: 1,
-      text: "Hello location po?",
-      createdAt: new Date(),
-      user: {
-        _id: 2,
-        name: "Driver's Name",
-        avatar: require("@/assets/images/user.png"),
-      },
-    },
-  ]);
+  const [messages, setMessages] = useState<IMessage[]>([]);
   const [text, setText] = useState("");
+  const socket = useSocket();
 
-  const onSend = useCallback((newMessages: IMessage[] = []) => {
-    setMessages((previousMessages) =>
-      GiftedChat.append(previousMessages, newMessages)
-    );
-    console.log(newMessages);
+  const [loadEarlier, setLoadEarlier] = useState(false);
+  const [isLoadingEarlier, setIsLoadingEarlier] = useState(false);
+  const [skip, setSkip] = useState(0);
+
+  // Format message for GiftedChat
+  const formatMessage = useCallback(
+    (msg: any): IMessage => {
+      const isMyMessage = msg.senderId === useAppStore.getState().id;
+
+      return {
+        _id: msg._id,
+        text: msg.text || "",
+        image: msg.image,
+        createdAt: new Date(msg.createdAt),
+        user: isMyMessage
+          ? {
+              _id: useAppStore.getState().id || "unknown",
+              name: useAppStore.getState().name || "Me",
+              avatar: useAppStore.getState().profilePictureUrl || "",
+            }
+          : {
+              _id: conversation?.driver._id || "unknown",
+              name: conversation?.driver.name || "Driver",
+              avatar: conversation?.driver.profilePictureUrl || "",
+            },
+      };
+    },
+    [conversation]
+  );
+
+  // Set flag when entering message screen
+  useEffect(() => {
+    useAppStore.getState().setIsInMessageScreen(true);
+
+    return () => {
+      // Clear flag when leaving message screen
+      useAppStore.getState().setIsInMessageScreen(false);
+    };
   }, []);
+
+  const handleLoadEarlier = () => {
+    if (!conversationId || isLoadingEarlier) return;
+
+    setIsLoadingEarlier(true);
+
+    socket.emit("get_messages", {
+      conversationId,
+      limit: 20,
+      skip,
+    });
+  };
+
+  // Socket listeners
+  useEffect(() => {
+    if (!conversationId || !conversation) return;
+
+    const driverId = conversation.driver._id;
+
+    console.log("Opening chat, joining room...");
+
+    // Join conversation room
+    socket.emit("join_room", { clientId: useAppStore.getState().id, driverId });
+
+    // Handle room joined
+    const handleRoomJoined = (data: {
+      conversationId: string;
+      success: boolean;
+    }) => {
+      console.log("Room joined:", data.conversationId);
+
+      // Request message history
+      socket.emit("get_messages", { conversationId: data.conversationId });
+    };
+
+    // Handle message history loaded
+    const handleMessagesLoaded = (data: MessagesLoadedData): void => {
+      const formatted = data.messages.map(formatMessage);
+
+      // If skip > 0, prepend older messages
+      if (data.skip > 0) {
+        setMessages((prev) => [...prev, ...formatted]);
+      } else {
+        // Initial load
+        setMessages(formatted);
+      }
+
+      setSkip((prev) => prev + data.messages.length);
+      setLoadEarlier(data.hasMore);
+      setIsLoadingEarlier(false);
+    };
+
+    // Handle incoming messages
+    const handleReceiveMessage = (msg: any) => {
+      console.log("New message received:", msg);
+      const formattedMessage = formatMessage(msg);
+      setMessages((prev) => GiftedChat.append(prev, [formattedMessage]));
+    };
+
+    // Handle errors
+    const handleMessageError = (error: any) => {
+      console.error("Message error:", error);
+      // You can show a toast/alert here
+    };
+
+    // Register listeners
+    socket.on("room_joined", handleRoomJoined);
+    socket.on("messages_loaded", handleMessagesLoaded);
+    socket.on("receive_message", handleReceiveMessage);
+    socket.on("message_error", handleMessageError);
+
+    // Cleanup
+    return () => {
+      console.log("Cleaning up chat listeners");
+      socket.off("room_joined", handleRoomJoined);
+      socket.off("messages_loaded", handleMessagesLoaded);
+      socket.off("receive_message", handleReceiveMessage);
+      socket.off("message_error", handleMessageError);
+    };
+  }, [conversationId, conversation, socket, formatMessage]);
+
+  // Send message via socket
+  const onSend = useCallback(
+    (newMessages: IMessage[] = []) => {
+      if (!conversation || !conversationId) {
+        console.error("Missing required data for sending message");
+        return;
+      }
+
+      newMessages.forEach((message) => {
+        console.log("Sending message senderID", message.user._id);
+        console.log("Sending message receiverID", conversation.driver._id);
+
+        // Emit to socket
+        socket.emit("send_message", {
+          conversationId,
+          senderId: useAppStore.getState().id,
+          name: useAppStore.getState().name,
+          receiverId: conversation.driver._id,
+          text: message.text || "",
+          image: message.image,
+        });
+
+        // Optimistically add to UI (will be confirmed by receive_message event)
+        // But we don't add here since backend will broadcast it back
+      });
+    },
+    [conversation, conversationId, socket]
+  );
 
   useEffect(() => {
     const showSub = Keyboard.addListener("keyboardDidShow", () => {
@@ -72,7 +209,7 @@ const Message = () => {
         text: "",
         createdAt: new Date(),
         user: {
-          _id: 1,
+          _id: useAppStore.getState().id!, // ✅ Instead of _id: 1
           name: "Me",
         },
         image: result.assets[0].uri,
@@ -81,7 +218,6 @@ const Message = () => {
     }
   };
 
-  // Take photo with camera
   const takePhoto = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
 
@@ -101,7 +237,7 @@ const Message = () => {
         text: "",
         createdAt: new Date(),
         user: {
-          _id: 1,
+          _id: useAppStore.getState().id!,
           name: "Me",
         },
         image: result.assets[0].uri,
@@ -117,33 +253,49 @@ const Message = () => {
           <View className="flex-row items-center gap-3 h-11">
             {/* Camera */}
             <Pressable onPress={takePhoto}>
-              <Ionicons name="camera" size={28} color="#FFA840" />
+              <Ionicons
+                name="camera"
+                size={Platform.OS === "ios" ? 32 : 28}
+                color="#FFA840"
+              />
             </Pressable>
             {/* Gallery */}
             <Pressable onPress={pickImage}>
-              <Ionicons name="image" size={28} color="#FFA840" />
+              <Ionicons
+                name="image"
+                size={Platform.OS === "ios" ? 32 : 28}
+                color="#FFA840"
+              />
             </Pressable>
           </View>
           {/* Text input */}
           <View className="flex-1 px-2 bg-white rounded-2xl">
             <TextInput
               placeholder="Type a message..."
+              placeholderTextColor="#9FABB4"
               value={text}
               onChangeText={setText}
               multiline
+              className="text-base py-3"
               style={{
                 maxHeight: 120,
-                textAlignVertical: "center", // keep text centered
+                textAlignVertical: "top", // recommended for chat inputs
               }}
             />
           </View>
+
           <View className="flex-row items-center gap-3 h-11">
             {/* Emoji */}
             <Pressable>
-              <Ionicons name="happy" size={28} color="#FFA840" />
+              <Ionicons
+                name="happy"
+                size={Platform.OS === "ios" ? 32 : 28}
+                color="#FFA840"
+              />
             </Pressable>
             {/* Send */}
             <Pressable
+              hitSlop={20}
               onPress={() => {
                 if (!text.trim()) return;
                 onSend([
@@ -151,13 +303,17 @@ const Message = () => {
                     _id: Date.now(),
                     text,
                     createdAt: new Date(),
-                    user: { _id: 1 },
+                    user: { _id: useAppStore.getState().id! }, // ✅ Use your actual ID
                   },
                 ]);
                 setText("");
               }}
             >
-              <Ionicons name="send" size={24} color="#FFA840" />
+              <Ionicons
+                name="send"
+                size={Platform.OS === "ios" ? 32 : 24}
+                color="#FFA840"
+              />
             </Pressable>
           </View>
         </View>
@@ -165,32 +321,13 @@ const Message = () => {
     );
   };
 
-  // Custom Bubble
-  const renderBubble = (props: any) => {
+  if (isPending) {
     return (
-      <Bubble
-        {...props}
-        wrapperStyle={{
-          right: {
-            backgroundColor: "#FFA840",
-          },
-          left: {
-            backgroundColor: "#E5E5E5",
-          },
-        }}
-        textStyle={{
-          right: {
-            color: "white",
-            fontSize: 15,
-          },
-          left: {
-            color: "#1F2937",
-            fontSize: 15,
-          },
-        }}
-      />
+      <View className="flex-1 items-center justify-center bg-secondary">
+        <ActivityIndicator size="large" color="#FFA840" />
+      </View>
     );
-  };
+  }
 
   return (
     <SafeAreaView className="flex-1 bg-secondary">
@@ -203,13 +340,26 @@ const Message = () => {
               ? "height"
               : undefined
         }
-        keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0} // Adjust this offset for iOS
+        keyboardVerticalOffset={0} // Adjust this offset for iOS
       >
         {/* Custom Header */}
         <View className="flex-row items-center justify-between px-4 py-3 bg-secondary">
-          <View className="flex-row items-center flex-1 gap-5">
-            <Pressable onPress={() => router.back()}>
-              <Ionicons name="chevron-back" size={24} color="#FFA840" />
+          <View className="flex-row items-center flex-1 gap-2">
+            <Pressable
+              onPress={() => {
+                socket.emit("leave_room", { conversationId });
+                queryClient.invalidateQueries({
+                  queryKey: ["conversations"],
+                });
+                router.back();
+              }}
+              className="p-2"
+            >
+              <Ionicons
+                name="chevron-back"
+                size={Platform.OS === "ios" ? 30 : 24}
+                color="#FFA840"
+              />
             </Pressable>
 
             <Image
@@ -220,23 +370,19 @@ const Message = () => {
 
             <View className="flex-1">
               <Text className="text-base font-bold text-white">
-                Driver&apos;s Name
+                {conversation?.driver.name}
               </Text>
-              <View className="flex-row items-center gap-1">
-                <View className="w-2 h-2 bg-green-500 rounded-full" />
-                <Text className="text-sm text-green-400">Active</Text>
-              </View>
+              <Text className="text-xs ml-0.5 text-gray-300">Driver</Text>
             </View>
           </View>
 
-          <View className="flex-row gap-6">
-            <Pressable>
-              <Ionicons name="call" size={24} color="#FFA840" />
-            </Pressable>
-            <Pressable>
-              <Ionicons name="videocam" size={24} color="#FFA840" />
-            </Pressable>
-          </View>
+          <Pressable hitSlop={20}>
+            <Ionicons
+              name="call"
+              size={Platform.OS === "ios" ? 28 : 24}
+              color="#FFA840"
+            />
+          </Pressable>
         </View>
 
         {/* Gifted Chat */}
@@ -244,13 +390,18 @@ const Message = () => {
           messages={messages}
           onSend={(messages) => onSend(messages)}
           user={{
-            _id: 1,
+            _id: useAppStore.getState().id!,
+            name: useAppStore.getState().name || "Me",
           }}
+          loadEarlier={loadEarlier}
+          onLoadEarlier={handleLoadEarlier}
+          isLoadingEarlier={isLoadingEarlier}
           renderBubble={renderBubble}
           renderInputToolbar={renderInputToolbar} // custom toolbar
           renderSend={() => null} // disable GiftedChat's default send
           keyboardShouldPersistTaps="handled"
           isKeyboardInternallyHandled={false}
+          renderChatEmpty={renderChatEmpty} // Add this
           listViewProps={
             {
               contentContainerStyle: {
@@ -265,3 +416,47 @@ const Message = () => {
 };
 
 export default Message;
+
+// Custom Bubble
+const renderBubble = (props: any) => {
+  return (
+    <Bubble
+      {...props}
+      wrapperStyle={{
+        right: {
+          backgroundColor: "#FFA840",
+        },
+        left: {
+          backgroundColor: "#E5E5E5",
+        },
+      }}
+      textStyle={{
+        right: {
+          color: "white",
+          fontSize: 15,
+        },
+        left: {
+          color: "#1F2937",
+          fontSize: 15,
+        },
+      }}
+    />
+  );
+};
+
+const renderChatEmpty = () => {
+  return (
+    <View
+      className="pb-20 items-center px-6"
+      style={{ transform: [{ scaleY: -1 }, { scaleX: -1 }] }}
+    >
+      <Ionicons name="chatbubbles-outline" size={100} color="#9CA3AF" />
+      <Text className="text-gray-300 text-xl font-semibold mt-4">
+        No conversation yet
+      </Text>
+      <Text className="text-gray-400 text-base text-center mt-2">
+        Start a conversation with the driver
+      </Text>
+    </View>
+  );
+};

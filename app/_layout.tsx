@@ -13,6 +13,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import LoadingModal from "@/components/modals/loading";
 import { toastConfig } from "@/config/toastConfig";
+import SocketProvider from "@/sockets/context/SocketProvider";
 import Toast from "react-native-toast-message";
 import "../global.css";
 
@@ -46,8 +47,9 @@ export default function RootLayout() {
       <SafeAreaProvider>
         {/* <FontWrapper> */}
         <QueryClientProvider client={queryClient}>
-          <Stack screenOptions={{ headerShown: false }}>
-            {/* <Stack.Protected guard={!user}>
+          <SocketProvider>
+            <Stack screenOptions={{ headerShown: false }}>
+              {/* <Stack.Protected guard={!user}>
           <Stack.Screen name="(auth)" />
         </Stack.Protected>
 
@@ -55,11 +57,12 @@ export default function RootLayout() {
           <Stack.Screen name="(drawer)" />
           <Stack.Screen name="(root_screens)" />
         </Stack.Protected> */}
-            <Stack.Screen name="(drawer)" />
-            <Stack.Screen name="(auth)" />
-            <Stack.Screen name="(root_screens)" />
-            <Stack.Screen name="(public_screens)" />
-          </Stack>
+              <Stack.Screen name="(drawer)" />
+              <Stack.Screen name="(auth)" />
+              <Stack.Screen name="(root_screens)" />
+              <Stack.Screen name="(public_screens)" />
+            </Stack>
+          </SocketProvider>
           <Toast config={toastConfig} />
           <LoadingModal />
         </QueryClientProvider>

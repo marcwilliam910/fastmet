@@ -8,7 +8,7 @@ export const requestBooking = (socket: Socket, bookingData: RequestBooking) => {
 };
 
 export const bookingAccepted = (socket: Socket) => {
-  const bookingAcceptedHandler = (data: { userId: string }) => {
+  const bookingAcceptedHandler = (data: { customerId: string }) => {
     console.log("✅ Booking accepted:", data);
 
     Toast.show({
@@ -22,7 +22,7 @@ export const bookingAccepted = (socket: Socket) => {
     });
 
     queryClient.invalidateQueries({
-      queryKey: ["userBookings", data.userId, "active"],
+      queryKey: ["userBookings", data.customerId, "active"],
     });
   };
 

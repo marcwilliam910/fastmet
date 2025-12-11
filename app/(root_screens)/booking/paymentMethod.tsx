@@ -39,7 +39,7 @@ export default function PaymentMethod() {
       selectedVehicle?.name || ""
     );
     const payload: RequestBooking = {
-      userId: id!,
+      customerId: id!,
       bookingRef,
       pickUp: pickUp,
       dropOff: dropOff,

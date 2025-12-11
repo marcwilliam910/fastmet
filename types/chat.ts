@@ -1,0 +1,28 @@
+export type ConversationResponse = {
+  _id: string;
+  lastMessage: string;
+  lastMessageBy: "client" | "driver";
+  updatedAt: string;
+
+  participantId: string;
+  unreadCount: {
+    client: number;
+    driver: number;
+  };
+  driver: {
+    _id: string;
+    name: string;
+    profilePictureUrl?: string;
+    phoneNumber: string;
+  };
+};
+
+export type MessageResponse = {
+  _id: string;
+  driver: {
+    _id: string;
+    name: string;
+    profilePictureUrl?: string;
+    phoneNumber: string;
+  };
+};

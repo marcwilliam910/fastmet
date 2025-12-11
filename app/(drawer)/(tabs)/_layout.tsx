@@ -1,9 +1,13 @@
 import HeaderTabs from "@/components/headers/HeaderTabs";
+import { useAppStore } from "@/store/useAppStore";
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
-import { View } from "react-native";
+import { Text, View } from "react-native";
 
 export default function TabLayout() {
+  const unreadConversationsCount = useAppStore(
+    (state) => state.unreadConversationsCount
+  );
   return (
     <Tabs
       initialRouteName="request"
@@ -62,9 +66,15 @@ export default function TabLayout() {
                 size={24}
                 color={color}
               />
-              {/* <View className="absolute flex items-center justify-center bg-red-500 rounded-full size-4 -top-1 -right-2">
-                <Text className="text-xs font-semibold text-white">4</Text>
-              </View> */}
+              {unreadConversationsCount > 0 && (
+                <View className="absolute flex items-center justify-center bg-red-500 rounded-full size-4 -top-1 -right-2">
+                  <Text className="text-xs font-semibold text-white">
+                    {unreadConversationsCount > 9
+                      ? "9+"
+                      : unreadConversationsCount}
+                  </Text>
+                </View>
+              )}
             </View>
           ),
         }}
