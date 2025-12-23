@@ -2,7 +2,7 @@ export type ConversationResponse = {
   _id: string;
   lastMessage: string;
   lastMessageBy: "client" | "driver";
-  updatedAt: string;
+  lastMessageAt: string;
 
   participantId: string;
   unreadCount: {

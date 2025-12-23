@@ -1,8 +1,9 @@
 import { useAuth } from "@/hooks/useAuth";
 import useSeeMoreDetails from "@/hooks/useSeeMoreDetails";
 import { useUserBookings } from "@/queries/bookingQueries";
-import { Booking } from "@/types/book";
+import { Booking, LocationDetails } from "@/types/book";
 import { formatDate } from "@/utils/date";
+import { formatLocation } from "@/utils/helper";
 import { Ionicons } from "@expo/vector-icons";
 import {
   ActivityIndicator,
@@ -54,8 +55,8 @@ export default function RequestRoute() {
           <RequestCard
             vehicle={item.selectedVehicle.name}
             bookingType={item.bookingType}
-            pickup={item.pickUp.address}
-            dropoff={item.dropOff.address}
+            pickup={item.pickUp}
+            dropoff={item.dropOff}
             distance={item.routeData.distance}
             amount={item.routeData.price}
             isCash={item.paymentMethod === "cash"}
@@ -125,8 +126,8 @@ type RequestCardProps = {
     type: string; // "asap" | "schedule"
     value: string | null;
   };
-  pickup: string;
-  dropoff: string;
+  pickup: LocationDetails;
+  dropoff: LocationDetails;
   distance: number;
   isCash: boolean;
   amount: number;
@@ -178,10 +179,10 @@ const RequestCard = ({
           <View className="relative flex-row items-center justify-between ml-5 mr-2 border-l border-dashed pl-7">
             <View className="gap-4">
               <Text className="font-medium max-w-56" numberOfLines={2}>
-                {pickup}
+                {formatLocation(pickup)}
               </Text>
               <Text className="font-medium max-w-56" numberOfLines={2}>
-                {dropoff}
+                {formatLocation(dropoff)}
               </Text>
             </View>
             <Text className="font-bold">{distance.toFixed(1)}km</Text>

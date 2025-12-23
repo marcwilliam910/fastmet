@@ -7,6 +7,7 @@ import { useState } from "react";
 import {
   FlatList,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   Text,
@@ -130,10 +131,16 @@ const CompleteCard = ({
           {/* Pickup & Drop */}
           <View className="relative flex-row items-center justify-between ml-5 mr-2 border-l border-dashed pl-7">
             <View className="gap-4">
-              <Text className="font-medium max-w-60" numberOfLines={2}>
+              <Text
+                className={`font-medium ${Platform.OS === "ios" ? "max-w-60" : "max-w-52"}`}
+                numberOfLines={2}
+              >
                 {pickup}
               </Text>
-              <Text className="font-medium max-w-60" numberOfLines={2}>
+              <Text
+                className={`font-medium ${Platform.OS === "ios" ? "max-w-60" : "max-w-52"}`}
+                numberOfLines={2}
+              >
                 {dropoff}
               </Text>
             </View>
@@ -351,18 +358,8 @@ function SeeMoreModal({
 
             <View className="relative flex-row items-center justify-between ml-5 mr-2 border-l border-dashed border-lightPrimary pl-7">
               <View className="gap-4">
-                <Text
-                  className="text-sm font-medium max-w-60"
-                  numberOfLines={2}
-                >
-                  {data.pickup}
-                </Text>
-                <Text
-                  className="text-sm font-medium max-w-60"
-                  numberOfLines={2}
-                >
-                  {data.dropoff}
-                </Text>
+                <Text className="text-sm font-medium">{data.pickup}</Text>
+                <Text className="text-sm font-medium">{data.dropoff}</Text>
               </View>
 
               <Ionicons

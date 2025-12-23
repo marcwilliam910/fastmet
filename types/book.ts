@@ -50,7 +50,7 @@ export type Booking = {
   };
   bookingType: {
     type: string; // "asap" | "schedule"
-    value: string | null;
+    value: string;
   };
   selectedVehicle: {
     id: string;

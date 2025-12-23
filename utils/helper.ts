@@ -1,4 +1,5 @@
 import { Type } from "@/store/slices/bookSlice";
+import { LocationDetails } from "@/types/book";
 
 export const generateBookingRef = (bookingType: Type, vehicleType: string) => {
   const prefixMap = {
@@ -12,4 +13,12 @@ export const generateBookingRef = (bookingType: Type, vehicleType: string) => {
   const randomNum = Math.floor(Math.random() * 9000 + 1000); // 4-digit random number
 
   return `${prefix}-${date}-${vehicleType.toUpperCase()}-${randomNum}`;
+};
+
+export const formatLocation = (loc: LocationDetails) => {
+  return (
+    loc?.address.includes(loc.name)
+      ? loc.address
+      : loc?.name + ", " + loc?.address
+  ).replace(", Philippines", "");
 };

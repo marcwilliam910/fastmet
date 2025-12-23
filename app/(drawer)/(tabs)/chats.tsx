@@ -154,7 +154,7 @@ const MessageCard = ({ item }: { item: ConversationResponse }) => {
           <Text
             className={`text-xs text-gray-400 ${item.unreadCount.client > 0 ? "font-bold" : ""}`}
           >
-            {formatLastMessageTime(item.updatedAt)}
+            {formatLastMessageTime(item.lastMessageAt)}
           </Text>
         </View>
         <View className="flex-row items-center justify-between pl-0.5">

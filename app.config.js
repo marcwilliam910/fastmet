@@ -16,6 +16,16 @@ export default {
       bundleIdentifier: "com.guildsman.fastmet",
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
+        UIBackgroundModes: ["location", "remote-notification"],
+        NSLocationWhenInUseUsageDescription:
+          "We need your location to show navigation.",
+        NSLocationAlwaysUsageDescription:
+          "We need your location in the background to track your deliveries.",
+        NSLocationAlwaysAndWhenInUseUsageDescription:
+          "We need your location to show navigation and track deliveries.",
+        NSPhotoLibraryUsageDescription:
+          "We need access to your photos to upload pictures.",
+        NSCameraUsageDescription: "We need camera access to take photos.",
       },
     },
     android: {
@@ -31,11 +41,23 @@ export default {
       edgeToEdgeEnabled: true,
       predictiveBackGestureEnabled: false,
       package: "com.guildsman.fastmet",
+      googleServicesFile: process.env.GOOGLE_SERVICES_JSON,
+      permissions: [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "NOTIFICATIONS",
+      ],
     },
     web: {
       bundler: "metro",
       output: "static",
       favicon: "./assets/fastmet/icon.png",
+    },
+    notification: {
+      icon: "./assets/fastmet/logo.png",
+      color: "#FFA840",
+      androidMode: "default",
+      androidCollapsedTitle: "{{unread_count}} new notifications",
     },
     plugins: [
       "expo-router",
@@ -45,12 +67,19 @@ export default {
           image: "./assets/fastmet/splash.png",
           resizeMode: "contain",
           backgroundColor: "#ffffff",
-          imageWidth: 200,
+          imageWidth: 250,
         },
       ],
       "expo-font",
       "expo-web-browser",
       "expo-secure-store",
+      [
+        "expo-notifications",
+        {
+          icon: "./assets/fastmet/logo.png",
+          color: "#fff",
+        },
+      ],
     ],
     experiments: {
       typedRoutes: true,

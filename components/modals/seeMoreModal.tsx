@@ -1,5 +1,6 @@
 import { ActiveBooking, Booking, Service } from "@/types/book";
 import { formatDate } from "@/utils/date";
+import { formatLocation } from "@/utils/helper";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React from "react";
@@ -151,15 +152,11 @@ export default function SeeMoreModal({
 
             <View className="relative flex-row items-center justify-between ml-5 mr-2 border-l border-dashed border-lightPrimary pl-7">
               <View className="gap-4">
-                <Text className="text-sm font-medium max-w-60">
-                  {data.pickUp.address.includes(data.pickUp.name)
-                    ? data.pickUp.address
-                    : data.pickUp.name + ", " + data.pickUp.address}
+                <Text className="text-sm font-medium">
+                  {formatLocation(data.pickUp)}
                 </Text>
-                <Text className="text-sm font-medium max-w-60">
-                  {data.dropOff.address.includes(data.dropOff.name)
-                    ? data.dropOff.address
-                    : data.dropOff.name + ", " + data.dropOff.address}
+                <Text className="text-sm font-medium">
+                  {formatLocation(data.dropOff)}
                 </Text>
               </View>
 

@@ -2,10 +2,13 @@ import { queryClient } from "@/lib/queryClient";
 import { useConversationById } from "@/queries/conversation";
 import { useSocket } from "@/sockets/context/SocketProvider";
 import { useAppStore } from "@/store/useAppStore";
-import { openGallery } from "@/utils/imagePicker";
+import {
+  convertImageToBase64,
+  openGallery,
+  takePhoto,
+} from "@/utils/imagePicker";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
-import * as ImagePicker from "expo-image-picker";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import {
@@ -19,6 +22,7 @@ import {
   View,
 } from "react-native";
 import { Bubble, GiftedChat, IMessage } from "react-native-gifted-chat";
+import ImageView from "react-native-image-viewing";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 interface MessagesLoadedData {
@@ -40,6 +44,10 @@ const Message = () => {
   const [loadEarlier, setLoadEarlier] = useState(false);
   const [isLoadingEarlier, setIsLoadingEarlier] = useState(false);
   const [skip, setSkip] = useState(0);
+
+  const [imageViewerVisible, setImageViewerVisible] = useState(false);
+  const [selectedImageUrl, setSelectedImageUrl] = useState("");
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   // Format message for GiftedChat
   const formatMessage = useCallback(
@@ -133,6 +141,7 @@ const Message = () => {
       console.log("New message received:", msg);
       const formattedMessage = formatMessage(msg);
       setMessages((prev) => GiftedChat.append(prev, [formattedMessage]));
+      setIsUploadingImage(false);
     };
 
     // Handle errors
@@ -166,8 +175,7 @@ const Message = () => {
       }
 
       newMessages.forEach((message) => {
-        console.log("Sending message senderID", message.user._id);
-        console.log("Sending message receiverID", conversation.driver._id);
+        if (message.image) setIsUploadingImage(true);
 
         // Emit to socket
         socket.emit("send_message", {
@@ -178,9 +186,6 @@ const Message = () => {
           text: message.text || "",
           image: message.image,
         });
-
-        // Optimistically add to UI (will be confirmed by receive_message event)
-        // But we don't add here since backend will broadcast it back
       });
     },
     [conversation, conversationId, socket]
@@ -201,48 +206,55 @@ const Message = () => {
   }, []);
 
   // Pick image from gallery
-  const pickImage = async () => {
+  const handlePickImage = async () => {
     const result = await openGallery();
+
     if (result && !result.canceled && result.assets[0]) {
-      const newMessage: IMessage = {
-        _id: Math.random().toString(),
-        text: "",
-        createdAt: new Date(),
-        user: {
-          _id: useAppStore.getState().id!, // ✅ Instead of _id: 1
-          name: "Me",
-        },
-        image: result.assets[0].uri,
-      };
-      onSend([newMessage]);
+      try {
+        const base64data = await convertImageToBase64(result.assets[0].uri);
+
+        const newMessage: IMessage = {
+          _id: Date.now().toString(),
+          text: "",
+          createdAt: new Date(),
+          user: {
+            _id: useAppStore.getState().id!,
+            name: useAppStore.getState().name || "Me",
+          },
+          image: base64data,
+        };
+        onSend([newMessage]);
+      } catch (error) {
+        console.error("Error converting image:", error); // What's the exact error?
+      }
+    } else {
+      console.log("No image selected or cancelled"); // ADD THIS
     }
   };
 
-  const takePhoto = async () => {
-    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+  // not working, socket getting disconnected when sending image
+  const handleTakePhoto = async () => {
+    const imageUri = await takePhoto();
 
-    if (status !== "granted") {
-      alert("Sorry, we need camera permissions!");
-      return;
-    }
+    if (!imageUri) return;
 
-    const result = await ImagePicker.launchCameraAsync({
-      allowsEditing: true,
-      quality: 0.8,
-    });
+    try {
+      const base64data = await convertImageToBase64(imageUri);
 
-    if (!result.canceled && result.assets[0]) {
       const newMessage: IMessage = {
-        _id: Math.random().toString(),
+        _id: Date.now().toString(),
         text: "",
         createdAt: new Date(),
         user: {
           _id: useAppStore.getState().id!,
-          name: "Me",
+          name: useAppStore.getState().name || "Me",
         },
-        image: result.assets[0].uri,
+        image: base64data,
       };
+
       onSend([newMessage]);
+    } catch (e) {
+      console.error("Error converting image:", e);
     }
   };
 
@@ -252,22 +264,30 @@ const Message = () => {
         <View className="flex-row items-end gap-3">
           <View className="flex-row items-center gap-3 h-11">
             {/* Camera */}
-            <Pressable onPress={takePhoto}>
+            <Pressable
+              onPress={handleTakePhoto}
+              disabled={isUploadingImage} // Disable while uploading
+            >
               <Ionicons
                 name="camera"
                 size={Platform.OS === "ios" ? 32 : 28}
-                color="#FFA840"
+                color={isUploadingImage ? "#666" : "#FFA840"}
               />
             </Pressable>
+
             {/* Gallery */}
-            <Pressable onPress={pickImage}>
+            <Pressable
+              onPress={handlePickImage}
+              disabled={isUploadingImage} // Disable while uploading
+            >
               <Ionicons
                 name="image"
                 size={Platform.OS === "ios" ? 32 : 28}
-                color="#FFA840"
+                color={isUploadingImage ? "#666" : "#FFA840"}
               />
             </Pressable>
           </View>
+
           {/* Text input */}
           <View className="flex-1 px-2 bg-white rounded-2xl">
             <TextInput
@@ -276,48 +296,87 @@ const Message = () => {
               value={text}
               onChangeText={setText}
               multiline
+              editable={!isUploadingImage} // Disable while uploading
               className="text-base py-3"
               style={{
                 maxHeight: 120,
-                textAlignVertical: "top", // recommended for chat inputs
+                textAlignVertical: "top",
               }}
             />
           </View>
 
           <View className="flex-row items-center gap-3 h-11">
-            {/* Emoji */}
-            <Pressable>
-              <Ionicons
-                name="happy"
-                size={Platform.OS === "ios" ? 32 : 28}
-                color="#FFA840"
-              />
-            </Pressable>
-            {/* Send */}
-            <Pressable
-              hitSlop={20}
-              onPress={() => {
-                if (!text.trim()) return;
-                onSend([
-                  {
-                    _id: Date.now(),
-                    text,
-                    createdAt: new Date(),
-                    user: { _id: useAppStore.getState().id! }, // ✅ Use your actual ID
-                  },
-                ]);
-                setText("");
-              }}
-            >
-              <Ionicons
-                name="send"
-                size={Platform.OS === "ios" ? 32 : 24}
-                color="#FFA840"
-              />
-            </Pressable>
+            {/* Show spinner while uploading */}
+            {isUploadingImage ? (
+              <ActivityIndicator size="small" color="#FFA840" />
+            ) : (
+              <>
+                {/* Emoji */}
+                <Pressable hitSlop={20}>
+                  <Ionicons
+                    name="happy"
+                    size={Platform.OS === "ios" ? 32 : 28}
+                    color="#FFA840"
+                  />
+                </Pressable>
+
+                {/* Send */}
+                <Pressable
+                  disabled={!text.trim()}
+                  hitSlop={20}
+                  onPress={() => {
+                    if (!text.trim()) return;
+                    onSend([
+                      {
+                        _id: Date.now(),
+                        text,
+                        createdAt: new Date(),
+                        user: { _id: useAppStore.getState().id! },
+                      },
+                    ]);
+                    setText("");
+                  }}
+                >
+                  <Ionicons
+                    name="send"
+                    size={Platform.OS === "ios" ? 32 : 28}
+                    color="#FFA840"
+                  />
+                </Pressable>
+              </>
+            )}
           </View>
         </View>
+
+        {/* Optional: Show uploading text */}
+        {isUploadingImage && (
+          <Text className="text-center text-sm text-gray-400 mt-2">
+            Uploading image...
+          </Text>
+        )}
       </View>
+    );
+  };
+
+  const renderMessageImage = (props: any) => {
+    return (
+      <Pressable
+        onPress={() => {
+          setSelectedImageUrl(props.currentMessage.image);
+          setImageViewerVisible(true);
+        }}
+      >
+        <Image
+          source={{ uri: props.currentMessage.image }}
+          contentFit="contain"
+          style={{
+            width: 200,
+            height: 200,
+            borderRadius: 13,
+            margin: 3,
+          }}
+        />
+      </Pressable>
     );
   };
 
@@ -340,9 +399,8 @@ const Message = () => {
               ? "height"
               : undefined
         }
-        keyboardVerticalOffset={0} // Adjust this offset for iOS
+        keyboardVerticalOffset={0}
       >
-        {/* Custom Header */}
         <View className="flex-row items-center justify-between px-4 py-3 bg-secondary">
           <View className="flex-row items-center flex-1 gap-2">
             <Pressable
@@ -397,11 +455,12 @@ const Message = () => {
           onLoadEarlier={handleLoadEarlier}
           isLoadingEarlier={isLoadingEarlier}
           renderBubble={renderBubble}
-          renderInputToolbar={renderInputToolbar} // custom toolbar
-          renderSend={() => null} // disable GiftedChat's default send
+          renderInputToolbar={renderInputToolbar}
+          renderSend={() => null}
           keyboardShouldPersistTaps="handled"
+          renderMessageImage={renderMessageImage}
           isKeyboardInternallyHandled={false}
-          renderChatEmpty={renderChatEmpty} // Add this
+          renderChatEmpty={renderChatEmpty}
           listViewProps={
             {
               contentContainerStyle: {
@@ -411,6 +470,13 @@ const Message = () => {
           }
         />
       </KeyboardAvoidingView>
+
+      <ImageView
+        images={[{ uri: selectedImageUrl }]}
+        imageIndex={0}
+        visible={imageViewerVisible}
+        onRequestClose={() => setImageViewerVisible(false)}
+      />
     </SafeAreaView>
   );
 };

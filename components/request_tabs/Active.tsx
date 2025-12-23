@@ -1,12 +1,14 @@
 import { useAuth } from "@/hooks/useAuth";
 import useSeeMoreDetails from "@/hooks/useSeeMoreDetails";
 import { useUserBookings } from "@/queries/bookingQueries";
-import { ActiveBooking } from "@/types/book";
+import { ActiveBooking, LocationDetails } from "@/types/book";
+import { formatLocation } from "@/utils/helper";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import {
   ActivityIndicator,
   FlatList,
+  Platform,
   Pressable,
   Text,
   View,
@@ -56,8 +58,8 @@ export default function ActiveRoute() {
           <ActiveCard
             id={item._id}
             vehicle={item.selectedVehicle.name}
-            pickup={item.pickUp.address}
-            dropoff={item.dropOff.address}
+            pickup={item.pickUp}
+            dropoff={item.dropOff}
             distance={item.routeData.distance}
             amount={item.routeData.price}
             isCash={item.paymentMethod === "cash"}
@@ -124,8 +126,8 @@ export default function ActiveRoute() {
 type ActiveCardProps = {
   id: string;
   vehicle: string;
-  pickup: string;
-  dropoff: string;
+  pickup: LocationDetails;
+  dropoff: LocationDetails;
   distance: number;
   amount: number;
   driverName: string;
@@ -228,11 +230,17 @@ const ActiveCard = ({
           {/* Pickup & Drop */}
           <View className="relative flex-row items-center justify-between ml-5 mr-2 border-l border-dashed pl-7">
             <View className="gap-4">
-              <Text className="font-medium max-w-60" numberOfLines={2}>
-                {pickup}
+              <Text
+                className={`font-medium ${Platform.OS === "ios" ? "max-w-60" : "max-w-52"}`}
+                numberOfLines={2}
+              >
+                {formatLocation(pickup)}
               </Text>
-              <Text className="font-medium max-w-60" numberOfLines={2}>
-                {dropoff}
+              <Text
+                className={`font-medium ${Platform.OS === "ios" ? "max-w-60" : "max-w-52"}`}
+                numberOfLines={2}
+              >
+                {formatLocation(dropoff)}
               </Text>
             </View>
             <Text className="font-bold">{distance.toFixed(1)}km</Text>

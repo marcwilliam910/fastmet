@@ -2,7 +2,7 @@ import useSeeMoreDetails from "@/hooks/useSeeMoreDetails";
 import { Booking } from "@/types/book";
 import { serviceAddons } from "@/utils/constants";
 import { Ionicons } from "@expo/vector-icons";
-import { FlatList, Pressable, Text, View } from "react-native";
+import { FlatList, Platform, Pressable, Text, View } from "react-native";
 import SeeMoreModal from "../modals/seeMoreModal";
 
 const DUMMY_DATA = [
@@ -112,10 +112,16 @@ const CancelledCard = ({
           {/* Pickup & Drop */}
           <View className="relative flex-row items-center justify-between ml-5 mr-2 border-l border-dashed pl-7">
             <View className="gap-4">
-              <Text className="font-medium max-w-60" numberOfLines={2}>
+              <Text
+                className={`font-medium ${Platform.OS === "ios" ? "max-w-60" : "max-w-52"}`}
+                numberOfLines={2}
+              >
                 {pickup}
               </Text>
-              <Text className="font-medium max-w-60" numberOfLines={2}>
+              <Text
+                className={`font-medium ${Platform.OS === "ios" ? "max-w-60" : "max-w-52"}`}
+                numberOfLines={2}
+              >
                 {dropoff}
               </Text>
             </View>
