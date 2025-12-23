@@ -20,7 +20,7 @@ const LogoutModal = ({
     logout();
     setIsLoading(false);
     setIsOpen(false);
-    router.push("/(auth)/auth");
+    router.replace("/(auth)/auth");
   };
 
   return (

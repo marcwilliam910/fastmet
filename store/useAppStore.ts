@@ -30,7 +30,6 @@ export const useAppStore = create<AppStore>()(
         id: string | null;
         isProfileComplete: boolean;
         name: string;
-        email: string;
         profilePictureUrl: string;
       }>(),
       // Only persist auth data (prevents persisting temporary data)
@@ -40,7 +39,6 @@ export const useAppStore = create<AppStore>()(
         id: state.id,
         isProfileComplete: state.isProfileComplete,
         name: state.name,
-        email: state.email,
         profilePictureUrl: state.profilePictureUrl,
       }),
     }

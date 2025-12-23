@@ -139,6 +139,23 @@ export default function DrawerLayout() {
             ),
           }}
         />
+
+        <Drawer.Screen
+          name="favorite"
+          options={{
+            drawerLabel: "Favorite",
+            title: "Favorite",
+            headerShown: true,
+            drawerIcon: ({ focused }) => (
+              <Ionicons
+                name={focused ? "heart" : "heart-outline"}
+                size={24}
+                color={focused ? "#FFA840" : "#FFFFFF"}
+              />
+            ),
+          }}
+        />
+
         <Drawer.Screen
           name="about"
           options={{
@@ -150,22 +167,6 @@ export default function DrawerLayout() {
                 name={
                   focused ? "information-circle" : "information-circle-outline"
                 }
-                size={24}
-                color={focused ? "#FFA840" : "#FFFFFF"}
-              />
-            ),
-          }}
-        />
-
-        <Drawer.Screen
-          name="favorite"
-          options={{
-            drawerLabel: "Favorite",
-            title: "Favorite",
-            headerShown: true,
-            drawerIcon: ({ focused }) => (
-              <Ionicons
-                name={focused ? "heart" : "heart-outline"}
                 size={24}
                 color={focused ? "#FFA840" : "#FFFFFF"}
               />

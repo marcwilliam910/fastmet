@@ -22,11 +22,14 @@ export const ResetPassSchema = z.object({
 });
 
 export const ProfileSchema = z.object({
-  firstName: z.string().min(1, "First name is required"),
-  midName: z.string().optional(),
-  lastName: z.string().min(1, "Last name is required"),
-  contactNumber: z.string().min(11, "Please enter a valid contact number"),
-  birthday: z.string().optional(),
+  fullName: z
+    .string()
+    .trim()
+    .min(8, "Full name must be at least 5 characters")
+    .max(100, "Full name must not exceed 100 characters")
+    .regex(/^[a-zA-Z\s.'-]+$/, "Full name contains invalid characters"),
+
+  address: z.string().min(5, "Address is required"),
 });
 
 export const ChangePassSchema = z

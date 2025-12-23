@@ -1,11 +1,8 @@
 import CustomKeyAvoidingView from "@/components/CustomKeyAvoid";
-import SuccessModal from "@/components/modals/successModal";
-import { useAuth } from "@/hooks/useAuth";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
-import { useUpdateProfile } from "@/mutations/userMutations";
+import api from "@/lib/axios";
 import { ProfileSchema } from "@/schemas/authSchema";
 import { useAppStore } from "@/store/useAppStore";
-import { NewUser } from "@/types/user";
 import { openGallery } from "@/utils/imagePicker";
 import { validateForm } from "@/utils/validateForm";
 import { Ionicons } from "@expo/vector-icons";
@@ -13,6 +10,7 @@ import { Image } from "expo-image";
 import { router } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
+  Alert,
   findNodeHandle,
   Pressable,
   ScrollView,
@@ -21,50 +19,97 @@ import {
   UIManager,
   View,
 } from "react-native";
+import { Dropdown } from "react-native-element-dropdown";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Toast from "react-native-toast-message";
 
 const EditProfile = () => {
-  const name = useAppStore((state) => state.name);
-  const phoneNumber = useAppStore((state) => state.phoneNumber);
-  const profilePictureUrl = useAppStore((state) => state.profilePictureUrl);
-
-  const { id } = useAuth();
-
   const { isAuthenticated } = useAuthGuard();
 
   const numRef = useRef<TextInput>(null);
   const scrollRef = useRef<ScrollView>(null);
-  const [form, setForm] = useState<Partial<NewUser>>({
+  const [form, setForm] = useState<{ [key: string]: string }>({
     fullName: "",
-    phoneNumber: "",
     profilePictureUrl: "",
+    phoneNumber: "",
+    address: "",
+    gender: "",
+  });
+  // Store original values to compare against
+  const [originalForm, setOriginalForm] = useState<{ [key: string]: string }>({
+    fullName: "",
+    profilePictureUrl: "",
+    phoneNumber: "",
+    address: "",
+    gender: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [isSuccess, setIsSuccess] = useState(false);
-
-  const { mutate, isPending } = useUpdateProfile();
-
+  const [selectedAsset, setSelectedAsset] = useState<any>(null);
   const setLoading = useAppStore((state) => state.setLoading);
+  const loading = useAppStore((state) => state.isLoading);
 
-  useEffect(() => {
-    if (isPending) setLoading(true);
-    else setLoading(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isPending]);
+  const name = useAppStore((state) => state.name);
+  const profilePictureUrl = useAppStore((state) => state.profilePictureUrl);
+  const phoneNumber = useAppStore((state) => state.phoneNumber);
+  const address = useAppStore((state) => state.address);
+  const gender = useAppStore((state) => state.gender);
+
+  const input1Ref = useRef<TextInput>(null);
+  const input2Ref = useRef<TextInput>(null);
 
   useEffect(() => {
     setForm({
       fullName: name,
-      phoneNumber: phoneNumber,
       profilePictureUrl: profilePictureUrl,
+      phoneNumber: phoneNumber,
+      address: address || "",
+      gender: gender || "",
     });
-  }, [name, phoneNumber, profilePictureUrl]);
+  }, [name, profilePictureUrl, phoneNumber, address, gender]);
+
+  useEffect(() => {
+    const initialData = {
+      fullName: name,
+      profilePictureUrl: profilePictureUrl,
+      phoneNumber: phoneNumber,
+      address: address || "",
+      gender: gender || "",
+    };
+
+    setForm(initialData);
+    setOriginalForm(initialData); // Store original values
+  }, [name, profilePictureUrl, phoneNumber, address, gender]);
+
+  // Check if form has changes
+  const hasChanges = () => {
+    // Check if image was deleted
+    if (
+      form.profilePictureUrl === "" &&
+      originalForm.profilePictureUrl !== ""
+    ) {
+      return true;
+    }
+
+    // Check if new image was selected
+    if (selectedAsset) {
+      return true;
+    }
+
+    // Check text fields
+    return (
+      form.fullName !== originalForm.fullName ||
+      form.address !== originalForm.address ||
+      form.gender !== originalForm.gender
+    );
+  };
+
+  const isButtonDisabled = loading || !hasChanges();
 
   const onFormChange = (name: string, value: string) => {
     setForm({ ...form, [name]: value });
   };
 
-  const scrollToInput = (ref: React.RefObject<TextInput>) => {
+  const scrollToInput = (ref: React.RefObject<TextInput | null>) => {
     setTimeout(() => {
       if (ref.current && scrollRef.current) {
         const node = findNodeHandle(ref.current);
@@ -81,12 +126,11 @@ const EditProfile = () => {
       }
     }, 100);
   };
-
   const pickProfilePic = async () => {
     setLoading(true);
     const result = await openGallery();
     if (result && !result.canceled && result.assets[0]) {
-      console.log(result.assets[0].uri);
+      setSelectedAsset(result.assets[0]); // Store the asset
       setForm({ ...form, profilePictureUrl: result.assets[0].uri });
     }
     setLoading(false);
@@ -103,23 +147,87 @@ const EditProfile = () => {
 
     if (!isAuthenticated()) return;
 
-    mutate(
-      {
-        id: id!,
-        user: form,
-      },
-      {
-        onSuccess: () => {
-          setIsSuccess(true);
-          useAppStore.getState().setAuthData({
-            name: form.fullName,
-            phoneNumber: form.phoneNumber,
-            profilePictureUrl: form.profilePictureUrl,
-          });
-          console.log("Profile updated successfully");
+    setLoading(true);
+
+    const formData = new FormData();
+    formData.append("fullName", form.fullName);
+    formData.append("address", form.address);
+    formData.append("gender", form.gender || "");
+
+    // Handle profile picture deletion
+    if (!form.profilePictureUrl) {
+      formData.append("deleteProfilePicture", "true");
+    }
+    // Handle new profile picture upload
+    else if (selectedAsset) {
+      formData.append("profilePicture", {
+        uri: selectedAsset.uri,
+        type: selectedAsset.mimeType || "image/jpeg",
+        name: selectedAsset.fileName || "profile.jpg",
+      } as any);
+    }
+
+    try {
+      const response = await api.patch("/profile/update-profile", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${useAppStore.getState().token}`,
         },
+      });
+
+      if (response.data.success) {
+        Toast.show({
+          type: "success",
+          text1: "Success",
+          text2: "Profile updated successfully",
+          position: "top",
+          visibilityTime: 5_000,
+          swipeable: true,
+          topOffset: 50,
+        });
+
+        const updatedData = {
+          name: response.data.user.fullName,
+          profilePictureUrl: response.data.user.profilePictureUrl || "",
+          address: response.data.user.address,
+          gender: response.data.user.gender,
+        };
+
+        useAppStore.getState().setAuthData(updatedData);
+
+        // Reset selectedAsset since image is now uploaded
+        setSelectedAsset(null);
+
+        // Update originalForm to match new current state
+        setOriginalForm({
+          fullName: response.data.user.fullName,
+          profilePictureUrl: response.data.user.profilePictureUrl || "",
+          phoneNumber: form.phoneNumber,
+          address: response.data.user.address,
+          gender: response.data.user.gender,
+        });
+
+        // Update form with server response (in case server modified anything)
+        setForm({
+          fullName: response.data.user.fullName,
+          profilePictureUrl: response.data.user.profilePictureUrl || "",
+          phoneNumber: form.phoneNumber,
+          address: response.data.user.address,
+          gender: response.data.user.gender,
+        });
+
+        console.log("Profile updated successfully");
       }
-    );
+    } catch (error: any) {
+      console.error("Error updating profile:", error);
+      Alert.alert(
+        "Error",
+        error.response?.data?.message ||
+          "Failed to update profile. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -139,7 +247,7 @@ const EditProfile = () => {
                 form.profilePictureUrl
                   ? { uri: form.profilePictureUrl }
                   : require("@/assets/images/user.png")
-              } // style={{width: 32, height: 32}}
+              }
               style={{ width: 128, height: 128, borderRadius: 999 }}
               contentFit="contain"
             />
@@ -177,9 +285,11 @@ const EditProfile = () => {
           {/* first name */}
           <View className="gap-2">
             <Text className="text-sm font-medium text-gray-700 ">
-              Full Name
+              Full Name <Text className="text-red-500">*</Text>
             </Text>
             <TextInput
+              ref={input1Ref}
+              onFocus={() => scrollToInput(input1Ref)}
               value={form.fullName}
               onChangeText={(text) => onFormChange("fullName", text)}
               onSubmitEditing={() => numRef.current?.focus()}
@@ -196,59 +306,72 @@ const EditProfile = () => {
             )}
           </View>
 
+          {/* phone number */}
           <View className="gap-2">
             <Text className="text-sm font-medium text-gray-700 ">
-              Phone Number
+              Phone Number <Text className="text-red-500">*</Text>
+            </Text>
+            {/* display the phone number, not as input. disabled */}
+            <Text className="p-4 text-base bg-gray-100 opacity-50 rounded-lg ">
+              0{useAppStore.getState().phoneNumber}
+            </Text>
+          </View>
+
+          {/* Address */}
+          <View className="gap-2">
+            <Text className="text-sm font-medium text-gray-700">
+              Address <Text className="text-red-500">*</Text>
             </Text>
             <TextInput
-              value={form.phoneNumber}
-              onChangeText={(text) => onFormChange("phoneNumber", text)}
-              ref={numRef}
-              onFocus={() =>
-                scrollToInput(numRef as React.RefObject<TextInput>)
-              }
-              placeholder="ex. 09xxxxxxxxx"
+              ref={input2Ref}
+              onFocus={() => scrollToInput(input2Ref)}
+              value={form.address}
+              onChangeText={(text) => onFormChange("address", text)}
+              placeholder="Enter Address"
               placeholderTextColor="#9CA3AF"
               className={`p-4 text-base bg-gray-100 rounded-lg ${
-                errors.contactNumber ? "border border-red-500" : ""
+                errors.address ? "border border-red-500" : ""
               }`}
-              keyboardType="phone-pad"
             />
-            {errors.contactNumber && (
-              <Text className="text-xs text-red-500">
-                {errors.contactNumber}
+            {errors.address && (
+              <Text className="text-xs ml-2 text-red-500">
+                {errors.address}
               </Text>
             )}
           </View>
 
-          {/* <View className="gap-2">
-            <Text className="text-sm font-medium text-gray-700 ">Birthday</Text>
+          {/* Gender Dropdown */}
+          <View className="gap-2">
+            <Text className="text-sm font-medium text-gray-700">Gender</Text>
 
-            <Pressable
-              onPress={() => setIsDatePickerOpen(true)}
-              className="p-4 bg-gray-100 rounded-lg"
-            >
-              <Text className="text-gray-400">Select Date</Text>
-            </Pressable>
-
-            {isDatePickerOpen && (
-              <DateTimePicker
-                value={new Date()}
-                mode="date"
-                display="default"
-                onChange={(_, selectedDate) => {
-                  setIsDatePickerOpen(false);
-                  console.log(selectedDate);
-                }}
-              />
-            )}
-          </View> */}
+            <Dropdown
+              style={{
+                backgroundColor: "#F3F4F6",
+                paddingHorizontal: 16,
+                paddingVertical: 14,
+                borderRadius: 10,
+              }}
+              placeholderStyle={{ color: "#9CA3AF", fontSize: 14 }}
+              selectedTextStyle={{ color: "#111827" }}
+              data={[
+                { label: "Male", value: "male" },
+                { label: "Female", value: "female" },
+                { label: "Prefer not to say", value: "prefer_not" },
+              ]}
+              dropdownPosition="top"
+              labelField="label"
+              valueField="value"
+              placeholder="Select Gender"
+              value={form.gender}
+              onChange={(item) => onFormChange("gender", item.value)}
+            />
+          </View>
 
           {/*  Button */}
-          <View className="absolute bottom-6 left-0 right-0 mx-6">
+          <View>
             <Pressable
-              className="items-center py-4 rounded-lg bg-lightPrimary active:bg-darkPrimary"
-              disabled={isPending}
+              className={`items-center py-4 rounded-lg bg-lightPrimary  ${isButtonDisabled ? "opacity-65" : "active:bg-darkPrimary"}`}
+              disabled={isButtonDisabled}
               onPress={onSubmit}
             >
               <Text className="text-base font-bold text-white">
@@ -264,11 +387,6 @@ const EditProfile = () => {
           </View>
         </View>
       </CustomKeyAvoidingView>
-      <SuccessModal
-        visible={isSuccess}
-        text="Profile successfully updated!"
-        setVisible={setIsSuccess}
-      />
     </SafeAreaView>
   );
 };

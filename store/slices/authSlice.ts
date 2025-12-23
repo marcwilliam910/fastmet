@@ -6,7 +6,9 @@ export interface AuthSlice {
   isProfileComplete: boolean;
   name: string;
   token: string | null;
-  email: string;
+  gender: string | null;
+  address: string | null;
+  // email: string;
   profilePictureUrl: string;
 
   // Actions
@@ -22,7 +24,9 @@ export const createAuthSlice: StateCreator<AuthSlice> = (set) => ({
   isProfileComplete: false,
   name: "",
   token: null,
-  email: "",
+  // email: "",
+  gender: null,
+  address: null,
   profilePictureUrl: "",
 
   setAuthData: (data) =>
@@ -37,7 +41,9 @@ export const createAuthSlice: StateCreator<AuthSlice> = (set) => ({
       id: null,
       name: "",
       token: null,
-      email: "",
+      address: null,
+      gender: null,
+      // email: "",
       isProfileComplete: false,
       profilePictureUrl: "",
     }),

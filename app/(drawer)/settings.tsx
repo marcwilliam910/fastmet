@@ -1,4 +1,5 @@
 import LogoutModal from "@/components/modals/logoutModal";
+import NotLoggedIn from "@/components/notLoggedIn";
 import { useAuth } from "@/hooks/useAuth";
 import api from "@/lib/axios";
 import { Ionicons } from "@expo/vector-icons";
@@ -20,8 +21,12 @@ const Settings = () => {
 
   // Fetch notification settings on mount
   useEffect(() => {
+    if (!isLoggedIn) {
+      return;
+    }
+
     fetchNotificationSettings();
-  }, []);
+  }, [isLoggedIn]);
 
   const fetchNotificationSettings = async () => {
     try {
@@ -189,6 +194,10 @@ const Settings = () => {
     ],
     [isLoggedIn]
   );
+
+  if (!isLoggedIn) {
+    return <NotLoggedIn />;
+  }
 
   return (
     <SafeAreaView className="flex-1 bg-white">

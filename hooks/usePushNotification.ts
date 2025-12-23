@@ -5,6 +5,7 @@ import * as Notifications from "expo-notifications";
 import { getItemAsync, setItemAsync } from "expo-secure-store";
 import { useEffect, useRef, useState } from "react";
 import { Alert, Platform } from "react-native";
+import { useAuth } from "./useAuth";
 
 const NOTIFICATION_PERMISSION_KEY = "notification_permission_asked";
 
@@ -27,8 +28,11 @@ export function usePushNotifications() {
     null
   );
   const responseListener = useRef<Notifications.EventSubscription | null>(null);
+  const { isLoggedIn } = useAuth();
 
   useEffect(() => {
+    if (!isLoggedIn) return;
+
     // Register for push notifications
     registerForPushNotificationsAsync().then((token) => {
       setExpoPushToken(token);

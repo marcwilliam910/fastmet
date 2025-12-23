@@ -1,7 +1,6 @@
 import NotLoggedIn from "@/components/notLoggedIn";
 import { useAuth } from "@/hooks/useAuth";
 import { useConversations } from "@/queries/conversation";
-import { useAppStore } from "@/store/useAppStore";
 import { ConversationResponse } from "@/types/chat";
 import { formatLastMessageTime } from "@/utils/date";
 import { Ionicons } from "@expo/vector-icons";
@@ -35,8 +34,6 @@ const Chats = () => {
   if (!isLoggedIn) {
     return <NotLoggedIn />;
   }
-
-  console.log(useAppStore.getState().name);
 
   if (isPending)
     return (

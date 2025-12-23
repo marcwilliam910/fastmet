@@ -6,6 +6,7 @@ import { router } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Toast from "react-native-toast-message";
 
 export default function PhoneOTPScreen() {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
@@ -66,11 +67,25 @@ export default function PhoneOTPScreen() {
           isProfileComplete: res.data.client.isProfileComplete,
           name: res.data.client.fullName,
           profilePictureUrl: res.data.client.profilePictureUrl,
+          address: res.data.client.address,
+          gender: res.data.client.gender,
         });
 
-        if (res.data.status === "existing" && res.data.client.isProfileComplete)
+        if (
+          res.data.status === "existing" &&
+          res.data.client.isProfileComplete
+        ) {
+          Toast.show({
+            type: "success",
+            text1: "Login successful",
+            text2: "Welcome back!",
+            position: "top",
+            visibilityTime: 5_000,
+            swipeable: true,
+            topOffset: 50,
+          });
           router.replace("/(drawer)/book");
-        else router.replace("/(auth)/profile-register");
+        } else router.replace("/(auth)/profile-register");
       }
     } catch (error: any) {
       setError(error.response?.data?.error || "Something went wrong");

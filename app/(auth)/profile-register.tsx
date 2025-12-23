@@ -1,6 +1,6 @@
 import CustomKeyAvoidingView from "@/components/CustomKeyAvoid";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
-import { useRegisterProfile } from "@/mutations/userMutations";
+import api from "@/lib/axios";
 import { ProfileSchema } from "@/schemas/authSchema";
 import { useAppStore } from "@/store/useAppStore";
 import { NewUser } from "@/types/user";
@@ -9,8 +9,8 @@ import { validateForm } from "@/utils/validateForm";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
-import { Pressable, Text, TextInput, View } from "react-native";
+import React, { useState } from "react";
+import { Alert, Pressable, Text, TextInput, View } from "react-native";
 import { Dropdown } from "react-native-element-dropdown";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -24,31 +24,25 @@ export default function ProfileRegistration() {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const { isAuthenticated } = useAuthGuard();
-  const { mutate, isPending } = useRegisterProfile();
+  const [selectedAsset, setSelectedAsset] = useState<any>(null);
 
   const setLoading = useAppStore((state) => state.setLoading);
-
-  useEffect(() => {
-    if (isPending) setLoading(true);
-    else setLoading(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isPending]);
+  const loading = useAppStore((state) => state.isLoading);
 
   const pickProfilePic = async () => {
     const result = await openGallery();
     if (result && !result.canceled && result.assets[0]) {
-      console.log(result.assets[0].uri);
-      setForm({ ...form, profilePictureUrl: result.assets[0].uri });
+      const asset = result.assets[0];
+      setSelectedAsset(asset);
+      setForm({ ...form, profilePictureUrl: asset.uri });
     }
   };
-
   const onFormChange = (name: string, value: string) => {
     setForm({ ...form, [name]: value });
   };
 
   const onSubmit = async () => {
     const result = validateForm(ProfileSchema, form);
-
     if (!result.success) {
       setErrors(result.errors);
       return;
@@ -57,12 +51,47 @@ export default function ProfileRegistration() {
 
     if (!isAuthenticated()) return;
 
-    mutate(form, {
-      onSuccess: () => {
+    setLoading(true);
+    // Create FormData for file upload
+    const formData = new FormData();
+    formData.append("fullName", form.fullName);
+    formData.append("address", form.address);
+    formData.append("gender", form.gender || "");
+
+    if (selectedAsset) {
+      formData.append("profilePicture", {
+        uri: selectedAsset.uri,
+        type: selectedAsset.mimeType || "image/jpeg",
+        name: selectedAsset.fileName || "profile.jpg",
+      } as any);
+    }
+    // Use regular API call since you're sending FormData
+    try {
+      const response = await api.post("/profile/register-profile", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${useAppStore.getState().token}`,
+        },
+      });
+
+      if (response.data.success) {
         console.log("Profile registered successfully");
+
+        useAppStore.getState().setAuthData({
+          name: response.data.user.fullName,
+          isProfileComplete: true,
+          profilePictureUrl: response.data.user.profilePictureUrl,
+          address: response.data.user.address,
+        });
+
         router.replace("/(drawer)/book");
-      },
-    });
+      }
+    } catch (error) {
+      console.error("Error registering profile:", error);
+      Alert.alert("Error", "Failed to register profile. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -115,7 +144,9 @@ export default function ProfileRegistration() {
               }`}
             />
             {errors.fullName && (
-              <Text className="text-xs text-red-500">{errors.fullName}</Text>
+              <Text className="text-xs ml-2 text-red-500">
+                {errors.fullName}
+              </Text>
             )}
           </View>
 
@@ -134,15 +165,15 @@ export default function ProfileRegistration() {
               }`}
             />
             {errors.address && (
-              <Text className="text-xs text-red-500">{errors.address}</Text>
+              <Text className="text-xs ml-2 text-red-500">
+                {errors.address}
+              </Text>
             )}
           </View>
 
           {/* Gender Dropdown */}
           <View className="gap-2">
-            <Text className="text-sm font-medium text-gray-700">
-              Gender <Text className="text-red-500">*</Text>
-            </Text>
+            <Text className="text-sm font-medium text-gray-700">Gender</Text>
 
             <Dropdown
               style={{
@@ -164,10 +195,6 @@ export default function ProfileRegistration() {
               value={form.gender}
               onChange={(item) => onFormChange("gender", item.value)}
             />
-
-            {errors.gender && (
-              <Text className="text-xs text-red-500">{errors.gender}</Text>
-            )}
           </View>
 
           {/* Buttons */}
@@ -175,13 +202,14 @@ export default function ProfileRegistration() {
             <Pressable
               className="items-center py-4 my-2 rounded-lg bg-lightPrimary active:bg-darkPrimary"
               onPress={onSubmit}
+              disabled={loading}
             >
               <Text className="text-base font-bold text-white">Create</Text>
             </Pressable>
 
             <Pressable
               onPress={() => router.push("/(drawer)/book")}
-              className="items-center py-4 my-2 border rounded-lg border-lightPrimary active:border-darkPrimary"
+              className="items-center py-4 my-2 border rounded-lg bg-white border-lightPrimary active:border-darkPrimary"
             >
               <Text className="text-base font-bold text-lightPrimary">
                 Skip for now

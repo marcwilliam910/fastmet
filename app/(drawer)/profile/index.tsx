@@ -9,7 +9,8 @@ import { Pressable, ScrollView, Text, View } from "react-native";
 
 export default function MyProfile() {
   const { isLoggedIn } = useAuth();
-
+  const name = useAppStore((state) => state.name);
+  const profilePictureUrl = useAppStore((state) => state.profilePictureUrl);
   const options = [
     {
       icon: "person",
@@ -29,9 +30,13 @@ export default function MyProfile() {
     <ScrollView className="flex-1 bg-white">
       <View className="items-center gap-4 pt-12 pb-8">
         {/* Profile Image with Border */}
-        <View className="border border-[#FFA840] rounded-full p-2">
+        <View className="border border-lightPrimary rounded-full p-2">
           <Image
-            source={require("@/assets/images/user.png")}
+            source={
+              profilePictureUrl
+                ? { uri: profilePictureUrl }
+                : require("@/assets/images/user.png")
+            }
             style={{ width: 120, height: 120, borderRadius: 999 }}
             contentFit="contain"
           />
@@ -40,7 +45,7 @@ export default function MyProfile() {
         {/* User Info */}
         <View className="items-center gap-1">
           <Text className="text-xl font-bold text-gray-800">
-            {useAppStore.getState().name || "User"}
+            {name || "User"}
           </Text>
           <Text className="text-base text-gray-400">
             0{useAppStore.getState().phoneNumber}
