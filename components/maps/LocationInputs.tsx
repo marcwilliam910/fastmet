@@ -1,4 +1,5 @@
 import { useAppStore } from "@/store/useAppStore";
+import { formatLocation } from "@/utils/helper";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import React from "react";
 import { Pressable, Text, View } from "react-native";
@@ -26,9 +27,7 @@ export default function LocationInputs({
             className="text-base font-medium text-gray-900"
             numberOfLines={1}
           >
-            {pickUp
-              ? pickUp?.name + ", " + pickUp?.address
-              : "Choose pickup location"}
+            {pickUp ? formatLocation(pickUp) : "Choose pickup location"}
           </Text>
         </View>
         <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
@@ -48,9 +47,7 @@ export default function LocationInputs({
             className="text-base font-medium text-gray-900"
             numberOfLines={1}
           >
-            {dropOff
-              ? dropOff?.name + ", " + dropOff?.address
-              : "Choose drop off location"}
+            {dropOff ? formatLocation(dropOff) : "Choose drop off location"}
           </Text>
         </View>
         <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />

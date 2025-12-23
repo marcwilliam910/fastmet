@@ -2,17 +2,23 @@ import { useShake } from "@/hooks/useShakeAnimation";
 import { useAppStore } from "@/store/useAppStore";
 import { LocationDetails } from "@/types/book";
 import { GOOGLE_MAPS_API_KEY, METRO_MANILA_POLYGON } from "@/utils/constants";
+import { formatLocation } from "@/utils/helper";
 import { Ionicons } from "@expo/vector-icons";
+import * as Location from "expo-location";
 import { router } from "expo-router";
 import { isPointInPolygon } from "geolib";
 import React, { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
+  Alert,
   FlatList,
+  Linking,
   Modal,
   Platform,
   Pressable,
   Text,
   TextInput,
+  ToastAndroid,
   View,
 } from "react-native";
 import GooglePlacesTextInput, {
@@ -65,38 +71,176 @@ const SearchModal: React.FC<SearchModalProps> = ({
     },
   ]);
   const inset = useSafeAreaInsets();
-  const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
+  const [selectedPlace, setSelectedPlace] = useState<Partial<Place> | null>(
+    null
+  );
   const setPickUp = useAppStore((state) => state.setPickUp);
+  const setPickUpAdditionalDetails = useAppStore(
+    (state) => state.setPickUpAdditionalDetails
+  );
   const setDropOff = useAppStore((state) => state.setDropOff);
+  const setDropOffAdditionalDetails = useAppStore(
+    (state) => state.setDropOffAdditionalDetails
+  );
+
   const insets = useSafeAreaInsets();
 
   const dropOff = useAppStore((state) => state.dropOff);
   const pickUp = useAppStore((state) => state.pickUp);
   const { shake, animatedStyle } = useShake();
+  const [additionalDetails, setAdditionalDetails] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const searchValue = formatLocation(type === "pickup" ? pickUp : dropOff);
+  const haveValue = type === "pickup" ? pickUp : dropOff;
+
+  // Initialize additionalDetails when modal opens with existing value
+  useEffect(() => {
+    if (visible) {
+      setAdditionalDetails(haveValue?.additionalDetails || "");
+      setSelectedPlace(null); // Reset selected place when reopening
+    }
+  }, [visible, haveValue?.additionalDetails]);
+
+  // Determine if confirm button should be enabled
+  const initialAdditionalDetails = haveValue?.additionalDetails || "";
+  const additionalDetailsChanged =
+    additionalDetails !== initialAdditionalDetails;
+
+  // Primary condition: location selected OR (location exists AND details changed)
+  const canConfirm =
+    selectedPlace !== null || (haveValue !== null && additionalDetailsChanged);
 
   const handleConfirm = () => {
-    if (!selectedPlace || !selectedPlace.details) return;
+    // If a new place was selected
+    if (selectedPlace?.details) {
+      const details = selectedPlace.details;
 
-    const details = selectedPlace.details;
+      const locationData: LocationDetails = {
+        name: details.displayName.text || "Unknown location",
+        address: details.formattedAddress || "Unknown address",
+        coords: {
+          lat: details.location.latitude,
+          lng: details.location.longitude,
+        },
+      };
 
-    const locationData: LocationDetails = {
-      name: details.displayName?.text || "Unknown location",
-      address: details?.formattedAddress || "Unknown address",
-      coords: {
-        lat: details.location.latitude,
-        lng: details.location.longitude,
-      },
-    };
-
-    if (type === "pickup") setPickUp(locationData);
-    else setDropOff(locationData);
+      if (type === "pickup") {
+        setPickUp(locationData);
+        setPickUpAdditionalDetails(additionalDetails);
+      } else {
+        setDropOff(locationData);
+        setDropOffAdditionalDetails(additionalDetails);
+      }
+    }
+    // If only additionalDetails changed (location already exists)
+    else if (haveValue && additionalDetailsChanged) {
+      if (type === "pickup") {
+        setPickUpAdditionalDetails(additionalDetails);
+      } else {
+        setDropOffAdditionalDetails(additionalDetails);
+      }
+    }
 
     onClose();
   };
 
-  const handleCurrentLocation = () => {
-    console.log("Getting current location...");
-    // Get user's current location
+  const handleCurrentLocation = async () => {
+    try {
+      setLoading(true);
+      const isLocationEnabled = await Location.hasServicesEnabledAsync();
+
+      if (!isLocationEnabled) {
+        Alert.alert(
+          "Location Services Disabled",
+          "Please enable location services in your device settings to use this feature.",
+          [
+            { text: "Cancel", style: "cancel" },
+            {
+              text: "Open Settings",
+              onPress: () => {
+                if (Platform.OS === "ios") {
+                  Linking.openURL("app-settings:");
+                } else {
+                  Linking.openSettings();
+                }
+              },
+            },
+          ]
+        );
+        return;
+      }
+
+      const { status } = await Location.requestForegroundPermissionsAsync();
+
+      if (status !== "granted") {
+        const message = "Permission to access location was denied";
+
+        if (Platform.OS === "android") {
+          ToastAndroid.showWithGravity(
+            message,
+            ToastAndroid.LONG,
+            ToastAndroid.TOP
+          );
+        } else {
+          Alert.alert("Permission Denied", message);
+        }
+        return;
+      }
+
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
+
+      const { latitude, longitude } = location.coords;
+      // Reverse geocode to get address
+      const response = await fetch(
+        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${GOOGLE_MAPS_API_KEY}`
+      );
+
+      const data = await response.json();
+
+      if (data.results && data.results.length > 0) {
+        const result = data.results[0];
+
+        console.log(additionalDetails);
+
+        const locationData: LocationDetails = {
+          name: result.address_components[0]?.long_name || "Current Location",
+          address: result.formatted_address,
+          coords: {
+            lat: latitude,
+            lng: longitude,
+          },
+        };
+
+        if (type === "pickup") {
+          setPickUp(locationData);
+          setPickUpAdditionalDetails(additionalDetails);
+        } else {
+          setDropOff(locationData);
+          setDropOffAdditionalDetails(additionalDetails);
+        }
+
+        onClose();
+      }
+    } catch (error) {
+      console.error("Error getting current location:", error);
+
+      const message = "Failed to get current location";
+
+      if (Platform.OS === "android") {
+        ToastAndroid.showWithGravity(
+          message,
+          ToastAndroid.LONG,
+          ToastAndroid.TOP
+        );
+      } else {
+        Alert.alert("Error", message);
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleOnPlaceSelect = (place: Place) => {
@@ -153,13 +297,6 @@ const SearchModal: React.FC<SearchModalProps> = ({
     if (!GOOGLE_MAPS_API_KEY) router.back();
   }, []);
 
-  const searchValue =
-    type === "pickup"
-      ? pickUp?.name + ", " + pickUp?.address
-      : dropOff?.name + ", " + dropOff?.address;
-
-  const haveValue = type === "pickup" ? pickUp : dropOff;
-
   return (
     <Modal
       visible={visible}
@@ -181,7 +318,11 @@ const SearchModal: React.FC<SearchModalProps> = ({
           style={{ paddingBottom: Platform.OS === "ios" ? 25 : 16 }}
         >
           <Pressable
-            onPress={onClose}
+            onPress={() => {
+              setSelectedPlace(null);
+
+              onClose();
+            }}
             className="absolute left-4 -top-1"
             hitSlop={20}
           >
@@ -239,6 +380,8 @@ const SearchModal: React.FC<SearchModalProps> = ({
           </Text>
 
           <TextInput
+            defaultValue={haveValue?.additionalDetails}
+            onChangeText={setAdditionalDetails}
             multiline
             numberOfLines={4}
             placeholder="e.g. In front of Jollibee or near gate 3"
@@ -252,15 +395,27 @@ const SearchModal: React.FC<SearchModalProps> = ({
         <View className="px-4 mt-5 mb-2">
           <Pressable
             onPress={handleCurrentLocation}
+            disabled={loading}
             className="flex-row items-center px-4 py-4 bg-white border border-gray-200 rounded-2xl active:bg-gray-50"
           >
             <View className="items-center justify-center mr-3 bg-blue-500 rounded-full w-11 h-11">
               <Ionicons name="navigate" size={20} color="#FFFFFF" />
             </View>
-            <Text className="flex-1 text-base font-semibold text-gray-900">
-              Use current location
-            </Text>
-            <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+            {loading ? (
+              <>
+                <Text className="flex-1  text-base font-semibold text-gray-900">
+                  Getting current location...
+                </Text>
+                <ActivityIndicator size="small" color="#FFA840" />
+              </>
+            ) : (
+              <>
+                <Text className="flex-1 text-base font-semibold text-gray-900">
+                  Use current location
+                </Text>
+                <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+              </>
+            )}
           </Pressable>
         </View>
 
@@ -288,9 +443,9 @@ const SearchModal: React.FC<SearchModalProps> = ({
         </View>
 
         <Pressable
-          className={`items-center justify-center p-3.5 mx-6 bg-lightPrimary absolute left-0 right-0 active:bg-darkPrimary rounded-lg ${selectedPlace ? "active:bg-darkPrimary" : "opacity-80"}`}
+          className={`items-center justify-center p-3.5 mx-6 bg-lightPrimary absolute left-0 right-0 active:bg-darkPrimary rounded-lg ${canConfirm ? "active:bg-darkPrimary" : "opacity-80"}`}
           onPress={handleConfirm}
-          disabled={!selectedPlace}
+          disabled={!canConfirm}
           style={{
             bottom: inset.bottom + 15,
           }}

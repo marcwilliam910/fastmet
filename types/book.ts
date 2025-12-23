@@ -13,6 +13,7 @@ export type LocationDetails = {
   name: string;
   address: string;
   coords: { lat: number; lng: number };
+  additionalDetails?: string;
 } | null;
 
 export type Service = {

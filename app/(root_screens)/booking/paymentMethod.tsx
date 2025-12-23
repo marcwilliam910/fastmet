@@ -13,16 +13,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 
 export default function PaymentMethod() {
-  const {
-    bookingType,
-    selectedVehicle,
-    pickUp,
-    dropOff,
-    routeData,
-    addedServices,
-    clearStates,
-  } = useAppStore.getState();
-
   const paymentMethod = useAppStore((state) => state.paymentMethod);
   const setPaymentMethod = useAppStore((state) => state.setPaymentMethod);
 
@@ -33,6 +23,15 @@ export default function PaymentMethod() {
 
   const submitRequest = async () => {
     setLoading(true);
+
+    const {
+      bookingType,
+      selectedVehicle,
+      pickUp,
+      dropOff,
+      routeData,
+      addedServices,
+    } = useAppStore.getState();
 
     const bookingRef = generateBookingRef(
       bookingType.type,
@@ -61,7 +60,7 @@ export default function PaymentMethod() {
     const bookingSaved = (data: { success: boolean }) => {
       setLoading(false);
       if (data.success) {
-        clearStates();
+        useAppStore.getState().clearStates();
 
         Toast.show({
           type: "success",
@@ -82,9 +81,7 @@ export default function PaymentMethod() {
     return () => {
       socket.off("booking_request_saved", bookingSaved);
     };
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [setLoading, socket]);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
@@ -130,7 +127,6 @@ export default function PaymentMethod() {
           )}
         </Pressable>
 
-        {/* Online Payment Option (Disabled for now) */}
         <Pressable
           onPress={() => setPaymentMethod("online")}
           className={`flex-row items-center justify-between rounded-xl border px-4 py-3 ${

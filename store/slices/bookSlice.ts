@@ -28,16 +28,15 @@ export interface BookSlice {
   toggleService: (service: Service) => void;
 
   setPickUp: (details: LocationDetails) => void;
+  setPickUpAdditionalDetails: (details: string) => void;
   setDropOff: (details: LocationDetails) => void;
+  setDropOffAdditionalDetails: (details: string) => void;
   setBookingType: (type: BookingType) => void;
   setSelectedVehicle: (vehicle: Vehicle) => void;
   setPrice: (p: number) => void;
   calculatePrice: () => void;
   setPaymentMethod: (method: "cash" | "online") => void;
   clearStates: () => void;
-
-  success: boolean;
-  setSuccess: (success: boolean) => void;
 }
 
 export const createBookSlice: StateCreator<BookSlice> = (set, get) => ({
@@ -51,7 +50,6 @@ export const createBookSlice: StateCreator<BookSlice> = (set, get) => ({
     price: 0,
   },
   paymentMethod: "cash",
-  success: false,
 
   // not sure
   addedServices: [...defaultService],
@@ -82,7 +80,17 @@ export const createBookSlice: StateCreator<BookSlice> = (set, get) => ({
     }),
 
   setPickUp: (details: LocationDetails) => set({ pickUp: details }),
+  setPickUpAdditionalDetails: (additionalDetails: string) =>
+    set((state) => ({
+      pickUp: state.pickUp ? { ...state.pickUp, additionalDetails } : null,
+    })),
+
   setDropOff: (details: LocationDetails) => set({ dropOff: details }),
+  setDropOffAdditionalDetails: (additionalDetails: string) =>
+    set((state) => ({
+      dropOff: state.dropOff ? { ...state.dropOff, additionalDetails } : null,
+    })),
+
   setBookingType: (type) => set({ bookingType: type }),
   setSelectedVehicle: (vehicle) => set({ selectedVehicle: vehicle }),
   setPrice: (p) =>
@@ -133,6 +141,4 @@ export const createBookSlice: StateCreator<BookSlice> = (set, get) => ({
       // not sure
       addedServices: [...defaultService],
     }),
-
-  setSuccess: (success) => set({ success }),
 });
