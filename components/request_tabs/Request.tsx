@@ -58,7 +58,7 @@ export default function RequestRoute() {
             pickup={item.pickUp}
             dropoff={item.dropOff}
             distance={item.routeData.distance}
-            amount={item.routeData.price}
+            amount={item.routeData.totalPrice}
             isCash={item.paymentMethod === "cash"}
             onCancel={() => setModalVisible(true)}
             onUpdateNote={() => {}}

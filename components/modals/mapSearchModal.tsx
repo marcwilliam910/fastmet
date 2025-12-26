@@ -3,6 +3,7 @@ import { useAppStore } from "@/store/useAppStore";
 import { LocationDetails } from "@/types/book";
 import { GOOGLE_MAPS_API_KEY, METRO_MANILA_POLYGON } from "@/utils/constants";
 import { formatLocation } from "@/utils/helper";
+import { getArray, pushToArray } from "@/utils/recentPlaceStorage";
 import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
 import { router } from "expo-router";
@@ -45,31 +46,14 @@ function isWithinMetroManila(lat: number, lng: number) {
   );
 }
 
+const RECENT_PLACE_KEY = "recent_places";
+
 const SearchModal: React.FC<SearchModalProps> = ({
   visible,
   onClose,
   type,
 }) => {
-  const [recentPlaces] = useState([
-    {
-      id: "1",
-      name: "Home",
-      address: "Quezon City, Metro Manila",
-      icon: "home-outline",
-    },
-    {
-      id: "2",
-      name: "Work",
-      address: "Makati, Metro Manila",
-      icon: "briefcase-outline",
-    },
-    {
-      id: "3",
-      name: "SM Mall of Asia",
-      address: "Pasay, Metro Manila",
-      icon: "location-outline",
-    },
-  ]);
+  const [recentPlaces, setRecentPlaces] = useState<LocationDetails[]>([]);
   const inset = useSafeAreaInsets();
   const [selectedPlace, setSelectedPlace] = useState<Partial<Place> | null>(
     null
@@ -94,6 +78,14 @@ const SearchModal: React.FC<SearchModalProps> = ({
   const searchValue = formatLocation(type === "pickup" ? pickUp : dropOff);
   const haveValue = type === "pickup" ? pickUp : dropOff;
 
+  useEffect(() => {
+    async function getRecentPlaces() {
+      setRecentPlaces(await getArray(RECENT_PLACE_KEY));
+    }
+
+    getRecentPlaces();
+  }, [visible]);
+
   // Initialize additionalDetails when modal opens with existing value
   useEffect(() => {
     if (visible) {
@@ -111,7 +103,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
   const canConfirm =
     selectedPlace !== null || (haveValue !== null && additionalDetailsChanged);
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     // If a new place was selected
     if (selectedPlace?.details) {
       const details = selectedPlace.details;
@@ -124,6 +116,8 @@ const SearchModal: React.FC<SearchModalProps> = ({
           lng: details.location.longitude,
         },
       };
+
+      await pushToArray(RECENT_PLACE_KEY, locationData);
 
       if (type === "pickup") {
         setPickUp(locationData);
@@ -203,8 +197,6 @@ const SearchModal: React.FC<SearchModalProps> = ({
       if (data.results && data.results.length > 0) {
         const result = data.results[0];
 
-        console.log(additionalDetails);
-
         const locationData: LocationDetails = {
           name: result.address_components[0]?.long_name || "Current Location",
           address: result.formatted_address,
@@ -222,6 +214,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
           setDropOffAdditionalDetails(additionalDetails);
         }
 
+        await pushToArray(RECENT_PLACE_KEY, locationData);
         onClose();
       }
     } catch (error) {
@@ -243,16 +236,11 @@ const SearchModal: React.FC<SearchModalProps> = ({
     }
   };
 
-  const handleOnPlaceSelect = (place: Place) => {
+  const handleOnPlaceSelect = async (place: Place) => {
     setSelectedPlace(null);
 
     const loc = place.details?.location;
     if (!loc) return;
-
-    console.log("Selected location:", {
-      lat: loc.latitude,
-      lng: loc.longitude,
-    });
 
     // const allowed = isWithinMetroManila(loc.latitude, loc.longitude);
 
@@ -276,19 +264,33 @@ const SearchModal: React.FC<SearchModalProps> = ({
     setSelectedPlace(place);
   };
 
-  const renderRecentPlace = ({ item }: any) => (
+  const handleRecentPlacePress = async (place: LocationDetails) => {
+    if (type === "pickup") {
+      setPickUp(place);
+      setPickUpAdditionalDetails(additionalDetails);
+    } else {
+      setDropOff(place);
+      setDropOffAdditionalDetails(additionalDetails);
+    }
+
+    onClose();
+  };
+
+  const renderRecentPlace = ({ item }: { item: LocationDetails }) => (
     <Pressable
-      className="flex-row items-center px-4 py-3 border-b border-gray-100"
-      style={({ pressed }) => [
-        { backgroundColor: pressed ? "#F3F4F6" : "transparent" },
-      ]}
+      onPress={() => handleRecentPlacePress(item)}
+      className="flex-row items-center px-4 py-3 border-b border-gray-100 active:bg-gray-100 rounded-xl"
     >
       <View className="items-center justify-center w-10 h-10 mr-3 bg-gray-100 rounded-full">
-        <Ionicons name={item.icon} size={20} color="#6B7280" />
+        <Ionicons name="location-outline" size={20} color="#6B7280" />
       </View>
       <View className="flex-1">
-        <Text className="font-medium text-gray-900">{item.name}</Text>
-        <Text className="text-sm text-gray-500 mt-0.5">{item.address}</Text>
+        <Text className="font-medium text-gray-900">
+          {item?.name || "Unknown Place"}
+        </Text>
+        <Text className="text-sm text-gray-500 mt-0.5 " numberOfLines={1}>
+          {item?.address || "Unknown Address"}
+        </Text>
       </View>
     </Pressable>
   );
@@ -338,7 +340,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
         </View>
         {/* Search Input */}
         <View className="pb-4 mx-4 bg-white border-b border-gray-200">
-          <View className="flex-row items-center px-3 py-2 rounded-xl">
+          <View className="flex-row items-center px-3 py-2">
             <Ionicons
               name="search-outline"
               size={24}
@@ -396,7 +398,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
           <Pressable
             onPress={handleCurrentLocation}
             disabled={loading}
-            className="flex-row items-center px-4 py-4 bg-white border border-gray-200 rounded-2xl active:bg-gray-50"
+            className="flex-row items-center px-4 py-4 bg-white border border-gray-200 rounded-xl active:bg-gray-50"
           >
             <View className="items-center justify-center mr-3 bg-blue-500 rounded-full w-11 h-11">
               <Ionicons name="navigate" size={20} color="#FFFFFF" />
@@ -420,27 +422,29 @@ const SearchModal: React.FC<SearchModalProps> = ({
         </View>
 
         {/* Recent Places */}
-        <View className="flex-1 px-4">
-          <View className="px-4 py-3 mb-2">
-            <View className="flex-row items-center">
-              <Ionicons
-                name="time-outline"
-                size={18}
-                color="#6B7280"
-                style={{ marginRight: 8 }}
-              />
-              <Text className="text-xs font-semibold tracking-wider text-gray-600 uppercase">
-                Recent Places
-              </Text>
+        {recentPlaces.length > 0 && (
+          <View className="flex-1 px-4 mt-2">
+            <View className="px-4 py-3">
+              <View className="flex-row items-center">
+                <Ionicons
+                  name="time-outline"
+                  size={18}
+                  color="#6B7280"
+                  style={{ marginRight: 8 }}
+                />
+                <Text className="text-xs font-semibold tracking-wider text-gray-600 uppercase">
+                  Recent Places
+                </Text>
+              </View>
             </View>
+            <FlatList
+              data={recentPlaces}
+              renderItem={renderRecentPlace}
+              keyExtractor={(item, index) => `${item!.name}-${index}`}
+              showsVerticalScrollIndicator={false}
+            />
           </View>
-          <FlatList
-            data={recentPlaces}
-            renderItem={renderRecentPlace}
-            keyExtractor={(item) => item.id}
-            showsVerticalScrollIndicator={false}
-          />
-        </View>
+        )}
 
         <Pressable
           className={`items-center justify-center p-3.5 mx-6 bg-lightPrimary absolute left-0 right-0 active:bg-darkPrimary rounded-lg ${canConfirm ? "active:bg-darkPrimary" : "opacity-80"}`}

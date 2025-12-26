@@ -61,11 +61,7 @@ export type Booking = {
     name: string;
     capacity: string;
   };
-  routeData: {
-    distance: number;
-    duration: number;
-    price: number;
-  };
+  routeData: RouteData;
   paymentMethod: string; // "cash" | "online"
   addedServices: {
     id: string;

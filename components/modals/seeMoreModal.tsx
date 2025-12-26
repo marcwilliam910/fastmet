@@ -220,7 +220,7 @@ export default function SeeMoreModal({
               </View>
               <Text className="text-xl font-bold text-darkPrimary">
                 Php{" "}
-                {data.routeData.price.toLocaleString("en-US", {
+                {data.routeData.totalPrice.toLocaleString("en-US", {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
                 })}

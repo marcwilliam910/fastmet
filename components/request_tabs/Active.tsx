@@ -61,7 +61,7 @@ export default function ActiveRoute() {
             pickup={item.pickUp}
             dropoff={item.dropOff}
             distance={item.routeData.distance}
-            amount={item.routeData.price}
+            amount={item.routeData.totalPrice}
             isCash={item.paymentMethod === "cash"}
             driverName={item.driver.name}
             rating={item.driver.rating}
