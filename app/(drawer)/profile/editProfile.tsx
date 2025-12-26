@@ -259,12 +259,7 @@ const EditProfile = () => {
                   setForm((prev) => ({ ...prev, profilePictureUrl: "" }))
                 }
               >
-                <Ionicons
-                  name="close-outline"
-                  size={24}
-                  color="red"
-                  className="font-bold"
-                />
+                <Ionicons name="close-outline" size={24} color="red" />
               </Pressable>
             )}
 

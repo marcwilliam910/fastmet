@@ -41,7 +41,6 @@ const SheetButton = ({
         position: "absolute",
         left: 0,
         right: 0,
-        // bottom: insets.bottom + 10, // respect safe area
         bottom: 0,
 
         paddingBottom: insets.bottom + 10,
@@ -50,7 +49,7 @@ const SheetButton = ({
       <View className="flex-row items-center justify-between">
         <Text className="font-semibold">Total Amount</Text>
         <Text className="font-bold text-lightPrimary text-lg">
-          Php {routeData.price.toFixed(2)}
+          Php {routeData.totalPrice.toFixed(2)}
         </Text>
       </View>
 

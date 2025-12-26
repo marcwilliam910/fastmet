@@ -2,13 +2,14 @@ import HeaderDrawer from "@/components/headers/HeaderDrawer";
 import LogoutModal from "@/components/modals/logoutModal";
 import { useAuth } from "@/hooks/useAuth";
 import { usePushNotifications } from "@/hooks/usePushNotification";
+import { useAppStore } from "@/store/useAppStore";
 import { Ionicons } from "@expo/vector-icons";
 import {
   DrawerContentScrollView,
   DrawerItemList,
 } from "@react-navigation/drawer";
 import { Drawer } from "expo-router/drawer";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -53,6 +54,11 @@ const CustomDrawerContent = (props: any) => {
 export default function DrawerLayout() {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   usePushNotifications();
+  const fetchFareRates = useAppStore.getState().fetchFareRates;
+
+  useEffect(() => {
+    fetchFareRates(); // fetch once when drawer mounts
+  }, [fetchFareRates]);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

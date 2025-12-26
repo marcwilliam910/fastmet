@@ -3,29 +3,77 @@ import api from "@/lib/axios";
 import { useAppStore } from "@/store/useAppStore";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import * as SecureStore from "expo-secure-store";
 import React, { useEffect, useRef, useState } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 
+const RESEND_TIMEOUT_SECONDS = 60;
+const RESEND_KEY = "resend_available_at";
+
 export default function PhoneOTPScreen() {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
-  const [resendTimer, setResendTimer] = useState(60);
-  const [canResend, setCanResend] = useState(false);
   const [error, setError] = useState("");
   const loading = useAppStore((state) => state.isLoading);
   const setLoading = useAppStore((state) => state.setLoading);
 
   const inputRefs = useRef<(TextInput | null)[]>([]);
 
+  const [resendTimer, setResendTimer] = useState(0);
+  const [canResend, setCanResend] = useState(true);
+
   useEffect(() => {
-    if (resendTimer > 0) {
-      const timer = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
-      return () => clearTimeout(timer);
-    } else {
-      setCanResend(true);
-    }
-  }, [resendTimer]);
+    let interval: NodeJS.Timeout | number;
+
+    const initCountdown = async () => {
+      const stored = await SecureStore.getItemAsync(RESEND_KEY);
+      if (!stored) return;
+
+      const availableAt = Number(stored);
+      const remaining = Math.ceil((availableAt - Date.now()) / 1000);
+
+      if (remaining > 0) {
+        setResendTimer(remaining);
+        setCanResend(false);
+
+        interval = setInterval(() => {
+          setResendTimer((prev) => {
+            if (prev <= 1) {
+              clearInterval(interval);
+              SecureStore.deleteItemAsync(RESEND_KEY);
+              setCanResend(true);
+              return 0;
+            }
+            return prev - 1;
+          });
+        }, 1000);
+      } else {
+        await SecureStore.deleteItemAsync(RESEND_KEY);
+        setCanResend(true);
+      }
+    };
+
+    initCountdown();
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, []);
+
+  const handleResendOtp = async () => {
+    if (!canResend) return;
+
+    await api.post("/auth/send-otp");
+
+    await SecureStore.setItemAsync(
+      RESEND_KEY,
+      String(Date.now() + RESEND_TIMEOUT_SECONDS * 1000)
+    );
+
+    setResendTimer(RESEND_TIMEOUT_SECONDS);
+    setCanResend(false);
+  };
 
   const handleOtpChange = (value: string, index: number) => {
     if (value && !/^\d+$/.test(value)) return;
@@ -56,8 +104,6 @@ export default function PhoneOTPScreen() {
         phoneNumber,
         otpCode,
       });
-
-      console.log(JSON.stringify(res.data, null, 2));
 
       if (res.data.success) {
         // Store everything in Zustand including status
@@ -166,7 +212,7 @@ export default function PhoneOTPScreen() {
             </Text>
 
             {canResend ? (
-              <Pressable disabled={loading}>
+              <Pressable disabled={loading} onPress={handleResendOtp}>
                 <Text className="text-base font-semibold text-darkPrimary">
                   Resend Code
                 </Text>

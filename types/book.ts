@@ -25,8 +25,11 @@ export type Service = {
 
 export type RouteData = {
   distance: number;
-  price: number;
   duration: number;
+  basePrice: number;
+  distanceFee: number;
+  serviceFee: number;
+  totalPrice: number;
 };
 
 export type Booking = {
@@ -98,4 +101,7 @@ export type RequestBooking = {
   routeData: RouteData;
   paymentMethod: "cash" | "online";
   addedServices: Service[];
+  photos: string[];
+  note: string;
+  itemType: string | null;
 };

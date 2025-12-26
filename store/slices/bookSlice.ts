@@ -4,9 +4,10 @@ import type {
   Service,
   Vehicle,
 } from "@/types/book";
-import { calculateAccuratePrice } from "@/utils/calculatePrice";
+import { fetchDrivingDistance } from "@/utils/calculatePrice";
 import { defaultService } from "@/utils/constants";
 import { StateCreator } from "zustand";
+import { useAppStore } from "../useAppStore";
 
 export type Type = "asap" | "pooling" | "schedule";
 
@@ -22,6 +23,10 @@ export interface BookSlice {
   selectedVehicle: Vehicle | null;
   routeData: RouteData;
   paymentMethod: "cash" | "online";
+  note: string;
+  itemType: string | null;
+  photos: string[];
+  fareRates: { baseFare: number; perKmRate: number; perMinRate: number };
 
   // not sure
   addedServices: Service[];
@@ -33,9 +38,16 @@ export interface BookSlice {
   setDropOffAdditionalDetails: (details: string) => void;
   setBookingType: (type: BookingType) => void;
   setSelectedVehicle: (vehicle: Vehicle) => void;
-  setPrice: (p: number) => void;
-  calculatePrice: () => void;
+
+  setNote: (note: string) => void;
+  setItemType: (itemType: string | null) => void;
   setPaymentMethod: (method: "cash" | "online") => void;
+
+  setPhoto: (photo: string) => void;
+  removePhoto: (photo: string) => void;
+
+  fetchFareRates: () => Promise<void>;
+  calculatePrice: () => Promise<void>;
   clearStates: () => void;
 }
 
@@ -47,35 +59,40 @@ export const createBookSlice: StateCreator<BookSlice> = (set, get) => ({
   routeData: {
     distance: 0,
     duration: 0,
-    price: 0,
+    basePrice: 0,
+    distanceFee: 0,
+    serviceFee: 0,
+    totalPrice: 0,
   },
+
   paymentMethod: "cash",
+  note: "",
+  itemType: null,
+  photos: [],
+  fareRates: { baseFare: 0, perKmRate: 0, perMinRate: 0 },
 
   // not sure
   addedServices: [...defaultService],
 
   toggleService: (service: Service) =>
     set((state) => {
-      const exists = state.addedServices.find((s) => s.id === service.id);
+      const exists = state.addedServices.some((s) => s.id === service.id);
 
-      let updatedServices;
-      let updatedPrice = state.routeData.price;
+      const updatedServices = exists
+        ? state.addedServices.filter((s) => s.id !== service.id)
+        : [...state.addedServices, service];
 
-      if (exists) {
-        // Remove service and subtract its price
-        updatedServices = state.addedServices.filter(
-          (s) => s.id !== service.id
-        );
-        updatedPrice -= service.price;
-      } else {
-        // Add service and add its price
-        updatedServices = [...state.addedServices, service];
-        updatedPrice += service.price;
-      }
+      const serviceFee = updatedServices.reduce((sum, s) => sum + s.price, 0);
+
+      const { basePrice, distanceFee } = state.routeData;
 
       return {
         addedServices: updatedServices,
-        routeData: { ...state.routeData, price: updatedPrice },
+        routeData: {
+          ...state.routeData,
+          serviceFee,
+          totalPrice: basePrice + distanceFee + serviceFee,
+        },
       };
     }),
 
@@ -84,40 +101,69 @@ export const createBookSlice: StateCreator<BookSlice> = (set, get) => ({
     set((state) => ({
       pickUp: state.pickUp ? { ...state.pickUp, additionalDetails } : null,
     })),
-
   setDropOff: (details: LocationDetails) => set({ dropOff: details }),
   setDropOffAdditionalDetails: (additionalDetails: string) =>
     set((state) => ({
       dropOff: state.dropOff ? { ...state.dropOff, additionalDetails } : null,
     })),
-
   setBookingType: (type) => set({ bookingType: type }),
   setSelectedVehicle: (vehicle) => set({ selectedVehicle: vehicle }),
-  setPrice: (p) =>
-    set((state) => ({
-      routeData: { ...state.routeData, price: p },
-    })),
+
+  setNote: (note) => set({ note }),
+  setItemType: (itemType) => set({ itemType }),
+  setPhoto: (photos) => set((state) => ({ photos: [...state.photos, photos] })),
+  removePhoto: (photo) =>
+    set((state) => ({ photos: state.photos.filter((p) => p !== photo) })),
   setPaymentMethod: (method: "cash" | "online") =>
     set({ paymentMethod: method }),
 
+  fetchFareRates: async () => {
+    try {
+      const res = await fetch(`${process.env.EXPO_PUBLIC_BASE_URL}/api/fare`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${useAppStore.getState().token}`,
+        },
+      });
+
+      if (!res.ok) {
+        throw new Error(`Failed to fetch fare rates: ${res.status}`);
+      }
+
+      const rates = await res.json();
+      console.log("Fare rates:", JSON.stringify(rates, null, 2));
+
+      set({ fareRates: rates });
+    } catch (e) {
+      console.error("Failed to fetch fare rates", e);
+    }
+  },
+
   calculatePrice: async () => {
-    const { pickUp, dropOff, addedServices } = get();
+    const { pickUp, dropOff, addedServices, fareRates } = get();
     if (!pickUp || !dropOff) return;
 
     try {
-      const { total, distanceKm, durationMin } = await calculateAccuratePrice(
+      const { distanceKm, durationMin } = await fetchDrivingDistance(
         pickUp,
         dropOff
       );
 
-      // compute total added services price
-      const servicesTotal = addedServices.reduce((acc, s) => acc + s.price, 0);
+      const basePrice = fareRates.baseFare;
+      const distanceFee =
+        distanceKm * fareRates.perKmRate + durationMin * fareRates.perMinRate;
+
+      const serviceFee = addedServices.reduce((sum, s) => sum + s.price, 0);
 
       set({
         routeData: {
           distance: distanceKm,
           duration: durationMin,
-          price: total + servicesTotal, // base + services
+          basePrice,
+          distanceFee,
+          serviceFee,
+          totalPrice: basePrice + distanceFee + serviceFee,
         },
       });
     } catch (e) {
@@ -134,8 +180,12 @@ export const createBookSlice: StateCreator<BookSlice> = (set, get) => ({
       routeData: {
         distance: 0,
         duration: 0,
-        price: 0,
+        basePrice: 0,
+        distanceFee: 0,
+        serviceFee: 0,
+        totalPrice: 0,
       },
+
       paymentMethod: "cash",
 
       // not sure

@@ -1,4 +1,3 @@
-import SheetButton from "@/components/maps/SheetButton";
 import { useAuth } from "@/hooks/useAuth";
 import { useSocket } from "@/sockets/context/SocketProvider";
 import { handleBookingSaved, requestBooking } from "@/sockets/handlers/booking";
@@ -9,12 +8,17 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useEffect } from "react";
 import { Pressable, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 
 export default function PaymentMethod() {
   const paymentMethod = useAppStore((state) => state.paymentMethod);
   const setPaymentMethod = useAppStore((state) => state.setPaymentMethod);
+  const routeData = useAppStore((state) => state.routeData);
+  const insets = useSafeAreaInsets();
 
   const setLoading = useAppStore((state) => state.setLoading);
 
@@ -31,6 +35,9 @@ export default function PaymentMethod() {
       dropOff,
       routeData,
       addedServices,
+      photos,
+      note,
+      itemType,
     } = useAppStore.getState();
 
     const bookingRef = generateBookingRef(
@@ -51,6 +58,9 @@ export default function PaymentMethod() {
       routeData: routeData,
       paymentMethod: paymentMethod,
       addedServices: addedServices,
+      photos: photos,
+      note: note,
+      itemType: itemType,
     };
 
     requestBooking(socket, payload);
@@ -151,7 +161,68 @@ export default function PaymentMethod() {
           )}
         </Pressable>
       </View>
-      <SheetButton next={submitRequest} isLast={true} />
+      <View
+        className="px-5 py-3 gap-2 bg-white z-30"
+        style={{
+          position: "absolute",
+          left: 0,
+          right: 0,
+          bottom: 0,
+          paddingBottom: insets.bottom + 10,
+        }}
+      >
+        {/* Fare Breakdown */}
+        {routeData.basePrice > 0 && (
+          <View className="flex-row items-center justify-between">
+            <Text className="text-xs font-semibold text-gray-500">
+              Base Fare
+            </Text>
+            <Text className="text-xs font-semibold text-gray-500">
+              Php {routeData.basePrice.toFixed(2)}
+            </Text>
+          </View>
+        )}
+
+        {routeData.distanceFee > 0 && (
+          <View className="flex-row items-center justify-between">
+            <Text className="text-xs font-semibold text-gray-500">
+              Distance / Duration ({routeData.distance.toFixed(2)} km -
+              {routeData.duration.toFixed(0)} min)
+            </Text>
+            <Text className="text-xs font-semibold text-gray-500">
+              Php {routeData.distanceFee.toFixed(2)}
+            </Text>
+          </View>
+        )}
+
+        {routeData.serviceFee > 0 && (
+          <View className="flex-row items-center justify-between">
+            <Text className="text-xs font-semibold text-gray-500">
+              Added Services ({useAppStore.getState().addedServices.length})
+            </Text>
+            <Text className="text-xs font-semibold text-gray-500">
+              Php {routeData.serviceFee.toFixed(2)}
+            </Text>
+          </View>
+        )}
+
+        {/* Total */}
+        <View className="flex-row items-center justify-between mt-1">
+          <Text className="font-semibold">Total Amount</Text>
+          <Text className="font-bold text-lightPrimary text-lg">
+            Php {routeData.totalPrice.toFixed(2)}
+          </Text>
+        </View>
+
+        <Pressable
+          className={`flex-1 py-3 rounded-md bg-lightPrimary active:bg-darkPrimary`}
+          onPress={submitRequest}
+        >
+          <Text className="font-bold text-center text-lg text-white">
+            Book Now
+          </Text>
+        </Pressable>
+      </View>
     </SafeAreaView>
   );
 }

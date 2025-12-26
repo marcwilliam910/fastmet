@@ -135,7 +135,7 @@ const Services = () => {
       </ScrollView>
 
       <SheetButton
-        next={() => router.push("/(root_screens)/booking/contactInfo")}
+        next={() => router.push("/(root_screens)/booking/additionalInfo")}
       />
     </SafeAreaView>
   );

@@ -21,20 +21,3 @@ export async function fetchDrivingDistance(
 
   return { distanceKm, durationMin };
 }
-
-export async function calculateAccuratePrice(
-  pickUp: LocationDetails,
-  dropOff: LocationDetails
-) {
-  const { distanceKm, durationMin } = await fetchDrivingDistance(
-    pickUp,
-    dropOff
-  );
-
-  const baseFare = 40;
-  const perKmRate = 15;
-  const perMinRate = 2;
-
-  const total = baseFare + distanceKm * perKmRate + durationMin * perMinRate;
-  return { total, distanceKm, durationMin };
-}

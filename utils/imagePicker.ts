@@ -3,16 +3,35 @@ import * as ImagePicker from "expo-image-picker";
 import { Alert, Linking } from "react-native";
 
 export const openGallery = async () => {
-  const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  // Check current status first
+  const { status: currentStatus } =
+    await ImagePicker.getMediaLibraryPermissionsAsync();
 
-  if (status !== "granted") {
-    Alert.alert("Sorry, we need camera roll permissions!");
+  let finalStatus = currentStatus;
+
+  // Request permission if not already granted
+  if (currentStatus !== "granted") {
+    const { status: requestedStatus } =
+      await ImagePicker.requestMediaLibraryPermissionsAsync();
+    finalStatus = requestedStatus;
+  }
+
+  // Only show alert if permission is still denied after request
+  if (finalStatus !== "granted") {
+    Alert.alert(
+      "Gallery Permission Required",
+      "Please enable gallery access in your device settings.",
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Open Settings", onPress: () => Linking.openSettings() },
+      ]
+    );
     return null;
   }
 
   return ImagePicker.launchImageLibraryAsync({
     mediaTypes: ["images"],
-    allowsEditing: true,
+    allowsEditing: false,
     quality: 1,
   });
 };
