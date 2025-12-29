@@ -43,8 +43,7 @@ const NotLoggedInModal = ({
           </Text>
 
           <Text className="text-sm text-center text-gray-600">
-            Please log in to continue with your delivery request and shipment
-            processing.
+            Please log in to continue with your request and shipment processing.
           </Text>
 
           <Pressable

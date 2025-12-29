@@ -9,8 +9,8 @@ import { Pressable, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 
-const RESEND_TIMEOUT_SECONDS = 60;
-const RESEND_KEY = "resend_available_at";
+export const RESEND_TIMEOUT_SECONDS = 60;
+export const RESEND_KEY = "resend_available_at";
 
 export default function PhoneOTPScreen() {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
@@ -21,14 +21,16 @@ export default function PhoneOTPScreen() {
   const inputRefs = useRef<(TextInput | null)[]>([]);
 
   const [resendTimer, setResendTimer] = useState(0);
-  const [canResend, setCanResend] = useState(true);
+  const [canResend, setCanResend] = useState(false);
 
+  // Initialize timer on mount
   useEffect(() => {
-    let interval: NodeJS.Timeout | number;
-
     const initCountdown = async () => {
       const stored = await SecureStore.getItemAsync(RESEND_KEY);
-      if (!stored) return;
+      if (!stored) {
+        setCanResend(true);
+        return;
+      }
 
       const availableAt = Number(stored);
       const remaining = Math.ceil((availableAt - Date.now()) / 1000);
@@ -36,18 +38,6 @@ export default function PhoneOTPScreen() {
       if (remaining > 0) {
         setResendTimer(remaining);
         setCanResend(false);
-
-        interval = setInterval(() => {
-          setResendTimer((prev) => {
-            if (prev <= 1) {
-              clearInterval(interval);
-              SecureStore.deleteItemAsync(RESEND_KEY);
-              setCanResend(true);
-              return 0;
-            }
-            return prev - 1;
-          });
-        }, 1000);
       } else {
         await SecureStore.deleteItemAsync(RESEND_KEY);
         setCanResend(true);
@@ -55,24 +45,61 @@ export default function PhoneOTPScreen() {
     };
 
     initCountdown();
-
-    return () => {
-      if (interval) clearInterval(interval);
-    };
   }, []);
 
+  // Separate effect for countdown logic
+  useEffect(() => {
+    if (resendTimer <= 0) {
+      setCanResend(true);
+      return;
+    }
+
+    const interval = setInterval(() => {
+      setResendTimer((prev) => {
+        if (prev <= 1) {
+          SecureStore.deleteItemAsync(RESEND_KEY);
+          setCanResend(true);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [resendTimer]);
+
   const handleResendOtp = async () => {
-    if (!canResend) return;
+    if (!canResend || loading) return;
 
-    await api.post("/auth/send-otp");
+    try {
+      await api.post("/auth/send-otp", {
+        phoneNumber: useAppStore.getState().phoneNumber,
+      });
 
-    await SecureStore.setItemAsync(
-      RESEND_KEY,
-      String(Date.now() + RESEND_TIMEOUT_SECONDS * 1000)
-    );
+      const availableAt = Date.now() + RESEND_TIMEOUT_SECONDS * 1000;
+      await SecureStore.setItemAsync(RESEND_KEY, String(availableAt));
 
-    setResendTimer(RESEND_TIMEOUT_SECONDS);
-    setCanResend(false);
+      setResendTimer(RESEND_TIMEOUT_SECONDS);
+      setCanResend(false);
+
+      Toast.show({
+        type: "success",
+        text1: "Code sent",
+        text2: "Please check your messages",
+        position: "top",
+        visibilityTime: 3000,
+        topOffset: 50,
+      });
+    } catch (error: any) {
+      Toast.show({
+        type: "error",
+        text1: "Failed to resend",
+        text2: error.response?.data?.error || "Please try again",
+        position: "top",
+        visibilityTime: 3000,
+        topOffset: 50,
+      });
+    }
   };
 
   const handleOtpChange = (value: string, index: number) => {
@@ -135,7 +162,6 @@ export default function PhoneOTPScreen() {
       }
     } catch (error: any) {
       setError(error.response?.data?.error || "Something went wrong");
-      console.error("OTP verification error:", error);
     } finally {
       setLoading(false);
     }
@@ -191,15 +217,11 @@ export default function PhoneOTPScreen() {
                 shadowOpacity: 0.05,
                 shadowRadius: 4,
                 shadowOffset: { width: 0, height: 2 },
-                elevation: 2, // Android
+                elevation: 2,
               }}
             >
               <Ionicons name="alert-circle" size={20} color="#DC2626" />
-
-              <Text
-                className="text-red-700 text-sm ml-3  leading-5
-      "
-              >
+              <Text className="text-red-700 text-sm ml-3 leading-5">
                 {error}
               </Text>
             </View>
@@ -242,7 +264,7 @@ export default function PhoneOTPScreen() {
 
           {/* Change Number */}
           <Pressable
-            onPress={() => router.back()}
+            onPress={() => router.push("/(auth)/auth")}
             disabled={loading}
             className="items-center"
           >

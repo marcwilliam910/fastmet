@@ -1,13 +1,11 @@
 import HeaderDrawer from "@/components/headers/HeaderDrawer";
 import LogoutModal from "@/components/modals/logoutModal";
+import NotLoggedInModal from "@/components/modals/notLoggedInModal";
 import { useAuth } from "@/hooks/useAuth";
 import { usePushNotifications } from "@/hooks/usePushNotification";
 import { useAppStore } from "@/store/useAppStore";
 import { Ionicons } from "@expo/vector-icons";
-import {
-  DrawerContentScrollView,
-  DrawerItemList,
-} from "@react-navigation/drawer";
+import { DrawerContentScrollView, DrawerItem } from "@react-navigation/drawer";
 import { Drawer } from "expo-router/drawer";
 import { useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
@@ -18,20 +16,55 @@ const CustomDrawerContent = (props: any) => {
   const inset = useSafeAreaInsets();
   const { isLoggedIn } = useAuth();
 
-  const action = isLoggedIn
-    ? () => props.setIsOpen(true)
-    : () => props.navigation.navigate("(auth)");
+  const { state, descriptors, navigation } = props;
+
+  const handlePress = (routeName: string) => {
+    if (!isLoggedIn && routeName !== "book") {
+      props.setShowNotLoggedInModal(true); // open login modal
+      return;
+    }
+
+    navigation.navigate(routeName);
+  };
 
   return (
     <View className="flex-1">
       <DrawerContentScrollView {...props}>
-        <DrawerItemList {...props} />
+        {state.routes.map((route: any, index: number) => {
+          const { options } = descriptors[route.key];
+
+          // Hide index route
+          if (route.name === "index") return null;
+
+          const focused = state.index === index;
+
+          return (
+            <DrawerItem
+              key={route.key}
+              label={options.drawerLabel ?? route.name}
+              icon={({ color, size }) =>
+                options.drawerIcon?.({ focused, color, size })
+              }
+              focused={focused}
+              activeTintColor="#FFA840"
+              inactiveTintColor="#FFFFFF"
+              activeBackgroundColor="#1a3a4f"
+              onPress={() => handlePress(route.name)}
+            />
+          );
+        })}
+
+        {/* Login / Logout action */}
         <Pressable
           className="flex-row items-center gap-3 px-5 py-4"
-          onPress={action}
+          onPress={() =>
+            isLoggedIn
+              ? props.setShowLogoutModal(true)
+              : props.navigation.navigate("(auth)")
+          }
         >
           <Ionicons
-            name={isLoggedIn ? "log-in-outline" : "log-out-outline"}
+            name={isLoggedIn ? "log-out-outline" : "log-in-outline"}
             size={24}
             color="white"
           />
@@ -53,6 +86,7 @@ const CustomDrawerContent = (props: any) => {
 
 export default function DrawerLayout() {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [showNotLoggedInModal, setShowNotLoggedInModal] = useState(false);
   usePushNotifications();
   const fetchFareRates = useAppStore.getState().fetchFareRates;
 
@@ -64,7 +98,11 @@ export default function DrawerLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <Drawer
         drawerContent={(props) => (
-          <CustomDrawerContent {...props} setIsOpen={setShowLogoutModal} />
+          <CustomDrawerContent
+            {...props}
+            setShowLogoutModal={setShowLogoutModal}
+            setShowNotLoggedInModal={setShowNotLoggedInModal}
+          />
         )}
         screenOptions={{
           headerShown: false,
@@ -181,6 +219,10 @@ export default function DrawerLayout() {
         />
       </Drawer>
       <LogoutModal isOpen={showLogoutModal} setIsOpen={setShowLogoutModal} />
+      <NotLoggedInModal
+        visible={showNotLoggedInModal}
+        setVisible={setShowNotLoggedInModal}
+      />
     </GestureHandlerRootView>
   );
 }

@@ -4,6 +4,7 @@ import api from "@/lib/axios";
 import { useAppStore } from "@/store/useAppStore";
 import { Ionicons } from "@expo/vector-icons";
 import { Link, router } from "expo-router";
+import * as SecureStore from "expo-secure-store";
 import React, { useState } from "react";
 import {
   Alert,
@@ -14,6 +15,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { RESEND_KEY, RESEND_TIMEOUT_SECONDS } from "./otp";
 
 const Auth = () => {
   const [checked, setChecked] = useState(false);
@@ -32,6 +34,8 @@ const Auth = () => {
           phoneNumber,
         });
 
+        const availableAt = Date.now() + RESEND_TIMEOUT_SECONDS * 1000;
+        await SecureStore.setItemAsync(RESEND_KEY, String(availableAt));
         router.replace("/(auth)/otp");
       }
     } catch (error: any) {
