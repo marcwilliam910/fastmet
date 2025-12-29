@@ -70,7 +70,8 @@ export type Booking = {
     icon: string;
   }[];
   note: string;
-  images: string[];
+  itemType: string | null;
+  photos: string[];
   createdAt: string;
   status: string;
 };

@@ -20,11 +20,16 @@ import {
   View,
 } from "react-native";
 import { Dropdown } from "react-native-element-dropdown";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 
 const EditProfile = () => {
   const { isAuthenticated } = useAuthGuard();
+
+  const inset = useSafeAreaInsets();
 
   const numRef = useRef<TextInput>(null);
   const scrollRef = useRef<ScrollView>(null);
@@ -313,7 +318,7 @@ const EditProfile = () => {
           </View>
 
           {/* Address */}
-          <View className="gap-2">
+          {/* <View className="gap-2">
             <Text className="text-sm font-medium text-gray-700">
               Address <Text className="text-red-500">*</Text>
             </Text>
@@ -333,7 +338,7 @@ const EditProfile = () => {
                 {errors.address}
               </Text>
             )}
-          </View>
+          </View> */}
 
           {/* Gender Dropdown */}
           <View className="gap-2">
@@ -361,27 +366,27 @@ const EditProfile = () => {
               onChange={(item) => onFormChange("gender", item.value)}
             />
           </View>
-
-          {/*  Button */}
-          <View>
-            <Pressable
-              className={`items-center py-4 rounded-lg bg-lightPrimary  ${isButtonDisabled ? "opacity-65" : "active:bg-darkPrimary"}`}
-              disabled={isButtonDisabled}
-              onPress={onSubmit}
-            >
-              <Text className="text-base font-bold text-white">
-                Update Profile
-              </Text>
-            </Pressable>
-            <Pressable
-              className="items-center py-4 my-2 border border-gray-200 rounded-lg bg-ctaSecondary active:bg-ctaSecondaryActive"
-              onPress={() => router.back()}
-            >
-              <Text className="text-base font-bold ">Back</Text>
-            </Pressable>
-          </View>
         </View>
       </CustomKeyAvoidingView>
+      {/*  Button */}
+      <View
+        className="absolute left-0 right-0 px-6 bg-white"
+        style={{ bottom: inset.bottom + 10 }}
+      >
+        <Pressable
+          className={`items-center py-4 rounded-lg bg-lightPrimary  ${isButtonDisabled ? "opacity-65" : "active:bg-darkPrimary"}`}
+          disabled={isButtonDisabled}
+          onPress={onSubmit}
+        >
+          <Text className="text-base font-bold text-white">Update Profile</Text>
+        </Pressable>
+        <Pressable
+          className="items-center py-4 my-2 border border-gray-200 rounded-lg bg-ctaSecondary active:bg-ctaSecondaryActive"
+          onPress={() => router.back()}
+        >
+          <Text className="text-base font-bold ">Back</Text>
+        </Pressable>
+      </View>
     </SafeAreaView>
   );
 };

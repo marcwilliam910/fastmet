@@ -8,12 +8,6 @@ import { createLoadingSlice, LoadingSlice } from "./slices/loadingStore";
 
 export type AppStore = BookSlice & LoadingSlice & AuthSlice & ChatSlice;
 
-// export const useAppStore = create<AppStore>()((...a) => ({
-//   ...createBookSlice(...a),
-//   ...createLoadingSlice(...a),
-//   ...createAuthSlice(...a),
-// }));
-
 export const useAppStore = create<AppStore>()(
   persist(
     (...a) => ({

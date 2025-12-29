@@ -161,7 +161,7 @@ const RequestCard = ({
     >
       <Pressable
         onPress={onPressSeeMore}
-        className="overflow-hidden bg-white rounded-2xl active:opacity-80"
+        className="overflow-hidden bg-white rounded-2xl active:opacity-90"
       >
         {/* Header */}
         <View className="flex-row items-center justify-between px-5 py-3 bg-lightPrimary">

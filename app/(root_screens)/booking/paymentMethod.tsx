@@ -4,6 +4,7 @@ import { handleBookingSaved, requestBooking } from "@/sockets/handlers/booking";
 import { useAppStore } from "@/store/useAppStore";
 import { RequestBooking } from "@/types/book";
 import { generateBookingRef } from "@/utils/helper";
+import { uploadBookingImages } from "@/utils/imagePicker";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useEffect } from "react";
@@ -26,44 +27,77 @@ export default function PaymentMethod() {
   const socket = useSocket();
 
   const submitRequest = async () => {
-    setLoading(true);
+    try {
+      setLoading(true);
 
-    const {
-      bookingType,
-      selectedVehicle,
-      pickUp,
-      dropOff,
-      routeData,
-      addedServices,
-      photos,
-      note,
-      itemType,
-    } = useAppStore.getState();
+      const {
+        bookingType,
+        selectedVehicle,
+        pickUp,
+        dropOff,
+        routeData,
+        addedServices,
+        photos,
+        note,
+        itemType,
+      } = useAppStore.getState();
 
-    const bookingRef = generateBookingRef(
-      bookingType.type,
-      selectedVehicle?.name || ""
-    );
-    const payload: RequestBooking = {
-      customerId: id!,
-      bookingRef,
-      pickUp: pickUp,
-      dropOff: dropOff,
-      bookingType: bookingType,
-      selectedVehicle: {
-        id: selectedVehicle?.id,
-        name: selectedVehicle?.name,
-        capacity: selectedVehicle?.capacity,
-      },
-      routeData: routeData,
-      paymentMethod: paymentMethod,
-      addedServices: addedServices,
-      photos: photos,
-      note: note,
-      itemType: itemType,
-    };
+      const bookingRef = generateBookingRef(
+        bookingType.type,
+        selectedVehicle?.name || ""
+      );
 
-    requestBooking(socket, payload);
+      // Upload images first
+      const uploadResult = await uploadBookingImages(photos, bookingRef);
+
+      if (!uploadResult.success) {
+        Toast.show({
+          type: "error",
+          text1: "Upload Failed",
+          text2: "Could not upload photos. Please try again.",
+          position: "top",
+          visibilityTime: 4000,
+        });
+        setLoading(false);
+        return;
+      }
+
+      const payload: RequestBooking = {
+        customerId: id!,
+        bookingRef,
+        pickUp: pickUp,
+        dropOff: dropOff,
+        bookingType: bookingType,
+        selectedVehicle: {
+          id: selectedVehicle?.id,
+          name: selectedVehicle?.name,
+          capacity: selectedVehicle?.capacity,
+        },
+        routeData: routeData,
+        paymentMethod: paymentMethod,
+        addedServices: addedServices,
+        photos: uploadResult.images, // Cloudinary URLs
+        note: note,
+        itemType: itemType,
+      };
+
+      console.log("📤 Sending booking request:", payload);
+
+      // Send via socket
+      requestBooking(socket, payload);
+    } catch (error) {
+      console.error("Booking submission error:", error);
+
+      Toast.show({
+        type: "error",
+        text1: "Booking Failed",
+        text2: error instanceof Error ? error.message : "Something went wrong",
+        position: "top",
+        visibilityTime: 4000,
+      });
+
+      setLoading(false);
+    }
   };
 
   useEffect(() => {

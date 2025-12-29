@@ -7,7 +7,6 @@ import type {
 import { fetchDrivingDistance } from "@/utils/calculatePrice";
 import { defaultService } from "@/utils/constants";
 import { StateCreator } from "zustand";
-import { useAppStore } from "../useAppStore";
 
 export type Type = "asap" | "pooling" | "schedule";
 
@@ -46,7 +45,7 @@ export interface BookSlice {
   setPhoto: (photo: string) => void;
   removePhoto: (photo: string) => void;
 
-  fetchFareRates: () => Promise<void>;
+  fetchFareRates: (token: string) => Promise<void>;
   calculatePrice: () => Promise<void>;
   clearStates: () => void;
 }
@@ -117,13 +116,13 @@ export const createBookSlice: StateCreator<BookSlice> = (set, get) => ({
   setPaymentMethod: (method: "cash" | "online") =>
     set({ paymentMethod: method }),
 
-  fetchFareRates: async () => {
+  fetchFareRates: async (token: string) => {
     try {
       const res = await fetch(`${process.env.EXPO_PUBLIC_BASE_URL}/api/fare`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${useAppStore.getState().token}`,
+          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -185,6 +184,10 @@ export const createBookSlice: StateCreator<BookSlice> = (set, get) => ({
         serviceFee: 0,
         totalPrice: 0,
       },
+
+      note: "",
+      itemType: null,
+      photos: [],
 
       paymentMethod: "cash",
 

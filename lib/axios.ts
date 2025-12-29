@@ -3,7 +3,7 @@ import axios, { InternalAxiosRequestConfig } from "axios";
 import { router } from "expo-router";
 import Toast from "react-native-toast-message";
 
-const apiUrl = `${process.env.EXPO_PUBLIC_BASE_URL}/api/client`;
+export const apiUrl = `${process.env.EXPO_PUBLIC_BASE_URL}/api/client`;
 
 const api = axios.create({
   baseURL: apiUrl,

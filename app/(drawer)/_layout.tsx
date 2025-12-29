@@ -88,11 +88,15 @@ export default function DrawerLayout() {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showNotLoggedInModal, setShowNotLoggedInModal] = useState(false);
   usePushNotifications();
-  const fetchFareRates = useAppStore.getState().fetchFareRates;
 
   useEffect(() => {
-    fetchFareRates(); // fetch once when drawer mounts
-  }, [fetchFareRates]);
+    const token = useAppStore.getState().token;
+
+    if (!token) return;
+
+    const fetchFareRates = useAppStore.getState().fetchFareRates;
+    fetchFareRates(token);
+  }, []); // Empty dependency array - fetch once on mount
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

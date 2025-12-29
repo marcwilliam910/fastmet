@@ -2,9 +2,11 @@ import { ActiveBooking, Booking, Service } from "@/types/book";
 import { formatDate } from "@/utils/date";
 import { formatLocation } from "@/utils/helper";
 import { Ionicons } from "@expo/vector-icons";
+import { Image } from "expo-image";
 import { router } from "expo-router";
-import React from "react";
+import React, { useState } from "react";
 import { Modal, Pressable, ScrollView, Text, View } from "react-native";
+import ImageView from "react-native-image-viewing";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 function isActiveBooking(
@@ -25,6 +27,8 @@ export default function SeeMoreModal({
   data: Booking | ActiveBooking;
 }) {
   const insets = useSafeAreaInsets();
+  const [imageViewerVisible, setImageViewerVisible] = useState(false);
+  const [selectedImageUrl, setSelectedImageUrl] = useState("");
 
   if (!data) return null;
 
@@ -199,10 +203,15 @@ export default function SeeMoreModal({
           {/* Payment Info */}
           <View className="p-5 bg-gray-50 rounded-2xl">
             <Text className="mb-3 text-base font-semibold text-gray-800">
-              Payment Information
+              Payment Information (
+              {data.paymentMethod === "cash"
+                ? "Cash Payment"
+                : "Online Payment"}
+              )
             </Text>
-            <View className="flex-row items-center justify-between p-4 bg-white rounded-xl">
-              <View className="flex-row items-center">
+            {/* Price Breakdown */}
+            <View className="p-4 bg-white rounded-xl gap-2">
+              {/* <View className="flex-row items-center mb-2">
                 <Ionicons
                   name={
                     data.paymentMethod === "cash"
@@ -217,14 +226,57 @@ export default function SeeMoreModal({
                     ? "Cash Payment"
                     : "Online Payment"}
                 </Text>
+              </View> */}
+              <View className="flex-row justify-between">
+                <Text className="text-xs text-gray-500">Base Fare</Text>
+                <Text className="text-xs font-semibold text-gray-700">
+                  Php{" "}
+                  {data.routeData.basePrice.toLocaleString("en-US", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
+                </Text>
               </View>
-              <Text className="text-xl font-bold text-darkPrimary">
-                Php{" "}
-                {data.routeData.totalPrice.toLocaleString("en-US", {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}
-              </Text>
+
+              <View className="flex-row justify-between">
+                <Text className="text-xs text-gray-500">Distance Fee</Text>
+                <Text className="text-xs font-semibold text-gray-700">
+                  Php{" "}
+                  {data.routeData.distanceFee.toLocaleString("en-US", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
+                </Text>
+              </View>
+
+              <View className="flex-row justify-between">
+                <Text className="text-xs text-gray-500">Service Fee</Text>
+                <Text className="text-xs font-semibold text-gray-700">
+                  {data.routeData.serviceFee > 0
+                    ? `Php ${data.routeData.serviceFee.toLocaleString("en-US", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}`
+                    : "FREE"}
+                </Text>
+              </View>
+
+              {/* Divider */}
+              <View className="h-px my-2 bg-gray-200" />
+
+              {/* Total */}
+              <View className="flex-row justify-between ">
+                <Text className="text-base font-semibold text-gray-800">
+                  Total Amount
+                </Text>
+                <Text className="text-xl font-bold text-darkPrimary">
+                  Php{" "}
+                  {data.routeData.totalPrice.toLocaleString("en-US", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
+                </Text>
+              </View>
             </View>
           </View>
 
@@ -269,6 +321,19 @@ export default function SeeMoreModal({
             </View>
           )}
 
+          {/* Item Type */}
+          {data.itemType && (
+            <View className="p-5 bg-blue-50 rounded-2xl">
+              <View className="flex-row items-center mb-2">
+                <Ionicons name="cube-outline" size={20} color="#3B82F6" />
+                <Text className="ml-2 text-base font-semibold text-gray-800">
+                  Item Type
+                </Text>
+              </View>
+              <Text className="leading-5 text-gray-700">{data.itemType}</Text>
+            </View>
+          )}
+
           {/* Note */}
           {data.note && (
             <View className="p-5 bg-amber-50 rounded-2xl">
@@ -287,23 +352,32 @@ export default function SeeMoreModal({
           )}
 
           {/* Images */}
-          {data.images && data.images.length > 0 && (
+          {data.photos && data.photos.length > 0 && (
             <View className="p-5 bg-gray-50 rounded-2xl">
               <View className="flex-row items-center mb-3">
                 <Ionicons name="image-outline" size={20} color="#666" />
                 <Text className="ml-2 text-base font-semibold text-gray-800">
-                  Attached Images ({data.images.length})
+                  Attached Images ({data.photos.length})
                 </Text>
               </View>
               <View className="flex-row flex-wrap gap-2">
-                {data.images.map((img: any, index: number) => (
-                  <View
+                {data.photos.map((img: any, index: number) => (
+                  <Pressable
                     key={index}
-                    className="items-center justify-center bg-gray-200 rounded-xl"
-                    style={{ width: 100, height: 100 }}
+                    onPress={() => {
+                      setImageViewerVisible(true);
+                      setSelectedImageUrl(img);
+                    }}
+                    className="flex-1"
                   >
-                    <Text className="text-gray-500">Image {index + 1}</Text>
-                  </View>
+                    <Image
+                      source={{ uri: img }}
+                      style={{
+                        flex: 1,
+                        height: data.photos.length > 1 ? 100 : 200,
+                      }}
+                    />
+                  </Pressable>
                 ))}
               </View>
             </View>
@@ -331,6 +405,12 @@ export default function SeeMoreModal({
           )}
         </ScrollView>
       </View>
+      <ImageView
+        images={[{ uri: selectedImageUrl }]}
+        imageIndex={0}
+        visible={imageViewerVisible}
+        onRequestClose={() => setImageViewerVisible(false)}
+      />
     </Modal>
   );
 }

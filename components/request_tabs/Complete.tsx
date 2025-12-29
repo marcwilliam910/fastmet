@@ -3,6 +3,7 @@ import { Service } from "@/types/book";
 import { serviceAddons } from "@/utils/constants";
 import { formatDate } from "@/utils/date";
 import { Ionicons } from "@expo/vector-icons";
+import { Image } from "expo-image";
 import { useState } from "react";
 import {
   FlatList,
@@ -13,6 +14,7 @@ import {
   Text,
   View,
 } from "react-native";
+import ImageView from "react-native-image-viewing";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const DUMMY_DATA = [
@@ -191,6 +193,8 @@ function SeeMoreModal({
   customerRating: number;
   setCustomerRating: React.Dispatch<React.SetStateAction<number>>;
 }) {
+  const [imageViewerVisible, setImageViewerVisible] = useState(false);
+  const [selectedImageUrl, setSelectedImageUrl] = useState("");
   if (!data) return null;
 
   return (
@@ -433,6 +437,19 @@ function SeeMoreModal({
             </View>
           )}
 
+          {/* Item Type */}
+          {data.itemType && (
+            <View className="p-5 bg-blue-50 rounded-2xl">
+              <View className="flex-row items-center mb-2">
+                <Ionicons name="cube-outline" size={20} color="#3B82F6" />
+                <Text className="ml-2 text-base font-semibold text-gray-800">
+                  Item Type
+                </Text>
+              </View>
+              <Text className="leading-5 text-gray-700">{data.itemType}</Text>
+            </View>
+          )}
+
           {/* Note */}
           {data.note && (
             <View className="p-5 bg-amber-50 rounded-2xl">
@@ -450,30 +467,45 @@ function SeeMoreModal({
             </View>
           )}
 
-          {/*User Images */}
-          {data.images && data.images.length > 0 && (
+          {/* Images */}
+          {data.photos && data.photos.length > 0 && (
             <View className="p-5 bg-gray-50 rounded-2xl">
               <View className="flex-row items-center mb-3">
                 <Ionicons name="image-outline" size={20} color="#666" />
                 <Text className="ml-2 text-base font-semibold text-gray-800">
-                  Attached Images ({data.images.length})
+                  Your Attached Images ({data.photos.length})
                 </Text>
               </View>
               <View className="flex-row flex-wrap gap-2">
-                {data.images.map((img: any, index: number) => (
-                  <View
+                {data.photos.map((img: any, index: number) => (
+                  <Pressable
                     key={index}
-                    className="items-center justify-center bg-gray-200 rounded-xl"
-                    style={{ width: 90, height: 90 }}
+                    onPress={() => {
+                      setImageViewerVisible(true);
+                      setSelectedImageUrl(img);
+                    }}
+                    className="flex-1"
                   >
-                    <Text className="text-gray-500">Image {index + 1}</Text>
-                  </View>
+                    <Image
+                      source={{ uri: img }}
+                      style={{
+                        flex: 1,
+                        height: data.photos.length > 1 ? 100 : 200,
+                      }}
+                    />
+                  </Pressable>
                 ))}
               </View>
             </View>
           )}
         </ScrollView>
       </SafeAreaView>
+      <ImageView
+        images={[{ uri: selectedImageUrl }]}
+        imageIndex={0}
+        visible={imageViewerVisible}
+        onRequestClose={() => setImageViewerVisible(false)}
+      />
     </Modal>
   );
 }

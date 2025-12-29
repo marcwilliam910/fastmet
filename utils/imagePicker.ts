@@ -1,3 +1,6 @@
+import { apiUrl } from "@/lib/axios";
+import { useAppStore } from "@/store/useAppStore";
+import axios from "axios";
 import * as ImageManipulator from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
 import { Alert, Linking } from "react-native";
@@ -97,4 +100,31 @@ export const convertImageToBase64 = async (uri: string): Promise<string> => {
     reader.onerror = reject;
     reader.readAsDataURL(blob);
   });
+};
+
+export const uploadBookingImages = async (
+  images: string[],
+  bookingRef: string
+): Promise<{ success: boolean; images: string[] }> => {
+  const form = new FormData();
+
+  form.append("bookingRef", bookingRef);
+
+  images.forEach((image, index) => {
+    form.append("images", {
+      uri: image,
+      type: "image/jpeg",
+      name: `${index}.jpg`,
+    } as any);
+    form.append("types", `${index}`); // maps to same index
+  });
+
+  const res = await axios.post(`${apiUrl}/booking/upload-image`, form, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+      Authorization: `Bearer ${useAppStore.getState().token}`,
+    },
+  });
+
+  return res.data;
 };
