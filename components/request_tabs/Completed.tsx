@@ -22,7 +22,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 export default function CompletedRoute() {
   const { modalVisible, setModalVisible, selectedRequest, handleSeeMorePress } =
     useSeeMoreDetails<CompletedBooking>();
-  const [customerRating, setCustomerRating] = useState(0);
 
   const {
     data,

@@ -128,7 +128,7 @@ export default function Request() {
         </Text>
         <Pressable
           onPress={() => refetch()}
-          className="bg-[#0F2535] py-2 px-4 rounded-md mt-4"
+          className="bg-lightPrimary py-2 px-4 rounded-md mt-4"
         >
           <Text className="text-white text-center">Retry</Text>
         </Pressable>

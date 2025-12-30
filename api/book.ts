@@ -7,7 +7,7 @@ export const getUserBookings = async <T>(
   limit = 5
 ): Promise<{ bookings: T; nextPage: number | null }> => {
   const res = await api.get<{ bookings: T; nextPage: number | null }>(
-    `/booking`,
+    `/booking/filters/by-status`,
     { params: { status, page, limit } }
   );
 
@@ -17,11 +17,11 @@ export const getUserBookings = async <T>(
 export const getBookingById = async (
   bookingId: string
 ): Promise<ActiveBooking> => {
-  const res = await api.get(`/booking/live/${bookingId}`);
+  const res = await api.get(`/booking/${bookingId}`);
   return res.data;
 };
 
 export const getBookingsCounts = async () => {
-  const res = await api.get(`/booking/counts`);
+  const res = await api.get(`/booking/stats/counts`);
   return res.data;
 };
