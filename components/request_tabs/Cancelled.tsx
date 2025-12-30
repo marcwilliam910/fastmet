@@ -44,7 +44,7 @@ export default function CancelledRoute() {
         )}
         keyExtractor={(item) => item.id}
         showsVerticalScrollIndicator={false}
-        className="flex-1 p-4 bg-white"
+        className="flex-1 p-4 "
         contentContainerStyle={{
           paddingBottom: 40,
           gap: 15,

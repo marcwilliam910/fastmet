@@ -1,4 +1,3 @@
-import { useAuth } from "@/hooks/useAuth";
 import useSeeMoreDetails from "@/hooks/useSeeMoreDetails";
 import { useUserBookings } from "@/queries/bookingQueries";
 import { Booking, LocationDetails } from "@/types/book";
@@ -18,8 +17,6 @@ export default function RequestRoute() {
   const { modalVisible, setModalVisible, selectedRequest, handleSeeMorePress } =
     useSeeMoreDetails<Booking>();
 
-  const { id } = useAuth();
-
   const {
     data,
     isPending,
@@ -28,17 +25,17 @@ export default function RequestRoute() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useUserBookings<Booking>(id!, "pending", 5);
+  } = useUserBookings<Booking>("pending", 5);
 
   if (isPending)
     return (
-      <View className="flex-1 items-center bg-white justify-center">
+      <View className="flex-1 items-center  justify-center">
         <ActivityIndicator size="large" color="#FFA840" />
       </View>
     );
   if (error)
     return (
-      <View className="flex-1 items-center justify-center bg-white">
+      <View className="flex-1 items-center justify-center">
         <Text className="text-lg font-semibold text-gray-500">
           {error.message}
         </Text>
@@ -67,7 +64,7 @@ export default function RequestRoute() {
         )}
         keyExtractor={(item) => item._id}
         showsVerticalScrollIndicator={false}
-        className="flex-1 p-4 bg-white"
+        className="flex-1 p-4 "
         contentContainerStyle={{
           paddingBottom: 40,
           gap: 15,

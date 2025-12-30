@@ -22,7 +22,8 @@ export const bookingAccepted = (socket: Socket) => {
     });
 
     queryClient.invalidateQueries({
-      queryKey: ["userBookings", data.customerId, "active"],
+      queryKey: ["userBookings", "active"],
+      exact: false,
     });
   };
 

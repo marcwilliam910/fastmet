@@ -1,15 +1,11 @@
 import { getBookingById, getBookingsCounts, getUserBookings } from "@/api/book";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 
-export const useUserBookings = <T>(
-  userId: string,
-  status: string,
-  limit: number
-) => {
+export const useUserBookings = <T>(status: string, limit: number) => {
   return useInfiniteQuery({
-    queryKey: ["userBookings", userId, status, limit],
+    queryKey: ["userBookings", status, limit],
     queryFn: ({ pageParam = 1 }) =>
-      getUserBookings<T[]>(userId, status, pageParam, limit),
+      getUserBookings<T[]>(status, pageParam, limit),
     getNextPageParam: (lastPage) => lastPage.nextPage,
     initialPageParam: 1,
   });
@@ -23,10 +19,9 @@ export const useBooking = (bookingId: string) => {
   });
 };
 
-export const useBookingCounts = (userId: string) => {
+export const useBookingCounts = () => {
   return useQuery({
-    queryKey: ["userBookingCounts", userId],
-    queryFn: () => getBookingsCounts(userId),
-    enabled: !!userId,
+    queryKey: ["userBookingCounts"],
+    queryFn: () => getBookingsCounts(),
   });
 };

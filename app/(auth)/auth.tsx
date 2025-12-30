@@ -25,13 +25,16 @@ const Auth = () => {
 
   const handleSignIn = async () => {
     // validations
+    const formattedPhoneNumber = `+63${phoneNumber}`;
     try {
       setLoading(true);
-      const res = await api.post("/auth/send-otp", { phoneNumber });
+      const res = await api.post("/auth/send-otp", {
+        phoneNumber: formattedPhoneNumber,
+      });
 
       if (res.data.success) {
         useAppStore.getState().setAuthData({
-          phoneNumber,
+          phoneNumber: formattedPhoneNumber,
         });
 
         const availableAt = Date.now() + RESEND_TIMEOUT_SECONDS * 1000;

@@ -154,29 +154,56 @@ export default function SeeMoreModal({
               Trip Details
             </Text>
 
-            <View className="relative flex-row items-center justify-between ml-5 mr-2 border-l border-dashed border-lightPrimary pl-7">
-              <View className="gap-4">
-                <Text className="text-sm font-medium">
-                  {formatLocation(data.pickUp)}
-                </Text>
-                <Text className="text-sm font-medium">
-                  {formatLocation(data.dropOff)}
-                </Text>
+            <View className="relative flex-row items-start justify-between ml-5 mr-2 border-l border-dashed border-lightPrimary pl-7">
+              <View className="gap-5 flex-1">
+                {/* Pickup */}
+                <View>
+                  <Text className="text-sm font-medium text-gray-900">
+                    {formatLocation(data.pickUp)}
+                  </Text>
+
+                  {data.pickUp?.additionalDetails && (
+                    <Text
+                      className="mt-1 text-xs text-gray-500"
+                      numberOfLines={3}
+                    >
+                      {data.pickUp.additionalDetails}
+                    </Text>
+                  )}
+                </View>
+
+                {/* Dropoff */}
+                <View>
+                  <Text className="text-sm font-medium text-gray-900">
+                    {formatLocation(data.dropOff)}
+                  </Text>
+
+                  {data.dropOff?.additionalDetails && (
+                    <Text
+                      className="mt-1 text-xs text-gray-500"
+                      numberOfLines={3}
+                    >
+                      {data.dropOff.additionalDetails}
+                    </Text>
+                  )}
+                </View>
               </View>
 
               <Ionicons
                 name="location-sharp"
                 size={24}
-                color={"#FFA840"}
-                className="absolute -left-3.5 -top-1 bg-gray-50"
+                color="#FFA840"
+                className="absolute -left-3.5 -top-1  bg-gray-50"
               />
+
               <Ionicons
                 name="locate-sharp"
                 size={24}
-                color={"#FFA840"}
-                className="absolute -left-3.5 -bottom-1 bg-gray-50 "
+                color="#FFA840"
+                className="absolute -left-3.5 -bottom-3 pb-2  bg-gray-50"
               />
             </View>
+
             {/* Distance */}
             <View className="flex-row items-center justify-between p-3 mt-4 bg-white rounded-lg">
               <Text className="text-sm text-gray-600">Distance</Text>
@@ -382,13 +409,6 @@ export default function SeeMoreModal({
               </View>
             </View>
           )}
-
-          {/* {data.driverName && data.rating && (
-            <Pressable className="flex-row items-center justify-center gap-1 py-3 rounded-md active:bg-darkPrimary bg-lightPrimary">
-              <Text className="text-lg font-bold text-white">View on Map</Text>
-              <Ionicons name="arrow-forward" size={18} color="white" />
-            </Pressable>
-          )} */}
 
           {type === "Active Booking" && (
             <Pressable

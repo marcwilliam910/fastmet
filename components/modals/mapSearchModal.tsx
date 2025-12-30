@@ -374,7 +374,6 @@ const SearchModal: React.FC<SearchModalProps> = ({
         </View>
 
         {/* Additional Details Input */}
-
         <View className="mx-4 mt-7">
           <Text className="mb-2 font-semibold text-gray-700">
             Location details{" "}

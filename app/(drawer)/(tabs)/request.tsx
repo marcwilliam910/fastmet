@@ -1,11 +1,10 @@
 import NotLoggedIn from "@/components/notLoggedIn";
 import ActiveRoute from "@/components/request_tabs/Active";
 import CancelledRoute from "@/components/request_tabs/Cancelled";
-import CompleteRoute from "@/components/request_tabs/Complete";
+import CompletedRoute from "@/components/request_tabs/Completed";
 import RequestRoute from "@/components/request_tabs/Request";
 import { useAuth } from "@/hooks/useAuth";
 import { useBookingCounts } from "@/queries/bookingQueries";
-import { useAppStore } from "@/store/useAppStore";
 import { useState } from "react";
 import {
   ActivityIndicator,
@@ -84,17 +83,16 @@ function CustomTabBar({ navigationState, jumpTo, counts }: CustomTabBarProps) {
 
 export default function Request() {
   const { isLoggedIn } = useAuth();
-  const id = useAppStore((state) => state.id);
   const layout = useWindowDimensions();
   const [index, setIndex] = useState(0);
   const [routes] = useState<TabRoute[]>([
     { key: "pending", title: "Request" },
     { key: "active", title: "Active" },
-    { key: "complete", title: "Complete" },
+    { key: "completed", title: "Completed" },
     { key: "canceled", title: "Cancelled" },
   ]);
 
-  const { data: counts, isPending, error } = useBookingCounts(id!);
+  const { data: counts, isPending, error, refetch } = useBookingCounts();
 
   // Lazy render - only renders the active tab
   const renderScene = ({ route }: { route: TabRoute }) => {
@@ -103,8 +101,8 @@ export default function Request() {
         return <RequestRoute />;
       case "active":
         return <ActiveRoute />;
-      case "complete":
-        return <CompleteRoute />;
+      case "completed":
+        return <CompletedRoute />;
       case "canceled":
         return <CancelledRoute />;
       default:
@@ -124,10 +122,16 @@ export default function Request() {
     );
   if (error)
     return (
-      <View className="flex-1 items-center justify-center">
+      <View className="flex-1 items-center justify-center bg-white">
         <Text className="text-lg font-semibold text-gray-500">
           {error.message}
         </Text>
+        <Pressable
+          onPress={() => refetch()}
+          className="bg-[#0F2535] py-2 px-4 rounded-md mt-4"
+        >
+          <Text className="text-white text-center">Retry</Text>
+        </Pressable>
       </View>
     );
 
@@ -143,6 +147,7 @@ export default function Request() {
           <ActivityIndicator size="small" color="#999" />
         </View>
       )}
+      className="bg-white"
       renderTabBar={(props) => <CustomTabBar {...props} counts={counts} />}
     />
   );

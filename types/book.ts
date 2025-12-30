@@ -36,22 +36,8 @@ export type Booking = {
   _id: string;
   bookingRef: string;
   customerId: string;
-  pickUp: {
-    name: string;
-    address: string;
-    coords: {
-      lat: number;
-      lng: number;
-    };
-  };
-  dropOff: {
-    name: string;
-    address: string;
-    coords: {
-      lat: number;
-      lng: number;
-    };
-  };
+  pickUp: LocationDetails;
+  dropOff: LocationDetails;
   bookingType: {
     type: string; // "asap" | "schedule"
     value: string;
@@ -74,9 +60,15 @@ export type Booking = {
   photos: string[];
   createdAt: string;
   status: string;
+  isRated: boolean;
 };
 
 export type ActiveBooking = Booking & { driver: Driver };
+
+export type CompletedBooking = ActiveBooking & {
+  proofImageUrl: string;
+  completedAt: string;
+};
 
 export type Driver = {
   id: string;

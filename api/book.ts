@@ -2,13 +2,12 @@ import api from "@/lib/axios";
 import { ActiveBooking } from "@/types/book";
 
 export const getUserBookings = async <T>(
-  userId: string,
   status: string,
   page = 1,
   limit = 5
 ): Promise<{ bookings: T; nextPage: number | null }> => {
   const res = await api.get<{ bookings: T; nextPage: number | null }>(
-    `/booking/${userId}`,
+    `/booking`,
     { params: { status, page, limit } }
   );
 
@@ -22,7 +21,7 @@ export const getBookingById = async (
   return res.data;
 };
 
-export const getBookingsCounts = async (userId: string) => {
-  const res = await api.get(`/booking/counts/${userId}`);
+export const getBookingsCounts = async () => {
+  const res = await api.get(`/booking/counts`);
   return res.data;
 };

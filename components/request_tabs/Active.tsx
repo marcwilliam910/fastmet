@@ -1,4 +1,3 @@
-import { useAuth } from "@/hooks/useAuth";
 import useSeeMoreDetails from "@/hooks/useSeeMoreDetails";
 import { useUserBookings } from "@/queries/bookingQueries";
 import { ActiveBooking, LocationDetails } from "@/types/book";
@@ -19,8 +18,6 @@ export default function ActiveRoute() {
   const { modalVisible, setModalVisible, selectedRequest, handleSeeMorePress } =
     useSeeMoreDetails<ActiveBooking>();
 
-  const { id } = useAuth();
-
   const {
     data,
     isPending,
@@ -29,17 +26,17 @@ export default function ActiveRoute() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useUserBookings<ActiveBooking>(id!, "active", 5);
+  } = useUserBookings<ActiveBooking>("active", 5);
 
   if (isPending)
     return (
-      <View className="flex-1 items-center bg-white justify-center">
+      <View className="flex-1 items-center justify-center">
         <ActivityIndicator size="large" color="#FFA840" />
       </View>
     );
   if (error)
     return (
-      <View className="flex-1 items-center justify-center bg-white">
+      <View className="flex-1 items-center justify-center">
         <Text className="text-lg font-semibold text-gray-500">
           {error.message}
         </Text>
@@ -47,8 +44,6 @@ export default function ActiveRoute() {
     );
 
   const activeBookings = data?.pages.flatMap((page) => page.bookings) ?? [];
-
-  console.log(activeBookings);
 
   return (
     <>
@@ -70,7 +65,7 @@ export default function ActiveRoute() {
         )}
         keyExtractor={(item) => item._id}
         showsVerticalScrollIndicator={false}
-        className="flex-1 p-4 bg-white"
+        className="flex-1 p-4"
         contentContainerStyle={{
           paddingBottom: 40,
           gap: 15,
