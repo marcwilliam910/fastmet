@@ -66,7 +66,7 @@ export function usePushNotifications() {
         responseListener.current.remove();
       }
     };
-  }, []);
+  }, [isLoggedIn]);
 
   return {
     expoPushToken,
@@ -75,30 +75,42 @@ export function usePushNotifications() {
 }
 
 async function registerForPushNotificationsAsync() {
-  let token;
+  try {
+    let token: string | undefined;
 
-  // Check if we already asked for permission using SecureStore
-  const hasAsked = await getItemAsync(NOTIFICATION_PERMISSION_KEY);
+    const hasAsked = await getItemAsync(NOTIFICATION_PERMISSION_KEY);
 
-  if (Platform.OS === "android") {
-    await Notifications.setNotificationChannelAsync("default", {
-      name: "default",
-      importance: Notifications.AndroidImportance.MAX,
-      vibrationPattern: [0, 250, 250, 250],
-      lightColor: "#FFA840",
-    });
-  }
+    if (Platform.OS === "android") {
+      await Notifications.setNotificationChannelAsync("default", {
+        name: "default",
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: "#FFA840",
+      });
+    }
 
-  if (Device.isDevice) {
+    if (!Device.isDevice) {
+      console.log("⚠️ Must use physical device for Push Notifications");
+      return undefined;
+    }
+
+    const projectId =
+      Constants.expoConfig?.extra?.eas?.projectId ??
+      Constants.easConfig?.projectId;
+
+    if (!projectId) {
+      console.error("❌ EAS projectId missing");
+      return undefined;
+    }
+
     const { status: existingStatus } =
       await Notifications.getPermissionsAsync();
+
     let finalStatus = existingStatus;
 
-    // Only ask if we haven't asked before or permission was previously granted
     if (existingStatus !== "granted") {
       if (!hasAsked) {
-        // Show explanation before asking
-        return new Promise<string | undefined>((resolve) => {
+        return await new Promise<string | undefined>((resolve) => {
           Alert.alert(
             "🔔 Stay Updated",
             "Enable notifications to receive alerts about scheduled trips and booking updates.",
@@ -116,18 +128,23 @@ async function registerForPushNotificationsAsync() {
                 onPress: async () => {
                   const { status } =
                     await Notifications.requestPermissionsAsync();
+
                   finalStatus = status;
                   await setItemAsync(NOTIFICATION_PERMISSION_KEY, "asked");
 
-                  if (finalStatus === "granted") {
+                  if (finalStatus !== "granted") {
+                    resolve(undefined);
+                    return;
+                  }
+
+                  try {
                     const token = (
-                      await Notifications.getExpoPushTokenAsync({
-                        projectId: Constants.expoConfig?.extra?.eas?.projectId,
-                      })
+                      await Notifications.getExpoPushTokenAsync({ projectId })
                     ).data;
                     console.log("📱 Push token obtained:", token);
                     resolve(token);
-                  } else {
+                  } catch (error) {
+                    console.error("❌ Token fetch failed:", error);
                     resolve(undefined);
                   }
                 },
@@ -135,10 +152,10 @@ async function registerForPushNotificationsAsync() {
             ]
           );
         });
-      } else {
-        console.log("⚠️ Permission previously declined");
-        return undefined;
       }
+
+      console.log("⚠️ Permission previously declined");
+      return undefined;
     }
 
     if (finalStatus !== "granted") {
@@ -146,19 +163,14 @@ async function registerForPushNotificationsAsync() {
       return undefined;
     }
 
-    // Get the token
-    token = (
-      await Notifications.getExpoPushTokenAsync({
-        projectId: Constants.expoConfig?.extra?.eas?.projectId,
-      })
-    ).data;
+    token = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
 
     console.log("📱 Push token obtained:", token);
-  } else {
-    console.log("⚠️ Must use physical device for Push Notifications");
+    return token;
+  } catch (error) {
+    console.error("❌ registerForPushNotificationsAsync failed:", error);
+    return undefined;
   }
-
-  return token;
 }
 
 async function savePushTokenToBackend(token: string) {

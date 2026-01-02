@@ -338,7 +338,16 @@ function SeeMoreModal({
               </Text>
               <View className="flex-row items-center justify-between">
                 <View className="flex-row items-center justify-center gap-2">
-                  <Ionicons name="person-circle" size={44} color="#F7931E" />
+                  {data.driver.profilePictureUrl ? (
+                    <Image
+                      source={{ uri: data.driver.profilePictureUrl }}
+                      style={{ height: 44, width: 44 }}
+                      contentFit="contain"
+                      className="rounded-full"
+                    />
+                  ) : (
+                    <Ionicons name="person-circle" size={44} color="#F7931E" />
+                  )}
                   <View>
                     <Text className="text-lg font-semibold text-gray-800">
                       {data.driver.name}

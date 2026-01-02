@@ -48,7 +48,7 @@ export default function MyProfile() {
             {name || "User"}
           </Text>
           <Text className="text-base text-gray-400">
-            0{useAppStore.getState().phoneNumber}
+            {useAppStore.getState().phoneNumber}
           </Text>
         </View>
       </View>

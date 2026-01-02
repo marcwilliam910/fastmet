@@ -297,12 +297,14 @@ const EditProfile = () => {
               submitBehavior="submit"
               placeholder="Enter Name"
               placeholderTextColor="#9CA3AF"
-              className={`p-4 text-base bg-gray-100 rounded-lg ${
+              className={`p-4 text-base bg-gray-200 rounded-lg ${
                 errors.fullName ? "border border-red-500" : ""
               }`}
             />
             {errors.fullName && (
-              <Text className="text-xs text-red-500">{errors.fullName}</Text>
+              <Text className="text-xs ml-2 text-red-500">
+                {errors.fullName}
+              </Text>
             )}
           </View>
 
@@ -312,8 +314,8 @@ const EditProfile = () => {
               Phone Number <Text className="text-red-500">*</Text>
             </Text>
             {/* display the phone number, not as input. disabled */}
-            <Text className="p-4 text-base bg-gray-100 opacity-50 rounded-lg ">
-              0{useAppStore.getState().phoneNumber}
+            <Text className="p-4 text-base bg-gray-200 opacity-50 rounded-lg ">
+              {useAppStore.getState().phoneNumber}
             </Text>
           </View>
 
@@ -346,7 +348,7 @@ const EditProfile = () => {
 
             <Dropdown
               style={{
-                backgroundColor: "#F3F4F6",
+                backgroundColor: "#e5e7eb",
                 paddingHorizontal: 16,
                 paddingVertical: 14,
                 borderRadius: 10,
@@ -374,8 +376,8 @@ const EditProfile = () => {
         style={{ bottom: inset.bottom + 10 }}
       >
         <Pressable
-          className={`items-center py-4 rounded-lg bg-lightPrimary  ${isButtonDisabled ? "opacity-65" : "active:bg-darkPrimary"}`}
-          disabled={isButtonDisabled}
+          className={`items-center py-4 rounded-lg bg-lightPrimary  ${isButtonDisabled || form.fullName === "" ? "opacity-65" : "active:bg-darkPrimary"}`}
+          disabled={isButtonDisabled || form.fullName === ""}
           onPress={onSubmit}
         >
           <Text className="text-base font-bold text-white">Update Profile</Text>
