@@ -134,6 +134,7 @@ export default function PaymentMethod() {
         <Pressable
           className="absolute left-5 top-1.5"
           onPress={() => router.back()}
+          hitSlop={20}
         >
           <Ionicons name="chevron-back" size={28} color="#FFA840" />
         </Pressable>

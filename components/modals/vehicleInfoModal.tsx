@@ -78,7 +78,10 @@ export const VehicleInfoModal = ({
         {/* Done button */}
         <Pressable
           onPress={() => setModalVisible(false)}
-          className="bg-[#FFA840] rounded-xl py-3 mb-4"
+          className="bg-[#FFA840] rounded-xl mb-4"
+          style={{
+            paddingBlock: Platform.OS === "ios" ? 14 : 12,
+          }}
         >
           <Text className="text-white text-center text-base font-semibold">
             Done

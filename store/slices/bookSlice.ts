@@ -45,7 +45,7 @@ export interface BookSlice {
   setPhoto: (photo: string) => void;
   removePhoto: (photo: string) => void;
 
-  fetchFareRates: (token: string) => Promise<void>;
+  fetchFareRates: () => Promise<void>;
   calculatePrice: () => Promise<void>;
   clearStates: () => void;
 }
@@ -116,13 +116,34 @@ export const createBookSlice: StateCreator<BookSlice> = (set, get) => ({
   setPaymentMethod: (method: "cash" | "online") =>
     set({ paymentMethod: method }),
 
-  fetchFareRates: async (token: string) => {
+  // fetchFareRates: async (token: string) => {
+  //   try {
+  //     const res = await fetch(`${process.env.EXPO_PUBLIC_BASE_URL}/api/fare`, {
+  //       method: "GET",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //         Authorization: `Bearer ${token}`,
+  //       },
+  //     });
+
+  //     if (!res.ok) {
+  //       throw new Error(`Failed to fetch fare rates: ${res.status}`);
+  //     }
+
+  //     const rates = await res.json();
+  //     console.log("Fare rates:", JSON.stringify(rates, null, 2));
+
+  //     set({ fareRates: rates });
+  //   } catch (e) {
+  //     console.error("Failed to fetch fare rates", e);
+  //   }
+  // },
+  fetchFareRates: async () => {
     try {
       const res = await fetch(`${process.env.EXPO_PUBLIC_BASE_URL}/api/fare`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -138,7 +159,6 @@ export const createBookSlice: StateCreator<BookSlice> = (set, get) => ({
       console.error("Failed to fetch fare rates", e);
     }
   },
-
   calculatePrice: async () => {
     const { pickUp, dropOff, addedServices, fareRates } = get();
     if (!pickUp || !dropOff) return;

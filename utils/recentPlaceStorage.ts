@@ -1,7 +1,8 @@
+import { LocationDetails } from "@/types/book";
 import * as SecureStore from "expo-secure-store";
 
 // Save an array
-const saveArray = async (key: string, array: any[]) => {
+const saveArray = async (key: string, array: LocationDetails[]) => {
   try {
     await SecureStore.setItemAsync(key, JSON.stringify(array));
   } catch (error) {
@@ -21,9 +22,15 @@ const getArray = async (key: string) => {
 };
 
 // Push a new item to the array
-const pushToArray = async (key: string, newItem: any) => {
+const pushToArray = async (key: string, newItem: LocationDetails) => {
   try {
     const currentArray = await getArray(key);
+
+    //dont add if already exists
+    if (
+      currentArray.some((item: LocationDetails) => item?.name === newItem?.name)
+    )
+      return;
 
     // Keep array size max 3
     if (currentArray.length === 3) currentArray.pop();

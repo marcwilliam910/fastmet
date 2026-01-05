@@ -6,14 +6,7 @@ import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import React, { useMemo, useRef, useState } from "react";
-import {
-  Dimensions,
-  Platform,
-  Pressable,
-  ScrollView,
-  Text,
-  View,
-} from "react-native";
+import { Dimensions, Platform, Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import BookingTypeModal from "../modals/bookingTypeModal";
 import SearchModal from "../modals/mapSearchModal";
@@ -92,13 +85,9 @@ const BookSheet = () => {
                   />
                 </Pressable>
               </View>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                className="py-2"
-              >
+              <View className="flex-row w-full py-2">
                 {vehicles.map((v) => (
-                  <View key={v.id} className="relative items-center gap-1 mr-3">
+                  <View key={v.id} className="flex-1 items-center gap-1">
                     <Pressable
                       className={`items-center gap-3 px-4 py-2 rounded-lg ${
                         selectedVehicle?.id === v.id
@@ -122,7 +111,7 @@ const BookSheet = () => {
                     </Pressable>
                   </View>
                 ))}
-              </ScrollView>
+              </View>
             </View>
             <LocationInputs
               onOpenSearch={(type) => {

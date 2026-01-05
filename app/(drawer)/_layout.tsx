@@ -90,13 +90,9 @@ export default function DrawerLayout() {
   usePushNotifications();
 
   useEffect(() => {
-    const token = useAppStore.getState().token;
-
-    if (!token) return;
-
     const fetchFareRates = useAppStore.getState().fetchFareRates;
-    fetchFareRates(token);
-  }, []); // Empty dependency array - fetch once on mount
+    fetchFareRates();
+  }, []);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

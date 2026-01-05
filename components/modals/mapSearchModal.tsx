@@ -13,6 +13,7 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
+  Keyboard,
   Linking,
   Modal,
   Platform,
@@ -20,6 +21,7 @@ import {
   Text,
   TextInput,
   ToastAndroid,
+  TouchableWithoutFeedback,
   View,
 } from "react-native";
 import GooglePlacesTextInput, {
@@ -306,156 +308,158 @@ const SearchModal: React.FC<SearchModalProps> = ({
       transparent
       onRequestClose={onClose}
     >
-      <View
-        style={{
-          flex: 1,
-          paddingTop: insets.top + 5, // respect status bar / notch
-          paddingBottom: insets.bottom,
-          backgroundColor: "white",
-        }}
-      >
-        {/* Header */}
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View
-          className="flex-row items-center justify-center px-4"
-          style={{ paddingBottom: Platform.OS === "ios" ? 25 : 16 }}
-        >
-          <Pressable
-            onPress={() => {
-              setSelectedPlace(null);
-
-              onClose();
-            }}
-            className="absolute left-4 -top-1"
-            hitSlop={20}
-          >
-            <Ionicons
-              name="chevron-back-outline"
-              size={Platform.OS === "ios" ? 34 : 28}
-              color="#FFA840"
-            />
-          </Pressable>
-          <Text className="text-lg font-semibold capitalize">
-            {type} location
-          </Text>
-        </View>
-        {/* Search Input */}
-        <View className="pb-4 mx-4 bg-white border-b border-gray-200">
-          <View className="flex-row items-center px-3 py-2">
-            <Ionicons
-              name="search-outline"
-              size={24}
-              color="#4B5563"
-              className="absolute z-50 bg-white top-5 left-3"
-            />
-            <Animated.View
-              className="flex-1 ml-6" // all static styling here
-              style={animatedStyle} // only animated transforms here
-            >
-              <GooglePlacesTextInput
-                apiKey={GOOGLE_MAPS_API_KEY ?? ""}
-                onPlaceSelect={handleOnPlaceSelect}
-                value={haveValue ? searchValue : undefined}
-                style={customStyles}
-                languageCode="en"
-                includedRegionCodes={["ph"]}
-                minCharsToFetch={2}
-                fetchDetails={true}
-                placeHolderText={`Where to ${type === "pickup" ? "pick up" : "drop off"}?`}
-                returnKeyType="search"
-                textContentType="location"
-                textAlign="left"
-                clearElement={
-                  <Ionicons name="close" size={24} className="pt-3" />
-                }
-                showLoadingIndicator={false}
-              />
-            </Animated.View>
-          </View>
-        </View>
-
-        {/* Additional Details Input */}
-        <View className="mx-4 mt-7">
-          <Text className="mb-2 font-semibold text-gray-700">
-            Location details{" "}
-            <Text className="text-sm text-gray-400">(optional)</Text>
-          </Text>
-
-          <TextInput
-            defaultValue={haveValue?.additionalDetails}
-            onChangeText={setAdditionalDetails}
-            multiline
-            numberOfLines={4}
-            placeholder="e.g. In front of Jollibee or near gate 3"
-            placeholderTextColor="#9CA3AF"
-            style={{ height: 120, textAlignVertical: "top" }}
-            className="p-4 text-base text-gray-800 bg-white border border-gray-200 rounded-xl"
-          />
-        </View>
-
-        {/* Current Location Button */}
-        <View className="px-4 mt-5 mb-2">
-          <Pressable
-            onPress={handleCurrentLocation}
-            disabled={loading}
-            className="flex-row items-center px-4 py-4 bg-white border border-gray-200 rounded-xl active:bg-gray-50"
-          >
-            <View className="items-center justify-center mr-3 bg-blue-500 rounded-full w-11 h-11">
-              <Ionicons name="navigate" size={20} color="#FFFFFF" />
-            </View>
-            {loading ? (
-              <>
-                <Text className="flex-1  text-base font-semibold text-gray-900">
-                  Getting current location...
-                </Text>
-                <ActivityIndicator size="small" color="#FFA840" />
-              </>
-            ) : (
-              <>
-                <Text className="flex-1 text-base font-semibold text-gray-900">
-                  Use current location
-                </Text>
-                <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
-              </>
-            )}
-          </Pressable>
-        </View>
-
-        {/* Recent Places */}
-        {recentPlaces.length > 0 && (
-          <View className="flex-1 px-4 mt-2">
-            <View className="px-4 py-3">
-              <View className="flex-row items-center">
-                <Ionicons
-                  name="time-outline"
-                  size={18}
-                  color="#6B7280"
-                  style={{ marginRight: 8 }}
-                />
-                <Text className="text-xs font-semibold tracking-wider text-gray-600 uppercase">
-                  Recent Places
-                </Text>
-              </View>
-            </View>
-            <FlatList
-              data={recentPlaces}
-              renderItem={renderRecentPlace}
-              keyExtractor={(item, index) => `${item!.name}-${index}`}
-              showsVerticalScrollIndicator={false}
-            />
-          </View>
-        )}
-
-        <Pressable
-          className={`items-center justify-center p-3.5 mx-6 bg-lightPrimary absolute left-0 right-0 active:bg-darkPrimary rounded-lg ${canConfirm ? "active:bg-darkPrimary" : "opacity-80"}`}
-          onPress={handleConfirm}
-          disabled={!canConfirm}
           style={{
-            bottom: inset.bottom + 15,
+            flex: 1,
+            paddingTop: insets.top + 5, // respect status bar / notch
+            paddingBottom: insets.bottom,
+            backgroundColor: "white",
           }}
         >
-          <Text className="text-lg font-bold text-white">Confirm</Text>
-        </Pressable>
-      </View>
+          {/* Header */}
+          <View
+            className="flex-row items-center justify-center px-4"
+            style={{ paddingBottom: Platform.OS === "ios" ? 25 : 16 }}
+          >
+            <Pressable
+              onPress={() => {
+                setSelectedPlace(null);
+
+                onClose();
+              }}
+              className="absolute left-4 -top-1"
+              hitSlop={20}
+            >
+              <Ionicons
+                name="chevron-back-outline"
+                size={Platform.OS === "ios" ? 34 : 28}
+                color="#FFA840"
+              />
+            </Pressable>
+            <Text className="text-lg font-semibold capitalize">
+              {type} location
+            </Text>
+          </View>
+          {/* Search Input */}
+          <View className="pb-4 mx-4 bg-white border-b border-gray-200">
+            <View className="flex-row items-center px-3 py-2">
+              <Ionicons
+                name="search-outline"
+                size={24}
+                color="#4B5563"
+                className="absolute z-50 bg-white top-5 left-3"
+              />
+              <Animated.View
+                className="flex-1 ml-6" // all static styling here
+                style={animatedStyle} // only animated transforms here
+              >
+                <GooglePlacesTextInput
+                  apiKey={GOOGLE_MAPS_API_KEY ?? ""}
+                  onPlaceSelect={handleOnPlaceSelect}
+                  value={haveValue ? searchValue : undefined}
+                  style={customStyles}
+                  languageCode="en"
+                  includedRegionCodes={["ph"]}
+                  minCharsToFetch={2}
+                  fetchDetails={true}
+                  placeHolderText={`Where to ${type === "pickup" ? "pick up" : "drop off"}?`}
+                  returnKeyType="search"
+                  textContentType="location"
+                  textAlign="left"
+                  clearElement={
+                    <Ionicons name="close" size={24} className="pt-3" />
+                  }
+                  showLoadingIndicator={false}
+                />
+              </Animated.View>
+            </View>
+          </View>
+
+          {/* Additional Details Input */}
+          <View className="mx-4 mt-7">
+            <Text className="mb-2 font-semibold text-gray-700">
+              Location details{" "}
+              <Text className="text-sm text-gray-400">(optional)</Text>
+            </Text>
+
+            <TextInput
+              defaultValue={haveValue?.additionalDetails}
+              onChangeText={setAdditionalDetails}
+              multiline
+              numberOfLines={4}
+              placeholder="e.g. In front of Jollibee or near gate 3"
+              placeholderTextColor="#9CA3AF"
+              style={{ height: 120, textAlignVertical: "top" }}
+              className="p-4 text-base text-gray-800 bg-white border border-gray-200 rounded-xl"
+            />
+          </View>
+
+          {/* Current Location Button */}
+          <View className="px-4 mt-5 mb-2">
+            <Pressable
+              onPress={handleCurrentLocation}
+              disabled={loading}
+              className="flex-row items-center px-4 py-4 bg-white border border-gray-200 rounded-xl active:bg-gray-50"
+            >
+              <View className="items-center justify-center mr-3 bg-blue-500 rounded-full w-11 h-11">
+                <Ionicons name="navigate" size={20} color="#FFFFFF" />
+              </View>
+              {loading ? (
+                <>
+                  <Text className="flex-1  text-base font-semibold text-gray-900">
+                    Getting current location...
+                  </Text>
+                  <ActivityIndicator size="small" color="#FFA840" />
+                </>
+              ) : (
+                <>
+                  <Text className="flex-1 text-base font-semibold text-gray-900">
+                    Use current location
+                  </Text>
+                  <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+                </>
+              )}
+            </Pressable>
+          </View>
+
+          {/* Recent Places */}
+          {recentPlaces.length > 0 && (
+            <View className="flex-1 px-4 mt-2">
+              <View className="px-4 py-3">
+                <View className="flex-row items-center">
+                  <Ionicons
+                    name="time-outline"
+                    size={18}
+                    color="#6B7280"
+                    style={{ marginRight: 8 }}
+                  />
+                  <Text className="text-xs font-semibold tracking-wider text-gray-600 uppercase">
+                    Recent Places
+                  </Text>
+                </View>
+              </View>
+              <FlatList
+                data={recentPlaces}
+                renderItem={renderRecentPlace}
+                keyExtractor={(item, index) => `${item!.name}-${index}`}
+                showsVerticalScrollIndicator={false}
+              />
+            </View>
+          )}
+
+          <Pressable
+            className={`items-center justify-center p-3.5 mx-6 bg-lightPrimary absolute left-0 right-0 active:bg-darkPrimary rounded-lg ${canConfirm ? "active:bg-darkPrimary" : "opacity-80"}`}
+            onPress={handleConfirm}
+            disabled={!canConfirm}
+            style={{
+              bottom: inset.bottom + 15,
+            }}
+          >
+            <Text className="text-lg font-bold text-white">Confirm</Text>
+          </Pressable>
+        </View>
+      </TouchableWithoutFeedback>
     </Modal>
   );
 };

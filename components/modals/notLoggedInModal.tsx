@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import React from "react";
-import { Modal, Pressable, Text, View } from "react-native";
+import { Modal, Platform, Pressable, Text, View } from "react-native";
 
 const NotLoggedInModal = ({
   visible,
@@ -28,8 +28,13 @@ const NotLoggedInModal = ({
           <Pressable
             className="absolute top-4 right-4"
             onPress={() => setVisible(false)}
+            hitSlop={20}
           >
-            <Ionicons name="close" size={28} color="#FFA840" />
+            <Ionicons
+              name="close"
+              size={Platform.OS === "ios" ? 34 : 28}
+              color="#FFA840"
+            />
           </Pressable>
 
           <Image
@@ -48,7 +53,8 @@ const NotLoggedInModal = ({
 
           <Pressable
             onPress={handleGoToLogin}
-            className="w-full py-3 mt-2 rounded-lg bg-lightPrimary"
+            className="w-full mt-2 rounded-lg bg-lightPrimary"
+            style={{ paddingBlock: Platform.OS === "ios" ? 14 : 12 }}
           >
             <Text className="font-semibold text-center text-white">
               Go to Login

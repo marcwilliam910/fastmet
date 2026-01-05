@@ -97,6 +97,7 @@ export default function MapScreen({
               }}
               title="Pick Up"
               image={STATIC_IMAGES.pickup}
+              zIndex={1000}
             />
           )}
 
@@ -108,6 +109,7 @@ export default function MapScreen({
               }}
               title="Drop Off"
               image={STATIC_IMAGES.dropoff}
+              zIndex={1000}
             />
           )}
 
