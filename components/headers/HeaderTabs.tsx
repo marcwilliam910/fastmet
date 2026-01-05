@@ -12,7 +12,7 @@ const HeaderTabs = () => {
     <View className="flex-row items-center justify-between w-full">
       <View className="flex-row items-center gap-8">
         <Pressable
-          hitSlop={{ top: 20, left: 20, bottom: 20, right: 20 }}
+          hitSlop={{ top: 20, left: 20, bottom: 0, right: 20 }}
           onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
         >
           <Ionicons

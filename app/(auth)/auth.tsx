@@ -24,7 +24,6 @@ const Auth = () => {
   const [isValid, setIsValid] = useState(false);
 
   const handleSignIn = async () => {
-    // validations
     const formattedPhoneNumber = `+63${phoneNumber}`;
     try {
       setLoading(true);
@@ -43,10 +42,26 @@ const Auth = () => {
       }
     } catch (error: any) {
       console.log(error);
-      Alert.alert(
-        "Error",
-        error.response?.data?.error || "Failed to send OTP. Please try again."
-      );
+
+      // Handle rate limit errors specifically
+      if (error.response?.status === 429) {
+        const retryAfter = error.response?.data?.retryAfter;
+        const minutes = retryAfter ? Math.ceil(retryAfter / 60) : null;
+
+        Alert.alert(
+          "Too Many Attempts",
+          error.response?.data?.error ||
+            (minutes
+              ? `Please try again in ${minutes} minute${minutes > 1 ? "s" : ""}.`
+              : "Please try again later."),
+          [{ text: "OK" }]
+        );
+      } else {
+        Alert.alert(
+          "Error",
+          error.response?.data?.error || "Failed to send OTP. Please try again."
+        );
+      }
     } finally {
       setLoading(false);
     }

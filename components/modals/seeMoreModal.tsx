@@ -5,7 +5,14 @@ import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import React, { useState } from "react";
-import { Modal, Pressable, ScrollView, Text, View } from "react-native";
+import {
+  Modal,
+  Platform,
+  Pressable,
+  ScrollView,
+  Text,
+  View,
+} from "react-native";
 import ImageView from "react-native-image-viewing";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -54,8 +61,16 @@ export default function SeeMoreModal({
       >
         {/* Header */}
         <View className="flex-row items-center justify-center px-4 pb-4">
-          <Pressable onPress={onClose} className="absolute left-4 -top-1">
-            <Ionicons name="chevron-back-outline" size={28} color="#FFA840" />
+          <Pressable
+            onPress={onClose}
+            className="absolute left-4 -top-1"
+            hitSlop={20}
+          >
+            <Ionicons
+              name="chevron-back-outline"
+              size={Platform.OS === "ios" ? 34 : 28}
+              color="#FFA840"
+            />
           </Pressable>
           <Text className="text-lg font-semibold capitalize">{type}</Text>
         </View>
@@ -100,7 +115,27 @@ export default function SeeMoreModal({
                 </Text>
                 <View className="flex-row items-center justify-between">
                   <View className="flex-row items-center justify-center gap-2">
-                    <Ionicons name="person-circle" size={44} color="#F7931E" />
+                    {data.driver.profilePictureUrl ? (
+                      <Pressable
+                        className="w-[44px] h-[44px] rounded-full overflow-hidden"
+                        onPress={() => {
+                          setImageViewerVisible(true);
+                          setSelectedImageUrl(data.driver.profilePictureUrl);
+                        }}
+                      >
+                        <Image
+                          source={{ uri: data.driver.profilePictureUrl }}
+                          style={{ width: "100%", height: "100%" }}
+                          contentFit="cover"
+                        />
+                      </Pressable>
+                    ) : (
+                      <Ionicons
+                        name="person-circle"
+                        size={44}
+                        color="#F7931E"
+                      />
+                    )}
                     <View>
                       <Text className="text-lg font-semibold text-gray-800">
                         {data.driver.name}
@@ -413,12 +448,14 @@ export default function SeeMoreModal({
           {type === "Active Booking" && (
             <Pressable
               className="items-center justify-center py-3 mx-4 rounded-lg bg-lightPrimary active:bg-darkPrimary"
-              onPress={() =>
+              onPress={() => {
+                console.log(data._id);
+                onClose();
                 router.push({
                   pathname: "/(root_screens)/booking/viewOnMap",
                   params: { bookingId: data._id },
-                })
-              }
+                });
+              }}
             >
               <Text className="text-lg font-bold text-white">View on Map</Text>
             </Pressable>

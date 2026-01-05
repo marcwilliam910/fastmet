@@ -163,7 +163,7 @@ const RequestCard = ({
         {/* Header */}
         <View className="flex-row items-center justify-between px-5 py-3 bg-lightPrimary">
           <Text className="text-lg font-semibold text-white">{vehicle}</Text>
-          <Text className="text-sm text-white capitalize">
+          <Text className="text-sm text-white">
             {bookingType.type === "schedule"
               ? `Scheduled: ${formatDate(bookingType.value || "")}`
               : bookingType.value}

@@ -2,8 +2,8 @@ import { useAppStore } from "@/store/useAppStore";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import React, { useState } from "react";
-import { ActivityIndicator, Modal, Pressable, Text, View } from "react-native";
+import React from "react";
+import { Modal, Pressable, Text, View } from "react-native";
 
 const LogoutModal = ({
   isOpen,
@@ -12,13 +12,9 @@ const LogoutModal = ({
   isOpen: boolean;
   setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }) => {
-  const [isLoading, setIsLoading] = useState(false);
-  const logout = useAppStore((state) => state.logout);
-
   const handleLogout = async () => {
-    setIsLoading(true);
-    logout();
-    setIsLoading(false);
+    useAppStore.getState().logout();
+    useAppStore.getState().clearStates();
     setIsOpen(false);
     router.replace("/(auth)/auth");
   };
@@ -57,9 +53,7 @@ const LogoutModal = ({
               className="items-center py-4 rounded-lg bg-lightPrimary active:bg-darkPrimary"
               onPress={handleLogout}
             >
-              <Text className="text-base font-bold text-white">
-                {isLoading ? <ActivityIndicator color="white" /> : "Logout"}
-              </Text>
+              <Text className="text-base font-bold text-white">Logout</Text>
             </Pressable>
             <Pressable
               className="items-center py-4 my-2 border border-gray-200 rounded-lg bg-ctaSecondary active:bg-ctaSecondaryActive"

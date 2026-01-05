@@ -3,9 +3,10 @@ import { Driver, LocationDetails, RouteData } from "@/types/book";
 import { GOOGLE_MAPS_API_KEY, STATIC_IMAGES } from "@/utils/constants";
 import { useFocusEffect } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { StatusBar, StyleSheet, Text, View } from "react-native";
+import { StatusBar, StyleSheet, View } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import MapViewDirections from "react-native-maps-directions";
+import { DistanceBubble } from "./MapScreen";
 
 type Region = {
   latitude: number;
@@ -132,6 +133,7 @@ export default function LiveTrackingMapScreen({
               title={driver.name ? `Driver - ${driver.name}` : "Your Driver"}
               // rotation={driverLocation.heading}
               anchor={{ x: 0.5, y: 0.5 }}
+              zIndex={1000}
             />
           )}
 
@@ -177,16 +179,6 @@ export default function LiveTrackingMapScreen({
       {routeData.distance > 0 && routeData.duration > 0 && (
         <DistanceBubble routeData={routeData} />
       )}
-    </View>
-  );
-}
-
-export function DistanceBubble({ routeData }: { routeData: RouteData }) {
-  return (
-    <View className="absolute z-50 self-center px-4 py-2 top-10 bg-black/60 rounded-2xl">
-      <Text className="text-sm font-semibold text-white">
-        {routeData.distance.toFixed(1)} km • {routeData.duration.toFixed(0)} min
-      </Text>
     </View>
   );
 }

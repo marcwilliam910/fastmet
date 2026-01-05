@@ -25,6 +25,15 @@ export const bookingAccepted = (socket: Socket) => {
       queryKey: ["userBookings", "active"],
       exact: false,
     });
+
+    queryClient.invalidateQueries({
+      queryKey: ["userBookings", "pending"],
+      exact: false,
+    });
+
+    queryClient.invalidateQueries({
+      queryKey: ["userBookingCounts"],
+    });
   };
 
   socket.on("bookingAccepted", bookingAcceptedHandler);

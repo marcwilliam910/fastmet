@@ -47,7 +47,7 @@ export default function LocationInputs({
             className="text-base font-medium text-gray-900"
             numberOfLines={1}
           >
-            {dropOff ? formatLocation(dropOff) : "Choose drop off location"}
+            {dropOff ? formatLocation(dropOff) : "Choose drop-off location"}
           </Text>
         </View>
         <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />

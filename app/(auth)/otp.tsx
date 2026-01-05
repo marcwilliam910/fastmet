@@ -87,7 +87,7 @@ export default function PhoneOTPScreen() {
         text1: "Code sent",
         text2: "Please check your messages",
         position: "top",
-        visibilityTime: 3000,
+        visibilityTime: 5000,
         topOffset: 50,
       });
     } catch (error: any) {
@@ -133,7 +133,6 @@ export default function PhoneOTPScreen() {
       });
 
       if (res.data.success) {
-        // Store everything in Zustand including status
         useAppStore.getState().setAuthData({
           token: res.data.token,
           id: res.data.client.id,
@@ -161,7 +160,20 @@ export default function PhoneOTPScreen() {
         } else router.replace("/(auth)/profile-register");
       }
     } catch (error: any) {
-      setError(error.response?.data?.error || "Something went wrong");
+      // Handle rate limit errors for verification
+      if (error.response?.status === 429) {
+        const retryAfter = error.response?.data?.retryAfter;
+        const minutes = retryAfter ? Math.ceil(retryAfter / 60) : null;
+
+        setError(
+          error.response?.data?.error ||
+            (minutes
+              ? `Too many failed attempts. Try again in ${minutes} minute${minutes > 1 ? "s" : ""}.`
+              : "Too many attempts. Please try again later.")
+        );
+      } else {
+        setError(error.response?.data?.error || "Something went wrong");
+      }
     } finally {
       setLoading(false);
     }
@@ -180,7 +192,7 @@ export default function PhoneOTPScreen() {
           <Text className="text-base text-gray-500 mb-10 text-center leading-6">
             Enter the 6-digit verification code sent to{" "}
             <Text className="font-semibold text-[#111] underline">
-              0{useAppStore.getState().phoneNumber}
+              {useAppStore.getState().phoneNumber}
             </Text>
           </Text>
 
@@ -211,7 +223,7 @@ export default function PhoneOTPScreen() {
           {/* Error */}
           {error && (
             <View
-              className="flex-row items-center justify-center w-full mb-5 px-4 py-3 bg-red-50 border border-red-200 rounded-xl"
+              className="flex-row items-center justify-center gap-2 w-full mb-5 px-4 py-3 bg-red-50 border border-red-200 rounded-xl"
               style={{
                 shadowColor: "#000",
                 shadowOpacity: 0.05,
@@ -221,9 +233,7 @@ export default function PhoneOTPScreen() {
               }}
             >
               <Ionicons name="alert-circle" size={20} color="#DC2626" />
-              <Text className="text-red-700 text-sm ml-3 leading-5">
-                {error}
-              </Text>
+              <Text className="text-red-700 text-sm leading-5">{error}</Text>
             </View>
           )}
 

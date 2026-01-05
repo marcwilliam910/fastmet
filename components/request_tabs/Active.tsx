@@ -1,8 +1,9 @@
 import useSeeMoreDetails from "@/hooks/useSeeMoreDetails";
 import { useUserBookings } from "@/queries/bookingQueries";
-import { ActiveBooking, LocationDetails } from "@/types/book";
+import { ActiveBooking, Driver, LocationDetails } from "@/types/book";
 import { formatLocation } from "@/utils/helper";
 import { Ionicons } from "@expo/vector-icons";
+import { Image } from "expo-image";
 import { router } from "expo-router";
 import {
   ActivityIndicator,
@@ -58,8 +59,7 @@ export default function ActiveRoute() {
             distance={item.routeData.distance}
             amount={item.routeData.totalPrice}
             isCash={item.paymentMethod === "cash"}
-            driverName={item.driver.name}
-            rating={item.driver.rating}
+            driver={item.driver}
             onPressSeeMore={() => handleSeeMorePress(item)}
           />
         )}
@@ -125,8 +125,7 @@ type ActiveCardProps = {
   dropoff: LocationDetails;
   distance: number;
   amount: number;
-  driverName: string;
-  rating: number;
+  driver: Driver;
   isCash: boolean;
   onPressSeeMore: () => void;
 };
@@ -139,8 +138,7 @@ const ActiveCard = ({
   distance,
   isCash,
   amount,
-  driverName,
-  rating,
+  driver,
   onPressSeeMore,
 }: ActiveCardProps) => {
   return (
@@ -182,20 +180,35 @@ const ActiveCard = ({
           </Text>
           <View className="flex-row items-center justify-between">
             <View className="flex-row items-center justify-center gap-2">
-              <Ionicons name="person-circle" size={40} color="#F7931E" />
+              {driver.profilePictureUrl ? (
+                <View className="w-[44px] h-[44px] rounded-full overflow-hidden">
+                  <Image
+                    source={{ uri: driver.profilePictureUrl }}
+                    style={{ width: "100%", height: "100%" }}
+                    contentFit="cover"
+                  />
+                </View>
+              ) : (
+                <Ionicons name="person-circle" size={50} color="#F7931E" />
+              )}
               <View>
-                <Text className="font-semibold text-gray-800">
-                  {driverName}
+                <Text className="font-semibold text-lg text-gray-800">
+                  {driver.name}
                 </Text>
                 <View className="flex-row">
-                  {[...Array(Math.floor(rating))].map((_, i) => (
-                    <Ionicons key={i} name="star" size={16} color="#FFD700" />
+                  {[...Array(Math.floor(driver.rating))].map((_, i) => (
+                    <Ionicons
+                      key={i}
+                      name="star"
+                      size={Platform.OS === "ios" ? 18 : 16}
+                      color="#FFD700"
+                    />
                   ))}
-                  {[...Array(5 - Math.floor(rating))].map((_, i) => (
+                  {[...Array(5 - Math.floor(driver.rating))].map((_, i) => (
                     <Ionicons
                       key={i}
                       name="star-outline"
-                      size={16}
+                      size={Platform.OS === "ios" ? 18 : 16}
                       color="#FFD700"
                     />
                   ))}
@@ -205,13 +218,17 @@ const ActiveCard = ({
 
             <View className="flex-row gap-4">
               <Pressable className="items-center active:scale-110">
-                <Ionicons name="call" size={22} color="#F7931E" />
+                <Ionicons
+                  name="call"
+                  size={Platform.OS === "ios" ? 25 : 22}
+                  color="#F7931E"
+                />
                 <Text className="text-xs text-gray-600">Call</Text>
               </Pressable>
               <Pressable className="items-center active:scale-110">
                 <Ionicons
                   name="chatbubble-ellipses"
-                  size={22}
+                  size={Platform.OS === "ios" ? 25 : 22}
                   color="#F7931E"
                 />
                 <Text className="text-xs text-gray-600">Chat</Text>

@@ -1,9 +1,16 @@
 import LiveTrackingMapScreen from "@/components/maps/LiveTrackingMapScreen";
 import { useBooking } from "@/queries/bookingQueries";
 import { Ionicons } from "@expo/vector-icons";
+import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import React, { useState } from "react";
-import { ActivityIndicator, Pressable, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Platform,
+  Pressable,
+  Text,
+  View,
+} from "react-native";
 import { Region } from "react-native-maps";
 import {
   SafeAreaView,
@@ -60,7 +67,11 @@ export default function ViewOnMap() {
               onPress={() => router.back()}
               className="absolute left-0 -top-1"
             >
-              <Ionicons name="chevron-back-outline" size={28} color="#FFA840" />
+              <Ionicons
+                name="chevron-back-outline"
+                size={Platform.OS === "ios" ? 30 : 28}
+                color="#FFA840"
+              />
             </Pressable>
             <Text className="text-lg font-semibold">On the way</Text>
           </View>
@@ -71,7 +82,17 @@ export default function ViewOnMap() {
             </Text>
             <View className="flex-row items-center justify-between">
               <View className="flex-row items-center justify-center gap-2">
-                <Ionicons name="person-circle" size={54} color="#F7931E" />
+                {booking.driver.profilePictureUrl ? (
+                  <Pressable className="w-[44px] h-[44px] rounded-full overflow-hidden">
+                    <Image
+                      source={{ uri: booking.driver.profilePictureUrl }}
+                      style={{ width: "100%", height: "100%" }}
+                      contentFit="cover"
+                    />
+                  </Pressable>
+                ) : (
+                  <Ionicons name="person-circle" size={48} color="#F7931E" />
+                )}
                 <View>
                   <Text className="text-lg font-semibold text-gray-800">
                     {booking.driver.name}

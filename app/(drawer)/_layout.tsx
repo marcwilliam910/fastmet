@@ -3,6 +3,7 @@ import LogoutModal from "@/components/modals/logoutModal";
 import NotLoggedInModal from "@/components/modals/notLoggedInModal";
 import { useAuth } from "@/hooks/useAuth";
 import { usePushNotifications } from "@/hooks/usePushNotification";
+import { queryClient } from "@/lib/queryClient";
 import { useAppStore } from "@/store/useAppStore";
 import { Ionicons } from "@expo/vector-icons";
 import { DrawerContentScrollView, DrawerItem } from "@react-navigation/drawer";
@@ -87,7 +88,28 @@ const CustomDrawerContent = (props: any) => {
 export default function DrawerLayout() {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showNotLoggedInModal, setShowNotLoggedInModal] = useState(false);
-  usePushNotifications();
+  const { notification } = usePushNotifications();
+
+  useEffect(() => {
+    if (
+      notification &&
+      notification.request?.content?.data?.type === "booking_completed"
+    ) {
+      queryClient.invalidateQueries({
+        queryKey: ["userBookings", "active"],
+        exact: false,
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["userBookings", "completed"],
+        exact: false,
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["userBookingCounts"],
+      });
+    }
+  }, [notification]);
 
   useEffect(() => {
     const fetchFareRates = useAppStore.getState().fetchFareRates;
