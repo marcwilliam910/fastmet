@@ -38,6 +38,14 @@ const BookSheet = () => {
     return [first, second];
   }, [insets.bottom, screenHeight]);
 
+  const bookingTypeDisplay = useMemo(() => {
+    if (bookingType.type === "asap") {
+      return `${bookingType.type.toUpperCase()} - ${bookingType.value}`;
+    } else if (bookingType.type === "schedule") {
+      return formatDate(bookingType.value);
+    } else return bookingType.value;
+  }, [bookingType.type, bookingType.value]);
+
   return (
     <>
       <BottomSheet
@@ -61,9 +69,7 @@ const BookSheet = () => {
             </Text>
 
             <Text className="text-sm font-bold text-gray-900">
-              {bookingType?.type === "schedule"
-                ? formatDate(bookingType.value)
-                : bookingType?.value}
+              {bookingTypeDisplay}
             </Text>
 
             <Ionicons name="chevron-down" size={14} color="#9CA3AF" />

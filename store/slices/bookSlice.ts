@@ -53,7 +53,7 @@ export interface BookSlice {
 export const createBookSlice: StateCreator<BookSlice> = (set, get) => ({
   pickUp: null,
   dropOff: null,
-  bookingType: { type: "asap", value: "ASAP" },
+  bookingType: { type: "asap", value: "REGULAR" },
   selectedVehicle: null,
   routeData: {
     distance: 0,

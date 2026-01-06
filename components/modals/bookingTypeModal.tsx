@@ -24,7 +24,7 @@ export default function BookingTypeModal({
   const bookingType = useAppStore((state) => state.bookingType);
   const setBookingType = useAppStore((state) => state.setBookingType);
 
-  const handleConfirm = (type: Type) => {
+  const handleConfirm = (type: Type, value: string) => {
     if (type === "schedule") {
       let combined: Date;
 
@@ -43,7 +43,9 @@ export default function BookingTypeModal({
       }
 
       setBookingType({ type, value: combined.toISOString() });
-    } else setBookingType({ type, value: type.toUpperCase() });
+    } else if (type === "asap") {
+      setBookingType({ type, value });
+    } else setBookingType({ type, value });
 
     const resetTime = new Date();
     resetTime.setHours(9, 0, 0, 0);
@@ -60,14 +62,14 @@ export default function BookingTypeModal({
     {
       id: "asap",
       name: "ASAP",
-      icon: "flash-outline",
-      onPress: () => handleConfirm("asap"),
+      icon: "rocket-outline",
+      onPress: () => setBookingType({ type: "asap", value: "" }),
     },
     {
       id: "pooling",
       name: "Pooling",
       icon: "people-outline",
-      onPress: () => handleConfirm("pooling"),
+      onPress: () => handleConfirm("pooling", "POOLING"),
     },
     {
       id: "schedule",
@@ -110,37 +112,113 @@ export default function BookingTypeModal({
 
               <View className="gap-3">
                 {OPTIONS.map((value) => (
-                  <Pressable
-                    key={value.id}
-                    className={`flex-row items-center justify-between px-4 py-3 border rounded-lg ${
-                      value.id === bookingType?.type
-                        ? " border-darkPrimary bg-orange-50"
-                        : " border-gray-300"
-                    }`}
-                    onPress={value.onPress}
-                  >
-                    <View className="flex-row gap-2 items-center">
-                      <Ionicons
-                        name={value.icon as keyof typeof Ionicons.glyphMap}
-                        size={20}
-                        color={
-                          value.id === bookingType?.type ? "#FFA840" : "gray"
-                        }
-                      />
-                      <Text
-                        className={`text-base font-medium ${value.id === bookingType?.type ? "text-lightPrimary" : ""}`}
-                      >
-                        {value.name}
-                      </Text>
-                    </View>
-                    <Pressable>
-                      <Ionicons
-                        name="information-circle"
-                        color="#FFA840"
-                        size={20}
-                      />
+                  <View key={value.id}>
+                    <Pressable
+                      className={`flex-row items-center justify-between px-4 py-3 border rounded-lg ${
+                        value.id === bookingType?.type
+                          ? " border-darkPrimary bg-orange-50"
+                          : " border-gray-300"
+                      }`}
+                      onPress={value.onPress}
+                    >
+                      <View className="flex-row gap-2 items-center">
+                        <Ionicons
+                          name={value.icon as keyof typeof Ionicons.glyphMap}
+                          size={20}
+                          color={
+                            value.id === bookingType?.type ? "#FFA840" : "gray"
+                          }
+                        />
+                        <Text
+                          className={`text-base font-medium ${value.id === bookingType?.type ? "text-lightPrimary" : ""}`}
+                        >
+                          {value.name}
+                        </Text>
+                      </View>
+                      <Pressable>
+                        <Ionicons
+                          name="information-circle"
+                          color="#FFA840"
+                          size={20}
+                        />
+                      </Pressable>
                     </Pressable>
-                  </Pressable>
+
+                    {/* ASAP Sub-picker */}
+                    {value.id === "asap" && bookingType?.type === "asap" && (
+                      <View className="mt-2 ml-4 gap-2">
+                        <View className="flex-row gap-2">
+                          <Pressable
+                            className={`flex-1 px-3 py-2 border rounded-lg ${
+                              bookingType.value === "PRIORITY"
+                                ? "border-darkPrimary bg-orange-50"
+                                : "border-gray-300 bg-white"
+                            }`}
+                            onPress={() => handleConfirm("asap", "PRIORITY")}
+                          >
+                            <View className="flex-row items-center justify-center">
+                              <Ionicons
+                                name="flash-outline"
+                                size={16}
+                                color={
+                                  bookingType.value === "PRIORITY"
+                                    ? "#FFA840"
+                                    : "gray"
+                                }
+                                style={{ marginRight: 6 }}
+                              />
+                              <Text
+                                className={`text-sm font-medium ${
+                                  bookingType.value === "PRIORITY"
+                                    ? "text-lightPrimary"
+                                    : "text-gray-600"
+                                }`}
+                              >
+                                Priority
+                              </Text>
+                            </View>
+                            <Text className="text-xs text-gray-500 text-center mt-1">
+                              Quickest - pickup in &lt;1hr
+                            </Text>
+                          </Pressable>
+
+                          <Pressable
+                            className={`flex-1 px-3 py-2 border rounded-lg ${
+                              bookingType.value === "REGULAR"
+                                ? "border-darkPrimary bg-orange-50"
+                                : "border-gray-300 bg-white"
+                            }`}
+                            onPress={() => handleConfirm("asap", "REGULAR")}
+                          >
+                            <View className="flex-row items-center justify-center">
+                              <Ionicons
+                                name="time-outline"
+                                size={16}
+                                color={
+                                  bookingType.value === "REGULAR"
+                                    ? "#FFA840"
+                                    : "gray"
+                                }
+                                style={{ marginRight: 6 }}
+                              />
+                              <Text
+                                className={`text-sm font-medium ${
+                                  bookingType.value === "REGULAR"
+                                    ? "text-lightPrimary"
+                                    : "text-gray-600"
+                                }`}
+                              >
+                                Regular
+                              </Text>
+                            </View>
+                            <Text className="text-xs text-gray-500 text-center mt-1">
+                              Standard - pickup in ~2hrs
+                            </Text>
+                          </Pressable>
+                        </View>
+                      </View>
+                    )}
+                  </View>
                 ))}
               </View>
             </>
@@ -231,7 +309,7 @@ export default function BookingTypeModal({
 
                   {!showCalendar && (
                     <Pressable
-                      onPress={() => handleConfirm("schedule")}
+                      onPress={() => handleConfirm("schedule", "")}
                       className="py-3 bg-lightPrimary rounded-xl"
                     >
                       <Text className="font-semibold text-center text-white">
@@ -315,7 +393,7 @@ export default function BookingTypeModal({
                   {/* CONFIRM BUTTON */}
                   {!showCalendar && !showTimePicker && (
                     <Pressable
-                      onPress={() => handleConfirm("schedule")}
+                      onPress={() => handleConfirm("schedule", "")}
                       className="py-3 bg-lightPrimary rounded-xl"
                     >
                       <Text className="font-semibold text-center text-white">
