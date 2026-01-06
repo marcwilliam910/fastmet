@@ -1,9 +1,9 @@
 import NotLoggedIn from "@/components/notLoggedIn";
-import useAuth from "@/hooks/useAuth";
-import {Image} from "expo-image";
-import {router} from "expo-router";
+import { useAuth } from "@/hooks/useAuth";
+import { Image } from "expo-image";
+import { router } from "expo-router";
 import React from "react";
-import {ActivityIndicator, FlatList, Pressable, Text, View} from "react-native";
+import { FlatList, Pressable, Text, View } from "react-native";
 
 const DUMMYNOTIFICATIONS = [
   {
@@ -11,43 +11,35 @@ const DUMMYNOTIFICATIONS = [
     title: "Truck is ready",
     message: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
     sent: "2h ago",
-    image: require("@/assets/images/icon.png"),
+    image: require("@/assets/images/user.png"),
   },
   {
     id: "2",
     title: "Truck Arrived",
     message: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
     sent: "1min ago",
-    image: require("@/assets/images/icon.png"),
+    image: require("@/assets/images/user.png"),
   },
   {
     id: "3",
     title: "Truck Driver Cancelled",
     message: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
     sent: "Yesterday",
-    image: require("@/assets/images/icon.png"),
+    image: require("@/assets/images/user.png"),
   },
   {
     id: "4",
     title: "Truck on the way",
     message: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
     sent: "3hrs ago",
-    image: require("@/assets/images/icon.png"),
+    image: require("@/assets/images/user.png"),
   },
 ];
 
 const Notification = () => {
-  const {user, loading} = useAuth();
+  const { isLoggedIn } = useAuth();
 
-  if (loading) {
-    return (
-      <View className="items-center justify-center flex-1">
-        <ActivityIndicator size="large" color="#FFA840" />
-      </View>
-    );
-  }
-
-  if (user === null) {
+  if (!isLoggedIn) {
     return <NotLoggedIn />;
   }
 
@@ -56,9 +48,9 @@ const Notification = () => {
       <FlatList
         data={DUMMYNOTIFICATIONS}
         showsVerticalScrollIndicator={false}
-        renderItem={({item}) => <NotificationCard item={item} />}
+        renderItem={({ item }) => <NotificationCard item={item} />}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={{gap: 3, paddingBottom: 60}}
+        contentContainerStyle={{ gap: 3, paddingBottom: 60 }}
       />
     </View>
   );
@@ -66,7 +58,7 @@ const Notification = () => {
 
 export default Notification;
 
-const NotificationCard = ({item}: any) => {
+const NotificationCard = ({ item }: any) => {
   return (
     <Pressable
       className="flex-row items-center gap-4 px-4 py-2 active:bg-ctaSecondary"
@@ -74,7 +66,7 @@ const NotificationCard = ({item}: any) => {
     >
       <Image
         source={item.image}
-        style={{width: 50, height: 50, borderRadius: 999}}
+        style={{ width: 50, height: 50, borderRadius: 999 }}
         contentFit="contain"
       />
       <View className="flex-1 gap-1">

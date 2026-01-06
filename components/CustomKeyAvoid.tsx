@@ -1,4 +1,4 @@
-import React, {FC} from "react";
+import React, { FC } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -6,7 +6,7 @@ import {
   StyleSheet,
 } from "react-native";
 
-const CustomKeyAvoidingView: FC<{children: React.ReactNode; ref?: any}> = ({
+const CustomKeyAvoidingView: FC<{ children: React.ReactNode; ref?: any }> = ({
   children,
   ref,
 }) => {
@@ -14,15 +14,14 @@ const CustomKeyAvoidingView: FC<{children: React.ReactNode; ref?: any}> = ({
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
     >
       <ScrollView
         ref={ref}
         keyboardShouldPersistTaps="handled"
-        style={{flex: 1}}
+        style={{ flex: 1 }}
         contentInsetAdjustmentBehavior="automatic"
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{flexGrow: 1 /*dont know if this is needed*/}}
+        contentContainerStyle={{ flexGrow: 1 /*dont know if this is needed*/ }}
       >
         {children}
       </ScrollView>

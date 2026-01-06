@@ -1,147 +1,177 @@
 import NotLoggedIn from "@/components/notLoggedIn";
-import useAuth from "@/hooks/useAuth";
-import {Ionicons} from "@expo/vector-icons";
-import {Image} from "expo-image";
-import {router} from "expo-router";
+import { useAuth } from "@/hooks/useAuth";
+import { useConversations } from "@/queries/conversation";
+import { ConversationResponse } from "@/types/chat";
+import { formatLastMessageTime } from "@/utils/date";
+import { Ionicons } from "@expo/vector-icons";
+import { Image } from "expo-image";
+import { router } from "expo-router";
 import React from "react";
-import {ActivityIndicator, FlatList, Pressable, Text, View} from "react-native";
-import {TextInput} from "react-native-gesture-handler";
+import {
+  ActivityIndicator,
+  Button,
+  FlatList,
+  Platform,
+  Pressable,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 
-const DUMMYMESSAGES = [
-  {
-    id: "1",
-    name: "John Doe",
-    message: "Hello, how are you?",
-    sent: "now",
+const Chats = () => {
+  const { isLoggedIn } = useAuth();
 
-    image: require("@/assets/images/icon.png"),
-  },
-  {
-    id: "2",
-    name: "Joel Manahan",
-    sent: "Yesterday",
-    message: "Can i book you today? I need to get to the airport",
-    image: require("@/assets/images/icon.png"),
-  },
-  {
-    id: "3",
-    name: "Felix Lopez",
-    sent: "3 days ago",
-    message: "Sup! I need your truck tomorrow, I need to deliver some stuff",
-    image: require("@/assets/images/icon.png"),
-  },
-  {
-    id: "4",
-    name: "Eudrudo Pangilinan",
-    sent: "10:32 AM",
+  const {
+    data,
+    isPending,
+    error,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useConversations(10);
 
-    message: "Hi sir, can you help me please?",
-    image: require("@/assets/images/icon.png"),
-  },
-  // {
-  //   id: "5",
-  //   name: "John Doe",
-  //   sent: "now",
-  //   message: "Hello, how are you?",
-  //   image: require("@/assets/images/icon.png"),
-  // },
-  // {
-  //   id: "6",
-  //   name: "John Doe",
-  //   sent: "now",
-  //   message: "Hello, how are you?",
-  //   image: require("@/assets/images/icon.png"),
-  // },
-  // {
-  //   id: "7",
-  //   name: "John Doe",
-  //   sent: "now",
-  //   message: "Hello, how are you?",
-  //   image: require("@/assets/images/icon.png"),
-  // },
-  // {
-  //   id: "8",
-  //   name: "John Doe",
-  //   sent: "now",
-  //   message: "Hello, how are you?",
-  //   image: require("@/assets/images/icon.png"),
-  // },
-  // {
-  //   id: "9",
-  //   name: "John Doe",
-  //   sent: "now",
-  //   message: "Hello, how are you?",
-  //   image: require("@/assets/images/icon.png"),
-  // },
-  // {
-  //   id: "10",
-  //   name: "John Doe",
-  //   sent: "now",
-  //   message: "Hello, how are you?",
-  //   image: require("@/assets/images/icon.png"),
-  // },
-];
-
-const Chat = () => {
-  const {user, loading} = useAuth();
-
-  if (loading) {
-    return (
-      <View className="items-center justify-center flex-1">
-        <ActivityIndicator size="large" color="#FFA840" />
-      </View>
-    );
-  }
-  if (user === null) {
+  if (!isLoggedIn) {
     return <NotLoggedIn />;
   }
 
+  if (isPending)
+    return (
+      <View className="flex-1 items-center bg-white justify-center">
+        <ActivityIndicator size="large" color="#FFA840" />
+      </View>
+    );
+  if (error)
+    return (
+      <View className="flex-1 items-center justify-center bg-white">
+        <Text className="text-lg font-semibold text-gray-500">
+          {error.message}
+        </Text>
+        <Button title="Retry" onPress={() => refetch()} />
+      </View>
+    );
+
+  const conversations = data?.pages.flatMap((page) => page.conversations) ?? [];
+
   return (
     <View className="flex-1 gap-6 py-6 bg-white">
-      <View className="flex-row items-center px-4 py-1 mx-4 rounded-full bg-ctaSecondary">
-        <TextInput placeholder="Search..." className="flex-1" />
-        <Ionicons name="search" size={24} color="#9FABB4" />
-      </View>
+      {conversations.length === 0 ? (
+        <View className="flex-1 items-center justify-center">
+          {/* show no message screen */}
+          <Text className="text-center text-lg text-gray-400">
+            You have no messages
+          </Text>
+        </View>
+      ) : (
+        <>
+          <View
+            className="flex-row items-center bg-ctaSecondary mx-4 px-4 rounded-full"
+            style={{
+              height: Platform.OS === "ios" ? 54 : 46,
+            }}
+          >
+            <TextInput
+              placeholder="Search..."
+              placeholderTextColor="#9FABB4"
+              className="flex-1 text-base leading-[18px]"
+            />
+            <Ionicons
+              name="search"
+              size={Platform.OS === "ios" ? 24 : 20}
+              color="#9FABB4"
+            />
+          </View>
 
-      <View>
-        <FlatList
-          data={DUMMYMESSAGES}
-          showsVerticalScrollIndicator={false}
-          renderItem={({item}) => <MessageCard item={item} />}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={{gap: 3, paddingBottom: 60}}
-        />
-      </View>
+          <View>
+            <FlatList
+              data={conversations}
+              showsVerticalScrollIndicator={false}
+              renderItem={({ item }) => <MessageCard item={item} />}
+              keyExtractor={(item) => item._id}
+              contentContainerStyle={{ gap: 3, paddingBottom: 60 }}
+              // pull to refresh
+              refreshing={isPending}
+              onRefresh={refetch}
+              // infinite scroll
+              onEndReached={() => {
+                if (hasNextPage && !isFetchingNextPage) {
+                  fetchNextPage();
+                }
+              }}
+              onEndReachedThreshold={0.3}
+              // Loading indicator at bottom
+              ListFooterComponent={() => {
+                if (isFetchingNextPage) {
+                  return (
+                    <View className="py-4">
+                      <ActivityIndicator size="small" color="#FFA840" />
+                    </View>
+                  );
+                }
+                return null;
+              }}
+            />
+          </View>
+        </>
+      )}
     </View>
   );
 };
 
-export default Chat;
+export default Chats;
 
-const MessageCard = ({item}: any) => {
+const MessageCard = ({ item }: { item: ConversationResponse }) => {
   return (
     <Pressable
       className="flex-row items-center gap-4 px-4 py-2 active:bg-ctaSecondary"
-      onPress={() => router.push("/(root_screens)/message")}
+      onPress={() =>
+        router.push({
+          pathname: "/message",
+          params: { conversationId: item._id },
+        })
+      }
     >
       <Image
-        source={item.image}
-        style={{width: 50, height: 50, borderRadius: 999}}
-        contentFit="contain"
+        source={
+          item.driver.profilePictureUrl
+            ? { uri: item.driver.profilePictureUrl }
+            : require("@/assets/images/user.png")
+        }
+        style={{ width: 50, height: 50, borderRadius: 999 }}
+        contentFit="cover"
       />
       <View className="flex-1 gap-1">
         <View className="flex-row items-center justify-between">
-          <Text className="font-bold max-w-[60%]" numberOfLines={1}>
-            {item.name}
+          <Text
+            className={`font-bold max-w-[60%] ${item.unreadCount.client > 0 ? "font-bold" : ""}`}
+            numberOfLines={1}
+          >
+            {item.driver.name}
           </Text>
-          <Text className="text-xs text-gray-400">{item.sent}</Text>
+          <Text
+            className={`text-xs text-gray-400 ${item.unreadCount.client > 0 ? "font-bold" : ""}`}
+          >
+            {formatLastMessageTime(item.lastMessageAt)}
+          </Text>
         </View>
-        <Text
-          className="text-sm font-medium text-gray-600 max-w-[80%]"
-          numberOfLines={1}
-        >
-          {item.message}
-        </Text>
+        <View className="flex-row items-center justify-between pl-0.5">
+          <Text
+            className={`text-sm max-w-[80%] ${item.unreadCount.client > 0 ? "font-extrabold text-black" : "text-gray-600 font-medium"}`}
+            numberOfLines={1}
+          >
+            {item.lastMessageBy === "client" ? "You: " : ""}
+            {item.lastMessage}
+          </Text>
+          {item.unreadCount.client > 0 ? (
+            <View className="bg-red-500 size-5 items-center justify-center rounded-full">
+              <Text className="text-xs font-bold text-white">
+                {item.unreadCount.client}
+              </Text>
+            </View>
+          ) : item.unreadCount.driver === 0 ? (
+            <Text className="text-xs font-bold text-white">seen</Text>
+          ) : null}
+        </View>
       </View>
     </Pressable>
   );

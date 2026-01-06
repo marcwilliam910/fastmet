@@ -4,6 +4,7 @@
     "source.organizeImports": "explicit",
     "source.sortMembers": "explicit"
   },
+
   "postman.settings.dotenv-detection-notification-visibility": false,
-  "cSpell.words": ["datetimepicker", "nativewind", "worklets"]
+  "cSpell.words": ["gorhom", "nativewind", "Pressable", "Xendit"]
 }

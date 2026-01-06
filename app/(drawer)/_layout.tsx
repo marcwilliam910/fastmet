@@ -1,42 +1,82 @@
 import HeaderDrawer from "@/components/headers/HeaderDrawer";
 import LogoutModal from "@/components/modals/logoutModal";
-import useAuth from "@/hooks/useAuth";
-import {Ionicons} from "@expo/vector-icons";
-import {
-  DrawerContentScrollView,
-  DrawerItemList,
-} from "@react-navigation/drawer";
-import {Drawer} from "expo-router/drawer";
-import {useState} from "react";
-import {Pressable, Text, View} from "react-native";
-import {GestureHandlerRootView} from "react-native-gesture-handler";
+import NotLoggedInModal from "@/components/modals/notLoggedInModal";
+import { useAuth } from "@/hooks/useAuth";
+import { usePushNotifications } from "@/hooks/usePushNotification";
+import { queryClient } from "@/lib/queryClient";
+import { useAppStore } from "@/store/useAppStore";
+import { Ionicons } from "@expo/vector-icons";
+import { DrawerContentScrollView, DrawerItem } from "@react-navigation/drawer";
+import { Drawer } from "expo-router/drawer";
+import { useEffect, useState } from "react";
+import { Pressable, Text, View } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const CustomDrawerContent = (props: any) => {
-  const isAuthenticated = !!props.user;
-  const action = isAuthenticated
-    ? () => props.setIsOpen(true)
-    : () => props.navigation.navigate("(auth)");
+  const inset = useSafeAreaInsets();
+  const { isLoggedIn } = useAuth();
+
+  const { state, descriptors, navigation } = props;
+
+  const handlePress = (routeName: string) => {
+    if (!isLoggedIn && routeName !== "book") {
+      props.setShowNotLoggedInModal(true); // open login modal
+      return;
+    }
+
+    navigation.navigate(routeName);
+  };
+
   return (
     <View className="flex-1">
       <DrawerContentScrollView {...props}>
-        <DrawerItemList {...props} />
+        {state.routes.map((route: any, index: number) => {
+          const { options } = descriptors[route.key];
+
+          // Hide index route
+          if (route.name === "index") return null;
+
+          const focused = state.index === index;
+
+          return (
+            <DrawerItem
+              key={route.key}
+              label={options.drawerLabel ?? route.name}
+              icon={({ color, size }) =>
+                options.drawerIcon?.({ focused, color, size })
+              }
+              focused={focused}
+              activeTintColor="#FFA840"
+              inactiveTintColor="#FFFFFF"
+              activeBackgroundColor="#1a3a4f"
+              onPress={() => handlePress(route.name)}
+            />
+          );
+        })}
+
+        {/* Login / Logout action */}
         <Pressable
           className="flex-row items-center gap-3 px-5 py-4"
-          onPress={action}
+          onPress={() =>
+            isLoggedIn
+              ? props.setShowLogoutModal(true)
+              : props.navigation.navigate("(auth)")
+          }
         >
           <Ionicons
-            name={isAuthenticated ? "log-out-outline" : "log-in-outline"}
+            name={isLoggedIn ? "log-out-outline" : "log-in-outline"}
             size={24}
             color="white"
           />
           <Text className="font-semibold text-white">
-            {isAuthenticated ? "Logout" : "Register / Login"}
+            {isLoggedIn ? "Logout" : "Register / Login"}
           </Text>
         </Pressable>
       </DrawerContentScrollView>
 
       {/* Footer */}
-      <View className="mb-5">
+      <View style={{ marginBottom: inset.bottom + 10 }}>
         <Text className="text-sm tracking-widest text-center text-gray-400">
           www.fastmet.com
         </Text>
@@ -47,16 +87,43 @@ const CustomDrawerContent = (props: any) => {
 
 export default function DrawerLayout() {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const {user} = useAuth();
+  const [showNotLoggedInModal, setShowNotLoggedInModal] = useState(false);
+  const { notification } = usePushNotifications();
+
+  useEffect(() => {
+    if (
+      notification &&
+      notification.request?.content?.data?.type === "booking_completed"
+    ) {
+      queryClient.invalidateQueries({
+        queryKey: ["userBookings", "active"],
+        exact: false,
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["userBookings", "completed"],
+        exact: false,
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["userBookingCounts"],
+      });
+    }
+  }, [notification]);
+
+  useEffect(() => {
+    const fetchFareRates = useAppStore.getState().fetchFareRates;
+    fetchFareRates();
+  }, []);
 
   return (
-    <GestureHandlerRootView style={{flex: 1}}>
+    <GestureHandlerRootView style={{ flex: 1 }}>
       <Drawer
         drawerContent={(props) => (
           <CustomDrawerContent
             {...props}
-            setIsOpen={setShowLogoutModal}
-            user={user}
+            setShowLogoutModal={setShowLogoutModal}
+            setShowNotLoggedInModal={setShowNotLoggedInModal}
           />
         )}
         screenOptions={{
@@ -71,19 +138,23 @@ export default function DrawerLayout() {
             borderRadius: 8,
           },
 
-          headerStyle: {backgroundColor: "#0F2535"},
+          headerStyle: { backgroundColor: "#0F2535" },
           headerLeft: () => null,
-          headerTitle: ({children}) => <HeaderDrawer title={children} />,
+          headerTitle: ({ children }) => <HeaderDrawer title={children} />,
         }}
       >
         <Drawer.Screen
-          name="(tabs)"
+          name="index"
+          options={{ drawerItemStyle: { display: "none" } }}
+        />
+        <Drawer.Screen
+          name="book"
           options={{
-            drawerLabel: "Home",
-            title: "Home",
-            drawerIcon: ({focused}) => (
+            drawerLabel: "Book Now",
+            title: "Book",
+            drawerIcon: ({ focused }) => (
               <Ionicons
-                name={focused ? "home" : "home-outline"}
+                name={focused ? "navigate" : "navigate-outline"}
                 size={24}
                 color={focused ? "#FFA840" : "#FFFFFF"}
               />
@@ -91,12 +162,26 @@ export default function DrawerLayout() {
           }}
         />
         <Drawer.Screen
-          name="(profile)"
+          name="(tabs)"
+          options={{
+            drawerLabel: "Dashboard",
+            title: "Home",
+            drawerIcon: ({ focused }) => (
+              <Ionicons
+                name={focused ? "speedometer" : "speedometer-outline"}
+                size={24}
+                color={focused ? "#FFA840" : "#FFFFFF"}
+              />
+            ),
+          }}
+        />
+        <Drawer.Screen
+          name="profile"
           options={{
             drawerLabel: "My Profile",
             title: "My Profile",
             // headerShown: true,
-            drawerIcon: ({focused}) => (
+            drawerIcon: ({ focused }) => (
               <Ionicons
                 name={focused ? "person" : "person-outline"}
                 size={24}
@@ -111,7 +196,7 @@ export default function DrawerLayout() {
             drawerLabel: "Settings",
             title: "Settings",
             headerShown: true,
-            drawerIcon: ({focused}) => (
+            drawerIcon: ({ focused }) => (
               <Ionicons
                 name={focused ? "settings" : "settings-outline"}
                 size={24}
@@ -120,13 +205,30 @@ export default function DrawerLayout() {
             ),
           }}
         />
+
+        <Drawer.Screen
+          name="favorite"
+          options={{
+            drawerLabel: "Favorite",
+            title: "Favorite",
+            headerShown: true,
+            drawerIcon: ({ focused }) => (
+              <Ionicons
+                name={focused ? "heart" : "heart-outline"}
+                size={24}
+                color={focused ? "#FFA840" : "#FFFFFF"}
+              />
+            ),
+          }}
+        />
+
         <Drawer.Screen
           name="about"
           options={{
             drawerLabel: "About",
             title: "About",
             headerShown: true,
-            drawerIcon: ({focused}) => (
+            drawerIcon: ({ focused }) => (
               <Ionicons
                 name={
                   focused ? "information-circle" : "information-circle-outline"
@@ -137,38 +239,12 @@ export default function DrawerLayout() {
             ),
           }}
         />
-        <Drawer.Screen
-          name="apply-driver"
-          options={{
-            drawerLabel: "Apply as Driver",
-            title: "Apply as Driver",
-            headerShown: true,
-            drawerIcon: ({focused}) => (
-              <Ionicons
-                name={focused ? "car" : "car-outline"}
-                size={24}
-                color={focused ? "#FFA840" : "#FFFFFF"}
-              />
-            ),
-          }}
-        />
-        <Drawer.Screen
-          name="favorite"
-          options={{
-            drawerLabel: "Favorite",
-            title: "Favorite",
-            headerShown: true,
-            drawerIcon: ({focused}) => (
-              <Ionicons
-                name={focused ? "heart" : "heart-outline"}
-                size={24}
-                color={focused ? "#FFA840" : "#FFFFFF"}
-              />
-            ),
-          }}
-        />
       </Drawer>
       <LogoutModal isOpen={showLogoutModal} setIsOpen={setShowLogoutModal} />
+      <NotLoggedInModal
+        visible={showNotLoggedInModal}
+        setVisible={setShowNotLoggedInModal}
+      />
     </GestureHandlerRootView>
   );
 }

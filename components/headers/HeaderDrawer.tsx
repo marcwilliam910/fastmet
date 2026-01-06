@@ -1,33 +1,38 @@
-import {Ionicons} from "@expo/vector-icons";
-import {DrawerActions, useNavigation} from "@react-navigation/native";
-import {Pressable, Text, View} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { DrawerActions, useNavigation } from "@react-navigation/native";
+import { Platform, Pressable, Text, View } from "react-native";
 
-const HeaderDrawer = ({title}: {title: string}) => {
+const HeaderDrawer = ({ title }: { title: string }) => {
   const navigation = useNavigation();
 
   // Map titles to icons
   const iconMap: Record<string, string> = {
-    "Home": "home",
+    Home: "home",
     "My Profile": "person",
-    "Settings": "settings",
-    "About": "information-circle",
-    "Apply as Driver": "car",
-    "Favorite": "heart",
+    Settings: "settings",
+    About: "information-circle",
+    Favorite: "heart",
   };
 
   const iconName = iconMap[title] || "document-outline"; // fallback icon
 
   return (
-    <View className="flex-row items-center justify-between w-full">
+    <View className="flex-row items-center justify-center">
       {/* Left: Hamburger Menu */}
       <Pressable
+        className="absolute top-0 left-0"
         onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
+        hitSlop={{ top: 20, left: 20, bottom: 20, right: 20 }}
       >
-        <Ionicons name="menu" size={28} color="#FFA840" />
+        <Ionicons
+          name="menu"
+          size={Platform.OS === "ios" ? 34 : 28}
+          color="#FFA840"
+        />
       </Pressable>
 
       {/* Center: Icon + Title */}
-      <View className="absolute left-0 right-0 flex-row items-center justify-center gap-2">
+      <View className="w-full flex-row items-center justify-center gap-2">
         <Ionicons
           name={iconName as keyof typeof Ionicons.glyphMap}
           size={24}
@@ -35,9 +40,6 @@ const HeaderDrawer = ({title}: {title: string}) => {
         />
         <Text className="text-lg font-bold text-white">{title}</Text>
       </View>
-
-      {/* Right: Empty spacer to balance layout */}
-      <View className="w-7" />
     </View>
   );
 };

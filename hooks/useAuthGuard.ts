@@ -1,12 +1,12 @@
 // hooks/useAuthGuard.ts
-import {Alert, Platform, ToastAndroid} from "react-native";
-import useAuth from "./useAuth";
+import { Alert, Platform, ToastAndroid } from "react-native";
+import { useAuth } from "./useAuth";
 
 export function useAuthGuard() {
-  const {user} = useAuth();
+  const { isLoggedIn } = useAuth();
 
   const isAuthenticated = () => {
-    if (!user) {
+    if (!isLoggedIn) {
       if (Platform.OS === "android") {
         ToastAndroid.show("Login required", ToastAndroid.SHORT);
       } else {
@@ -18,5 +18,5 @@ export function useAuthGuard() {
     return true;
   };
 
-  return {isAuthenticated};
+  return { isAuthenticated };
 }

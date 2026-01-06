@@ -1,9 +1,7 @@
-export type User = {
-  uid: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  middleName?: string;
-  birthDate?: string;
+export type NewUser = {
+  fullName: string;
+  address: string;
+  gender?: string;
+
   profilePictureUrl?: string;
 };

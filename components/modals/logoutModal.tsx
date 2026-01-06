@@ -1,9 +1,9 @@
-import {logout} from "@/lib/auth";
-import {Ionicons} from "@expo/vector-icons";
-import {Image} from "expo-image";
-import {router} from "expo-router";
-import React, {useState} from "react";
-import {ActivityIndicator, Modal, Pressable, Text, View} from "react-native";
+import { useAppStore } from "@/store/useAppStore";
+import { Ionicons } from "@expo/vector-icons";
+import { Image } from "expo-image";
+import { router } from "expo-router";
+import React from "react";
+import { Modal, Pressable, Text, View } from "react-native";
 
 const LogoutModal = ({
   isOpen,
@@ -12,14 +12,11 @@ const LogoutModal = ({
   isOpen: boolean;
   setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }) => {
-  const [isLoading, setIsLoading] = useState(false);
-
   const handleLogout = async () => {
-    setIsLoading(true);
-    await logout();
-    setIsLoading(false);
+    useAppStore.getState().logout();
+    useAppStore.getState().clearStates();
     setIsOpen(false);
-    router.push("/(auth)/login");
+    router.replace("/(auth)/auth");
   };
 
   return (
@@ -35,7 +32,7 @@ const LogoutModal = ({
           <View className="flex-row items-center">
             <Image
               source={require("@/assets/fastmet/logo.png")}
-              style={{width: 50, height: 50}}
+              style={{ width: 50, height: 50 }}
               contentFit="contain"
             />
             <Text className="text-xl font-bold tracking-widest text-secondary">
@@ -56,12 +53,10 @@ const LogoutModal = ({
               className="items-center py-4 rounded-lg bg-lightPrimary active:bg-darkPrimary"
               onPress={handleLogout}
             >
-              <Text className="text-base font-bold text-white">
-                {isLoading ? <ActivityIndicator color="white" /> : "Logout"}
-              </Text>
+              <Text className="text-base font-bold text-white">Logout</Text>
             </Pressable>
             <Pressable
-              className="items-center py-4 my-2 border border-gray-300 rounded-lg bg-ctaSecondary active:bg-ctaSecondaryActive"
+              className="items-center py-4 my-2 border border-gray-200 rounded-lg bg-ctaSecondary active:bg-ctaSecondaryActive"
               onPress={() => setIsOpen(false)}
             >
               <Text className="text-base font-bold ">Cancel</Text>

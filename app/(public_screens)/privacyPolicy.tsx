@@ -1,7 +1,7 @@
 import LogoWithText from "@/components/LogoWithText";
 import React from "react";
-import {ScrollView, Text, View} from "react-native";
-import {SafeAreaView} from "react-native-safe-area-context";
+import { ScrollView, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const PrivacyPolicy = () => {
   return (
@@ -43,9 +43,9 @@ const PrivacyPolicy = () => {
             3.1. Licensing
           </Text>
           <Text className="mb-2 text-sm leading-relaxed text-gray-700">
-            • All drivers must possess a valid Commercial Driver's License (CDL)
-            with the appropriate endorsements.{"\n"}• Drivers must notify the
-            company immediately of any license suspensions, revocations, or
+            • All drivers must possess a valid Commercial Driver&apos;s License
+            (CDL) with the appropriate endorsements.{"\n"}• Drivers must notify
+            the company immediately of any license suspensions, revocations, or
             violations.
           </Text>
 
@@ -53,9 +53,9 @@ const PrivacyPolicy = () => {
             3.2. Driving Record
           </Text>
           <Text className="mb-2 text-sm leading-relaxed text-gray-700">
-            • The company will conduct regular reviews of driver's motor vehicle
-            records (MVRs).{"\n"}• Drivers with excessive violations may be
-            subject to disciplinary action, including termination.
+            • The company will conduct regular reviews of driver&apos;s motor
+            vehicle records (MVRs).{"\n"}• Drivers with excessive violations may
+            be subject to disciplinary action, including termination.
           </Text>
 
           <Text className="text-base font-semibold text-[#FFA840] mb-1">
@@ -123,9 +123,9 @@ const PrivacyPolicy = () => {
             4.4. Accident Reporting
           </Text>
           <Text className="mb-2 text-sm leading-relaxed text-gray-700">
-            • In the event of an accident, drivers must follow the company's
-            accident reporting procedures.{"\n"}• Drivers must cooperate fully
-            with law enforcement and company investigations.
+            • In the event of an accident, drivers must follow the
+            company&apos;s accident reporting procedures.{"\n"}• Drivers must
+            cooperate fully with law enforcement and company investigations.
           </Text>
         </View>
 

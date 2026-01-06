@@ -1,4 +1,4 @@
-import {z} from "zod";
+import * as z from "zod";
 
 export const RegisterSchema = z
   .object({
@@ -22,13 +22,34 @@ export const ResetPassSchema = z.object({
 });
 
 export const ProfileSchema = z.object({
-  firstName: z.string().min(1, "First name is required"),
-  midName: z.string().optional(),
-  lastName: z.string().min(1, "Last name is required"),
-  birthday: z.string().optional(),
+  fullName: z
+    .string()
+    .trim()
+    .min(8, "Full name must be at least 5 characters")
+    .max(100, "Full name must not exceed 100 characters")
+    .regex(/^[a-zA-Z\s.'-]+$/, "Full name contains invalid characters"),
+
+  address: z
+    .string()
+    .optional()
+    .refine((val) => !val || val.length >= 5, {
+      message: "Address must be at least 5 characters",
+    }),
 });
+
+export const ChangePassSchema = z
+  .object({
+    oldPassword: z.string().min(8, "Old password is required"),
+    newPassword: z.string().min(8, "Password must be at least 8 characters"),
+    confirmPassword: z.string().min(8, "Confirm password is required"),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
 
 export type RegisterSchemaType = z.infer<typeof RegisterSchema>;
 export type LoginSchemaType = z.infer<typeof LoginSchema>;
 export type ResetPassSchemaType = z.infer<typeof ResetPassSchema>;
 export type ProfileSchemaType = z.infer<typeof ProfileSchema>;
+export type ChangePassSchemaType = z.infer<typeof ChangePassSchema>;

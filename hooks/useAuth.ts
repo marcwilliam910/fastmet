@@ -1,18 +1,13 @@
-import {onAuthStateChanged, User} from "firebase/auth";
-import {useEffect, useState} from "react";
-import {auth} from "../lib/firebaseConfig";
+import { useAppStore } from "@/store/useAppStore";
 
-export default function useAuth() {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+export const useAuth = () => {
+  const id = useAppStore((state) => state.id);
+  const token = useAppStore((state) => state.token);
+  const phoneNumber = useAppStore((state) => state.phoneNumber);
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      setUser(firebaseUser); // firebaseUser is User | null
-      setLoading(false);
-    });
-    return unsubscribe;
-  }, []);
-
-  return {user, loading};
-}
+  return {
+    isLoggedIn: !!id && !!token && !!phoneNumber,
+    id,
+    token,
+  };
+};
