@@ -1,4 +1,5 @@
 import useSeeMoreDetails from "@/hooks/useSeeMoreDetails";
+import { useRateDriverMutation } from "@/mutations/booking";
 import { useUserBookings } from "@/queries/bookingQueries";
 import { CompletedBooking, LocationDetails } from "@/types/book";
 import { formatDate } from "@/utils/date";
@@ -18,6 +19,7 @@ import {
 } from "react-native";
 import ImageView from "react-native-image-viewing";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import StarDisplay from "../StarDisplay";
 
 export default function CompletedRoute() {
   const { modalVisible, setModalVisible, selectedRequest, handleSeeMorePress } =
@@ -243,6 +245,8 @@ function SeeMoreModal({
   const [userRating, setUserRating] = useState(0);
   const [showRatingCard, setShowRatingCard] = useState(false);
 
+  const { mutate, isPending, error } = useRateDriverMutation();
+
   const openImageViewer = (imageUrl: string) => {
     setSelectedImage(imageUrl);
     setIsImageViewVisible(true);
@@ -250,21 +254,27 @@ function SeeMoreModal({
 
   const handleRateDriver = () => {
     if (userRating > 0) {
-      // Handle rating submission here
-      console.log(`Driver rated: ${userRating} stars`);
-      // You can add your API call here
-      setShowRatingCard(false);
+      mutate(
+        { bookingId: data._id, rating: userRating },
+        {
+          onSuccess: (data) => {
+            setShowRatingCard(false);
+            setUserRating(0);
+            onClose();
+          },
+        }
+      );
     }
   };
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      if (data.isRated) setShowRatingCard(false);
+      if (data.driverRating !== null) setShowRatingCard(false);
       else setShowRatingCard(true);
     }, 7000);
 
     return () => clearTimeout(timeoutId);
-  }, [visible, data.isRated]);
+  }, [visible, data.driverRating]);
 
   return (
     <Modal
@@ -287,7 +297,7 @@ function SeeMoreModal({
           <Pressable
             onPress={onClose}
             className="absolute left-4 top-1"
-            hitSlop={20}
+            hitSlop={30}
           >
             <Ionicons
               name="chevron-back-outline"
@@ -339,7 +349,7 @@ function SeeMoreModal({
               <View className="flex-row items-center justify-center gap-2">
                 {data.driver.profilePictureUrl ? (
                   <Pressable
-                    className="w-[44px] h-[44px] rounded-full overflow-hidden"
+                    className="w-[48px] h-[48px] rounded-full overflow-hidden"
                     onPress={() =>
                       openImageViewer(data.driver.profilePictureUrl)
                     }
@@ -357,38 +367,18 @@ function SeeMoreModal({
                   <Text className="text-lg font-semibold text-gray-800">
                     {data.driver.name}
                   </Text>
-                  <View className="flex-row">
-                    {[...Array(Math.floor(data.driver.rating))].map((_, i) => (
-                      <Ionicons key={i} name="star" size={18} color="#FFD700" />
-                    ))}
-                    {[...Array(5 - Math.floor(data.driver.rating))].map(
-                      (_, i) => (
-                        <Ionicons
-                          key={i}
-                          name="star-outline"
-                          size={18}
-                          color="#FFD700"
-                        />
-                      )
-                    )}
-                  </View>
+                  <StarDisplay rating={data.driver.rating} />
                 </View>
               </View>
 
-              <View className="flex-row gap-5">
-                <Pressable className="items-center active:scale-110">
-                  <Ionicons name="call" size={26} color="#F7931E" />
-                  <Text className="text-xs text-gray-600">Call</Text>
-                </Pressable>
-                <Pressable className="items-center active:scale-110">
-                  <Ionicons
-                    name="chatbubble-ellipses"
-                    size={26}
-                    color="#F7931E"
-                  />
-                  <Text className="text-xs text-gray-600">Chat</Text>
-                </Pressable>
-              </View>
+              <Pressable className="items-center active:scale-110">
+                <Ionicons
+                  name="chatbubble-ellipses"
+                  size={Platform.OS === "ios" ? 28 : 24}
+                  color="#F7931E"
+                />
+                <Text className="text-sm text-gray-600">Chat</Text>
+              </Pressable>
             </View>
           </View>
 
@@ -727,17 +717,25 @@ function SeeMoreModal({
             {/* Rate Button */}
             <Pressable
               onPress={handleRateDriver}
-              disabled={userRating === 0}
+              disabled={userRating === 0 || isPending}
               className={`py-3 rounded-xl ${
                 userRating > 0 ? "bg-lightPrimary" : "bg-gray-300"
               }`}
             >
               <Text className="text-base font-semibold text-center text-white">
-                {userRating > 0
-                  ? `Rate ${userRating} Star${userRating > 1 ? "s" : ""}`
-                  : "Select Rating"}
+                {isPending
+                  ? "Please wait..."
+                  : userRating > 0
+                    ? `Rate ${userRating} Star${userRating > 1 ? "s" : ""}`
+                    : "Select Rating"}
               </Text>
             </Pressable>
+            {error && (
+              <Text className="mt-2 text-sm text-center text-red-500">
+                {error.response?.data?.message ??
+                  "Failed to submit rating. Please try again."}
+              </Text>
+            )}
           </View>
         )}
       </View>

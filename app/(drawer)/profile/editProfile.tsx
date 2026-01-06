@@ -254,7 +254,7 @@ const EditProfile = () => {
                   : require("@/assets/images/user.png")
               }
               style={{ width: 128, height: 128, borderRadius: 999 }}
-              contentFit="contain"
+              contentFit="cover"
             />
 
             {form.profilePictureUrl && (
@@ -315,7 +315,7 @@ const EditProfile = () => {
             </Text>
             {/* display the phone number, not as input. disabled */}
             <Text className="p-4 text-base bg-gray-200 opacity-50 rounded-lg ">
-              {useAppStore.getState().phoneNumber}
+              {useAppStore.getState().phoneNumber.replace("+63", "+63 ")}
             </Text>
           </View>
 

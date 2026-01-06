@@ -38,17 +38,15 @@ export default function MyProfile() {
                 : require("@/assets/images/user.png")
             }
             style={{ width: 120, height: 120, borderRadius: 999 }}
-            contentFit="contain"
+            contentFit="cover"
           />
         </View>
 
         {/* User Info */}
         <View className="items-center gap-1">
-          <Text className="text-xl font-bold text-gray-800">
-            {name || "User"}
-          </Text>
+          <Text className="text-xl font-bold text-gray-800">{name}</Text>
           <Text className="text-base text-gray-400">
-            {useAppStore.getState().phoneNumber}
+            {useAppStore.getState().phoneNumber.replace("+63", "+63 ")}
           </Text>
         </View>
       </View>

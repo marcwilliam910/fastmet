@@ -5,6 +5,7 @@ import { router } from "expo-router";
 import React, { useMemo, useRef } from "react";
 import { Dimensions, Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import StarDisplay from "../StarDisplay";
 
 export default function ViewOnMapSheet({ driver }: { driver: Driver }) {
   const sheetRef = useRef<BottomSheet>(null);
@@ -46,19 +47,7 @@ export default function ViewOnMapSheet({ driver }: { driver: Driver }) {
               <Text className="text-lg font-semibold text-gray-800">
                 {driver.name}
               </Text>
-              <View className="flex-row">
-                {[...Array(Math.floor(driver.rating))].map((_, i) => (
-                  <Ionicons key={i} name="star" size={20} color="#FFD700" />
-                ))}
-                {[...Array(5 - Math.floor(driver.rating))].map((_, i) => (
-                  <Ionicons
-                    key={i}
-                    name="star-outline"
-                    size={20}
-                    color="#FFD700"
-                  />
-                ))}
-              </View>
+              <StarDisplay rating={driver.rating} />
             </View>
           </View>
 

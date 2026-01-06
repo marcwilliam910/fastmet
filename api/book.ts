@@ -25,3 +25,8 @@ export const getBookingsCounts = async () => {
   const res = await api.get(`/booking/stats/counts`);
   return res.data;
 };
+
+export const rateDriver = async (bookingId: string, rating: number) => {
+  const res = await api.patch(`/booking/rate-driver/${bookingId}`, { rating });
+  return res.data;
+};

@@ -5,7 +5,7 @@ import { defaultService, serviceAddons } from "@/utils/constants";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { Platform, Pressable, ScrollView, Text, View } from "react-native";
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -24,7 +24,11 @@ const Services = () => {
           onPress={() => router.back()}
           hitSlop={20}
         >
-          <Ionicons name="chevron-back" size={28} color="#FFA840" />
+          <Ionicons
+            name="chevron-back"
+            size={Platform.OS === "ios" ? 32 : 28}
+            color="#FFA840"
+          />
         </Pressable>
         <Text className="text-lg font-semibold">Services</Text>
         <Text className="absolute text-sm font-semibold right-5 top-3.5">

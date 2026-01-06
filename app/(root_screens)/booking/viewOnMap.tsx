@@ -1,4 +1,5 @@
 import LiveTrackingMapScreen from "@/components/maps/LiveTrackingMapScreen";
+import StarDisplay from "@/components/StarDisplay";
 import { useBooking } from "@/queries/bookingQueries";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
@@ -97,28 +98,7 @@ export default function ViewOnMap() {
                   <Text className="text-lg font-semibold text-gray-800">
                     {booking.driver.name}
                   </Text>
-                  <View className="flex-row">
-                    {[...Array(Math.floor(booking.driver.rating))].map(
-                      (_, i) => (
-                        <Ionicons
-                          key={i}
-                          name="star"
-                          size={20}
-                          color="#FFD700"
-                        />
-                      )
-                    )}
-                    {[...Array(5 - Math.floor(booking.driver.rating))].map(
-                      (_, i) => (
-                        <Ionicons
-                          key={i}
-                          name="star-outline"
-                          size={20}
-                          color="#FFD700"
-                        />
-                      )
-                    )}
-                  </View>
+                  <StarDisplay rating={booking.driver.rating} />
                 </View>
               </View>
 

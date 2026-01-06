@@ -91,11 +91,15 @@ export default function AdditionalInfo() {
       {/* Header */}
       <View className="relative flex-row items-center justify-center px-6 pt-2 pb-4">
         <Pressable
-          className="absolute left-5 top-1.5"
+          className="absolute left-5 top-1"
           onPress={() => router.back()}
           hitSlop={20}
         >
-          <Ionicons name="chevron-back" size={28} color="#FFA840" />
+          <Ionicons
+            name="chevron-back"
+            size={Platform.OS === "ios" ? 32 : 28}
+            color="#FFA840"
+          />
         </Pressable>
         <Text className="text-lg font-semibold">Additional Information</Text>
         <Text className="absolute text-sm font-semibold right-5 top-3.5">

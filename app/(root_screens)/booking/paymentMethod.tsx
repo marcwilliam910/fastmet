@@ -8,7 +8,7 @@ import { uploadBookingImages } from "@/utils/imagePicker";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useEffect } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Platform, Pressable, Text, View } from "react-native";
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -136,7 +136,11 @@ export default function PaymentMethod() {
           onPress={() => router.back()}
           hitSlop={20}
         >
-          <Ionicons name="chevron-back" size={28} color="#FFA840" />
+          <Ionicons
+            name="chevron-back"
+            size={Platform.OS === "ios" ? 32 : 28}
+            color="#FFA840"
+          />
         </Pressable>
         <Text className="text-lg font-semibold">Payment Method</Text>
         <Text className="absolute text-sm font-semibold right-5 top-3.5">

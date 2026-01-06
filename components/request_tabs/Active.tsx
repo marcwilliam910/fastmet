@@ -14,6 +14,7 @@ import {
   View,
 } from "react-native";
 import SeeMoreModal from "../modals/seeMoreModal";
+import StarDisplay from "../StarDisplay";
 
 export default function ActiveRoute() {
   const { modalVisible, setModalVisible, selectedRequest, handleSeeMorePress } =
@@ -161,6 +162,7 @@ const ActiveCard = ({
           <Text className="text-lg font-semibold text-white">{vehicle}</Text>
           <Pressable
             className="flex-row items-center gap-2 active:scale-105"
+            hitSlop={15}
             onPress={() =>
               router.push({
                 pathname: "/(root_screens)/booking/viewOnMap",
@@ -195,43 +197,26 @@ const ActiveCard = ({
                 <Text className="font-semibold text-lg text-gray-800">
                   {driver.name}
                 </Text>
-                <View className="flex-row">
-                  {[...Array(Math.floor(driver.rating))].map((_, i) => (
-                    <Ionicons
-                      key={i}
-                      name="star"
-                      size={Platform.OS === "ios" ? 18 : 16}
-                      color="#FFD700"
-                    />
-                  ))}
-                  {[...Array(5 - Math.floor(driver.rating))].map((_, i) => (
-                    <Ionicons
-                      key={i}
-                      name="star-outline"
-                      size={Platform.OS === "ios" ? 18 : 16}
-                      color="#FFD700"
-                    />
-                  ))}
-                </View>
+                <StarDisplay rating={driver.rating} />
               </View>
             </View>
 
-            <View className="flex-row gap-4">
+            <View className="flex-row gap-5">
               <Pressable className="items-center active:scale-110">
                 <Ionicons
                   name="call"
-                  size={Platform.OS === "ios" ? 25 : 22}
+                  size={Platform.OS === "ios" ? 28 : 24}
                   color="#F7931E"
                 />
-                <Text className="text-xs text-gray-600">Call</Text>
+                <Text className="text-sm text-gray-600">Call</Text>
               </Pressable>
               <Pressable className="items-center active:scale-110">
                 <Ionicons
                   name="chatbubble-ellipses"
-                  size={Platform.OS === "ios" ? 25 : 22}
+                  size={Platform.OS === "ios" ? 28 : 24}
                   color="#F7931E"
                 />
-                <Text className="text-xs text-gray-600">Chat</Text>
+                <Text className="text-sm text-gray-600">Chat</Text>
               </Pressable>
             </View>
           </View>

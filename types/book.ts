@@ -60,7 +60,7 @@ export type Booking = {
   photos: string[];
   createdAt: string;
   status: string;
-  isRated: boolean;
+  driverRating: number | null;
 };
 
 export type ActiveBooking = Booking & { driver: Driver };

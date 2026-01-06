@@ -138,7 +138,7 @@ const MessageCard = ({ item }: { item: ConversationResponse }) => {
             : require("@/assets/images/user.png")
         }
         style={{ width: 50, height: 50, borderRadius: 999 }}
-        contentFit="contain"
+        contentFit="cover"
       />
       <View className="flex-1 gap-1">
         <View className="flex-row items-center justify-between">

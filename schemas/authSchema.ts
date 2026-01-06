@@ -29,7 +29,12 @@ export const ProfileSchema = z.object({
     .max(100, "Full name must not exceed 100 characters")
     .regex(/^[a-zA-Z\s.'-]+$/, "Full name contains invalid characters"),
 
-  address: z.string().min(5, "Address is required").optional(),
+  address: z
+    .string()
+    .optional()
+    .refine((val) => !val || val.length >= 5, {
+      message: "Address must be at least 5 characters",
+    }),
 });
 
 export const ChangePassSchema = z

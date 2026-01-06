@@ -15,6 +15,7 @@ import {
 } from "react-native";
 import ImageView from "react-native-image-viewing";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import StarDisplay from "../StarDisplay";
 
 function isActiveBooking(
   booking: Booking | ActiveBooking
@@ -64,7 +65,7 @@ export default function SeeMoreModal({
           <Pressable
             onPress={onClose}
             className="absolute left-4 -top-1"
-            hitSlop={20}
+            hitSlop={30}
           >
             <Ionicons
               name="chevron-back-outline"
@@ -117,7 +118,7 @@ export default function SeeMoreModal({
                   <View className="flex-row items-center justify-center gap-2">
                     {data.driver.profilePictureUrl ? (
                       <Pressable
-                        className="w-[44px] h-[44px] rounded-full overflow-hidden"
+                        className="w-[48px] h-[48px] rounded-full overflow-hidden"
                         onPress={() => {
                           setImageViewerVisible(true);
                           setSelectedImageUrl(data.driver.profilePictureUrl);
@@ -140,43 +141,26 @@ export default function SeeMoreModal({
                       <Text className="text-lg font-semibold text-gray-800">
                         {data.driver.name}
                       </Text>
-                      <View className="flex-row">
-                        {[...Array(Math.floor(data.driver.rating))].map(
-                          (_, i) => (
-                            <Ionicons
-                              key={i}
-                              name="star"
-                              size={18}
-                              color="#FFD700"
-                            />
-                          )
-                        )}
-                        {[...Array(5 - Math.floor(data.driver.rating))].map(
-                          (_, i) => (
-                            <Ionicons
-                              key={i}
-                              name="star-outline"
-                              size={18}
-                              color="#FFD700"
-                            />
-                          )
-                        )}
-                      </View>
+                      <StarDisplay rating={data.driver.rating} />
                     </View>
                   </View>
 
                   <View className="flex-row gap-5">
                     <Pressable className="items-center active:scale-110">
-                      <Ionicons name="call" size={26} color="#F7931E" />
-                      <Text className="text-xs text-gray-600">Call</Text>
+                      <Ionicons
+                        name="call"
+                        size={Platform.OS === "ios" ? 28 : 24}
+                        color="#F7931E"
+                      />
+                      <Text className="text-sm text-gray-600">Call</Text>
                     </Pressable>
                     <Pressable className="items-center active:scale-110">
                       <Ionicons
                         name="chatbubble-ellipses"
-                        size={26}
+                        size={Platform.OS === "ios" ? 28 : 24}
                         color="#F7931E"
                       />
-                      <Text className="text-xs text-gray-600">Chat</Text>
+                      <Text className="text-sm text-gray-600">Chat</Text>
                     </Pressable>
                   </View>
                 </View>
