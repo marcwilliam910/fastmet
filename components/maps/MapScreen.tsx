@@ -21,6 +21,7 @@ type Props = {
   routeData: RouteData;
   region: Region | null;
   setRegion: React.Dispatch<React.SetStateAction<Region | null>>;
+  setIsDragging: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
 export default function MapScreen({
@@ -29,6 +30,7 @@ export default function MapScreen({
   routeData,
   region,
   setRegion,
+  setIsDragging,
 }: Props) {
   const mapRef = useRef<MapView>(null);
 
@@ -88,6 +90,9 @@ export default function MapScreen({
           showsCompass
           mapType="standard"
           initialRegion={region}
+          onTouchStart={() => setIsDragging(true)}
+          onTouchEnd={() => setIsDragging(false)}
+          onTouchCancel={() => setIsDragging(false)}
         >
           {pickUp && (
             <Marker

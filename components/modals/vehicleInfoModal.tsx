@@ -1,4 +1,4 @@
-import { Vehicle } from "@/types/book";
+import { IVehicleType } from "@/types/vehicle";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import {
@@ -18,7 +18,7 @@ export const VehicleInfoModal = ({
 }: {
   visible: boolean;
   setModalVisible: (visible: boolean) => void;
-  vehicles: Vehicle[];
+  vehicles: IVehicleType[];
 }) => {
   const insets = useSafeAreaInsets();
   return (
@@ -56,7 +56,7 @@ export const VehicleInfoModal = ({
           <View className="flex-col gap-4 mb-8">
             {vehicles.map((v) => (
               <View
-                key={v.id}
+                key={v.key}
                 className="bg-[#F7F9FC] border border-[#FFA840] rounded-2xl p-4 flex-row justify-between items-center"
               >
                 <View className="flex-1 pr-3">
@@ -66,7 +66,7 @@ export const VehicleInfoModal = ({
                   <Text className="text-sm text-gray-500 mt-1">{v.desc}</Text>
                 </View>
                 <Image
-                  source={v.img}
+                  source={v.imageUrl}
                   style={{ width: 96, height: 64 }}
                   contentFit="contain"
                 />

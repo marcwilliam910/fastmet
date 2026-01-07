@@ -1,9 +1,5 @@
-import type {
-  LocationDetails,
-  RouteData,
-  Service,
-  Vehicle,
-} from "@/types/book";
+import type { LocationDetails, RouteData, Service } from "@/types/book";
+import { SelectedVehicle } from "@/types/vehicle";
 import { fetchDrivingDistance } from "@/utils/calculatePrice";
 import { defaultService } from "@/utils/constants";
 import { StateCreator } from "zustand";
@@ -19,13 +15,12 @@ export interface BookSlice {
   pickUp: LocationDetails;
   dropOff: LocationDetails;
   bookingType: BookingType;
-  selectedVehicle: Vehicle | null;
+  selectedVehicle: SelectedVehicle | null;
   routeData: RouteData;
   paymentMethod: "cash" | "gcash";
   note: string;
   itemType: string | null;
   photos: string[];
-  fareRates: { baseFare: number; perKmRate: number; perMinRate: number };
 
   // not sure
   addedServices: Service[];
@@ -36,7 +31,7 @@ export interface BookSlice {
   setDropOff: (details: LocationDetails) => void;
   setDropOffAdditionalDetails: (details: string) => void;
   setBookingType: (type: BookingType) => void;
-  setSelectedVehicle: (vehicle: Vehicle) => void;
+  setSelectedVehicle: (vehicle: SelectedVehicle) => void;
 
   setNote: (note: string) => void;
   setItemType: (itemType: string | null) => void;
@@ -45,8 +40,8 @@ export interface BookSlice {
   setPhoto: (photo: string) => void;
   removePhoto: (photo: string) => void;
 
-  fetchFareRates: () => Promise<void>;
-  calculatePrice: () => Promise<void>;
+  calculatePrice: () => Promise<number>; // Now returns Promise since it's async
+
   clearStates: () => void;
 }
 
@@ -68,7 +63,6 @@ export const createBookSlice: StateCreator<BookSlice> = (set, get) => ({
   note: "",
   itemType: null,
   photos: [],
-  fareRates: { baseFare: 0, perKmRate: 0, perMinRate: 0 },
 
   // not sure
   addedServices: [...defaultService],
@@ -116,52 +110,22 @@ export const createBookSlice: StateCreator<BookSlice> = (set, get) => ({
   setPaymentMethod: (method: "cash" | "gcash") =>
     set({ paymentMethod: method }),
 
-  // fetchFareRates: async (token: string) => {
-  //   try {
-  //     const res = await fetch(`${process.env.EXPO_PUBLIC_BASE_URL}/api/fare`, {
-  //       method: "GET",
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //         Authorization: `Bearer ${token}`,
-  //       },
-  //     });
+  calculatePrice: async () => {
+    const { selectedVehicle, addedServices, pickUp, dropOff } = get();
 
-  //     if (!res.ok) {
-  //       throw new Error(`Failed to fetch fare rates: ${res.status}`);
-  //     }
-
-  //     const rates = await res.json();
-  //     console.log("Fare rates:", JSON.stringify(rates, null, 2));
-
-  //     set({ fareRates: rates });
-  //   } catch (e) {
-  //     console.error("Failed to fetch fare rates", e);
-  //   }
-  // },
-  fetchFareRates: async () => {
-    try {
-      const res = await fetch(`${process.env.EXPO_PUBLIC_BASE_URL}/api/fare`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
+    if (!pickUp || !dropOff || !selectedVehicle || !selectedVehicle.variant) {
+      set({
+        routeData: {
+          distance: 0,
+          duration: 0,
+          basePrice: 0,
+          distanceFee: 0,
+          serviceFee: 0,
+          totalPrice: 0,
         },
       });
-
-      if (!res.ok) {
-        throw new Error(`Failed to fetch fare rates: ${res.status}`);
-      }
-
-      const rates = await res.json();
-      console.log("Fare rates:", JSON.stringify(rates, null, 2));
-
-      set({ fareRates: rates });
-    } catch (e) {
-      console.error("Failed to fetch fare rates", e);
+      return 0;
     }
-  },
-  calculatePrice: async () => {
-    const { pickUp, dropOff, addedServices, fareRates } = get();
-    if (!pickUp || !dropOff) return;
 
     try {
       const { distanceKm, durationMin } = await fetchDrivingDistance(
@@ -169,27 +133,47 @@ export const createBookSlice: StateCreator<BookSlice> = (set, get) => ({
         dropOff
       );
 
-      const basePrice = fareRates.baseFare;
-      const distanceFee =
-        distanceKm * fareRates.perKmRate + durationMin * fareRates.perMinRate;
+      const variant = selectedVehicle.variant;
+      const basePrice = variant.baseFare;
 
+      // Find the appropriate pricing tier based on distance
+      const tier = variant.pricingTiers.find(
+        (t) =>
+          distanceKm >= t.minKm &&
+          (t.maxKm === undefined || distanceKm <= t.maxKm)
+      );
+
+      const distanceFee = tier ? distanceKm * tier.pricePerKm : 0;
       const serviceFee = addedServices.reduce((sum, s) => sum + s.price, 0);
+      const totalPrice = basePrice + distanceFee + serviceFee;
 
       set({
         routeData: {
           distance: distanceKm,
           duration: durationMin,
-          basePrice,
-          distanceFee,
-          serviceFee,
-          totalPrice: basePrice + distanceFee + serviceFee,
+          basePrice: Math.round(basePrice * 100) / 100,
+          distanceFee: Math.round(distanceFee * 100) / 100,
+          serviceFee: Math.round(serviceFee * 100) / 100,
+          totalPrice: Math.round(totalPrice * 100) / 100,
         },
       });
-    } catch (e) {
-      console.error("Failed to calculate price", e);
+
+      return totalPrice;
+    } catch (error) {
+      console.error("Error calculating price:", error);
+      set({
+        routeData: {
+          distance: 0,
+          duration: 0,
+          basePrice: 0,
+          distanceFee: 0,
+          serviceFee: 0,
+          totalPrice: 0,
+        },
+      });
+      return 0;
     }
   },
-
   clearStates: () =>
     set({
       pickUp: null,

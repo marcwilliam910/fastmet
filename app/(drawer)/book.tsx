@@ -15,6 +15,7 @@ const Book = () => {
   const routeData = useAppStore((state) => state.routeData);
   const [region, setRegion] = useState<Region | null>(null);
   const navigation = useNavigation();
+  const [isDragging, setIsDragging] = useState(false);
 
   return (
     <SafeAreaView
@@ -28,6 +29,7 @@ const Book = () => {
           routeData={routeData}
           region={region}
           setRegion={setRegion}
+          setIsDragging={setIsDragging}
         />
 
         {/* Floating burger */}
@@ -46,7 +48,7 @@ const Book = () => {
         </Pressable>
       </View>
 
-      <BookSheet />
+      <BookSheet isDragging={isDragging} />
     </SafeAreaView>
   );
 };

@@ -9,7 +9,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { DrawerContentScrollView, DrawerItem } from "@react-navigation/drawer";
 import { Drawer } from "expo-router/drawer";
 import { useEffect, useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -89,6 +89,12 @@ export default function DrawerLayout() {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showNotLoggedInModal, setShowNotLoggedInModal] = useState(false);
   const { notification } = usePushNotifications();
+  const vehicleLoading = useAppStore((state) => state.vehicleLoading);
+  const fetchVehicles = useAppStore((state) => state.fetchVehicles);
+
+  useEffect(() => {
+    fetchVehicles();
+  }, [fetchVehicles]);
 
   useEffect(() => {
     if (
@@ -111,10 +117,12 @@ export default function DrawerLayout() {
     }
   }, [notification]);
 
-  useEffect(() => {
-    const fetchFareRates = useAppStore.getState().fetchFareRates;
-    fetchFareRates();
-  }, []);
+  if (vehicleLoading)
+    return (
+      <View className="flex-1 items-center bg-white justify-center">
+        <ActivityIndicator size="large" color="#FFA840" />
+      </View>
+    );
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

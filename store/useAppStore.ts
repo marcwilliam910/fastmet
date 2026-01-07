@@ -5,8 +5,13 @@ import { AuthSlice, createAuthSlice } from "./slices/authSlice";
 import { BookSlice, createBookSlice } from "./slices/bookSlice";
 import { ChatSlice, createChatSlice } from "./slices/chatSlice";
 import { createLoadingSlice, LoadingSlice } from "./slices/loadingStore";
+import { createVehicleSlice, VehicleSlice } from "./slices/vehicleSlice";
 
-export type AppStore = BookSlice & LoadingSlice & AuthSlice & ChatSlice;
+export type AppStore = BookSlice &
+  LoadingSlice &
+  AuthSlice &
+  ChatSlice &
+  VehicleSlice;
 
 export const useAppStore = create<AppStore>()(
   persist(
@@ -15,6 +20,7 @@ export const useAppStore = create<AppStore>()(
       ...createLoadingSlice(...a),
       ...createAuthSlice(...a),
       ...createChatSlice(...a),
+      ...createVehicleSlice(...a),
     }),
     {
       name: "fastmet-client-storage",

@@ -44,9 +44,12 @@ export default function PaymentMethod() {
         itemType,
       } = useAppStore.getState();
 
+      if (!selectedVehicle || !selectedVehicle.variant || !pickUp || !dropOff)
+        return;
+
       const bookingRef = generateBookingRef(
         bookingType.type,
-        selectedVehicle?.name || ""
+        selectedVehicle.name || ""
       );
 
       // Upload images first
@@ -70,11 +73,7 @@ export default function PaymentMethod() {
         pickUp: pickUp,
         dropOff: dropOff,
         bookingType: bookingType,
-        selectedVehicle: {
-          id: selectedVehicle?.id,
-          name: selectedVehicle?.name,
-          capacity: selectedVehicle?.capacity,
-        },
+        selectedVehicle: selectedVehicle,
         routeData: routeData,
         paymentMethod: paymentMethod,
         addedServices: addedServices,

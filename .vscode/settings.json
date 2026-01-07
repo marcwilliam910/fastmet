@@ -6,5 +6,12 @@
   },
 
   "postman.settings.dotenv-detection-notification-visibility": false,
-  "cSpell.words": ["gcash", "gorhom", "nativewind", "Pressable", "Xendit"]
+  "cSpell.words": [
+    "gcash",
+    "gorhom",
+    "nativewind",
+    "Pressable",
+    "springify",
+    "Xendit"
+  ]
 }

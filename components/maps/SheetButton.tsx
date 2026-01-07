@@ -28,11 +28,11 @@ const SheetButton = ({
   };
 
   const isDisable = !selectedVehicle || !pickUp || !dropOff;
-
   useEffect(() => {
-    if (pickUp && dropOff) calculatePrice();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pickUp, dropOff]);
+    if (pickUp && dropOff && selectedVehicle?.variant) {
+      calculatePrice();
+    }
+  }, [pickUp, dropOff, selectedVehicle?.variant, calculatePrice]);
 
   return (
     <View

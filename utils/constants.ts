@@ -1,4 +1,4 @@
-import { Service, Vehicle } from "@/types/book";
+import { Service } from "@/types/book";
 import { Platform } from "react-native";
 
 export const defaultService: Service[] = [
@@ -30,57 +30,6 @@ export const serviceAddons: Service[] = [
   { id: "8", name: "Fire Extinguisher", price: 30, icon: "🧯" },
   { id: "9", name: "Document Print", price: 100, icon: "📄" },
   { id: "10", name: "FastMet ID", price: 200, icon: "🪪" },
-];
-
-export const vehicles: Vehicle[] = [
-  {
-    id: "motorcycle",
-    name: "Motorcycle",
-    img: require("@/assets/vehicle/motor.png"),
-    desc: "Best suited for small, lightweight packages and urgent deliveries within short distances.",
-  },
-  {
-    id: "sedan",
-    name: "Sedan",
-    img: require("@/assets/vehicle/sedan.png"),
-    desc: "Ideal for medium-sized parcels and multiple item deliveries within urban areas.",
-  },
-  {
-    id: "mpv_suv",
-    name: "MPV/SUV",
-    img: require("@/assets/vehicle/mpv_suv.png"),
-    desc: "Designed for bulkier shipments or multiple packages requiring additional cargo space.",
-  },
-  {
-    id: "light_van",
-    name: "Light Van",
-    img: require("@/assets/vehicle/light_van.png"),
-    desc: "Built for large-scale logistics operations, heavy cargo, and high-volume deliveries.",
-  },
-  {
-    id: "small_pickup",
-    name: "Small Pickup",
-    img: require("@/assets/vehicle/small_pickup.png"),
-    desc: "Optimized for commercial freight transport and long-haul cargo deliveries.",
-  },
-  {
-    id: "l3",
-    name: "L300",
-    img: require("@/assets/fastmet/logo.png"),
-    desc: "Optimized for commercial freight transport and long-haul cargo deliveries.",
-  },
-  {
-    id: "closed_van",
-    name: "Closed Van",
-    img: require("@/assets/vehicle/closed_van.png"),
-    desc: "Optimized for commercial freight transport and long-haul cargo deliveries.",
-  },
-  {
-    id: "wing_van",
-    name: "Wing Van",
-    img: require("@/assets/vehicle/wing_van.png"),
-    desc: "Optimized for commercial freight transport and long-haul cargo deliveries.",
-  },
 ];
 
 export const STATIC_IMAGES = {

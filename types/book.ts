@@ -1,12 +1,5 @@
 import { BookingType } from "@/store/slices/bookSlice";
-
-export type Vehicle = {
-  id: string;
-  name: string;
-  img: string;
-  desc: string;
-  price?: number; //placeholder
-};
+import { SelectedVehicle } from "./vehicle";
 
 export type LocationDetails = {
   name: string;
@@ -82,11 +75,7 @@ export type RequestBooking = {
   pickUp: LocationDetails;
   dropOff: LocationDetails;
   bookingType: BookingType;
-  selectedVehicle: {
-    id: string | undefined;
-    name: string | undefined;
-    capacity: string | undefined;
-  };
+  selectedVehicle: SelectedVehicle;
   routeData: RouteData;
   paymentMethod: "cash" | "gcash";
   addedServices: Service[];
