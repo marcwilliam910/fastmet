@@ -2,6 +2,7 @@ import { queryClient } from "@/lib/queryClient";
 import { useConversationById } from "@/queries/conversation";
 import { useSocket } from "@/sockets/context/SocketProvider";
 import { useAppStore } from "@/store/useAppStore";
+import { STATIC_IMAGES } from "@/utils/constants";
 import {
   convertImageToBase64,
   openGallery,
@@ -421,9 +422,13 @@ const Message = () => {
             </Pressable>
 
             <Image
-              source={require("@/assets/images/user.png")}
+              source={
+                conversation?.driver.profilePictureUrl
+                  ? { uri: conversation.driver.profilePictureUrl }
+                  : STATIC_IMAGES.userPlaceholder
+              }
               style={{ width: 40, height: 40, borderRadius: 999 }}
-              contentFit="contain"
+              contentFit="cover"
             />
 
             <View className="flex-1">

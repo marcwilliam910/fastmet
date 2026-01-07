@@ -286,7 +286,7 @@ export default function BookingTypeModal({
                             setSelectedDate(date);
                           }
                         }}
-                        minimumDate={new Date()}
+                        minimumDate={new Date(Date.now() + 2 * 60 * 60 * 1000)}
                         maximumDate={
                           new Date(
                             new Date().setMonth(new Date().getMonth() + 1)

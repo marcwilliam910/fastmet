@@ -6,7 +6,6 @@ export type Vehicle = {
   img: string;
   desc: string;
   price?: number; //placeholder
-  capacity: string;
 };
 
 export type LocationDetails = {
@@ -89,7 +88,7 @@ export type RequestBooking = {
     capacity: string | undefined;
   };
   routeData: RouteData;
-  paymentMethod: "cash" | "online";
+  paymentMethod: "cash" | "gcash";
   addedServices: Service[];
   photos: string[];
   note: string;

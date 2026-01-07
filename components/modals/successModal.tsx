@@ -1,3 +1,4 @@
+import { STATIC_IMAGES } from "@/utils/constants";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import React, { useEffect } from "react";
@@ -32,7 +33,7 @@ const SuccessModal = ({
           {/* logo */}
           <View className="flex-row items-center">
             <Image
-              source={require("@/assets/fastmet/logo.png")}
+              source={STATIC_IMAGES.fastmetLogo}
               style={{ width: 50, height: 50 }}
               contentFit="contain"
             />

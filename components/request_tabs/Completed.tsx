@@ -475,9 +475,7 @@ function SeeMoreModal({
           <View className="p-5 bg-gray-50 rounded-2xl">
             <Text className="mb-3 text-base font-semibold text-gray-800">
               Payment Information (
-              {data.paymentMethod === "cash"
-                ? "Cash Payment"
-                : "Online Payment"}
+              {data.paymentMethod === "cash" ? "Cash Payment" : "Gcash Payment"}
               )
             </Text>
 

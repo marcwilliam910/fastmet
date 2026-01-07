@@ -2,6 +2,7 @@ import NotLoggedIn from "@/components/notLoggedIn";
 import { useAuth } from "@/hooks/useAuth";
 import { useConversations } from "@/queries/conversation";
 import { ConversationResponse } from "@/types/chat";
+import { STATIC_IMAGES } from "@/utils/constants";
 import { formatLastMessageTime } from "@/utils/date";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
@@ -135,7 +136,7 @@ const MessageCard = ({ item }: { item: ConversationResponse }) => {
         source={
           item.driver.profilePictureUrl
             ? { uri: item.driver.profilePictureUrl }
-            : require("@/assets/images/user.png")
+            : STATIC_IMAGES.userPlaceholder
         }
         style={{ width: 50, height: 50, borderRadius: 999 }}
         contentFit="cover"

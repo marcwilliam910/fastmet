@@ -1,3 +1,4 @@
+import { STATIC_IMAGES } from "@/utils/constants";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { router } from "expo-router";
@@ -38,7 +39,7 @@ const NotLoggedInModal = ({
           </Pressable>
 
           <Image
-            source={require("@/assets/images/phone.png")}
+            source={STATIC_IMAGES.phone}
             style={{ width: 100, height: 100 }}
             contentFit="contain"
           />

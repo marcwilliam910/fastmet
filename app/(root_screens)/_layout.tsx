@@ -46,13 +46,6 @@ export default function RootScreenLayout() {
           headerShown: false,
         }}
       />
-      <Stack.Screen
-        name="wallet"
-        options={{
-          title: "Wallet",
-          headerShown: false,
-        }}
-      />
     </Stack>
   );
 }

@@ -6,7 +6,14 @@ import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import React, { useMemo, useRef, useState } from "react";
-import { Dimensions, Platform, Pressable, Text, View } from "react-native";
+import {
+  Dimensions,
+  Platform,
+  Pressable,
+  ScrollView,
+  Text,
+  View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import BookingTypeModal from "../modals/bookingTypeModal";
 import SearchModal from "../modals/mapSearchModal";
@@ -83,17 +90,25 @@ const BookSheet = () => {
                 <Text className="text-sm font-semibold text-gray-900">
                   Choose Vehicle
                 </Text>
-                <Pressable onPress={() => setInfoModalVisible(true)}>
+                <Pressable
+                  onPress={() => setInfoModalVisible(true)}
+                  hitSlop={20}
+                >
                   <Ionicons
                     name="information-circle"
                     color="#FFA840"
-                    size={20}
+                    size={Platform.OS === "ios" ? 22 : 20}
                   />
                 </Pressable>
               </View>
-              <View className="flex-row w-full py-2">
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                className="py-2 w-full px-2"
+                contentContainerStyle={{ gap: 10 }}
+              >
                 {vehicles.map((v) => (
-                  <View key={v.id} className="flex-1 items-center gap-1">
+                  <View key={v.id} className="relative items-center gap-1">
                     <Pressable
                       className={`items-center gap-3 px-4 py-2 rounded-lg ${
                         selectedVehicle?.id === v.id
@@ -105,7 +120,7 @@ const BookSheet = () => {
                       <Text
                         className={`text-xs text-gray-500 ${
                           selectedVehicle?.id === v.id ? "font-semibold" : ""
-                        }`}
+                        }}`}
                       >
                         {v.name}
                       </Text>
@@ -117,7 +132,7 @@ const BookSheet = () => {
                     </Pressable>
                   </View>
                 ))}
-              </View>
+              </ScrollView>
             </View>
             <LocationInputs
               onOpenSearch={(type) => {

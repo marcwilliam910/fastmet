@@ -3,6 +3,7 @@ import { useAuthGuard } from "@/hooks/useAuthGuard";
 import api from "@/lib/axios";
 import { ProfileSchema } from "@/schemas/authSchema";
 import { useAppStore } from "@/store/useAppStore";
+import { STATIC_IMAGES } from "@/utils/constants";
 import { openGallery } from "@/utils/imagePicker";
 import { validateForm } from "@/utils/validateForm";
 import { Ionicons } from "@expo/vector-icons";
@@ -251,7 +252,7 @@ const EditProfile = () => {
               source={
                 form.profilePictureUrl
                   ? { uri: form.profilePictureUrl }
-                  : require("@/assets/images/user.png")
+                  : STATIC_IMAGES.userPlaceholder
               }
               style={{ width: 128, height: 128, borderRadius: 999 }}
               contentFit="cover"

@@ -1,4 +1,5 @@
 import { useAppStore } from "@/store/useAppStore";
+import { STATIC_IMAGES } from "@/utils/constants";
 import { Image } from "expo-image";
 import { cssInterop } from "nativewind";
 import React, { useEffect, useRef } from "react";
@@ -70,7 +71,7 @@ export default function LoadingModal() {
 
             {/* Logo */}
             <Image
-              source={require("@/assets/fastmet/logo.png")}
+              source={STATIC_IMAGES.fastmetLogo}
               style={{ width: 60, height: 75 }}
               contentFit="contain"
             />

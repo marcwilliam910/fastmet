@@ -1,3 +1,4 @@
+import { STATIC_IMAGES } from "@/utils/constants";
 import { Image } from "expo-image";
 import React from "react";
 import { Text, View } from "react-native";
@@ -6,7 +7,7 @@ export default function LogoWithText() {
   return (
     <View className="items-center mb-2">
       <Image
-        source={require("@/assets/fastmet/logo.png")}
+        source={STATIC_IMAGES.fastmetLogo}
         style={{ width: 90, height: 110 }}
         contentFit="contain"
       />

@@ -1,4 +1,5 @@
 import { useAppStore } from "@/store/useAppStore";
+import { STATIC_IMAGES } from "@/utils/constants";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { router } from "expo-router";
@@ -31,7 +32,7 @@ const LogoutModal = ({
         <View className="items-center w-4/5 gap-4 p-6 bg-white rounded-2xl">
           <View className="flex-row items-center">
             <Image
-              source={require("@/assets/fastmet/logo.png")}
+              source={STATIC_IMAGES.fastmetLogo}
               style={{ width: 50, height: 50 }}
               contentFit="contain"
             />

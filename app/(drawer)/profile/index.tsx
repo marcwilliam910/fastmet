@@ -1,6 +1,7 @@
 import NotLoggedIn from "@/components/notLoggedIn";
 import { useAuth } from "@/hooks/useAuth";
 import { useAppStore } from "@/store/useAppStore";
+import { STATIC_IMAGES } from "@/utils/constants";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { router } from "expo-router";
@@ -35,7 +36,7 @@ export default function MyProfile() {
             source={
               profilePictureUrl
                 ? { uri: profilePictureUrl }
-                : require("@/assets/images/user.png")
+                : STATIC_IMAGES.userPlaceholder
             }
             style={{ width: 120, height: 120, borderRadius: 999 }}
             contentFit="cover"

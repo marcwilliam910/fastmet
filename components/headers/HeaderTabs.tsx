@@ -1,3 +1,4 @@
+import { STATIC_IMAGES } from "@/utils/constants";
 import { Ionicons } from "@expo/vector-icons";
 import { DrawerActions } from "@react-navigation/native";
 import { Image } from "expo-image";
@@ -23,7 +24,7 @@ const HeaderTabs = () => {
         </Pressable>
         <View className="flex-row items-center gap-1">
           <Image
-            source={require("@/assets/fastmet/logo.png")}
+            source={STATIC_IMAGES.fastmetLogo}
             style={{ width: 40, height: 60 }}
             contentFit="contain"
           />
@@ -34,7 +35,7 @@ const HeaderTabs = () => {
       </View>
       <View>
         <Image
-          source={require("@/assets/images/announcement.png")}
+          source={STATIC_IMAGES.announcement}
           style={{ width: 30, height: 30 }}
           contentFit="contain"
         />

@@ -3,9 +3,11 @@ import { useSocket } from "@/sockets/context/SocketProvider";
 import { handleBookingSaved, requestBooking } from "@/sockets/handlers/booking";
 import { useAppStore } from "@/store/useAppStore";
 import { RequestBooking } from "@/types/book";
+import { STATIC_IMAGES } from "@/utils/constants";
 import { generateBookingRef } from "@/utils/helper";
 import { uploadBookingImages } from "@/utils/imagePicker";
 import { Ionicons } from "@expo/vector-icons";
+import { Image } from "expo-image";
 import { router } from "expo-router";
 import React, { useEffect } from "react";
 import { Platform, Pressable, Text, View } from "react-native";
@@ -159,8 +161,12 @@ export default function PaymentMethod() {
           }`}
         >
           <View className="flex-row items-center gap-3">
-            <View className="items-center justify-center w-6 h-6 rounded-full bg-lightPrimary/20">
-              <Text className="font-bold text-lightPrimary">₱</Text>
+            <View className="items-center justify-center w-10 h-10 rounded-full bg-blue-50">
+              <Image
+                source={STATIC_IMAGES.cashPayment}
+                style={{ width: 24, height: 24 }}
+                contentFit="contain"
+              />
             </View>
             <View>
               <Text className="text-sm font-medium text-gray-800">
@@ -176,26 +182,31 @@ export default function PaymentMethod() {
           )}
         </Pressable>
 
+        {/* GCash Payment Option */}
         <Pressable
-          onPress={() => setPaymentMethod("online")}
+          onPress={() => setPaymentMethod("gcash")}
           className={`flex-row items-center justify-between rounded-xl border px-4 py-3 ${
-            paymentMethod === "online"
+            paymentMethod === "gcash"
               ? "border-[#FFA840] bg-[#FFF6EB]"
               : "border-gray-300 bg-white"
           }`}
         >
           <View className="flex-row items-center gap-3">
-            <View className="items-center justify-center w-6 h-6 rounded-full bg-lightPrimary/20">
-              <Text className="font-bold text-lightPrimary">💳</Text>
+            <View className="items-center justify-center w-10 h-10 rounded-full bg-blue-50">
+              <Image
+                source={STATIC_IMAGES.gcash}
+                style={{ width: 24, height: 24 }}
+                contentFit="contain"
+              />
             </View>
             <View>
-              <Text className="text-sm font-medium text-gray-800">
-                Online Payment
+              <Text className="text-sm font-medium text-gray-800">GCash</Text>
+              <Text className="text-xs text-gray-500">
+                Pay via GCash wallet
               </Text>
-              <Text className="text-xs text-gray-500">by Xendit</Text>
             </View>
           </View>
-          {paymentMethod === "online" && (
+          {paymentMethod === "gcash" && (
             <Ionicons name="checkmark-sharp" size={24} color="#FFA840" />
           )}
         </Pressable>

@@ -21,7 +21,7 @@ export interface BookSlice {
   bookingType: BookingType;
   selectedVehicle: Vehicle | null;
   routeData: RouteData;
-  paymentMethod: "cash" | "online";
+  paymentMethod: "cash" | "gcash";
   note: string;
   itemType: string | null;
   photos: string[];
@@ -40,7 +40,7 @@ export interface BookSlice {
 
   setNote: (note: string) => void;
   setItemType: (itemType: string | null) => void;
-  setPaymentMethod: (method: "cash" | "online") => void;
+  setPaymentMethod: (method: "cash" | "gcash") => void;
 
   setPhoto: (photo: string) => void;
   removePhoto: (photo: string) => void;
@@ -113,7 +113,7 @@ export const createBookSlice: StateCreator<BookSlice> = (set, get) => ({
   setPhoto: (photos) => set((state) => ({ photos: [...state.photos, photos] })),
   removePhoto: (photo) =>
     set((state) => ({ photos: state.photos.filter((p) => p !== photo) })),
-  setPaymentMethod: (method: "cash" | "online") =>
+  setPaymentMethod: (method: "cash" | "gcash") =>
     set({ paymentMethod: method }),
 
   // fetchFareRates: async (token: string) => {

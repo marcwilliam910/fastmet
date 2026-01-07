@@ -57,7 +57,7 @@ export default function RequestRoute() {
             distance={item.routeData.distance}
             amount={item.routeData.totalPrice}
             isCash={item.paymentMethod === "cash"}
-            onCancel={() => setModalVisible(true)}
+            onCancel={() => {}}
             onUpdateNote={() => {}}
             onPressSeeMore={() => handleSeeMorePress(item)}
           />
@@ -212,7 +212,7 @@ const RequestCard = ({
           {/* Buttons */}
           <View className="flex-row justify-between mt-6">
             <Pressable
-              className="flex-row items-center justify-center flex-1 py-3 mr-2 border border-lightPrimary rounded-xl"
+              className="flex-row items-center justify-center flex-1 py-3 mr-2 border border-lightPrimary rounded-xl active:bg-gray-50"
               onPress={onCancel}
             >
               <Ionicons name="close" size={18} color="#333" />
@@ -222,7 +222,7 @@ const RequestCard = ({
             </Pressable>
 
             <Pressable
-              className="flex-row items-center justify-center flex-1 py-3 ml-2 border border-lightPrimary rounded-xl"
+              className="flex-row items-center justify-center flex-1 py-3 ml-2 border border-lightPrimary rounded-xl active:bg-gray-50"
               onPress={onUpdateNote}
             >
               <Ionicons name="create-outline" size={18} color="#333" />
