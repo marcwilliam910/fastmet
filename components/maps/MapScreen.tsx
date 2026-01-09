@@ -86,7 +86,7 @@ export default function MapScreen({
           ref={mapRef}
           style={StyleSheet.absoluteFillObject}
           showsUserLocation
-          followsUserLocation
+          followsUserLocation={!pickUp && !dropOff}
           showsCompass
           mapType="standard"
           initialRegion={region}
@@ -135,7 +135,7 @@ export default function MapScreen({
                 optimizeWaypoints
                 onReady={(result) => {
                   mapRef.current?.fitToCoordinates(result.coordinates, {
-                    edgePadding: { top: 80, right: 80, bottom: 80, left: 80 },
+                    edgePadding: { top: 80, right: 80, bottom: 400, left: 80 },
                     animated: true,
                   });
                 }}

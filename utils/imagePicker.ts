@@ -106,6 +106,7 @@ export const uploadBookingImages = async (
   images: string[],
   bookingRef: string
 ): Promise<{ success: boolean; images: string[] }> => {
+  if (images.length === 0) return { success: true, images: [] };
   const form = new FormData();
 
   form.append("bookingRef", bookingRef);

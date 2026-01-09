@@ -1,36 +1,4 @@
-import { Service } from "@/types/book";
 import { Platform } from "react-native";
-
-export const defaultService: Service[] = [
-  {
-    id: "1",
-    name: "Standard service free",
-    price: 0,
-    icon: "🛠️",
-  },
-  {
-    id: "2",
-    name: "Toll and Parking Fee",
-    price: 0,
-    icon: "🛣️",
-  },
-];
-
-export const serviceAddons: Service[] = [
-  { id: "3", name: "Small Truck", price: 100, icon: "🚚" },
-  { id: "4", name: "Safety Shoes", price: 100, icon: "👞" },
-  {
-    id: "5",
-    name: "1 Extra Helper",
-    price: 100,
-    icon: "🧑",
-  },
-  { id: "6", name: "Reflector Vest", price: 50, icon: "🦺" },
-  { id: "7", name: "Extra Space", price: 60, icon: "📦" },
-  { id: "8", name: "Fire Extinguisher", price: 30, icon: "🧯" },
-  { id: "9", name: "Document Print", price: 100, icon: "📄" },
-  { id: "10", name: "FastMet ID", price: 200, icon: "🪪" },
-];
 
 export const STATIC_IMAGES = {
   pickup: require("@/assets/images/pickup.png"),
@@ -42,6 +10,7 @@ export const STATIC_IMAGES = {
   fastmetLogo: require("@/assets/fastmet/logo.png"),
   announcement: require("@/assets/images/announcement.png"),
   phone: require("@/assets/images/phone.png"),
+  map_bg: require("@/assets/images/map_bg.png"),
 };
 
 export const GOOGLE_MAPS_API_KEY =

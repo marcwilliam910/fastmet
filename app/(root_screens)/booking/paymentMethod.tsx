@@ -1,6 +1,7 @@
+import SearchingDriverModal from "@/components/modals/SearchingDriverModal";
 import { useAuth } from "@/hooks/useAuth";
 import { useSocket } from "@/sockets/context/SocketProvider";
-import { handleBookingSaved, requestBooking } from "@/sockets/handlers/booking";
+import { requestBooking } from "@/sockets/handlers/booking";
 import { useAppStore } from "@/store/useAppStore";
 import { RequestBooking } from "@/types/book";
 import { STATIC_IMAGES } from "@/utils/constants";
@@ -9,7 +10,7 @@ import { uploadBookingImages } from "@/utils/imagePicker";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Platform, Pressable, Text, View } from "react-native";
 import {
   SafeAreaView,
@@ -22,7 +23,7 @@ export default function PaymentMethod() {
   const setPaymentMethod = useAppStore((state) => state.setPaymentMethod);
   const routeData = useAppStore((state) => state.routeData);
   const insets = useSafeAreaInsets();
-
+  const [requestSubmitted, setRequestSubmitted] = useState(false);
   const setLoading = useAppStore((state) => state.setLoading);
 
   const { id } = useAuth();
@@ -67,16 +68,31 @@ export default function PaymentMethod() {
         return;
       }
 
+      const { paidServices, variant, ...rest } = selectedVehicle;
+
       const payload: RequestBooking = {
         customerId: id!,
         bookingRef,
         pickUp: pickUp,
         dropOff: dropOff,
         bookingType: bookingType,
-        selectedVehicle: selectedVehicle,
+        selectedVehicle: {
+          ...rest,
+          freeServices: selectedVehicle.freeServices.map((service) => ({
+            key: service.key,
+            name: service.name,
+            price: service.price,
+            quantity: service.quantity,
+          })),
+        },
         routeData: routeData,
         paymentMethod: paymentMethod,
-        addedServices: addedServices,
+        addedServices: addedServices.map((service) => ({
+          key: service.key,
+          name: service.name,
+          price: service.price,
+          quantity: service.quantity,
+        })),
         photos: uploadResult.images, // Cloudinary URLs
         note: note,
         itemType: itemType,
@@ -117,11 +133,12 @@ export default function PaymentMethod() {
           topOffset: 50,
         });
 
-        router.push("/(drawer)/(tabs)/request");
+        // router.replace("/(drawer)/(tabs)/request");
+        setRequestSubmitted(true);
       }
     };
 
-    handleBookingSaved(socket, bookingSaved);
+    socket.on("booking_request_saved", bookingSaved);
 
     return () => {
       socket.off("booking_request_saved", bookingSaved);
@@ -272,6 +289,7 @@ export default function PaymentMethod() {
           </Text>
         </Pressable>
       </View>
+      <SearchingDriverModal visible={requestSubmitted} />
     </SafeAreaView>
   );
 }

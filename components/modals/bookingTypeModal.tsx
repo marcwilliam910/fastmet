@@ -24,6 +24,11 @@ export default function BookingTypeModal({
   const bookingType = useAppStore((state) => state.bookingType);
   const setBookingType = useAppStore((state) => state.setBookingType);
 
+  const [infoVisible, setInfoVisible] = useState(false);
+  const [selectedOption, setSelectedOption] = useState<
+    (typeof OPTIONS)[number] | null
+  >(null);
+
   const handleConfirm = (type: Type, value: string) => {
     if (type === "schedule") {
       let combined: Date;
@@ -63,18 +68,26 @@ export default function BookingTypeModal({
       id: "asap",
       name: "ASAP",
       icon: "rocket-outline",
+      description:
+        "The ASAP option prioritizes immediate dispatch. Once your booking is confirmed, the system automatically searches for the nearest available driver and assigns the job as quickly as possible. This is ideal for urgent deliveries, time-sensitive pickups, or situations where delays may impact operations. Pricing may be higher due to priority matching and reduced flexibility in routing.",
       onPress: () => setBookingType({ type: "asap", value: "" }),
     },
     {
       id: "pooling",
       name: "Pooling",
       icon: "people-outline",
+      subtext: "Most affordable – share ride with others",
+      description:
+        "Pooling allows your booking to be grouped with other requests that have similar routes and destinations. This option optimizes vehicle capacity and reduces overall transport costs by sharing space and travel time. Delivery and pickup times may vary depending on route optimization, making it best suited for non-urgent shipments where cost efficiency is a priority.",
       onPress: () => handleConfirm("pooling", "POOLING"),
     },
     {
       id: "schedule",
       name: "Schedule",
       icon: "calendar-outline",
+      subtext: "Book up to 1 month in advance",
+      description:
+        "The Schedule option lets you pre-book a vehicle at a specific date and time, up to one month in advance. This is recommended for planned logistics operations such as scheduled deliveries, recurring pickups, or coordinated transport activities. Scheduling ensures better driver availability, predictable timelines, and smoother operational planning.",
       onPress: () => {
         setStep("calendar");
       },
@@ -121,25 +134,40 @@ export default function BookingTypeModal({
                       }`}
                       onPress={value.onPress}
                     >
-                      <View className="flex-row gap-2 items-center">
-                        <Ionicons
-                          name={value.icon as keyof typeof Ionicons.glyphMap}
-                          size={20}
-                          color={
-                            value.id === bookingType?.type ? "#FFA840" : "gray"
-                          }
-                        />
-                        <Text
-                          className={`text-base font-medium ${value.id === bookingType?.type ? "text-lightPrimary" : ""}`}
-                        >
-                          {value.name}
-                        </Text>
+                      <View className="gap-0.5">
+                        <View className="flex-row gap-2 items-center">
+                          <Ionicons
+                            name={value.icon as keyof typeof Ionicons.glyphMap}
+                            size={20}
+                            color={
+                              value.id === bookingType?.type
+                                ? "#FFA840"
+                                : "gray"
+                            }
+                          />
+                          <Text
+                            className={`text-base font-medium ${value.id === bookingType?.type ? "text-lightPrimary" : ""}`}
+                          >
+                            {value.name}
+                          </Text>
+                        </View>
+                        {value.subtext && (
+                          <Text className="text-xs text-gray-500 mt-0.5">
+                            {value.subtext}
+                          </Text>
+                        )}
                       </View>
-                      <Pressable>
+                      <Pressable
+                        onPress={() => {
+                          setSelectedOption(value);
+                          setInfoVisible(true);
+                        }}
+                        hitSlop={20}
+                      >
                         <Ionicons
                           name="information-circle"
                           color="#FFA840"
-                          size={20}
+                          size={Platform.OS === "ios" ? 25 : 22}
                         />
                       </Pressable>
                     </Pressable>
@@ -178,7 +206,7 @@ export default function BookingTypeModal({
                               </Text>
                             </View>
                             <Text className="text-xs text-gray-500 text-center mt-1">
-                              Quickest - pickup in &lt;1hr
+                              Quickest &#8226; pickup in &lt;1hr
                             </Text>
                           </Pressable>
 
@@ -212,7 +240,7 @@ export default function BookingTypeModal({
                               </Text>
                             </View>
                             <Text className="text-xs text-gray-500 text-center mt-1">
-                              Standard - pickup in ~2hrs
+                              Standard &#8226; pickup in ~2hrs
                             </Text>
                           </Pressable>
                         </View>
@@ -407,6 +435,47 @@ export default function BookingTypeModal({
           )}
         </View>
       </View>
+      <BookingInfoModal
+        visible={infoVisible}
+        option={selectedOption}
+        onClose={() => setInfoVisible(false)}
+      />
     </Modal>
   );
 }
+
+const BookingInfoModal = ({
+  visible,
+  onClose,
+  option,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  option: any;
+}) => {
+  if (!option) return null;
+
+  return (
+    <Modal visible={visible} transparent animationType="fade">
+      <View className="flex-1 items-center justify-center bg-black/40 px-6">
+        <View className="w-full rounded-2xl bg-white p-5">
+          <Text className="text-xl font-semibold text-gray-900">
+            {option.name}
+          </Text>
+
+          <Text className="mt-3 leading-6 text-gray-600">
+            {option.description}
+          </Text>
+
+          <Pressable
+            onPress={onClose}
+            className="mt-5 self-end rounded-lg bg-[#FFA840] px-5 py-3"
+            hitSlop={20}
+          >
+            <Text className="font-bold text-white">Got it</Text>
+          </Pressable>
+        </View>
+      </View>
+    </Modal>
+  );
+};

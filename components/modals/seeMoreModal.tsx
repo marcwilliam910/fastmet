@@ -1,4 +1,5 @@
-import { ActiveBooking, Booking, Service } from "@/types/book";
+import { ActiveBooking, Booking } from "@/types/book";
+import { Service } from "@/types/vehicle";
 import { formatDate } from "@/utils/date";
 import { formatLocation } from "@/utils/helper";
 import { Ionicons } from "@expo/vector-icons";
@@ -335,11 +336,11 @@ export default function SeeMoreModal({
               <View className="gap-2">
                 {data.addedServices.map((service: Service) => (
                   <View
-                    key={service.id}
+                    key={service.key}
                     className="flex-row items-center justify-between p-4 bg-white rounded-xl"
                   >
                     <View className="flex-row items-center flex-1">
-                      <Text className="mr-3 text-2xl">{service.icon}</Text>
+                      {/* <Text className="mr-3 text-2xl">{service.icon}</Text> */}
                       <Text className="text-base text-gray-800">
                         {service.name}
                       </Text>

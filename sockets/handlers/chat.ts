@@ -47,7 +47,6 @@ export const receiveMessage = (socket: Socket) => {
   const unreadConversationsCountHandler = (data: {
     unreadConversationsCount: number;
   }) => {
-    console.log("📊 Initial unread conversations count:", data);
     useAppStore
       .getState()
       .setUnreadConversationsCount(data.unreadConversationsCount);

@@ -33,22 +33,25 @@ const Book = () => {
         />
 
         {/* Floating burger */}
-        <Pressable
-          onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
-          className="absolute p-2 bg-white rounded-full shadow-lg top-8 left-6 active:scale-105 active:opacity-80"
-          style={{
-            shadowColor: "#000",
-            shadowOffset: { width: 2, height: 2 },
-            shadowOpacity: 0.25,
-            shadowRadius: 3.84,
-            elevation: 5,
-          }}
-        >
-          <Ionicons name="menu" size={28} color="#FFA840" />
-        </Pressable>
+        {!isDragging && (
+          <Pressable
+            onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
+            className="absolute p-2 bg-white rounded-full shadow-lg top-8 left-6 active:scale-105 active:opacity-80"
+            style={{
+              shadowColor: "#000",
+              shadowOffset: { width: 2, height: 2 },
+              shadowOpacity: 0.25,
+              shadowRadius: 3.84,
+              elevation: 5,
+            }}
+          >
+            <Ionicons name="menu" size={28} color="#FFA840" />
+          </Pressable>
+        )}
       </View>
 
       <BookSheet isDragging={isDragging} />
+      {/* <SearchingDriverModal visible={true} /> */}
     </SafeAreaView>
   );
 };

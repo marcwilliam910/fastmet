@@ -1,7 +1,6 @@
-import type { LocationDetails, RouteData, Service } from "@/types/book";
-import { SelectedVehicle } from "@/types/vehicle";
+import type { LocationDetails, RouteData } from "@/types/book";
+import { SelectedVehicle, Service } from "@/types/vehicle";
 import { fetchDrivingDistance } from "@/utils/calculatePrice";
-import { defaultService } from "@/utils/constants";
 import { StateCreator } from "zustand";
 
 export type Type = "asap" | "pooling" | "schedule";
@@ -25,6 +24,11 @@ export interface BookSlice {
   // not sure
   addedServices: Service[];
   toggleService: (service: Service) => void;
+  updateServiceQuantity: (
+    serviceKey: string,
+    originalPrice: number,
+    quantity: number
+  ) => void;
 
   setPickUp: (details: LocationDetails) => void;
   setPickUpAdditionalDetails: (details: string) => void;
@@ -65,18 +69,42 @@ export const createBookSlice: StateCreator<BookSlice> = (set, get) => ({
   photos: [],
 
   // not sure
-  addedServices: [...defaultService],
+  addedServices: [],
 
   toggleService: (service: Service) =>
     set((state) => {
-      const exists = state.addedServices.some((s) => s.id === service.id);
+      const exists = state.addedServices.some((s) => s.key === service.key);
 
       const updatedServices = exists
-        ? state.addedServices.filter((s) => s.id !== service.id)
+        ? state.addedServices.filter((s) => s.key !== service.key)
         : [...state.addedServices, service];
 
       const serviceFee = updatedServices.reduce((sum, s) => sum + s.price, 0);
 
+      const { basePrice, distanceFee } = state.routeData;
+
+      return {
+        addedServices: updatedServices,
+        routeData: {
+          ...state.routeData,
+          serviceFee,
+          totalPrice: basePrice + distanceFee + serviceFee,
+        },
+      };
+    }),
+  updateServiceQuantity: (
+    serviceKey: string,
+    originalPrice: number,
+    quantity: number
+  ) =>
+    set((state) => {
+      const updatedServices = state.addedServices.map((service) =>
+        service.key === serviceKey
+          ? { ...service, quantity, price: originalPrice * quantity }
+          : service
+      );
+
+      const serviceFee = updatedServices.reduce((sum, s) => sum + s.price, 0);
       const { basePrice, distanceFee } = state.routeData;
 
       return {
@@ -196,6 +224,6 @@ export const createBookSlice: StateCreator<BookSlice> = (set, get) => ({
       paymentMethod: "cash",
 
       // not sure
-      addedServices: [...defaultService],
+      addedServices: [],
     }),
 });

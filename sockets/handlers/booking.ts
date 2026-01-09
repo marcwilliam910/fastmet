@@ -39,10 +39,3 @@ export const bookingAccepted = (socket: Socket) => {
   socket.on("bookingAccepted", bookingAcceptedHandler);
   return () => socket.off("bookingAccepted", bookingAcceptedHandler); // return for cleanup
 };
-
-export const handleBookingSaved = (
-  socket: Socket,
-  callback: (data: { success: boolean }) => void
-) => {
-  socket.on("booking_request_saved", callback);
-};

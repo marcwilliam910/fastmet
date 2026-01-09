@@ -84,7 +84,11 @@ const BookSheet = ({ isDragging }: { isDragging: boolean }) => {
 
   const handleVehicleSelect = (vehicle: IVehicleType, index: number) => {
     setSelectedVehicle({
-      ...vehicle,
+      key: vehicle.key,
+      name: vehicle.name,
+      imageUrl: vehicle.imageUrl,
+      freeServices: vehicle.freeServices,
+      paidServices: vehicle.paidServices,
       variant: vehicle.variants[0],
     });
 

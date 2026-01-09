@@ -1,5 +1,5 @@
 import { BookingType } from "@/store/slices/bookSlice";
-import { SelectedVehicle } from "./vehicle";
+import { SelectedVehicle, Service } from "./vehicle";
 
 export type LocationDetails = {
   name: string;
@@ -7,13 +7,6 @@ export type LocationDetails = {
   coords: { lat: number; lng: number };
   additionalDetails?: string;
 } | null;
-
-export type Service = {
-  id: string;
-  name: string;
-  price: number;
-  icon: string;
-};
 
 export type RouteData = {
   distance: number;
@@ -34,19 +27,10 @@ export type Booking = {
     type: string; // "asap" | "schedule"
     value: string;
   };
-  selectedVehicle: {
-    id: string;
-    name: string;
-    capacity: string;
-  };
+  selectedVehicle: Omit<SelectedVehicle, "paidServices">;
   routeData: RouteData;
   paymentMethod: string; // "cash" | "online"
-  addedServices: {
-    id: string;
-    name: string;
-    price: number;
-    icon: string;
-  }[];
+  addedServices: Partial<Service>[];
   note: string;
   itemType: string | null;
   photos: string[];
@@ -75,10 +59,12 @@ export type RequestBooking = {
   pickUp: LocationDetails;
   dropOff: LocationDetails;
   bookingType: BookingType;
-  selectedVehicle: SelectedVehicle;
+  selectedVehicle: Partial<Omit<SelectedVehicle, "freeServices">> & {
+    freeServices: Partial<Service>[];
+  };
   routeData: RouteData;
   paymentMethod: "cash" | "gcash";
-  addedServices: Service[];
+  addedServices: Partial<Service>[];
   photos: string[];
   note: string;
   itemType: string | null;

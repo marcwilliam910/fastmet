@@ -1,6 +1,5 @@
 import useSeeMoreDetails from "@/hooks/useSeeMoreDetails";
 import { Booking } from "@/types/book";
-import { serviceAddons } from "@/utils/constants";
 import { Ionicons } from "@expo/vector-icons";
 import { FlatList, Platform, Pressable, Text, View } from "react-native";
 import SeeMoreModal from "../modals/seeMoreModal";
@@ -15,7 +14,7 @@ const DUMMY_DATA = [
     distance: "3KM",
     isCash: true,
     amount: 1000,
-    selectedServices: serviceAddons,
+    selectedServices: [],
     note: " Please handle with care.",
     images: [1, 2],
   },

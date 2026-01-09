@@ -17,14 +17,28 @@ export interface IVehicleType extends Document {
   imageUrl: string; // Cloudinary
   desc: string;
   variants: ILoadVariant[];
+  freeServices: Service[];
+  paidServices: Service[];
   isActive: boolean;
 }
 
-export interface SelectedVehicle extends Document {
-  key: string; // motorcycle, sedan, l300, closed_van, wing_van
-  name: string; // UI display
-  imageUrl: string; // Cloudinary
-  desc: string;
-  variant: ILoadVariant | null;
+export interface SelectedVehicle {
+  key: string;
+  name: string;
+  imageUrl: string;
+  freeServices: Service[];
+  paidServices: Service[];
+  variant: ILoadVariant;
+}
+
+export interface Service {
+  key: string; // extra_helper, extra_waiting_time, special_help, etc.
+  name: string; // Display name: "Extra Helper", "Extra Waiting Time"
+  desc: string; // Description of what this service includes
+  price: number; // Price in PHP (0 for free services)
+  unit: string; // "per person", "per 15 minutes", "per service", etc.
+  isQuantifiable: boolean; // true if user can request multiple (like extra helpers), false for one-time services
+  maxQuantity?: number; // Optional: max quantity user can request (e.g., max 5 helpers)
   isActive: boolean;
+  quantity?: number; // number of units requested by user
 }

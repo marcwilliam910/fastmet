@@ -1,7 +1,6 @@
 import SheetButton from "@/components/maps/SheetButton";
 import { useAppStore } from "@/store/useAppStore";
-import { Service } from "@/types/book";
-import { defaultService, serviceAddons } from "@/utils/constants";
+import { Service } from "@/types/vehicle";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React from "react";
@@ -15,6 +14,10 @@ const Services = () => {
   const insets = useSafeAreaInsets();
   const addedServices = useAppStore((state) => state.addedServices);
   const toggleService = useAppStore((state) => state.toggleService);
+  const updateServiceQuantity = useAppStore(
+    (state) => state.updateServiceQuantity
+  );
+  const selectedVehicle = useAppStore((state) => state.selectedVehicle);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
@@ -42,101 +45,65 @@ const Services = () => {
           paddingBottom: insets.bottom + (insets.bottom === 0 ? 120 : 70),
         }}
       >
-        {/* Summary Card */}
-        {/* <View className="flex-row justify-around py-4 mt-4 border-2 rounded-lg border-lightPrimary">
-            <View className="items-center">
-              <Text className="mb-1 text-xs font-semibold text-lightPrimary">
-                Price:
-              </Text>
-              <Text className="text-base font-bold">Php 5,500</Text>
-            </View>
-            <View className="items-center">
-              <Text className="mb-1 text-xs font-semibold text-lightPrimary">
-                Distance:
-              </Text>
-              <Text className="text-base font-bold">1,000km</Text>
-            </View>
-            <View className="items-center">
-              <Text className="mb-1 text-xs font-semibold text-lightPrimary">
-                Time:
-              </Text>
-              <Text className="text-base font-bold">18hr: 23min</Text>
-            </View>
-          </View> */}
+        {/* Free Services */}
+        {selectedVehicle?.freeServices &&
+          selectedVehicle.freeServices.length > 0 && (
+            <>
+              <Text className="mb-3 text-lg font-bold">Included Services</Text>
+              <View className="gap-3 mb-6">
+                {selectedVehicle.freeServices.map((service) => (
+                  <View
+                    key={service.key}
+                    className="flex-row items-center justify-between p-3 border border-gray-200 rounded-lg bg-gray-50"
+                  >
+                    <View className="flex-1 gap-1 pr-3">
+                      <View className="flex-row items-center gap-1">
+                        <Text className="text-sm font-semibold text-gray-700">
+                          {service.name}
+                        </Text>
+                        <Pressable hitSlop={8}>
+                          <Ionicons
+                            name="information-circle-outline"
+                            size={20}
+                            color="#9CA3AF"
+                          />
+                        </Pressable>
+                      </View>
+                      <Text className="text-xs font-medium text-green-600">
+                        Free
+                      </Text>
+                    </View>
+                    <View className="items-center justify-center w-6 h-6 rounded bg-green-500">
+                      <Ionicons name="checkmark" size={16} color="white" />
+                    </View>
+                  </View>
+                ))}
+              </View>
+            </>
+          )}
 
-        {/* Services Add's on */}
-        <Text className="mb-4 text-lg font-bold">Services Add-Ons</Text>
-
-        {/* Service Items */}
+        {/* Paid Services Add-ons */}
+        <Text className="mb-3 text-lg font-bold">Additional Services</Text>
         <View className="gap-3 mb-6">
-          {defaultService.map((service) => (
-            <View
-              key={service.id}
-              className="flex-row items-center justify-between p-3 border border-gray-200 rounded-lg bg-gray-50"
-            >
-              <View className="flex-row items-center flex-1 gap-3">
-                <View className="items-center justify-center w-10 h-10 bg-gray-100 rounded-lg">
-                  <Text className="text-xl">{service.icon}</Text>
-                </View>
-                <View className="flex-1 gap-1">
-                  <Text className="text-sm font-semibold text-gray-600">
-                    {service.name}
-                  </Text>
-                  {service.price > 0 && (
-                    <Text className="text-sm font-semibold text-darkPrimary">
-                      Php {service.price}
-                    </Text>
-                  )}
-                </View>
-              </View>
-              <View className="items-center justify-center w-6 h-6 rounded bg-lightPrimary">
-                <Ionicons name="checkmark" size={16} color="white" />
-              </View>
-            </View>
-          ))}
-
-          {serviceAddons.map((service) => {
-            const isSelected = addedServices.some((s) => s.id === service.id);
+          {selectedVehicle?.paidServices.map((service) => {
+            const addedService = addedServices.find(
+              (s) => s.key === service.key
+            );
+            const isSelected = !!addedService;
+            const quantity = addedService?.quantity ?? 1;
 
             return (
               <ServiceCard
-                key={service.id}
+                key={service.key}
                 service={service}
                 isSelected={isSelected}
+                quantity={quantity}
                 toggleService={toggleService}
+                updateServiceQuantity={updateServiceQuantity}
               />
             );
           })}
         </View>
-
-        {/* Note and attachment */}
-        {/* <View className="gap-5">
-            <View className="gap-2">
-              <Text className="text-lg font-bold">Note and attachment</Text>
-              <TextInput
-                multiline
-                numberOfLines={4}
-                placeholder="Type here..."
-                style={{ height: 120, textAlignVertical: "top" }}
-                className="p-4 border border-gray-300 rounded-lg"
-              />
-            </View>
-
-            <View className="gap-2">
-              <Text className="text-lg font-bold">Upload Photo</Text>
-              <View className="flex-row items-center justify-between gap-2">
-                <Pressable className="items-center justify-center flex-1 gap-1 border border-gray-300 h-28 rounded-xl active:bg-gray-100">
-                  <Ionicons name="add-outline" size={22} color="gray" />
-                </Pressable>
-                <Pressable className="items-center justify-center flex-1 gap-1 border border-gray-300 h-28 rounded-xl active:bg-gray-100">
-                  <Ionicons name="add-outline" size={22} color="gray" />
-                </Pressable>
-                <Pressable className="items-center justify-center flex-1 gap-1 border border-gray-300 h-28 rounded-xl active:bg-gray-100">
-                  <Ionicons name="add-outline" size={22} color="gray" />
-                </Pressable>
-              </View>
-            </View>
-          </View> */}
       </ScrollView>
 
       <SheetButton
@@ -151,38 +118,114 @@ export default Services;
 export const ServiceCard = ({
   service,
   isSelected,
+  quantity,
   toggleService,
+  updateServiceQuantity,
 }: {
   service: Service;
   isSelected: boolean;
+  quantity: number;
   toggleService: (service: Service) => void;
+  updateServiceQuantity: (
+    serviceKey: string,
+    originalPrice: number,
+    quantity: number
+  ) => void;
 }) => {
+  const handleIncrement = () => {
+    if (service.maxQuantity && quantity >= service.maxQuantity) return;
+    updateServiceQuantity(service.key, service.price, quantity + 1);
+  };
+
+  const handleDecrement = () => {
+    if (quantity <= 1) {
+      toggleService(service);
+    } else {
+      updateServiceQuantity(service.key, service.price, quantity - 1);
+    }
+  };
+
   return (
     <Pressable
-      key={service.id}
       onPress={() => toggleService(service)}
-      className="flex-row items-center justify-between p-3 border border-gray-300 rounded-lg active:bg-gray-50"
+      className={`flex-row items-center justify-between p-3 border rounded-lg ${
+        isSelected
+          ? "border-lightPrimary bg-orange-50"
+          : "border-gray-300 active:bg-gray-50"
+      }`}
+      disabled={!!(service.maxQuantity && quantity >= service.maxQuantity)}
     >
-      <View className="flex-row items-center flex-1 gap-3">
-        <View className="items-center justify-center w-10 h-10 bg-gray-100 rounded-lg">
-          <Text className="text-xl">{service.icon}</Text>
-        </View>
+      <View className="flex-row items-center flex-1 gap-2 pr-3">
         <View className="flex-1 gap-1">
-          <Text className="text-sm font-semibold">{service.name}</Text>
-          {service.price && (
-            <Text className="text-sm font-semibold text-darkPrimary">
-              Php {service.price}
-            </Text>
-          )}
+          <View className="flex-row items-center">
+            <Text className="text-sm font-semibold">{service.name} </Text>
+            <Pressable hitSlop={8}>
+              <Ionicons
+                name="information-circle-outline"
+                size={20}
+                color="#9CA3AF"
+              />
+            </Pressable>
+          </View>
+          <View className="flex-row items-center gap-2">
+            {service.price > 0 ? (
+              <Text className="text-sm font-semibold text-darkPrimary">
+                ₱{service.price}
+              </Text>
+            ) : (
+              <Text className="text-xs font-medium text-blue-600">
+                Actual Cost
+              </Text>
+            )}
+            <Text className="text-xs text-gray-500">· {service.unit}</Text>
+          </View>
         </View>
       </View>
-      <View
-        className={`w-6 h-6 rounded items-center justify-center ${
-          isSelected ? "bg-lightPrimary" : "bg-gray-300"
-        }`}
-      >
-        {isSelected && <Ionicons name="checkmark" size={16} color="white" />}
-      </View>
+
+      {service.isQuantifiable ? (
+        // Quantifiable service - show quantity controls or checkbox
+        isSelected ? (
+          <View className="flex-row items-center gap-2">
+            <Pressable
+              onPress={handleDecrement}
+              className="items-center justify-center w-8 h-8 rounded-lg border border-lightPrimary active:bg-gray-100"
+              hitSlop={8}
+            >
+              <Ionicons name="remove" size={18} />
+            </Pressable>
+            <Text className="w-6 text-sm font-semibold text-center">
+              {quantity}
+            </Text>
+            <Pressable
+              onPress={handleIncrement}
+              className={`w-8 h-8 rounded-lg items-center bg-lightPrimary justify-center ${
+                service.maxQuantity && quantity >= service.maxQuantity
+                  ? "opacity-50"
+                  : " active:bg-darkPrimary"
+              }`}
+              hitSlop={8}
+              disabled={
+                !!(service.maxQuantity && quantity >= service.maxQuantity)
+              }
+            >
+              <Ionicons name="add" size={18} color="white" />
+            </Pressable>
+          </View>
+        ) : (
+          <View className="items-center justify-center w-6 h-6 bg-gray-300 rounded">
+            {/* Empty checkbox */}
+          </View>
+        )
+      ) : (
+        // Non-quantifiable service - simple checkbox
+        <View
+          className={`w-6 h-6 rounded items-center justify-center ${
+            isSelected ? "bg-lightPrimary" : "bg-gray-300"
+          }`}
+        >
+          {isSelected && <Ionicons name="checkmark" size={16} color="white" />}
+        </View>
+      )}
     </Pressable>
   );
 };
