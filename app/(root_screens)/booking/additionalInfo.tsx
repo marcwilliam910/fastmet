@@ -45,18 +45,57 @@ export default function AdditionalInfo() {
   ];
 
   const itemVehicleMap: Record<string, string[]> = {
-    "Documents / Envelope": ["motorcycle", "car", "suv", "truck"],
-    "Small Package / Bag": ["motorcycle", "car", "suv", "truck"],
-    "Medium Box / Carton": ["car", "suv", "truck"],
-    "Large Box / Furniture / Appliance": ["suv", "truck"],
-    "Other / Oversized": ["truck"],
+    "Documents / Envelope": [
+      "motorcycle",
+      "sedan",
+      "mpv_suv",
+      "light_van",
+      "small_pickup",
+      "l300",
+      "closed_van",
+      "wing_van",
+    ],
+
+    "Small Package / Bag": [
+      "motorcycle",
+      "sedan",
+      "mpv_suv",
+      "light_van",
+      "small_pickup",
+      "l300",
+      "closed_van",
+      "wing_van",
+    ],
+
+    "Medium Box / Carton": [
+      "sedan",
+      "mpv_suv",
+      "light_van",
+      "small_pickup",
+      "l300",
+      "closed_van",
+      "wing_van",
+    ],
+
+    "Large Box / Furniture / Appliance": [
+      "mpv_suv",
+      "light_van",
+      "small_pickup",
+      "l300",
+      "closed_van",
+      "wing_van",
+    ],
+
+    "Other / Oversized": ["l300", "closed_van", "wing_van"],
   };
 
   const isItemCompatible = (item: string | null) => {
     if (!item) return true;
-    return itemVehicleMap[item].includes(
-      useAppStore.getState().selectedVehicle?.id!
-    );
+
+    const selectedVehicle = useAppStore.getState().selectedVehicle?.key;
+    if (!selectedVehicle) return false;
+
+    return itemVehicleMap[item]?.includes(selectedVehicle) ?? false;
   };
 
   const handleAddPhoto = async () => {
@@ -171,7 +210,8 @@ export default function AdditionalInfo() {
                   {/* display also what vehicle is compatible */}
                   Warning: Your selected item may not fit in the chosen vehicle.
                   <Text className="capitalize">
-                    (Compatible: {itemVehicleMap[itemType].join(", ")})
+                    (Compatible:{" "}
+                    {itemVehicleMap[itemType].join(", ").replaceAll("_", " ")})
                   </Text>
                 </Text>
               )}

@@ -1,7 +1,8 @@
 import useSeeMoreDetails from "@/hooks/useSeeMoreDetails";
 import { useUserBookings } from "@/queries/bookingQueries";
+import { useAppStore } from "@/store/useAppStore";
 import { ActiveBooking, Driver, LocationDetails } from "@/types/book";
-import { formatLocation } from "@/utils/helper";
+import { createConversationId, formatLocation } from "@/utils/helper";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { router } from "expo-router";
@@ -166,7 +167,7 @@ const ActiveCard = ({
             onPress={() =>
               router.push({
                 pathname: "/(root_screens)/booking/viewOnMap",
-                params: { bookingId: id },
+                params: { bookingId: id, canGoBack: "true" },
               })
             }
           >
@@ -202,21 +203,35 @@ const ActiveCard = ({
             </View>
 
             <View className="flex-row gap-5">
-              <Pressable className="items-center active:scale-110">
-                <Ionicons
-                  name="call"
-                  size={Platform.OS === "ios" ? 28 : 24}
-                  color="#F7931E"
-                />
-                <Text className="text-sm text-gray-600">Call</Text>
-              </Pressable>
-              <Pressable className="items-center active:scale-110">
+              <Pressable
+                className="items-center active:scale-110"
+                hitSlop={20}
+                onPress={() =>
+                  router.push({
+                    pathname: "/message",
+                    params: {
+                      conversationId: createConversationId(
+                        useAppStore.getState().id!,
+                        driver.id
+                      ),
+                    },
+                  })
+                }
+              >
                 <Ionicons
                   name="chatbubble-ellipses"
                   size={Platform.OS === "ios" ? 28 : 24}
                   color="#F7931E"
                 />
                 <Text className="text-sm text-gray-600">Chat</Text>
+              </Pressable>
+              <Pressable className="items-center active:scale-110" hitSlop={20}>
+                <Ionicons
+                  name="call"
+                  size={Platform.OS === "ios" ? 28 : 24}
+                  color="#F7931E"
+                />
+                <Text className="text-sm text-gray-600">Call</Text>
               </Pressable>
             </View>
           </View>

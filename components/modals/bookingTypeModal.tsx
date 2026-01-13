@@ -174,51 +174,17 @@ export default function BookingTypeModal({
 
                     {/* ASAP Sub-picker */}
                     {value.id === "asap" && bookingType?.type === "asap" && (
-                      <View className="mt-2 ml-4 gap-2">
+                      <View className="mt-2 gap-2">
                         <View className="flex-row gap-2">
                           <Pressable
-                            className={`flex-1 px-3 py-2 border rounded-lg ${
-                              bookingType.value === "PRIORITY"
-                                ? "border-darkPrimary bg-orange-50"
-                                : "border-gray-300 bg-white"
-                            }`}
-                            onPress={() => handleConfirm("asap", "PRIORITY")}
-                          >
-                            <View className="flex-row items-center justify-center">
-                              <Ionicons
-                                name="flash-outline"
-                                size={16}
-                                color={
-                                  bookingType.value === "PRIORITY"
-                                    ? "#FFA840"
-                                    : "gray"
-                                }
-                                style={{ marginRight: 6 }}
-                              />
-                              <Text
-                                className={`text-sm font-medium ${
-                                  bookingType.value === "PRIORITY"
-                                    ? "text-lightPrimary"
-                                    : "text-gray-600"
-                                }`}
-                              >
-                                Priority
-                              </Text>
-                            </View>
-                            <Text className="text-xs text-gray-500 text-center mt-1">
-                              Quickest &#8226; pickup in &lt;1hr
-                            </Text>
-                          </Pressable>
-
-                          <Pressable
-                            className={`flex-1 px-3 py-2 border rounded-lg ${
+                            className={`flex-1 px-1.5 py-2 border rounded-lg ${
                               bookingType.value === "REGULAR"
                                 ? "border-darkPrimary bg-orange-50"
                                 : "border-gray-300 bg-white"
                             }`}
                             onPress={() => handleConfirm("asap", "REGULAR")}
                           >
-                            <View className="flex-row items-center justify-center">
+                            <View className="flex-row items-center justify-center gap-1">
                               <Ionicons
                                 name="time-outline"
                                 size={16}
@@ -227,7 +193,6 @@ export default function BookingTypeModal({
                                     ? "#FFA840"
                                     : "gray"
                                 }
-                                style={{ marginRight: 6 }}
                               />
                               <Text
                                 className={`text-sm font-medium ${
@@ -241,6 +206,38 @@ export default function BookingTypeModal({
                             </View>
                             <Text className="text-xs text-gray-500 text-center mt-1">
                               Standard &#8226; pickup in ~2hrs
+                            </Text>
+                          </Pressable>
+                          <Pressable
+                            className={`flex-1 px-1.5 py-2 border rounded-lg ${
+                              bookingType.value === "PRIORITY"
+                                ? "border-darkPrimary bg-orange-50"
+                                : "border-gray-300 bg-white"
+                            }`}
+                            onPress={() => handleConfirm("asap", "PRIORITY")}
+                          >
+                            <View className="flex-row items-center justify-center gap-1">
+                              <Ionicons
+                                name="flash-outline"
+                                size={16}
+                                color={
+                                  bookingType.value === "PRIORITY"
+                                    ? "#FFA840"
+                                    : "gray"
+                                }
+                              />
+                              <Text
+                                className={`text-sm font-medium ${
+                                  bookingType.value === "PRIORITY"
+                                    ? "text-lightPrimary"
+                                    : "text-gray-600"
+                                }`}
+                              >
+                                Priority
+                              </Text>
+                            </View>
+                            <Text className="text-xs text-gray-500 text-center mt-1">
+                              Quickest &#8226; pickup in &lt;1hr
                             </Text>
                           </Pressable>
                         </View>

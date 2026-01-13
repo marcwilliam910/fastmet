@@ -1,47 +1,66 @@
 import useSeeMoreDetails from "@/hooks/useSeeMoreDetails";
-import { Booking } from "@/types/book";
+import { useUserBookings } from "@/queries/bookingQueries";
+import { ActiveBooking, Booking } from "@/types/book";
 import { Ionicons } from "@expo/vector-icons";
-import { FlatList, Platform, Pressable, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  FlatList,
+  Platform,
+  Pressable,
+  Text,
+  View,
+} from "react-native";
 import SeeMoreModal from "../modals/seeMoreModal";
-
-const DUMMY_DATA = [
-  {
-    id: "1",
-    vehicle: "Motorcycle",
-    bookedTime: "3:30 PM",
-    pickup: "13, Allen Street Village, San Isidro hagonoy Bulacan sfsd ddfg",
-    dropoff: "Hernandez Street",
-    distance: "3KM",
-    isCash: true,
-    amount: 1000,
-    selectedServices: [],
-    note: " Please handle with care.",
-    images: [1, 2],
-  },
-];
 
 export default function CancelledRoute() {
   const { modalVisible, setModalVisible, selectedRequest, handleSeeMorePress } =
     useSeeMoreDetails<Booking>();
 
+  const {
+    data,
+    isPending,
+    error,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useUserBookings<ActiveBooking>("cancelled", 5);
+
+  if (isPending)
+    return (
+      <View className="flex-1 items-center justify-center">
+        <ActivityIndicator size="large" color="#FFA840" />
+      </View>
+    );
+  if (error)
+    return (
+      <View className="flex-1 items-center justify-center">
+        <Text className="text-lg font-semibold text-gray-500">
+          {error.message}
+        </Text>
+      </View>
+    );
+
+  const cancelledBookings = data?.pages.flatMap((page) => page.bookings) ?? [];
+
   return (
     <>
       <FlatList
-        data={DUMMY_DATA}
+        data={cancelledBookings}
         renderItem={({ item }) => (
           <CancelledCard
-            vehicle={item.vehicle}
-            bookedTime={item.bookedTime}
-            pickup={item.pickup}
-            dropoff={item.dropoff}
-            distance={item.distance}
-            isCash={item.isCash}
-            amount={item.amount}
+            vehicle={item.selectedVehicle.name}
+            bookingRef={item.bookingRef}
+            pickup={item.pickUp?.address || ""}
+            dropoff={item.dropOff?.address || ""}
+            distance={item.routeData.distance}
+            isCash={item.paymentMethod === "cash"}
+            amount={item.routeData.totalPrice}
             onPressSeeMore={() => handleSeeMorePress(item)}
             date="August 25, 2023"
           />
         )}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item._id}
         showsVerticalScrollIndicator={false}
         className="flex-1 p-4 "
         contentContainerStyle={{
@@ -64,10 +83,10 @@ export default function CancelledRoute() {
 
 type CancelledCardProps = {
   vehicle: string;
-  bookedTime: string;
+  bookingRef: string;
   pickup: string;
   dropoff: string;
-  distance: string;
+  distance: number;
   isCash: boolean;
   amount: number;
   date: string;
@@ -76,7 +95,7 @@ type CancelledCardProps = {
 
 const CancelledCard = ({
   vehicle,
-  bookedTime,
+  bookingRef,
   pickup,
   dropoff,
   distance,
@@ -103,7 +122,7 @@ const CancelledCard = ({
         {/* Header */}
         <View className="flex-row items-center justify-between px-5 py-3 bg-red-500">
           <Text className="text-lg font-semibold text-white">{vehicle}</Text>
-          <Text className="text-sm text-white">Cancelled at {bookedTime}</Text>
+          <Text className="text-sm text-white">{bookingRef}</Text>
         </View>
 
         {/* Body */}
@@ -124,7 +143,7 @@ const CancelledCard = ({
                 {dropoff}
               </Text>
             </View>
-            <Text className="font-bold">{distance}</Text>
+            <Text className="font-bold">{distance.toFixed(1)}km</Text>
 
             <Ionicons
               name="location-sharp"

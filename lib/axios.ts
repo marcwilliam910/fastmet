@@ -28,9 +28,7 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Token is expired or invalid
       useAppStore.getState().logout();
-
       Toast.show({
         type: "error",
         text1: "Session Expired",
@@ -40,6 +38,13 @@ api.interceptors.response.use(
         swipeable: true,
       });
       router.replace("/(auth)/auth");
+
+      // Don't reject - return a special response instead
+      return Promise.resolve({
+        data: null,
+        status: 401,
+        handled: true,
+      });
     }
 
     return Promise.reject(error);

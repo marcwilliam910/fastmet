@@ -400,7 +400,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
             <Pressable
               onPress={handleCurrentLocation}
               disabled={loading}
-              className="flex-row items-center px-4 py-4 bg-white border border-gray-200 rounded-xl active:bg-gray-50"
+              className="flex-row items-center px-4 py-3 bg-white border border-gray-200 rounded-xl active:bg-gray-50"
             >
               <View className="items-center justify-center mr-3 bg-blue-500 rounded-full w-11 h-11">
                 <Ionicons name="navigate" size={20} color="#FFFFFF" />

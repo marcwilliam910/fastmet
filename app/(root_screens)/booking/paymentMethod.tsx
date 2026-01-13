@@ -1,7 +1,5 @@
-import SearchingDriverModal from "@/components/modals/SearchingDriverModal";
 import { useAuth } from "@/hooks/useAuth";
 import { useSocket } from "@/sockets/context/SocketProvider";
-import { requestBooking } from "@/sockets/handlers/booking";
 import { useAppStore } from "@/store/useAppStore";
 import { RequestBooking } from "@/types/book";
 import { STATIC_IMAGES } from "@/utils/constants";
@@ -10,7 +8,7 @@ import { uploadBookingImages } from "@/utils/imagePicker";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { Platform, Pressable, Text, View } from "react-native";
 import {
   SafeAreaView,
@@ -19,26 +17,23 @@ import {
 import Toast from "react-native-toast-message";
 
 export default function PaymentMethod() {
-  const paymentMethod = useAppStore((state) => state.paymentMethod);
-  const setPaymentMethod = useAppStore((state) => state.setPaymentMethod);
-  const routeData = useAppStore((state) => state.routeData);
   const insets = useSafeAreaInsets();
-  const [requestSubmitted, setRequestSubmitted] = useState(false);
-  const setLoading = useAppStore((state) => state.setLoading);
+  const paymentMethod = useAppStore((state) => state.paymentMethod);
+
+  const { bookingType, setPaymentMethod, setLoading, routeData } =
+    useAppStore.getState();
 
   const { id } = useAuth();
   const socket = useSocket();
 
-  const submitRequest = async () => {
+  const handleBookNow = async () => {
     try {
       setLoading(true);
 
       const {
-        bookingType,
         selectedVehicle,
         pickUp,
         dropOff,
-        routeData,
         addedServices,
         photos,
         note,
@@ -101,7 +96,7 @@ export default function PaymentMethod() {
       console.log("📤 Sending booking request:", payload);
 
       // Send via socket
-      requestBooking(socket, payload);
+      socket.emit("request_booking", payload);
     } catch (error) {
       console.error("Booking submission error:", error);
 
@@ -118,32 +113,47 @@ export default function PaymentMethod() {
   };
 
   useEffect(() => {
-    const bookingSaved = (data: { success: boolean }) => {
+    const bookingSaved = (data: {
+      success: boolean;
+      bookingId: string;
+      message: string;
+    }) => {
       setLoading(false);
+
       if (data.success) {
-        useAppStore.getState().clearStates();
-
+        if (bookingType.type === "asap")
+          router.push({
+            pathname: "/(root_screens)/booking/searchingDriver",
+            params: { bookingId: data.bookingId },
+          });
+        else {
+          Toast.show({
+            type: "success",
+            text1: "Booking Request Saved",
+            text2: "You will be notified when a driver accepts your request",
+            position: "top",
+            visibilityTime: 5_000,
+            swipeable: true,
+            topOffset: 50,
+          });
+          router.replace("/(drawer)/(tabs)/request");
+        }
+      } else {
         Toast.show({
-          type: "success",
-          text1: "Booking Request Saved",
-          text2: "You will be notified when a driver accepts your request",
+          type: "error",
+          text1: "Booking Failed",
+          text2: data.message,
           position: "top",
-          visibilityTime: 5_000,
-          swipeable: true,
-          topOffset: 50,
+          visibilityTime: 4000,
         });
-
-        // router.replace("/(drawer)/(tabs)/request");
-        setRequestSubmitted(true);
       }
     };
 
     socket.on("booking_request_saved", bookingSaved);
-
     return () => {
       socket.off("booking_request_saved", bookingSaved);
     };
-  }, [setLoading, socket]);
+  }, [setLoading, socket, bookingType.type]);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
@@ -252,7 +262,7 @@ export default function PaymentMethod() {
         {routeData.distanceFee > 0 && (
           <View className="flex-row items-center justify-between">
             <Text className="text-xs font-semibold text-gray-500">
-              Distance / Duration ({routeData.distance.toFixed(2)} km -
+              Distance / Duration ({routeData.distance.toFixed(2)} km -{" "}
               {routeData.duration.toFixed(0)} min)
             </Text>
             <Text className="text-xs font-semibold text-gray-500">
@@ -282,14 +292,13 @@ export default function PaymentMethod() {
 
         <Pressable
           className={`flex-1 py-3 rounded-md bg-lightPrimary active:bg-darkPrimary`}
-          onPress={submitRequest}
+          onPress={handleBookNow}
         >
           <Text className="font-bold text-center text-lg text-white">
             Book Now
           </Text>
         </Pressable>
       </View>
-      <SearchingDriverModal visible={requestSubmitted} />
     </SafeAreaView>
   );
 }

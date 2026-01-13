@@ -1,9 +1,11 @@
 import LiveTrackingMapScreen from "@/components/maps/LiveTrackingMapScreen";
 import StarDisplay from "@/components/StarDisplay";
 import { useBooking } from "@/queries/bookingQueries";
+import { useAppStore } from "@/store/useAppStore";
+import { createConversationId } from "@/utils/helper";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
-import { router, useLocalSearchParams } from "expo-router";
+import { RelativePathString, router, useLocalSearchParams } from "expo-router";
 import React, { useState } from "react";
 import {
   ActivityIndicator,
@@ -20,7 +22,12 @@ import {
 
 export default function ViewOnMap() {
   const [region, setRegion] = useState<Region | null>(null);
-  const { bookingId } = useLocalSearchParams<{ bookingId: string }>();
+  const { bookingId, canGoBack, returnTo, returnTab } = useLocalSearchParams<{
+    bookingId: string;
+    canGoBack: string;
+    returnTo: RelativePathString;
+    returnTab?: string;
+  }>();
   const insets = useSafeAreaInsets();
 
   const { data: booking, isPending, error } = useBooking(bookingId);
@@ -39,6 +46,20 @@ export default function ViewOnMap() {
         </Text>
       </View>
     );
+
+  const handleBack = () => {
+    if (canGoBack === "true") {
+      router.back();
+    } else if (returnTo) {
+      // Include the tab parameter when navigating back
+      router.replace({
+        pathname: returnTo,
+        params: returnTab ? { tab: returnTab } : {},
+      });
+    } else {
+      router.back(); // Default fallback
+    }
+  };
 
   return (
     <SafeAreaView
@@ -65,8 +86,9 @@ export default function ViewOnMap() {
         >
           <View className="flex-row items-center justify-center px-4">
             <Pressable
-              onPress={() => router.back()}
+              onPress={handleBack} // TODO: infinite routing
               className="absolute left-0 -top-1"
+              hitSlop={20}
             >
               <Ionicons
                 name="chevron-back-outline"
@@ -103,17 +125,34 @@ export default function ViewOnMap() {
               </View>
 
               <View className="flex-row gap-6 mr-2">
-                <Pressable className="items-center active:scale-110">
-                  <Ionicons name="call" size={28} color="#F7931E" />
-                  <Text className="text-gray-600">Call</Text>
-                </Pressable>
-                <Pressable className="items-center active:scale-110">
+                <Pressable
+                  className="items-center active:scale-110"
+                  hitSlop={20}
+                  onPress={() =>
+                    router.push({
+                      pathname: "/message",
+                      params: {
+                        conversationId: createConversationId(
+                          useAppStore.getState().id!,
+                          booking.driver.id
+                        ),
+                      },
+                    })
+                  }
+                >
                   <Ionicons
                     name="chatbubble-ellipses"
                     size={28}
                     color="#F7931E"
                   />
                   <Text className="text-gray-600">Chat</Text>
+                </Pressable>
+                <Pressable
+                  className="items-center active:scale-110"
+                  hitSlop={20}
+                >
+                  <Ionicons name="call" size={28} color="#F7931E" />
+                  <Text className="text-gray-600">Call</Text>
                 </Pressable>
               </View>
             </View>

@@ -5,7 +5,8 @@ import CompletedRoute from "@/components/request_tabs/Completed";
 import RequestRoute from "@/components/request_tabs/Request";
 import { useAuth } from "@/hooks/useAuth";
 import { useBookingCounts } from "@/queries/bookingQueries";
-import { useState } from "react";
+import { useLocalSearchParams } from "expo-router";
+import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -89,10 +90,21 @@ export default function Request() {
     { key: "pending", title: "Request" },
     { key: "active", title: "Active" },
     { key: "completed", title: "Completed" },
-    { key: "canceled", title: "Cancelled" },
+    { key: "cancelled", title: "Cancelled" },
   ]);
+  const params = useLocalSearchParams();
 
   const { data: counts, isPending, error, refetch } = useBookingCounts();
+
+  // Handle tab navigation from params (auto focus)
+  useEffect(() => {
+    if (params.tab) {
+      const tabIndex = routes.findIndex((route) => route.key === params.tab);
+      if (tabIndex !== -1) {
+        setIndex(tabIndex);
+      }
+    }
+  }, [params.tab, routes]);
 
   // Lazy render - only renders the active tab
   const renderScene = ({ route }: { route: TabRoute }) => {
@@ -103,7 +115,7 @@ export default function Request() {
         return <ActiveRoute />;
       case "completed":
         return <CompletedRoute />;
-      case "canceled":
+      case "cancelled":
         return <CancelledRoute />;
       default:
         return null;

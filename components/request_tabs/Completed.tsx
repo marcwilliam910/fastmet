@@ -195,7 +195,7 @@ const CompletedCard = ({
                 {formatLocation(dropoff)}
               </Text>
             </View>
-            <Text className="font-bold">{distance}km</Text>
+            <Text className="font-bold">{distance.toFixed(1)}km</Text>
 
             <Ionicons
               name="location-sharp"

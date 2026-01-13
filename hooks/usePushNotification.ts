@@ -175,13 +175,21 @@ async function registerForPushNotificationsAsync() {
 
 async function savePushTokenToBackend(token: string) {
   try {
+    // Check if we've already saved this token
+    const savedToken = await getItemAsync("expo_push_token");
+
+    if (savedToken === token) {
+      console.log("✅ Push token already saved (no update needed)");
+      return;
+    }
+
     const response = await api.post("/notifications/token", {
       expoPushToken: token,
     });
 
     if (response.data.success) {
       console.log("✅ Push token saved to backend");
-      // Optionally store token locally for reference
+      // Store token locally to prevent duplicate saves
       await setItemAsync("expo_push_token", token);
     }
   } catch (error: any) {

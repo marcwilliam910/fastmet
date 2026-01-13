@@ -21,7 +21,6 @@ export interface BookSlice {
   itemType: string | null;
   photos: string[];
 
-  // not sure
   addedServices: Service[];
   toggleService: (service: Service) => void;
   updateServiceQuantity: (
@@ -67,8 +66,6 @@ export const createBookSlice: StateCreator<BookSlice> = (set, get) => ({
   note: "",
   itemType: null,
   photos: [],
-
-  // not sure
   addedServices: [],
 
   toggleService: (service: Service) =>
@@ -206,7 +203,7 @@ export const createBookSlice: StateCreator<BookSlice> = (set, get) => ({
     set({
       pickUp: null,
       dropOff: null,
-      bookingType: { type: "asap", value: "ASAP" },
+      bookingType: { type: "asap", value: "REGULAR" },
       selectedVehicle: null,
       routeData: {
         distance: 0,
@@ -220,10 +217,7 @@ export const createBookSlice: StateCreator<BookSlice> = (set, get) => ({
       note: "",
       itemType: null,
       photos: [],
-
       paymentMethod: "cash",
-
-      // not sure
       addedServices: [],
     }),
 });

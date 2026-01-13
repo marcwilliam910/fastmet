@@ -30,7 +30,7 @@ export type Booking = {
   selectedVehicle: Omit<SelectedVehicle, "paidServices">;
   routeData: RouteData;
   paymentMethod: string; // "cash" | "online"
-  addedServices: Partial<Service>[];
+  addedServices: Service[];
   note: string;
   itemType: string | null;
   photos: string[];

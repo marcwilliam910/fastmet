@@ -51,7 +51,6 @@ const Book = () => {
       </View>
 
       <BookSheet isDragging={isDragging} />
-      {/* <SearchingDriverModal visible={true} /> */}
     </SafeAreaView>
   );
 };

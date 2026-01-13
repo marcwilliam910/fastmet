@@ -1,7 +1,8 @@
+import { useAppStore } from "@/store/useAppStore";
 import { ActiveBooking, Booking } from "@/types/book";
 import { Service } from "@/types/vehicle";
 import { formatDate } from "@/utils/date";
-import { formatLocation } from "@/utils/helper";
+import { createConversationId, formatLocation } from "@/utils/helper";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { router } from "expo-router";
@@ -100,6 +101,7 @@ export default function SeeMoreModal({
                 <Text className="mb-1 text-sm text-white opacity-90">
                   {type === "Cancelled Booking" ? "Cancelled At" : "Booked At"}
                 </Text>
+                {/* bug here when cancelled, date not correct */}
                 <Text className="text-sm font-semibold text-white">
                   {formatDate(data.createdAt)}
                 </Text>
@@ -142,11 +144,38 @@ export default function SeeMoreModal({
                       <Text className="text-lg font-semibold text-gray-800">
                         {data.driver.name}
                       </Text>
-                      <StarDisplay rating={data.driver.rating} />
+                      <View className="flex-row items-center gap-2 ">
+                        <StarDisplay rating={data.driver.rating} />
+                        <Text className="text-sm font-semibold text-gray-600">
+                          ({data.driver.rating})
+                        </Text>
+                      </View>
                     </View>
                   </View>
 
                   <View className="flex-row gap-5">
+                    <Pressable
+                      className="items-center active:scale-110"
+                      hitSlop={20}
+                      onPress={() =>
+                        router.push({
+                          pathname: "/message",
+                          params: {
+                            conversationId: createConversationId(
+                              useAppStore.getState().id!,
+                              data.driver.id
+                            ),
+                          },
+                        })
+                      }
+                    >
+                      <Ionicons
+                        name="chatbubble-ellipses"
+                        size={Platform.OS === "ios" ? 28 : 24}
+                        color="#F7931E"
+                      />
+                      <Text className="text-sm text-gray-600">Chat</Text>
+                    </Pressable>
                     <Pressable className="items-center active:scale-110">
                       <Ionicons
                         name="call"
@@ -154,14 +183,6 @@ export default function SeeMoreModal({
                         color="#F7931E"
                       />
                       <Text className="text-sm text-gray-600">Call</Text>
-                    </Pressable>
-                    <Pressable className="items-center active:scale-110">
-                      <Ionicons
-                        name="chatbubble-ellipses"
-                        size={Platform.OS === "ios" ? 28 : 24}
-                        color="#F7931E"
-                      />
-                      <Text className="text-sm text-gray-600">Chat</Text>
                     </Pressable>
                   </View>
                 </View>
@@ -233,17 +254,27 @@ export default function SeeMoreModal({
             </View>
 
             {/* Booking Type */}
-            <View className="flex-row items-center justify-between p-3 mt-0 bg-white rounded-lg">
-              <Text className="text-sm font-bold text-gray-600">
+            <View className="flex-row items-center justify-between p-3  bg-white rounded-lg">
+              <Text className="text-sm font-semibold text-gray-600">
                 {data.bookingType.type === "schedule"
-                  ? "Schedule"
-                  : data.bookingType.value}
+                  ? "Scheduled on"
+                  : data.bookingType.type.toUpperCase()}
               </Text>
-              {data.bookingType.type === "schedule" && (
+              {data.bookingType.type === "schedule" ? (
                 <Text className="text-sm font-bold text-gray-600">
                   {formatDate(data.bookingType.value || "")}
                 </Text>
+              ) : (
+                <Text className="text-sm font-bold text-gray-600">
+                  {data.bookingType.value}
+                </Text>
               )}
+            </View>
+
+            <View className="mt-5 self-end">
+              <Text className="text-xs font-bold text-gray-600">
+                Reference: {data.bookingRef}
+              </Text>
             </View>
           </View>
 
@@ -329,36 +360,92 @@ export default function SeeMoreModal({
 
           {/* Selected Services */}
           {data.addedServices && data.addedServices.length > 0 && (
-            <View className="p-5 bg-gray-50 rounded-2xl">
-              <Text className="mb-3 text-base font-semibold text-gray-800">
-                Selected Services ({data.addedServices.length})
-              </Text>
-              <View className="gap-2">
-                {data.addedServices.map((service: Service) => (
-                  <View
-                    key={service.key}
-                    className="flex-row items-center justify-between p-4 bg-white rounded-xl"
-                  >
-                    <View className="flex-row items-center flex-1">
-                      {/* <Text className="mr-3 text-2xl">{service.icon}</Text> */}
-                      <Text className="text-base text-gray-800">
-                        {service.name}
-                      </Text>
-                    </View>
-                    <Text className="font-semibold text-lightPrimary">
-                      ₱{service.price}
-                    </Text>
-                  </View>
-                ))}
+            <View className="p-4 border border-gray-200 rounded-2xl bg-white">
+              <View className="flex-row items-center justify-between mb-3">
+                <Text className="text-base font-semibold text-gray-800">
+                  Selected Services
+                </Text>
+                <View className="px-2 py-1 bg-orange-100 rounded-full">
+                  <Text className="text-xs font-semibold text-lightPrimary">
+                    {data.addedServices.length} add-ons
+                  </Text>
+                </View>
               </View>
 
-              <View className="flex-row items-center justify-between p-4 rounded-xl">
-                <Text className="text-base font-semibold text-gray-800">
-                  Total
+              {/* Free Services */}
+              {data.selectedVehicle.freeServices &&
+                data.selectedVehicle.freeServices.length > 0 && (
+                  <View className="mb-3">
+                    <Text className="mb-2 text-xs font-medium text-gray-500 uppercase">
+                      Included (Free)
+                    </Text>
+                    <View className="gap-2">
+                      {data.selectedVehicle.freeServices.map(
+                        (service: Service) => (
+                          <View
+                            key={service.key}
+                            className="flex-row items-center justify-between py-2"
+                          >
+                            <View className="flex-row items-center flex-1 gap-2">
+                              <View className="w-1.5 h-1.5 bg-green-500 rounded-full" />
+                              <Text className="flex-1 text-sm text-gray-700">
+                                {service.name}
+                              </Text>
+                            </View>
+                            <Text className="text-xs font-medium text-green-600">
+                              FREE
+                            </Text>
+                          </View>
+                        )
+                      )}
+                    </View>
+                  </View>
+                )}
+
+              {/* Paid Services */}
+              <View className="pt-3 border-t border-gray-200">
+                <Text className="mb-2 text-xs font-medium text-gray-500 uppercase">
+                  Add-ons
                 </Text>
-                <Text className="font-semibold text-lightPrimary">
+                <View className="gap-2">
+                  {data.addedServices.map((service: Service) => (
+                    <View
+                      key={service.key}
+                      className="flex-row items-center justify-between py-2"
+                    >
+                      <View className="flex-1">
+                        <Text className="text-sm font-medium text-gray-800">
+                          {service.name}
+                        </Text>
+                        {service.quantity && service.quantity > 1 && (
+                          <Text className="text-xs text-gray-500">
+                            Qty: {service.quantity} × ₱{service.price}
+                          </Text>
+                        )}
+                      </View>
+                      <Text className="font-semibold text-lightPrimary">
+                        ₱
+                        {service.quantity && service.quantity > 1
+                          ? (service.price * service.quantity).toLocaleString(
+                              "en-US"
+                            )
+                          : service.price > 0
+                            ? service.price.toLocaleString("en-US")
+                            : "0.00"}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+
+              {/* Total */}
+              <View className="flex-row items-center justify-between pt-3 mt-3 border-t border-gray-300">
+                <Text className="text-base font-semibold text-gray-800">
+                  Services Total
+                </Text>
+                <Text className="text-lg font-bold text-lightPrimary">
                   {totalServicesPrice > 0
-                    ? `Php ${totalServicesPrice.toLocaleString("en-US", {
+                    ? `₱${totalServicesPrice.toLocaleString("en-US", {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,
                       })}`
@@ -432,16 +519,17 @@ export default function SeeMoreModal({
 
           {type === "Active Booking" && (
             <Pressable
-              className="items-center justify-center py-3 mx-4 rounded-lg bg-lightPrimary active:bg-darkPrimary"
+              className="items-center flex-row gap-2 justify-center py-3 mx-4 rounded-lg bg-lightPrimary active:bg-darkPrimary"
               onPress={() => {
                 console.log(data._id);
                 onClose();
                 router.push({
                   pathname: "/(root_screens)/booking/viewOnMap",
-                  params: { bookingId: data._id },
+                  params: { bookingId: data._id, canGoBack: "true" },
                 });
               }}
             >
+              <Ionicons name="map-outline" size={20} color="#fff" />
               <Text className="text-lg font-bold text-white">View on Map</Text>
             </Pressable>
           )}

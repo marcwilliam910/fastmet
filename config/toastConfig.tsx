@@ -65,4 +65,30 @@ export const toastConfig = {
       </View>
     </View>
   ),
+  info: ({ text1, text2 }: any) => (
+    <View className="mx-4 flex-row items-center justify-between rounded-2xl border border-gray-200 bg-white p-4 shadow-lg">
+      <View className="flex-1">
+        <View className="mb-1 flex-row items-center gap-2">
+          <Ionicons name="information-circle" size={20} color="#3B82F6" />
+          <Text className="font-bold text-gray-800">{text1}</Text>
+        </View>
+        <Text numberOfLines={2} className="text-sm text-gray-600">
+          {text2}
+        </Text>
+      </View>
+    </View>
+  ),
+  error: ({ text1, text2 }: any) => (
+    <View className="bg-white mx-4 rounded-2xl shadow-lg border border-gray-200 p-4 flex-row items-center justify-between">
+      <View className="flex-1">
+        <View className="flex-row items-center gap-2 mb-1">
+          <Ionicons name="alert-circle" size={20} color="#EF4444" />
+          <Text className="font-bold text-gray-800">{text1}</Text>
+        </View>
+        <Text numberOfLines={2} className="text-gray-600 text-sm">
+          {text2}
+        </Text>
+      </View>
+    </View>
+  ),
 };

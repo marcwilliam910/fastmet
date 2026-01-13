@@ -84,8 +84,7 @@ export default function LiveTrackingMapScreen({
         socket.off("driverLocationResponse", handleDriverLocationResponse);
         console.log("🔌 Unsubscribed from driver location");
       };
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [bookingId, driver.id])
+    }, [bookingId, driver.id, socket])
   );
 
   useEffect(() => {
