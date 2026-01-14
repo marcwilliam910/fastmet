@@ -1,7 +1,11 @@
 import { useShake } from "@/hooks/useShakeAnimation";
 import { useAppStore } from "@/store/useAppStore";
 import { LocationDetails } from "@/types/book";
-import { GOOGLE_MAPS_API_KEY, METRO_MANILA_POLYGON } from "@/utils/constants";
+import {
+  GOOGLE_MAPS_API_KEY,
+  METRO_MANILA_POLYGON,
+  requiresFerryFromMetroManila,
+} from "@/utils/constants";
 import { formatLocation } from "@/utils/helper";
 import { getArray, pushToArray } from "@/utils/recentPlaceStorage";
 import { Ionicons } from "@expo/vector-icons";
@@ -141,6 +145,122 @@ const SearchModal: React.FC<SearchModalProps> = ({
     onClose();
   };
 
+  // Update your handleOnPlaceSelect function
+  const handleOnPlaceSelect = async (place: Place) => {
+    setSelectedPlace(null);
+
+    const loc = place.details?.location;
+    if (!loc) return;
+
+    console.log(place);
+
+    // Check if pickup is within Metro Manila
+    if (type === "pickup") {
+      const allowed = isWithinMetroManila(loc.latitude, loc.longitude);
+
+      if (!allowed) {
+        const message = "Pick-up is only available within Metro Manila.";
+
+        if (Platform.OS === "android") {
+          ToastAndroid.showWithGravity(
+            message,
+            ToastAndroid.LONG,
+            ToastAndroid.TOP
+          );
+        } else {
+          Alert.alert("Not Available", message);
+        }
+
+        shake();
+        return;
+      }
+    }
+
+    // Check if drop-off requires ferry
+    if (type === "dropoff") {
+      const requiresFerry = requiresFerryFromMetroManila(
+        loc.latitude,
+        loc.longitude
+      );
+
+      if (requiresFerry) {
+        const message =
+          "Drop-off location requires ferry access and is not available.";
+
+        if (Platform.OS === "android") {
+          ToastAndroid.showWithGravity(
+            message,
+            ToastAndroid.LONG,
+            ToastAndroid.TOP
+          );
+        } else {
+          Alert.alert("Not Available", message);
+        }
+
+        shake();
+        return;
+      }
+    }
+
+    setSelectedPlace(place);
+  };
+
+  const handleRecentPlacePress = async (place: LocationDetails) => {
+    if (!place) return;
+    const { lat, lng } = place.coords;
+
+    // Validate pickup location
+    if (type === "pickup") {
+      const allowed = isWithinMetroManila(lat, lng);
+
+      if (!allowed) {
+        const message = "Pick-up is only available within Metro Manila.";
+
+        if (Platform.OS === "android") {
+          ToastAndroid.showWithGravity(
+            message,
+            ToastAndroid.LONG,
+            ToastAndroid.TOP
+          );
+        } else {
+          Alert.alert("Not Available", message);
+        }
+
+        shake();
+        return;
+      }
+
+      setPickUp(place);
+      setPickUpAdditionalDetails(additionalDetails);
+    } else {
+      // Validate drop-off location
+      const requiresFerry = requiresFerryFromMetroManila(lat, lng);
+
+      if (requiresFerry) {
+        const message =
+          "Drop-off location requires ferry access and is not available.";
+
+        if (Platform.OS === "android") {
+          ToastAndroid.showWithGravity(
+            message,
+            ToastAndroid.LONG,
+            ToastAndroid.TOP
+          );
+        } else {
+          Alert.alert("Not Available", message);
+        }
+
+        shake();
+        return;
+      }
+
+      setDropOff(place);
+      setDropOffAdditionalDetails(additionalDetails);
+    }
+
+    onClose();
+  };
+
   const handleCurrentLocation = async () => {
     try {
       setLoading(true);
@@ -189,6 +309,51 @@ const SearchModal: React.FC<SearchModalProps> = ({
       });
 
       const { latitude, longitude } = location.coords;
+
+      // Validate location before proceeding
+      if (type === "pickup") {
+        const allowed = isWithinMetroManila(latitude, longitude);
+
+        if (!allowed) {
+          const message =
+            "Your current location is outside Metro Manila. Pick-up is only available within Metro Manila.";
+
+          if (Platform.OS === "android") {
+            ToastAndroid.showWithGravity(
+              message,
+              ToastAndroid.LONG,
+              ToastAndroid.TOP
+            );
+          } else {
+            Alert.alert("Not Available", message);
+          }
+
+          shake();
+          return;
+        }
+      } else {
+        // Validate drop-off location
+        const requiresFerry = requiresFerryFromMetroManila(latitude, longitude);
+
+        if (requiresFerry) {
+          const message =
+            "Your current location requires ferry access and is not available for drop-off.";
+
+          if (Platform.OS === "android") {
+            ToastAndroid.showWithGravity(
+              message,
+              ToastAndroid.LONG,
+              ToastAndroid.TOP
+            );
+          } else {
+            Alert.alert("Not Available", message);
+          }
+
+          shake();
+          return;
+        }
+      }
+
       // Reverse geocode to get address
       const response = await fetch(
         `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${GOOGLE_MAPS_API_KEY}`
@@ -236,46 +401,6 @@ const SearchModal: React.FC<SearchModalProps> = ({
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleOnPlaceSelect = async (place: Place) => {
-    setSelectedPlace(null);
-
-    const loc = place.details?.location;
-    if (!loc) return;
-
-    // const allowed = isWithinMetroManila(loc.latitude, loc.longitude);
-
-    // if (!allowed) {
-    //   const message = "Services are only available within Metro Manila.";
-
-    //   if (Platform.OS === "android") {
-    //     ToastAndroid.showWithGravity(
-    //       message,
-    //       ToastAndroid.LONG,
-    //       ToastAndroid.TOP
-    //     );
-    //   } else {
-    //     Alert.alert("Not Available", message);
-    //   }
-
-    //   shake();
-    //   return;
-    // }
-
-    setSelectedPlace(place);
-  };
-
-  const handleRecentPlacePress = async (place: LocationDetails) => {
-    if (type === "pickup") {
-      setPickUp(place);
-      setPickUpAdditionalDetails(additionalDetails);
-    } else {
-      setDropOff(place);
-      setDropOffAdditionalDetails(additionalDetails);
-    }
-
-    onClose();
   };
 
   const renderRecentPlace = ({ item }: { item: LocationDetails }) => (
