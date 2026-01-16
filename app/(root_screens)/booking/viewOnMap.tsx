@@ -120,7 +120,12 @@ export default function ViewOnMap() {
                   <Text className="text-lg font-semibold text-gray-800">
                     {booking.driver.name}
                   </Text>
-                  <StarDisplay rating={booking.driver.rating} />
+                  <View className="flex-row items-center gap-2 ">
+                    <StarDisplay rating={booking.driver.rating} />
+                    <Text className="text-sm font-semibold text-gray-600">
+                      ({booking.driver.rating})
+                    </Text>
+                  </View>
                 </View>
               </View>
 

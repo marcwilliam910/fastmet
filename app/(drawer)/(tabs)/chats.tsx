@@ -147,7 +147,7 @@ const MessageCard = ({ item }: { item: ConversationResponse }) => {
             className={`font-bold max-w-[60%] ${item.unreadCount.client > 0 ? "font-bold" : ""}`}
             numberOfLines={1}
           >
-            {item.driver.name}
+            {item.driver.firstName} {item.driver.lastName}
           </Text>
           <Text
             className={`text-xs text-gray-400 ${item.unreadCount.client > 0 ? "font-bold" : ""}`}

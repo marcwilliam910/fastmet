@@ -1,11 +1,13 @@
 import useSeeMoreDetails from "@/hooks/useSeeMoreDetails";
 import { useRateDriverMutation } from "@/mutations/booking";
 import { useUserBookings } from "@/queries/bookingQueries";
+import { useAppStore } from "@/store/useAppStore";
 import { CompletedBooking, LocationDetails } from "@/types/book";
 import { formatDate } from "@/utils/date";
-import { formatLocation } from "@/utils/helper";
+import { createConversationId, formatLocation } from "@/utils/helper";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
+import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -325,7 +327,7 @@ function SeeMoreModal({
                 <Text className="mb-1 text-sm text-white opacity-90">
                   Order Reference
                 </Text>
-                <Text className="text-xl font-bold text-white">
+                <Text className="text-sm font-bold text-white">
                   #{data.bookingRef}
                 </Text>
               </View>
@@ -367,11 +369,30 @@ function SeeMoreModal({
                   <Text className="text-lg font-semibold text-gray-800">
                     {data.driver.name}
                   </Text>
-                  <StarDisplay rating={data.driver.rating} />
+                  <View className="flex-row items-center gap-2 ">
+                    <StarDisplay rating={data.driver.rating} />
+                    <Text className="text-sm font-semibold text-gray-600">
+                      ({data.driver.rating})
+                    </Text>
+                  </View>
                 </View>
               </View>
 
-              <Pressable className="items-center active:scale-110">
+              <Pressable
+                className="items-center active:scale-110"
+                onPress={() =>
+                  router.push({
+                    pathname: "/message",
+                    params: {
+                      conversationId: createConversationId(
+                        useAppStore.getState().id!,
+                        data.driver.id
+                      ),
+                    },
+                  })
+                }
+                hitSlop={20}
+              >
                 <Ionicons
                   name="chatbubble-ellipses"
                   size={Platform.OS === "ios" ? 28 : 24}
@@ -532,36 +553,136 @@ function SeeMoreModal({
                 </Text>
               </View>
             </View>
+          </View>
 
-            {/* Delivery Proof Image */}
-            {data.proofImageUrl && (
-              <Pressable
-                onPress={() => openImageViewer(data.proofImageUrl)}
-                className="mt-3 overflow-hidden bg-white rounded-xl"
-              >
-                <View className="flex-row items-center p-3 mb-2">
-                  <Ionicons
-                    name="checkmark-done-circle-outline"
-                    size={20}
-                    color="#FFA840"
-                  />
-                  <Text className="ml-2 text-sm font-semibold text-gray-800">
-                    Delivery Proof
-                  </Text>
-                </View>
-                <Image
-                  source={{ uri: data.proofImageUrl }}
-                  style={{ height: 200, width: "100%" }}
-                  contentFit="contain"
+          {/* Delivery Proof Images */}
+          <View className="p-5 bg-gray-50 rounded-2xl">
+            <View className="flex-row items-center mb-3 gap-2">
+              <View className="bg-green-100 rounded-full p-1">
+                <Ionicons
+                  name="checkmark-done-circle"
+                  size={22}
+                  color="#10B981"
                 />
-                <View className="flex-row items-center justify-center p-2 bg-gray-50">
-                  <Ionicons name="expand-outline" size={16} color="#666" />
-                  <Text className="ml-1 text-xs text-gray-600">
-                    Tap to view full size
-                  </Text>
+              </View>
+              <Text className="text-base font-bold text-gray-800">
+                Delivery Proof Images
+              </Text>
+            </View>
+
+            <View className="p-4 bg-white rounded-xl gap-3">
+              {/* Pickup Section */}
+              <View className="gap-2">
+                <Text className="text-xs font-bold text-gray-500">
+                  Pickup Confirmation
+                </Text>
+
+                <View className="flex-row gap-2">
+                  {data.bookingImages.pickup.beforeImageUrl && (
+                    <Pressable
+                      onPress={() =>
+                        openImageViewer(
+                          data.bookingImages.pickup.beforeImageUrl
+                        )
+                      }
+                      className="flex-1"
+                    >
+                      <Image
+                        source={{
+                          uri: data.bookingImages.pickup.beforeImageUrl,
+                        }}
+                        style={{ height: 90, width: "100%" }}
+                        contentFit="cover"
+                      />
+                      <View className="p-2">
+                        <Text className="text-xs text-center text-gray-600">
+                          Before Loading
+                        </Text>
+                      </View>
+                    </Pressable>
+                  )}
+
+                  {data.bookingImages.pickup.afterImageUrl && (
+                    <Pressable
+                      onPress={() =>
+                        openImageViewer(data.bookingImages.pickup.afterImageUrl)
+                      }
+                      className="flex-1"
+                    >
+                      <Image
+                        source={{
+                          uri: data.bookingImages.pickup.afterImageUrl,
+                        }}
+                        style={{ height: 90, width: "100%" }}
+                        contentFit="cover"
+                      />
+                      <View className="p-2">
+                        <Text className="text-xs text-center text-gray-600">
+                          After Loading
+                        </Text>
+                      </View>
+                    </Pressable>
+                  )}
                 </View>
-              </Pressable>
-            )}
+              </View>
+
+              {/* Dropoff Section */}
+              <View className="gap-2">
+                <Text className="text-xs font-bold text-gray-500">
+                  Delivery Confirmation
+                </Text>
+
+                <View className="flex-row gap-2">
+                  {data.bookingImages.dropoff.receiptImageUrl && (
+                    <Pressable
+                      onPress={() =>
+                        openImageViewer(
+                          data.bookingImages.dropoff.receiptImageUrl
+                        )
+                      }
+                      className="flex-1"
+                    >
+                      <Image
+                        source={{
+                          uri: data.bookingImages.dropoff.receiptImageUrl,
+                        }}
+                        style={{ height: 90, width: "100%" }}
+                        contentFit="cover"
+                      />
+                      <View className="p-2">
+                        <Text className="text-xs text-center text-gray-600">
+                          Receipt
+                        </Text>
+                      </View>
+                    </Pressable>
+                  )}
+
+                  {data.bookingImages.dropoff.packageImageUrl && (
+                    <Pressable
+                      onPress={() =>
+                        openImageViewer(
+                          data.bookingImages.dropoff.packageImageUrl
+                        )
+                      }
+                      className="flex-1"
+                    >
+                      <Image
+                        source={{
+                          uri: data.bookingImages.dropoff.packageImageUrl,
+                        }}
+                        style={{ height: 90, width: "100%" }}
+                        contentFit="cover"
+                      />
+                      <View className="p-2">
+                        <Text className="text-xs text-center text-gray-600">
+                          Delivered Package
+                        </Text>
+                      </View>
+                    </Pressable>
+                  )}
+                </View>
+              </View>
+            </View>
           </View>
 
           {/* Selected Services */}

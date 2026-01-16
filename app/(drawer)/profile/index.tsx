@@ -58,7 +58,7 @@ export default function MyProfile() {
           <Pressable
             key={index}
             onPress={item.onPress}
-            className="flex-row items-center px-5 py-4 bg-gray-100 rounded-2xl active:opacity-70"
+            className="flex-row items-center px-5 py-3 bg-gray-100 rounded-2xl active:opacity-70"
           >
             <View className="items-center justify-center w-10 h-10">
               <Ionicons name={item.icon as any} size={22} color="#FFA840" />

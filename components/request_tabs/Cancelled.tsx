@@ -1,6 +1,7 @@
 import useSeeMoreDetails from "@/hooks/useSeeMoreDetails";
 import { useUserBookings } from "@/queries/bookingQueries";
 import { ActiveBooking, Booking } from "@/types/book";
+import { formatDate } from "@/utils/date";
 import { Ionicons } from "@expo/vector-icons";
 import {
   ActivityIndicator,
@@ -57,7 +58,7 @@ export default function CancelledRoute() {
             isCash={item.paymentMethod === "cash"}
             amount={item.routeData.totalPrice}
             onPressSeeMore={() => handleSeeMorePress(item)}
-            date="August 25, 2023"
+            cancelledAt={item.cancelledAt!}
           />
         )}
         keyExtractor={(item) => item._id}
@@ -66,6 +67,40 @@ export default function CancelledRoute() {
         contentContainerStyle={{
           paddingBottom: 40,
           gap: 15,
+        }}
+        ListEmptyComponent={() => (
+          <View className=" items-center justify-center px-8 py-12">
+            <View className="items-center">
+              <Ionicons name="alert-circle-outline" size={80} color="#9CA3AF" />
+              <Text className="text-2xl font-bold text-gray-800 mt-6 text-center">
+                No Requests Yet
+              </Text>
+              <Text className="text-base text-gray-500 text-center mt-2">
+                You currently don&apos;t have any active requests.
+              </Text>
+            </View>
+          </View>
+        )}
+        // pull to refresh
+        refreshing={isPending}
+        onRefresh={refetch}
+        // infinite scroll
+        onEndReached={() => {
+          if (hasNextPage && !isFetchingNextPage) {
+            fetchNextPage();
+          }
+        }}
+        onEndReachedThreshold={0.3}
+        // Loading indicator at bottom
+        ListFooterComponent={() => {
+          if (isFetchingNextPage) {
+            return (
+              <View className="py-4">
+                <ActivityIndicator size="small" color="#FFA840" />
+              </View>
+            );
+          }
+          return null;
         }}
       />
 
@@ -89,7 +124,7 @@ type CancelledCardProps = {
   distance: number;
   isCash: boolean;
   amount: number;
-  date: string;
+  cancelledAt: string;
   onPressSeeMore: () => void;
 };
 
@@ -101,7 +136,7 @@ const CancelledCard = ({
   distance,
   isCash,
   amount,
-  date,
+  cancelledAt,
   onPressSeeMore,
 }: CancelledCardProps) => {
   return (
@@ -169,7 +204,9 @@ const CancelledCard = ({
             <Text className="text-sm font-semibold text-red-500">
               Cancelled Request
             </Text>
-            <Text className="text-sm font-semibold">{date}</Text>
+            <Text className="text-sm font-semibold">
+              {formatDate(cancelledAt)}
+            </Text>
           </View>
 
           <Pressable

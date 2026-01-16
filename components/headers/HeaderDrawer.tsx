@@ -35,7 +35,7 @@ const HeaderDrawer = ({ title }: { title: string }) => {
       <View className="w-full flex-row items-center justify-center gap-2">
         <Ionicons
           name={iconName as keyof typeof Ionicons.glyphMap}
-          size={24}
+          size={Platform.OS === "ios" ? 28 : 24}
           color="#FFA840"
         />
         <Text className="text-lg font-bold text-white">{title}</Text>

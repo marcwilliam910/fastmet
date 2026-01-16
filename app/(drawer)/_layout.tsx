@@ -4,12 +4,11 @@ import NotLoggedInModal from "@/components/modals/notLoggedInModal";
 import { useAuth } from "@/hooks/useAuth";
 import { usePushNotifications } from "@/hooks/usePushNotification";
 import { queryClient } from "@/lib/queryClient";
-import { useAppStore } from "@/store/useAppStore";
 import { Ionicons } from "@expo/vector-icons";
 import { DrawerContentScrollView, DrawerItem } from "@react-navigation/drawer";
 import { Drawer } from "expo-router/drawer";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Pressable, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -89,18 +88,14 @@ export default function DrawerLayout() {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showNotLoggedInModal, setShowNotLoggedInModal] = useState(false);
   const { notification } = usePushNotifications();
-  const vehicleLoading = useAppStore((state) => state.vehicleLoading);
-  const fetchVehicles = useAppStore((state) => state.fetchVehicles);
-
-  useEffect(() => {
-    fetchVehicles();
-  }, [fetchVehicles]);
 
   useEffect(() => {
     if (
       notification &&
       notification.request?.content?.data?.type === "booking_completed"
     ) {
+      // show modal or something
+
       queryClient.invalidateQueries({
         queryKey: ["userBookings", "active"],
         exact: false,
@@ -116,13 +111,6 @@ export default function DrawerLayout() {
       });
     }
   }, [notification]);
-
-  if (vehicleLoading)
-    return (
-      <View className="flex-1 items-center bg-white justify-center">
-        <ActivityIndicator size="large" color="#FFA840" />
-      </View>
-    );
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

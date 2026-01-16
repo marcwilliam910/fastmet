@@ -4,7 +4,7 @@ import { useAppStore } from "@/store/useAppStore";
 import { Ionicons } from "@expo/vector-icons";
 import { DrawerActions } from "@react-navigation/native";
 import { useNavigation } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Pressable, View } from "react-native";
 import { Region } from "react-native-maps";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -16,6 +16,11 @@ const Book = () => {
   const [region, setRegion] = useState<Region | null>(null);
   const navigation = useNavigation();
   const [isDragging, setIsDragging] = useState(false);
+  const fetchVehicles = useAppStore((state) => state.fetchVehicles);
+
+  useEffect(() => {
+    fetchVehicles();
+  }, [fetchVehicles]);
 
   return (
     <SafeAreaView

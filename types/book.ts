@@ -37,13 +37,22 @@ export type Booking = {
   createdAt: string;
   status: string;
   driverRating: number | null;
+  cancelledAt: string | null;
 };
 
 export type ActiveBooking = Booking & { driver: Driver };
-
 export type CompletedBooking = ActiveBooking & {
-  proofImageUrl: string;
   completedAt: string;
+  bookingImages: {
+    pickup: {
+      beforeImageUrl: string;
+      afterImageUrl: string;
+    };
+    dropoff: {
+      receiptImageUrl: string;
+      packageImageUrl: string;
+    };
+  };
 };
 
 export type Driver = {

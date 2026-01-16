@@ -8,6 +8,8 @@ export const receiveMessage = (socket: Socket) => {
     unreadConversationsCount: number;
     message: string;
     sender: string;
+    conversationId: string;
+    profilePictureUrl: string;
   }) => {
     console.log("📩 New message badge received:", data);
     useAppStore
@@ -31,6 +33,11 @@ export const receiveMessage = (socket: Socket) => {
         text1: `New Message from ${data.sender}`,
         text2: data.message,
         position: "top",
+        visibilityTime: 5000,
+        props: {
+          conversationId: data.conversationId,
+          profilePictureUrl: data.profilePictureUrl,
+        },
       });
     }
   };

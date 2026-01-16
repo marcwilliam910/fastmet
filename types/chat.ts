@@ -11,7 +11,8 @@ export type ConversationResponse = {
   };
   driver: {
     _id: string;
-    name: string;
+    firstName: string;
+    lastName: string;
     profilePictureUrl?: string;
     phoneNumber: string;
   };
@@ -21,7 +22,8 @@ export type MessageResponse = {
   _id: string;
   driver: {
     _id: string;
-    name: string;
+    firstName: string;
+    lastName: string;
     profilePictureUrl?: string;
     phoneNumber: string;
   };

@@ -68,7 +68,9 @@ const Message = () => {
             }
           : {
               _id: conversation?.driver._id || "unknown",
-              name: conversation?.driver.name || "Driver",
+              name:
+                `${conversation?.driver.firstName} ${conversation?.driver.lastName}` ||
+                "Driver",
               avatar: conversation?.driver.profilePictureUrl || "",
             },
       };
@@ -186,6 +188,7 @@ const Message = () => {
           receiverId: conversation.driver._id,
           text: message.text || "",
           image: message.image,
+          profilePictureUrl: useAppStore.getState().profilePictureUrl,
         });
       });
     },
@@ -433,7 +436,7 @@ const Message = () => {
 
             <View className="flex-1">
               <Text className="text-base font-bold text-white">
-                {conversation?.driver.name}
+                {conversation?.driver.firstName} {conversation?.driver.lastName}
               </Text>
               <Text className="text-xs ml-0.5 text-gray-300">Driver</Text>
             </View>

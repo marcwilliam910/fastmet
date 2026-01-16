@@ -101,9 +101,12 @@ export default function SeeMoreModal({
                 <Text className="mb-1 text-sm text-white opacity-90">
                   {type === "Cancelled Booking" ? "Cancelled At" : "Booked At"}
                 </Text>
-                {/* bug here when cancelled, date not correct */}
                 <Text className="text-sm font-semibold text-white">
-                  {formatDate(data.createdAt)}
+                  {formatDate(
+                    type === "Cancelled Booking"
+                      ? data.cancelledAt!
+                      : data.createdAt
+                  )}
                 </Text>
               </View>
             </View>

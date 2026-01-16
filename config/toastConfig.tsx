@@ -1,5 +1,7 @@
 // config/toastConfig.tsx
+import { STATIC_IMAGES } from "@/utils/constants";
 import { Ionicons } from "@expo/vector-icons";
+import { Image } from "expo-image";
 import { router } from "expo-router";
 import { Pressable, Text, View } from "react-native";
 import Toast from "react-native-toast-message";
@@ -29,28 +31,52 @@ export const toastConfig = {
     </View>
   ),
 
-  newMessage: ({ text1, text2 }: any) => (
-    <View className="bg-white mx-4 rounded-2xl shadow-lg border border-gray-200 p-4 flex-row items-center justify-between">
-      <View className="flex-1">
-        <View className="flex-row items-center gap-2 mb-1">
-          <Ionicons name="chatbubble-ellipses" size={20} color="#FFA840" />
-          <Text className="font-bold text-gray-800">{text1}</Text>
+  newMessage: ({ text1, text2, props }: any) => (
+    <Pressable
+      onPress={() => {
+        Toast.hide();
+        router.push({
+          pathname: "/message",
+          params: {
+            conversationId: props.conversationId,
+          },
+        });
+      }}
+      className="mx-4 mb-2 rounded-2xl bg-white px-4 py-3 flex-row items-center shadow-md active:opacity-80"
+    >
+      {/* Avatar */}
+      {props?.profilePictureUrl ? (
+        <Image
+          source={{ uri: props.profilePictureUrl }}
+          contentFit="cover"
+          placeholder={STATIC_IMAGES.userPlaceholder}
+          style={{ width: 48, height: 48, borderRadius: 24 }}
+        />
+      ) : (
+        <View className="w-12 h-12 rounded-full bg-gray-100 items-center justify-center">
+          <Ionicons name="person" size={24} color="#9CA3AF" />
         </View>
-        <Text className="text-gray-600 text-sm" numberOfLines={2}>
+      )}
+
+      {/* Content */}
+      <View className="flex-1 ml-4">
+        <Text
+          className="font-semibold text-gray-900 text-[15px]"
+          numberOfLines={1}
+        >
+          {text1}
+        </Text>
+
+        <Text className="text-gray-500 text-[13px] mt-0.5" numberOfLines={1}>
           {text2}
         </Text>
       </View>
 
-      <Pressable
-        onPress={() => {
-          Toast.hide();
-          router.push("/(drawer)/(tabs)/chats");
-        }}
-        className="bg-lightPrimary px-4 py-2 rounded-lg ml-3"
-      >
-        <Text className="text-white font-semibold">Reply</Text>
-      </Pressable>
-    </View>
+      {/* Unread indicator */}
+      <View className="ml-3">
+        <View className="w-2.5 h-2.5 rounded-full bg-lightPrimary" />
+      </View>
+    </Pressable>
   ),
   success: ({ text1, text2 }: any) => (
     <View className="bg-white mx-4 rounded-2xl shadow-lg border border-gray-200 p-4 flex-row items-center justify-between">

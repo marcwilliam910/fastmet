@@ -61,17 +61,6 @@ const EditProfile = () => {
   const gender = useAppStore((state) => state.gender);
 
   const input1Ref = useRef<TextInput>(null);
-  const input2Ref = useRef<TextInput>(null);
-
-  useEffect(() => {
-    setForm({
-      fullName: name,
-      profilePictureUrl: profilePictureUrl,
-      phoneNumber: phoneNumber,
-      address: address || "",
-      gender: gender || "",
-    });
-  }, [name, profilePictureUrl, phoneNumber, address, gender]);
 
   useEffect(() => {
     const initialData = {
@@ -384,7 +373,7 @@ const EditProfile = () => {
           <Text className="text-base font-bold text-white">Update Profile</Text>
         </Pressable>
         <Pressable
-          className="items-center py-4 my-2 border border-gray-200 rounded-lg bg-ctaSecondary active:bg-ctaSecondaryActive"
+          className="items-center py-4 my-2  border-gray-200 rounded-lg bg-ctaSecondary active:bg-ctaSecondaryActive"
           onPress={() => router.back()}
         >
           <Text className="text-base font-bold ">Back</Text>

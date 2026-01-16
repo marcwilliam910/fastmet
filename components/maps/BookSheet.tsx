@@ -46,6 +46,8 @@ const BookSheet = ({ isDragging }: { isDragging: boolean }) => {
   const vehicles = useAppStore((state) => state.vehicles);
   const vehicleError = useAppStore((state) => state.vehicleError);
   const fetchVehicles = useAppStore((state) => state.fetchVehicles);
+  const vehicleLoading = useAppStore((state) => state.vehicleLoading);
+
   const vehicleScrollRef = useRef<ScrollView>(null);
   const [vehicleItemWidth] = useState(90);
 
@@ -181,13 +183,32 @@ const BookSheet = ({ isDragging }: { isDragging: boolean }) => {
                 </Pressable>
               </View>
 
-              {vehicleError ? (
+              {vehicleLoading ? (
+                <View className="py-2 w-full px-2">
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={{ gap: 10 }}
+                  >
+                    {[1, 2, 3, 4].map((item) => (
+                      <View key={item} className="items-center gap-1">
+                        <View className="px-4 py-2 rounded-lg items-center bg-gray-100">
+                          {/* Vehicle name skeleton */}
+                          <View className="w-16 h-3 bg-gray-300 rounded mb-3" />
+                          {/* Vehicle image skeleton */}
+                          <View className="w-11 h-9 bg-gray-300 rounded" />
+                        </View>
+                      </View>
+                    ))}
+                  </ScrollView>
+                </View>
+              ) : vehicleError ? (
                 <View className="h-12 py-2 px-3 bg-red-100 rounded-lg flex-row items-center gap-2">
                   <Text className="text-xs text-red-800 flex-1">
                     {vehicleError}
                   </Text>
                   <Pressable onPress={fetchVehicles}>
-                    <Text className="text-sm underline  text-red-900 font-semibold">
+                    <Text className="text-sm underline text-red-900 font-semibold">
                       Retry
                     </Text>
                   </Pressable>

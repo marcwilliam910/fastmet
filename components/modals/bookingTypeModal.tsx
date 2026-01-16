@@ -4,6 +4,13 @@ import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useState } from "react";
 import { Modal, Platform, Pressable, Text, View } from "react-native";
+import Toast from "react-native-toast-message";
+
+const getMinTime = () => {
+  const min = new Date();
+  min.setHours(min.getHours() + 2);
+  return min;
+};
 
 export default function BookingTypeModal({
   visible,
@@ -14,11 +21,8 @@ export default function BookingTypeModal({
 }) {
   const [step, setStep] = useState<"main" | "calendar">("main");
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [selectedTime, setSelectedTime] = useState(() => {
-    const time = new Date();
-    time.setHours(9, 0, 0, 0);
-    return time;
-  });
+  const [selectedTime, setSelectedTime] = useState(getMinTime());
+
   const [showCalendar, setShowCalendar] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const bookingType = useAppStore((state) => state.bookingType);
@@ -52,11 +56,8 @@ export default function BookingTypeModal({
       setBookingType({ type, value });
     } else setBookingType({ type, value });
 
-    const resetTime = new Date();
-    resetTime.setHours(9, 0, 0, 0);
-
     setSelectedDate(new Date());
-    setSelectedTime(resetTime);
+    setSelectedTime(getMinTime());
     setShowCalendar(false);
     setShowTimePicker(false);
     setStep("main");
@@ -95,12 +96,9 @@ export default function BookingTypeModal({
   ];
 
   const handleCancel = () => {
-    const resetTime = new Date();
-    resetTime.setHours(9, 0, 0, 0);
-
     onClose();
     setSelectedDate(new Date());
-    setSelectedTime(resetTime);
+    setSelectedTime(getMinTime());
     setShowCalendar(false);
     setShowTimePicker(false);
     setStep("main");
@@ -253,14 +251,12 @@ export default function BookingTypeModal({
             <View className="gap-6">
               <View className="relative flex-row items-center justify-center">
                 <Pressable
+                  hitSlop={20}
                   className="absolute top-0 left-1"
                   onPress={() => {
-                    const resetTime = new Date();
-                    resetTime.setHours(9, 0, 0, 0);
-
                     setStep("main");
                     setSelectedDate(new Date());
-                    setSelectedTime(resetTime);
+                    setSelectedTime(getMinTime());
                     setShowCalendar(false);
                     setShowTimePicker(false);
                   }}
@@ -268,7 +264,7 @@ export default function BookingTypeModal({
                   <Ionicons
                     name="chevron-back-outline"
                     color="#FFA840"
-                    size={24}
+                    size={Platform.OS === "ios" ? 34 : 28}
                   />
                 </Pressable>
                 <Text className="text-lg font-bold">Max schedule: 1 month</Text>
@@ -404,12 +400,36 @@ export default function BookingTypeModal({
                     <DateTimePicker
                       value={selectedTime}
                       mode="time"
+                      minimumDate={new Date(Date.now() + 2 * 60 * 60 * 1000)}
                       display="clock"
                       onChange={(event, time) => {
                         setShowTimePicker(false);
-                        if (time) {
-                          setSelectedTime(time);
+
+                        if (!time) return;
+
+                        const minTime = getMinTime();
+
+                        // Apply selected time to today's date
+                        const selected = new Date();
+                        selected.setHours(
+                          time.getHours(),
+                          time.getMinutes(),
+                          0,
+                          0
+                        );
+
+                        if (selected < minTime) {
+                          Toast.show({
+                            type: "info",
+                            text1: "Invalid time",
+                            text2:
+                              "Pickup time must be at least 2 hours from now",
+                          });
+                          setSelectedTime(minTime);
+                          return;
                         }
+
+                        setSelectedTime(selected);
                       }}
                       is24Hour={false}
                     />

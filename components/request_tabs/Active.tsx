@@ -198,7 +198,12 @@ const ActiveCard = ({
                 <Text className="font-semibold text-lg text-gray-800">
                   {driver.name}
                 </Text>
-                <StarDisplay rating={driver.rating} />
+                <View className="flex-row items-center gap-2 ">
+                  <StarDisplay rating={driver.rating} />
+                  <Text className="text-sm font-semibold text-gray-600">
+                    ({driver.rating})
+                  </Text>
+                </View>
               </View>
             </View>
 

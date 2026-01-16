@@ -115,9 +115,8 @@ export default function SearchingDriver() {
     };
     const handleBookingCancelled = ({ bookingId }: { bookingId: string }) => {
       useAppStore.getState().clearStates();
-      console.log(bookingId);
 
-      // ✅ Use query string format instead of params object
+      // ✅ Use query string format instead of params object //not working
       router.replace("/(drawer)/(tabs)/request?tab=cancelled");
     };
     const handleDriverAccepted = ({ bookingId }: { bookingId: string }) => {

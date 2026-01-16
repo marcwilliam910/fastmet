@@ -23,9 +23,6 @@ export const formatLocation = (loc: LocationDetails) => {
   ).replace(", Philippines", "");
 };
 
-export const createConversationId = (
-  clientId: string,
-  driverId: string
-): string => {
-  return [clientId, driverId].sort().join("_");
+export const createConversationId = (id1: string, id2: string): string => {
+  return [id1, id2].sort().join("_");
 };

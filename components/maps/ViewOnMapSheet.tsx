@@ -1,4 +1,6 @@
+import { useAppStore } from "@/store/useAppStore";
 import { Driver } from "@/types/book";
+import { createConversationId } from "@/utils/helper";
 import { Ionicons } from "@expo/vector-icons";
 import BottomSheet from "@gorhom/bottom-sheet";
 import { router } from "expo-router";
@@ -47,7 +49,12 @@ export default function ViewOnMapSheet({ driver }: { driver: Driver }) {
               <Text className="text-lg font-semibold text-gray-800">
                 {driver.name}
               </Text>
-              <StarDisplay rating={driver.rating} />
+              <View className="flex-row items-center gap-2 ">
+                <StarDisplay rating={driver.rating} />
+                <Text className="text-sm font-semibold text-gray-600">
+                  ({driver.rating})
+                </Text>
+              </View>
             </View>
           </View>
 
@@ -56,7 +63,21 @@ export default function ViewOnMapSheet({ driver }: { driver: Driver }) {
               <Ionicons name="call" size={28} color="#F7931E" />
               <Text className="text-gray-600">Call</Text>
             </Pressable>
-            <Pressable className="items-center active:scale-110">
+            <Pressable
+              className="items-center active:scale-110"
+              hitSlop={20}
+              onPress={() =>
+                router.push({
+                  pathname: "/message",
+                  params: {
+                    conversationId: createConversationId(
+                      useAppStore.getState().id!,
+                      driver.id
+                    ),
+                  },
+                })
+              }
+            >
               <Ionicons name="chatbubble-ellipses" size={28} color="#F7931E" />
               <Text className="text-gray-600">Chat</Text>
             </Pressable>
