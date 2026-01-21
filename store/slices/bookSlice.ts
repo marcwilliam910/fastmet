@@ -117,7 +117,9 @@ export const createBookSlice: StateCreator<BookSlice> = (set, get) => ({
   setPickUp: (details: LocationDetails) => set({ pickUp: details }),
   setPickUpAdditionalDetails: (additionalDetails: string) =>
     set((state) => ({
-      pickUp: state.pickUp ? { ...state.pickUp, additionalDetails } : null,
+      pickUp: state.pickUp
+        ? { ...state.pickUp, additionalDetails: additionalDetails.trim() }
+        : null,
     })),
   setDropOff: (details: LocationDetails) => set({ dropOff: details }),
   setDropOffAdditionalDetails: (additionalDetails: string) =>

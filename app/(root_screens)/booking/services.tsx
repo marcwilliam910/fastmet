@@ -5,6 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React from "react";
 import { Platform, Pressable, ScrollView, Text, View } from "react-native";
+import Popover, { PopoverPlacement } from "react-native-popover-view";
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -61,13 +62,24 @@ const Services = () => {
                         <Text className="text-sm font-semibold text-gray-700">
                           {service.name}
                         </Text>
-                        <Pressable hitSlop={8}>
-                          <Ionicons
-                            name="information-circle-outline"
-                            size={20}
-                            color="#9CA3AF"
-                          />
-                        </Pressable>
+                        <Popover
+                          placement={PopoverPlacement.AUTO}
+                          from={
+                            <Pressable className="p-1">
+                              <Ionicons
+                                name="information-circle-outline"
+                                size={20}
+                                color="#9CA3AF"
+                              />
+                            </Pressable>
+                          }
+                        >
+                          <View className="px-3 py-2 bg-white rounded-lg">
+                            <Text className="text-sm text-gray-700 leading-relaxed">
+                              {service.desc}
+                            </Text>
+                          </View>
+                        </Popover>
                       </View>
                       <Text className="text-xs font-medium text-green-600">
                         Free
@@ -159,13 +171,24 @@ export const ServiceCard = ({
         <View className="flex-1 gap-1">
           <View className="flex-row items-center">
             <Text className="text-sm font-semibold">{service.name} </Text>
-            <Pressable hitSlop={8}>
-              <Ionicons
-                name="information-circle-outline"
-                size={20}
-                color="#9CA3AF"
-              />
-            </Pressable>
+            <Popover
+              placement={PopoverPlacement.AUTO}
+              from={
+                <Pressable className="p-1">
+                  <Ionicons
+                    name="information-circle-outline"
+                    size={20}
+                    color="#9CA3AF"
+                  />
+                </Pressable>
+              }
+            >
+              <View className="px-3 py-2 bg-white rounded-lg">
+                <Text className="text-sm text-gray-700 leading-relaxed">
+                  {service.desc}
+                </Text>
+              </View>
+            </Popover>
           </View>
           <View className="flex-row items-center gap-2">
             {service.price > 0 ? (

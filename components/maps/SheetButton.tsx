@@ -27,7 +27,8 @@ const SheetButton = ({
     else next();
   };
 
-  const isDisable = !selectedVehicle || !pickUp || !dropOff;
+  const isDisable =
+    !selectedVehicle || !pickUp || !dropOff || !routeData.totalPrice;
   useEffect(() => {
     if (pickUp && dropOff && selectedVehicle?.variant) {
       calculatePrice();

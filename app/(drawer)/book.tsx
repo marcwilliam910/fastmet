@@ -1,5 +1,6 @@
 import BookSheet from "@/components/maps/BookSheet";
 import MapScreen from "@/components/maps/MapScreen";
+import SearchModal from "@/components/modals/mapSearchModal";
 import { useAppStore } from "@/store/useAppStore";
 import { Ionicons } from "@expo/vector-icons";
 import { DrawerActions } from "@react-navigation/native";
@@ -17,6 +18,10 @@ const Book = () => {
   const navigation = useNavigation();
   const [isDragging, setIsDragging] = useState(false);
   const fetchVehicles = useAppStore((state) => state.fetchVehicles);
+  const [searchModalVisible, setSearchModalVisible] = useState(false);
+  const [searchType, setSearchType] = useState<"pickup" | "dropoff" | null>(
+    null,
+  );
 
   useEffect(() => {
     fetchVehicles();
@@ -55,7 +60,21 @@ const Book = () => {
         )}
       </View>
 
-      <BookSheet isDragging={isDragging} />
+      <BookSheet
+        isDragging={isDragging}
+        onOpenSearch={(type) => {
+          setSearchType(type);
+          setSearchModalVisible(true);
+        }}
+      />
+
+      {searchType && (
+        <SearchModal
+          visible={searchModalVisible}
+          type={searchType}
+          onClose={() => setSearchModalVisible(false)}
+        />
+      )}
     </SafeAreaView>
   );
 };

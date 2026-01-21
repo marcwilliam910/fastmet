@@ -75,7 +75,7 @@ const Message = () => {
             },
       };
     },
-    [conversation]
+    [conversation],
   );
 
   // Set flag when entering message screen
@@ -192,7 +192,7 @@ const Message = () => {
         });
       });
     },
-    [conversation, conversationId, socket]
+    [conversation, conversationId, socket],
   );
 
   useEffect(() => {
@@ -352,7 +352,6 @@ const Message = () => {
           </View>
         </View>
 
-        {/* Optional: Show uploading text */}
         {isUploadingImage && (
           <Text className="text-center text-sm text-gray-400 mt-2">
             Uploading image...

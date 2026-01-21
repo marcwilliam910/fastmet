@@ -20,7 +20,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import StarDisplay from "../StarDisplay";
 
 function isActiveBooking(
-  booking: Booking | ActiveBooking
+  booking: Booking | ActiveBooking,
 ): booking is ActiveBooking {
   return "driver" in booking;
 }
@@ -44,7 +44,7 @@ export default function SeeMoreModal({
 
   const totalServicesPrice = data.addedServices.reduce(
     (total, service) => total + service.price,
-    0
+    0,
   );
 
   return (
@@ -105,7 +105,7 @@ export default function SeeMoreModal({
                   {formatDate(
                     type === "Cancelled Booking"
                       ? data.cancelledAt!
-                      : data.createdAt
+                      : data.createdAt,
                   )}
                 </Text>
               </View>
@@ -166,7 +166,7 @@ export default function SeeMoreModal({
                           params: {
                             conversationId: createConversationId(
                               useAppStore.getState().id!,
-                              data.driver.id
+                              data.driver.id,
                             ),
                           },
                         })
@@ -399,7 +399,7 @@ export default function SeeMoreModal({
                               FREE
                             </Text>
                           </View>
-                        )
+                        ),
                       )}
                     </View>
                   </View>
@@ -430,7 +430,7 @@ export default function SeeMoreModal({
                         ₱
                         {service.quantity && service.quantity > 1
                           ? (service.price * service.quantity).toLocaleString(
-                              "en-US"
+                              "en-US",
                             )
                           : service.price > 0
                             ? service.price.toLocaleString("en-US")
@@ -528,7 +528,7 @@ export default function SeeMoreModal({
                 onClose();
                 router.push({
                   pathname: "/(root_screens)/booking/viewOnMap",
-                  params: { bookingId: data._id, canGoBack: "true" },
+                  params: { bookingId: data._id, shouldGoBack: "true" },
                 });
               }}
             >

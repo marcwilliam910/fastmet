@@ -23,23 +23,25 @@ import {
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import BookingTypeModal from "../modals/bookingTypeModal";
-import SearchModal from "../modals/mapSearchModal";
 import { VehicleInfoModal } from "../modals/vehicleInfoModal";
 import LocationInputs from "./LocationInputs";
 import SheetButton from "./SheetButton";
 
-const BookSheet = ({ isDragging }: { isDragging: boolean }) => {
+const BookSheet = ({
+  isDragging,
+  onOpenSearch,
+}: {
+  isDragging: boolean;
+  onOpenSearch: (type: "pickup" | "dropoff") => void;
+}) => {
   const sheetRef = useRef<BottomSheet>(null);
   const previousSnapIndex = useRef<number>(1); // Store the previous index (default to 1, second snap point)
 
   const insets = useSafeAreaInsets();
   const { height: screenHeight } = Dimensions.get("window");
   const [infoModalVisible, setInfoModalVisible] = useState(false);
-  const [searchModalVisible, setSearchModalVisible] = useState(false);
   const [selectTimeModalVisible, setSelectTimeModalVisible] = useState(false);
-  const [searchType, setSearchType] = useState<"pickup" | "dropoff" | null>(
-    null
-  );
+
   const bookingType = useAppStore((state) => state.bookingType);
   const selectedVehicle = useAppStore((state) => state.selectedVehicle);
   const setSelectedVehicle = useAppStore((state) => state.setSelectedVehicle);
@@ -130,7 +132,7 @@ const BookSheet = ({ isDragging }: { isDragging: boolean }) => {
         previousSnapIndex.current = index;
       }
     },
-    [isDragging]
+    [isDragging],
   );
 
   return (
@@ -280,7 +282,7 @@ const BookSheet = ({ isDragging }: { isDragging: boolean }) => {
                                 {vehicles
                                   .find((v) => v.key === selectedVehicle.key)!
                                   .variants.filter(
-                                    (variant) => variant.isActive
+                                    (variant) => variant.isActive,
                                   )
                                   .map((variant, index) => (
                                     <Pressable
@@ -316,12 +318,7 @@ const BookSheet = ({ isDragging }: { isDragging: boolean }) => {
               )}
             </View>
 
-            <LocationInputs
-              onOpenSearch={(type) => {
-                setSearchType(type);
-                setSearchModalVisible(true);
-              }}
-            />
+            <LocationInputs onOpenSearch={onOpenSearch} />
           </View>
         </BottomSheetScrollView>
       </BottomSheet>
@@ -335,14 +332,6 @@ const BookSheet = ({ isDragging }: { isDragging: boolean }) => {
           visible={infoModalVisible}
           setModalVisible={setInfoModalVisible}
           vehicles={vehicles}
-        />
-      )}
-
-      {searchType && (
-        <SearchModal
-          visible={searchModalVisible}
-          type={searchType}
-          onClose={() => setSearchModalVisible(false)}
         />
       )}
 

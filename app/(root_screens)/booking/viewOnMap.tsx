@@ -5,7 +5,7 @@ import { useAppStore } from "@/store/useAppStore";
 import { createConversationId } from "@/utils/helper";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
-import { RelativePathString, router, useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import React, { useState } from "react";
 import {
   ActivityIndicator,
@@ -22,11 +22,9 @@ import {
 
 export default function ViewOnMap() {
   const [region, setRegion] = useState<Region | null>(null);
-  const { bookingId, canGoBack, returnTo, returnTab } = useLocalSearchParams<{
+  const { bookingId, shouldGoBack } = useLocalSearchParams<{
     bookingId: string;
-    canGoBack: string;
-    returnTo: RelativePathString;
-    returnTab?: string;
+    shouldGoBack: string;
   }>();
   const insets = useSafeAreaInsets();
 
@@ -48,16 +46,9 @@ export default function ViewOnMap() {
     );
 
   const handleBack = () => {
-    if (canGoBack === "true") {
-      router.back();
-    } else if (returnTo) {
-      // Include the tab parameter when navigating back
-      router.replace({
-        pathname: returnTo,
-        params: returnTab ? { tab: returnTab } : {},
-      });
-    } else {
-      router.back(); // Default fallback
+    router.back();
+    if (!shouldGoBack || shouldGoBack !== "true") {
+      router.push("/(drawer)/(tabs)/request?tab=active");
     }
   };
 
@@ -139,7 +130,7 @@ export default function ViewOnMap() {
                       params: {
                         conversationId: createConversationId(
                           useAppStore.getState().id!,
-                          booking.driver.id
+                          booking.driver.id,
                         ),
                       },
                     })

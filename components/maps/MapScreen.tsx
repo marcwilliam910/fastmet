@@ -2,7 +2,7 @@ import { LocationDetails, RouteData } from "@/types/book";
 import { GOOGLE_MAPS_API_KEY, STATIC_IMAGES } from "@/utils/constants";
 import * as Location from "expo-location";
 import { useFocusEffect } from "expo-router";
-import React, { useCallback, useEffect, useRef } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Alert, StatusBar, StyleSheet, Text, View } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import MapViewDirections from "react-native-maps-directions";
@@ -33,12 +33,13 @@ export default function MapScreen({
   setIsDragging,
 }: Props) {
   const mapRef = useRef<MapView>(null);
+  const [isAnimating, setIsAnimating] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
       StatusBar.setHidden(true);
       return () => StatusBar.setHidden(false);
-    }, [])
+    }, []),
   );
 
   useEffect(() => {
@@ -49,7 +50,7 @@ export default function MapScreen({
       if (status !== "granted") {
         Alert.alert(
           "Permission Required",
-          "Location permission is needed to show your position."
+          "Location permission is needed to show your position.",
         );
         return;
       }
@@ -66,8 +67,9 @@ export default function MapScreen({
     })();
   }, [setRegion]);
 
+  // Update the useEffect
   useEffect(() => {
-    if (pickUp?.coords) {
+    if (pickUp?.coords && mapRef.current && !isAnimating) {
       const newRegion = {
         latitude: pickUp.coords.lat,
         longitude: pickUp.coords.lng,
@@ -75,9 +77,15 @@ export default function MapScreen({
         longitudeDelta: 0.01,
       };
       setRegion(newRegion);
-      mapRef.current?.animateToRegion(newRegion, 1000);
+
+      // Only animate if dropOff doesn't exist (to avoid conflict with MapViewDirections)
+      if (!dropOff) {
+        setIsAnimating(true);
+        mapRef.current.animateToRegion(newRegion, 1000);
+        setTimeout(() => setIsAnimating(false), 1000);
+      }
     }
-  }, [pickUp, setRegion]);
+  }, [pickUp, dropOff, isAnimating, setRegion]);
 
   return (
     <View className="flex-1">
@@ -119,28 +127,30 @@ export default function MapScreen({
           )}
 
           {pickUp && dropOff && (
-            <>
-              <MapViewDirections
-                origin={{
-                  latitude: pickUp.coords.lat,
-                  longitude: pickUp.coords.lng,
-                }}
-                destination={{
-                  latitude: dropOff.coords.lat,
-                  longitude: dropOff.coords.lng,
-                }}
-                apikey={GOOGLE_MAPS_API_KEY ?? ""}
-                strokeWidth={5}
-                strokeColor="#007AFF"
-                optimizeWaypoints
-                onReady={(result) => {
-                  mapRef.current?.fitToCoordinates(result.coordinates, {
+            <MapViewDirections
+              origin={{
+                latitude: pickUp.coords.lat,
+                longitude: pickUp.coords.lng,
+              }}
+              destination={{
+                latitude: dropOff.coords.lat,
+                longitude: dropOff.coords.lng,
+              }}
+              apikey={GOOGLE_MAPS_API_KEY ?? ""}
+              strokeWidth={5}
+              strokeColor="#007AFF"
+              optimizeWaypoints
+              onReady={(result) => {
+                if (!isAnimating && mapRef.current) {
+                  setIsAnimating(true);
+                  mapRef.current.fitToCoordinates(result.coordinates, {
                     edgePadding: { top: 80, right: 80, bottom: 400, left: 80 },
                     animated: true,
                   });
-                }}
-              />
-            </>
+                  setTimeout(() => setIsAnimating(false), 1500);
+                }
+              }}
+            />
           )}
         </MapView>
       )}

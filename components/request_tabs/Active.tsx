@@ -167,7 +167,7 @@ const ActiveCard = ({
             onPress={() =>
               router.push({
                 pathname: "/(root_screens)/booking/viewOnMap",
-                params: { bookingId: id, canGoBack: "true" },
+                params: { bookingId: id, shouldGoBack: "true" },
               })
             }
           >
@@ -217,7 +217,7 @@ const ActiveCard = ({
                     params: {
                       conversationId: createConversationId(
                         useAppStore.getState().id!,
-                        driver.id
+                        driver.id,
                       ),
                     },
                   })

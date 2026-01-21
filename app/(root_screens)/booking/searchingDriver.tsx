@@ -37,31 +37,40 @@ type RequestedDriver = {
   profilePicture: string;
 };
 
+const formatRadius = (km: number) => {
+  if (km < 1) {
+    return `${Math.round(km * 1000)}m`;
+  }
+  return `${km.toFixed(1)}km`;
+};
+
 export default function SearchingDriver() {
   //get params
   const { bookingId } = useLocalSearchParams<{ bookingId: string }>();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-
   const sweepAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(0)).current;
   const inset = useSafeAreaInsets();
   const [drivers, setDrivers] = useState<RequestedDriver[]>([]);
   const socket = useSocket();
+  const [shouldPrevent, setShouldPrevent] = useState(true);
+
+  console.log("SearchingDriver");
 
   // 1. Prevent screen removal (for both platforms)
-  usePreventRemove(true, () => null);
+  usePreventRemove(shouldPrevent, () => null);
   // 2. Android hardware back override
   useEffect(() => {
     if (Platform.OS !== "android") return;
 
     const backHandler = BackHandler.addEventListener(
       "hardwareBackPress",
-      () => true
+      () => shouldPrevent, // Only block if shouldPrevent is true
     );
 
     return () => backHandler.remove();
-  }, []);
+  }, [shouldPrevent]);
 
   useEffect(() => {
     // Faster, smoother rotation for 2026 UI standards
@@ -71,7 +80,7 @@ export default function SearchingDriver() {
         duration: 2500,
         easing: Easing.linear,
         useNativeDriver: true,
-      })
+      }),
     ).start();
 
     // Subtle breathing pulse
@@ -81,7 +90,7 @@ export default function SearchingDriver() {
         duration: 2000,
         easing: Easing.inOut(Easing.quad),
         useNativeDriver: true,
-      })
+      }),
     ).start();
 
     return () => {
@@ -115,9 +124,22 @@ export default function SearchingDriver() {
     };
     const handleBookingCancelled = ({ bookingId }: { bookingId: string }) => {
       useAppStore.getState().clearStates();
+      setShouldPrevent(false);
 
-      // ✅ Use query string format instead of params object //not working
-      router.replace("/(drawer)/(tabs)/request?tab=cancelled");
+      Toast.show({
+        type: "success",
+        text1: "Booking Cancelled",
+        text2: "Successfully cancelled booking",
+        position: "top",
+        visibilityTime: 5_000,
+        swipeable: true,
+        topOffset: 50,
+      });
+
+      // Navigate after state update
+      setTimeout(() => {
+        router.replace("/(drawer)/(tabs)/request?tab=cancelled");
+      }, 50);
     };
     const handleDriverAccepted = ({ bookingId }: { bookingId: string }) => {
       setIsModalOpen(false);
@@ -134,20 +156,23 @@ export default function SearchingDriver() {
         pathname: "/(root_screens)/booking/viewOnMap",
         params: {
           bookingId,
-          returnTo: "/(drawer)/(tabs)/request",
-          tab: "active",
         }, //TESTING PA
       });
     };
     const errorHandler = ({ message }: { message: string }) => {
       Toast.show({
         type: "error",
-        text1: message,
+        text1: "Error",
+        text2: message,
         position: "top",
-        visibilityTime: 10_000,
+        visibilityTime: 5_000,
         swipeable: true,
         topOffset: 50,
       });
+
+      useAppStore.getState().clearStates();
+
+      router.push("/(drawer)/book");
     };
 
     socket.on("offerCancelled", handleCancelOffer);
@@ -190,14 +215,7 @@ export default function SearchingDriver() {
     >
       <View className="flex-1 bg-black/70 items-center justify-between pt-10 px-6">
         {/* Top Section: Status */}
-        <View className="items-center mt-10">
-          <Text className="text-white text-2xl font-bold tracking-tight">
-            Searching...
-          </Text>
-          <Text className="text-gray-400 text-sm mt-2">
-            Connecting you with the best driver nearby
-          </Text>
-        </View>
+        <SearchRadiusIndicator />
 
         {/* Center Section: The Radar */}
         <View className="items-center justify-center">
@@ -294,6 +312,7 @@ const DriverListCard = ({
   isModalOpen: boolean;
   setIsModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }) => {
+  console.log("DriverListCard");
   return (
     <View style={{ width: "100%", marginBottom: 24, paddingHorizontal: 8 }}>
       <View style={{ marginBottom: 12, paddingHorizontal: 4 }}>
@@ -344,6 +363,7 @@ const DriverRow = ({
   isModalOpen: boolean;
   setIsModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }) => {
+  console.log("DriverRow");
   const inset = useSafeAreaInsets();
   const translateX = useRef(new Animated.Value(-400)).current;
   const opacity = useRef(new Animated.Value(0)).current;
@@ -389,7 +409,7 @@ const DriverRow = ({
         }
       });
     },
-    [progressAnim, isPausedRef, onRemove, translateX, opacity]
+    [progressAnim, isPausedRef, onRemove, translateX, opacity],
   );
   useEffect(() => {
     // Entrance animation - slide in from left
@@ -649,5 +669,56 @@ const DriverRow = ({
         </View>
       </Modal>
     </>
+  );
+};
+
+const SearchRadiusIndicator = () => {
+  const [searchRadius, setSearchRadius] = useState(0.1);
+  const [searchAttempt, setSearchAttempt] = useState(1);
+  const socket = useSocket();
+
+  useEffect(() => {
+    const handleRadiusExpansion = ({
+      radiusKm,
+      attempt,
+    }: {
+      radiusKm: number;
+      attempt: number;
+    }) => {
+      setSearchRadius(radiusKm);
+      setSearchAttempt(attempt);
+    };
+
+    socket.on("radiusExpansion", handleRadiusExpansion);
+
+    return () => {
+      socket.off("radiusExpansion", handleRadiusExpansion);
+    };
+  }, [socket]);
+
+  return (
+    <View className="items-center mt-10">
+      <Text className="text-white text-2xl font-bold tracking-tight">
+        Searching...
+      </Text>
+      <Text className="text-gray-400 text-sm mt-2">
+        Connecting you with the best driver nearby
+      </Text>
+
+      {/* Search Radius Indicator */}
+      <View className="mt-4 px-4 py-2 bg-orange-500/20 border border-orange-500/30 rounded-full">
+        <View className="flex-row items-center gap-2">
+          <Ionicons name="radio-outline" size={16} color="#FB923D" />
+          <Text className="text-orange-400 text-sm font-semibold">
+            Searching within {formatRadius(searchRadius)} radius
+          </Text>
+        </View>
+      </View>
+
+      {/* Attempt counter */}
+      <Text className="text-gray-400 text-xs mt-2">
+        Attempt {searchAttempt}
+      </Text>
+    </View>
   );
 };

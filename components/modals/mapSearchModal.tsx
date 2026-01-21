@@ -48,7 +48,7 @@ function isWithinMetroManila(lat: number, lng: number) {
     METRO_MANILA_POLYGON.map(([lat, lng]) => ({
       latitude: lat,
       longitude: lng,
-    }))
+    })),
   );
 }
 
@@ -62,15 +62,15 @@ const SearchModal: React.FC<SearchModalProps> = ({
   const [recentPlaces, setRecentPlaces] = useState<LocationDetails[]>([]);
   const inset = useSafeAreaInsets();
   const [selectedPlace, setSelectedPlace] = useState<Partial<Place> | null>(
-    null
+    null,
   );
   const setPickUp = useAppStore((state) => state.setPickUp);
   const setPickUpAdditionalDetails = useAppStore(
-    (state) => state.setPickUpAdditionalDetails
+    (state) => state.setPickUpAdditionalDetails,
   );
   const setDropOff = useAppStore((state) => state.setDropOff);
   const setDropOffAdditionalDetails = useAppStore(
-    (state) => state.setDropOffAdditionalDetails
+    (state) => state.setDropOffAdditionalDetails,
   );
 
   const insets = useSafeAreaInsets();
@@ -152,8 +152,6 @@ const SearchModal: React.FC<SearchModalProps> = ({
     const loc = place.details?.location;
     if (!loc) return;
 
-    console.log(place);
-
     // Check if pickup is within Metro Manila
     if (type === "pickup") {
       const allowed = isWithinMetroManila(loc.latitude, loc.longitude);
@@ -165,7 +163,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
           ToastAndroid.showWithGravity(
             message,
             ToastAndroid.LONG,
-            ToastAndroid.TOP
+            ToastAndroid.TOP,
           );
         } else {
           Alert.alert("Not Available", message);
@@ -180,7 +178,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
     if (type === "dropoff") {
       const requiresFerry = requiresFerryFromMetroManila(
         loc.latitude,
-        loc.longitude
+        loc.longitude,
       );
 
       if (requiresFerry) {
@@ -191,7 +189,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
           ToastAndroid.showWithGravity(
             message,
             ToastAndroid.LONG,
-            ToastAndroid.TOP
+            ToastAndroid.TOP,
           );
         } else {
           Alert.alert("Not Available", message);
@@ -220,7 +218,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
           ToastAndroid.showWithGravity(
             message,
             ToastAndroid.LONG,
-            ToastAndroid.TOP
+            ToastAndroid.TOP,
           );
         } else {
           Alert.alert("Not Available", message);
@@ -244,7 +242,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
           ToastAndroid.showWithGravity(
             message,
             ToastAndroid.LONG,
-            ToastAndroid.TOP
+            ToastAndroid.TOP,
           );
         } else {
           Alert.alert("Not Available", message);
@@ -282,7 +280,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
                 }
               },
             },
-          ]
+          ],
         );
         return;
       }
@@ -296,7 +294,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
           ToastAndroid.showWithGravity(
             message,
             ToastAndroid.LONG,
-            ToastAndroid.TOP
+            ToastAndroid.TOP,
           );
         } else {
           Alert.alert("Permission Denied", message);
@@ -322,7 +320,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
             ToastAndroid.showWithGravity(
               message,
               ToastAndroid.LONG,
-              ToastAndroid.TOP
+              ToastAndroid.TOP,
             );
           } else {
             Alert.alert("Not Available", message);
@@ -343,7 +341,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
             ToastAndroid.showWithGravity(
               message,
               ToastAndroid.LONG,
-              ToastAndroid.TOP
+              ToastAndroid.TOP,
             );
           } else {
             Alert.alert("Not Available", message);
@@ -356,7 +354,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
 
       // Reverse geocode to get address
       const response = await fetch(
-        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${GOOGLE_MAPS_API_KEY}`
+        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${GOOGLE_MAPS_API_KEY}`,
       );
 
       const data = await response.json();
@@ -393,7 +391,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
         ToastAndroid.showWithGravity(
           message,
           ToastAndroid.LONG,
-          ToastAndroid.TOP
+          ToastAndroid.TOP,
         );
       } else {
         Alert.alert("Error", message);
@@ -482,7 +480,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
                 <GooglePlacesTextInput
                   apiKey={GOOGLE_MAPS_API_KEY ?? ""}
                   onPlaceSelect={handleOnPlaceSelect}
-                  value={haveValue ? searchValue : undefined}
+                  defaultValue={haveValue ? searchValue : ""}
                   style={customStyles}
                   languageCode="en"
                   includedRegionCodes={["ph"]}

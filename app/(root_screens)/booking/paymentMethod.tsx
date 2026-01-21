@@ -43,10 +43,11 @@ export default function PaymentMethod() {
       if (!selectedVehicle || !selectedVehicle.variant || !pickUp || !dropOff)
         return;
 
-      const bookingRef = generateBookingRef(
-        bookingType.type,
-        selectedVehicle.name || ""
-      );
+      const bookingRef = generateBookingRef({
+        bookingType: bookingType.type,
+        vehicleType: selectedVehicle.key,
+        priority: bookingType.type === "asap" ? bookingType.value : undefined,
+      });
 
       // Upload images first
       const uploadResult = await uploadBookingImages(photos, bookingRef);
@@ -89,14 +90,16 @@ export default function PaymentMethod() {
           quantity: service.quantity,
         })),
         photos: uploadResult.images, // Cloudinary URLs
-        note: note,
+        note: note.trim(),
         itemType: itemType,
       };
 
       console.log("📤 Sending booking request:", payload);
 
       // Send via socket
-      socket.emit("request_booking", payload);
+      if (bookingType.type === "asap") {
+        socket.emit("request_booking", payload);
+      }
     } catch (error) {
       console.error("Booking submission error:", error);
 
@@ -107,7 +110,7 @@ export default function PaymentMethod() {
         position: "top",
         visibilityTime: 4000,
       });
-
+    } finally {
       setLoading(false);
     }
   };
@@ -138,22 +141,31 @@ export default function PaymentMethod() {
           });
           router.replace("/(drawer)/(tabs)/request");
         }
-      } else {
-        Toast.show({
-          type: "error",
-          text1: "Booking Failed",
-          text2: data.message,
-          position: "top",
-          visibilityTime: 4000,
-        });
       }
     };
 
-    socket.on("booking_request_saved", bookingSaved);
+    socket.on("bookingRequestSaved", bookingSaved);
     return () => {
-      socket.off("booking_request_saved", bookingSaved);
+      socket.off("bookingRequestSaved", bookingSaved);
     };
   }, [setLoading, socket, bookingType.type]);
+
+  useEffect(() => {
+    const handleBookingFailed = (data: { message: string }) => {
+      Toast.show({
+        type: "error",
+        text1: "Booking Failed",
+        text2: data.message,
+        position: "top",
+        visibilityTime: 4000,
+      });
+    };
+
+    socket.on("bookingRequestFailed", handleBookingFailed);
+    return () => {
+      socket.off("bookingRequestFailed", handleBookingFailed);
+    };
+  }, [socket]);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
