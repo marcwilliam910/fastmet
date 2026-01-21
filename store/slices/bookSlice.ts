@@ -26,7 +26,7 @@ export interface BookSlice {
   updateServiceQuantity: (
     serviceKey: string,
     originalPrice: number,
-    quantity: number
+    quantity: number,
   ) => void;
 
   setPickUp: (details: LocationDetails) => void;
@@ -92,13 +92,13 @@ export const createBookSlice: StateCreator<BookSlice> = (set, get) => ({
   updateServiceQuantity: (
     serviceKey: string,
     originalPrice: number,
-    quantity: number
+    quantity: number,
   ) =>
     set((state) => {
       const updatedServices = state.addedServices.map((service) =>
         service.key === serviceKey
           ? { ...service, quantity, price: originalPrice * quantity }
-          : service
+          : service,
       );
 
       const serviceFee = updatedServices.reduce((sum, s) => sum + s.price, 0);
@@ -157,7 +157,8 @@ export const createBookSlice: StateCreator<BookSlice> = (set, get) => ({
     try {
       const { distanceKm, durationMin } = await fetchDrivingDistance(
         pickUp,
-        dropOff
+        dropOff,
+        selectedVehicle.key,
       );
 
       const variant = selectedVehicle.variant;
@@ -167,7 +168,7 @@ export const createBookSlice: StateCreator<BookSlice> = (set, get) => ({
       const tier = variant.pricingTiers.find(
         (t) =>
           distanceKm >= t.minKm &&
-          (t.maxKm === undefined || distanceKm <= t.maxKm)
+          (t.maxKm === undefined || distanceKm <= t.maxKm),
       );
 
       const distanceFee = tier ? distanceKm * tier.pricePerKm : 0;

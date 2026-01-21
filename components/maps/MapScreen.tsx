@@ -140,6 +140,7 @@ export default function MapScreen({
               strokeWidth={5}
               strokeColor="#007AFF"
               optimizeWaypoints
+              mode="DRIVING"
               onReady={(result) => {
                 if (!isAnimating && mapRef.current) {
                   setIsAnimating(true);
@@ -164,13 +165,25 @@ export default function MapScreen({
 
 export function DistanceBubble({ routeData }: { routeData: RouteData }) {
   const inset = useSafeAreaInsets();
+
+  // Format duration: convert to hours if >= 60 minutes
+  const formatDuration = (minutes: number) => {
+    if (minutes >= 60) {
+      const hours = Math.floor(minutes / 60);
+      const mins = Math.round(minutes % 60);
+      return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+    }
+    return `${Math.round(minutes)} min`;
+  };
+
   return (
     <View
       className="absolute z-50 self-center px-4 py-2 bg-black/60 rounded-2xl"
       style={{ top: inset.top + 10 }}
     >
       <Text className="text-sm font-semibold text-white">
-        {routeData.distance.toFixed(1)} km • {routeData.duration.toFixed(0)} min
+        {routeData.distance.toFixed(1)} km •{" "}
+        {formatDuration(routeData.duration)}
       </Text>
     </View>
   );
