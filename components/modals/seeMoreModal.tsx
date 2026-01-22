@@ -30,11 +30,13 @@ export default function SeeMoreModal({
   onClose,
   type,
   data,
+  setShowDriversModal,
 }: {
   visible: boolean;
   onClose: () => void;
   type: string;
   data: Booking | ActiveBooking;
+  setShowDriversModal?: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
   const insets = useSafeAreaInsets();
   const [imageViewerVisible, setImageViewerVisible] = useState(false);
@@ -534,6 +536,18 @@ export default function SeeMoreModal({
             >
               <Ionicons name="map-outline" size={20} color="#fff" />
               <Text className="text-lg font-bold text-white">View on Map</Text>
+            </Pressable>
+          )}
+
+          {type === "Request Booking" && data.requestedDrivers.length > 0 && (
+            <Pressable
+              className="items-center flex-row gap-2 justify-center py-3 mx-4 rounded-lg bg-lightPrimary active:bg-darkPrimary"
+              onPress={() => setShowDriversModal?.(true)}
+            >
+              <Ionicons name="car-outline" size={22} color="#FFFFFF" />
+              <Text className="text-lg font-bold text-white">
+                View Driver Offers
+              </Text>
             </Pressable>
           )}
         </ScrollView>

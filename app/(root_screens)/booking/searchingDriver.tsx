@@ -1,6 +1,8 @@
-import StarDisplay from "@/components/StarDisplay";
+import DriverDetailsModal from "@/components/modals/driverDetailsModal";
+import { queryClient } from "@/lib/queryClient";
 import { useSocket } from "@/sockets/context/SocketProvider";
 import { useAppStore } from "@/store/useAppStore";
+import { RequestedDriver } from "@/types/book";
 import { STATIC_IMAGES } from "@/utils/constants";
 import { Ionicons } from "@expo/vector-icons";
 import { usePreventRemove } from "@react-navigation/native";
@@ -14,7 +16,6 @@ import {
   Animated,
   BackHandler,
   Easing,
-  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -26,16 +27,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 
 const AnimatedView = cssInterop(Animated.View, { className: "style" });
-
-type RequestedDriver = {
-  name: string;
-  id: string;
-  rating: number;
-  vehicleImage: string;
-  totalBookings: number;
-  distance: number;
-  profilePicture: string;
-};
 
 const formatRadius = (km: number) => {
   if (km < 1) {
@@ -141,10 +132,11 @@ export default function SearchingDriver() {
         router.replace("/(drawer)/(tabs)/request?tab=cancelled");
       }, 50);
     };
+
     const handleDriverAccepted = ({ bookingId }: { bookingId: string }) => {
       setIsModalOpen(false);
       Toast.show({
-        type: "bookingAccepted",
+        type: "driverAccepted",
         text1: "Driver Found! 🎉",
         text2: "Your driver is on the way",
         position: "top",
@@ -152,6 +144,12 @@ export default function SearchingDriver() {
         swipeable: true,
         topOffset: 50,
       });
+
+      queryClient.invalidateQueries({
+        queryKey: ["userBookings", "active"],
+        exact: false,
+      });
+
       router.push({
         pathname: "/(root_screens)/booking/viewOnMap",
         params: {
@@ -159,6 +157,7 @@ export default function SearchingDriver() {
         }, //TESTING PA
       });
     };
+
     const errorHandler = ({ message }: { message: string }) => {
       Toast.show({
         type: "error",
@@ -176,13 +175,13 @@ export default function SearchingDriver() {
     };
 
     socket.on("offerCancelled", handleCancelOffer);
-    socket.on("acceptanceRequested", handleAcceptanceRequest);
+    socket.on("acceptanceRequestedASAP", handleAcceptanceRequest);
     socket.on("bookingCancelled", handleBookingCancelled);
     socket.on("driverAccepted", handleDriverAccepted);
     socket.on("error", errorHandler);
 
     return () => {
-      socket.off("acceptanceRequested", handleAcceptanceRequest);
+      socket.off("acceptanceRequestedASAP", handleAcceptanceRequest);
       socket.off("offerCancelled", handleCancelOffer);
       socket.off("bookingCancelled", handleBookingCancelled);
       socket.off("driverAccepted", handleDriverAccepted);
@@ -364,7 +363,6 @@ const DriverRow = ({
   setIsModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }) => {
   console.log("DriverRow");
-  const inset = useSafeAreaInsets();
   const translateX = useRef(new Animated.Value(-400)).current;
   const opacity = useRef(new Animated.Value(0)).current;
   const progressAnim = useRef(new Animated.Value(100)).current;
@@ -373,8 +371,12 @@ const DriverRow = ({
   const animationRef = useRef<Animated.CompositeAnimation | null>(null);
   const socket = useSocket();
 
-  const acceptDriver = async () => {
-    socket.emit("acceptDriver", { driverId: driver.id, bookingId });
+  const acceptDriver = () => {
+    socket.emit("acceptDriver", {
+      driverId: driver.id,
+      bookingId,
+      type: "asap",
+    });
   };
 
   const startTimer = useCallback(
@@ -540,134 +542,12 @@ const DriverRow = ({
         </Pressable>
       </Animated.View>
 
-      {/* Driver Details Modal */}
-      <Modal
-        visible={isModalOpen}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={handleCloseModal}
-      >
-        <View className="flex-1 justify-end bg-black/50">
-          <View
-            className="max-h-[85%] rounded-t-3xl bg-white"
-            style={{
-              paddingBottom: inset.bottom,
-            }}
-          >
-            {/* Header */}
-            <View className="flex-row items-center justify-between border-b border-gray-200 px-6 py-4">
-              <Text className="text-xl font-bold text-gray-900">
-                Driver Details
-              </Text>
-              <Pressable onPress={handleCloseModal}>
-                <Ionicons name="close" size={28} color="#6B7280" />
-              </Pressable>
-            </View>
-
-            <ScrollView
-              className="px-6 py-6"
-              showsVerticalScrollIndicator={false}
-            >
-              {/* Profile Section */}
-              <View className="items-center pb-6">
-                <Image
-                  source={
-                    driver.profilePicture
-                      ? { uri: driver.profilePicture }
-                      : STATIC_IMAGES.userPlaceholder
-                  }
-                  contentFit="cover"
-                  style={{ width: 120, height: 120, borderRadius: 60 }}
-                />
-                <Text className="mt-4 text-2xl font-bold text-gray-900">
-                  {driver.name}
-                </Text>
-                <View className="mt-2 flex-row items-center gap-2">
-                  <StarDisplay rating={driver.rating} />
-                </View>
-                <Text className="font-semibold text-sm text-gray-500">
-                  {driver.rating} stars
-                </Text>
-                <Text className="text-lg mt-2 font-semibold text-gray-700">
-                  Total Completed Bookings : {driver.totalBookings}
-                </Text>
-              </View>
-
-              {/* Info Cards */}
-              <View className="gap-4">
-                {/* Distance */}
-                {driver.distance && (
-                  <View className="rounded-xl bg-orange-50 p-4">
-                    <Text className="mb-1 text-xs font-semibold uppercase tracking-wide text-orange-600">
-                      Distance from pick up
-                    </Text>
-                    <Text className="text-2xl font-bold text-orange-600">
-                      {driver.distance < 1
-                        ? `${(driver.distance * 1000).toFixed(0)}m`
-                        : `${driver.distance.toFixed(2)}km`}{" "}
-                      away
-                    </Text>
-                  </View>
-                )}
-
-                {/* Vehicle Images Section */}
-                <View className="rounded-xl bg-gray-50 p-4">
-                  <Text className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-700">
-                    Vehicle Image
-                  </Text>
-
-                  <View
-                    className="w-full overflow-hidden rounded-lg bg-white"
-                    style={{ aspectRatio: 4 / 3 }}
-                  >
-                    {driver.vehicleImage ? (
-                      <View className="relative h-full w-full">
-                        <Image
-                          source={{ uri: driver.vehicleImage }}
-                          style={{ width: "100%", height: "100%" }}
-                          contentFit="cover"
-                        />
-                      </View>
-                    ) : (
-                      <View className="h-full w-full items-center justify-center bg-gray-200">
-                        <Ionicons
-                          name="image-outline"
-                          size={40}
-                          color="#9CA3AF"
-                        />
-
-                        <Text className="mt-1 text-gray-400">
-                          Not available
-                        </Text>
-                      </View>
-                    )}
-                  </View>
-                </View>
-              </View>
-
-              {/* Action Buttons */}
-              <View className="mt-6 gap-3">
-                <Pressable
-                  className="items-center rounded-xl bg-lightPrimary py-4"
-                  onPress={acceptDriver}
-                >
-                  <Text className="text-base font-bold text-white">
-                    Accept Driver
-                  </Text>
-                </Pressable>
-                <Pressable
-                  onPress={handleCloseModal}
-                  className="items-center rounded-xl bg-gray-200 py-4"
-                >
-                  <Text className="text-base font-bold text-gray-700">
-                    Close
-                  </Text>
-                </Pressable>
-              </View>
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
+      <DriverDetailsModal
+        isModalOpen={isModalOpen}
+        driver={driver}
+        handleCloseModal={handleCloseModal}
+        acceptDriver={acceptDriver}
+      />
     </>
   );
 };

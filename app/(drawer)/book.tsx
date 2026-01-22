@@ -23,6 +23,8 @@ const Book = () => {
     null,
   );
 
+  console.log("render", Date.now());
+
   useEffect(() => {
     fetchVehicles();
   }, [fetchVehicles]);

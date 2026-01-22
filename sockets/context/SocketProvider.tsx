@@ -5,7 +5,11 @@ import { router } from "expo-router";
 import React, { createContext, useContext, useEffect, useMemo } from "react";
 import Toast from "react-native-toast-message";
 import { Socket } from "socket.io-client";
-import { bookingAccepted, bookingExpired } from "../handlers/booking";
+import {
+  acceptanceRequestedSchedule,
+  // bookingAccepted,
+  bookingExpired,
+} from "../handlers/booking";
 import { receiveMessage } from "../handlers/chat";
 import { getSocket } from "../socket";
 
@@ -48,16 +52,19 @@ export default function SocketProvider({
       }
     });
 
-    const cleanupBookingAccepted = bookingAccepted(socket);
+    // const cleanupBookingAccepted = bookingAccepted(socket);
     const cleanupReceiveMessage = receiveMessage(socket);
     const cleanupBookingExpired = bookingExpired(socket);
+    const cleanupAcceptanceRequestedSchedule =
+      acceptanceRequestedSchedule(socket);
     socket.emit("get_unread_conversations_count");
 
     return () => {
       socket.off("connect_error"); // Clean up the listener
-      cleanupBookingAccepted();
+      // cleanupBookingAccepted();
       cleanupReceiveMessage();
       cleanupBookingExpired();
+      cleanupAcceptanceRequestedSchedule();
       socket.disconnect();
     };
   }, [socket, token]);

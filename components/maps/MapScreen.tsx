@@ -2,7 +2,7 @@ import { LocationDetails, RouteData } from "@/types/book";
 import { GOOGLE_MAPS_API_KEY, STATIC_IMAGES } from "@/utils/constants";
 import * as Location from "expo-location";
 import { useFocusEffect } from "expo-router";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { memo, useCallback, useEffect, useRef, useState } from "react";
 import { Alert, StatusBar, StyleSheet, Text, View } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import MapViewDirections from "react-native-maps-directions";
@@ -24,7 +24,7 @@ type Props = {
   setIsDragging: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
-export default function MapScreen({
+function MapScreen({
   pickUp,
   dropOff,
   routeData,
@@ -162,6 +162,8 @@ export default function MapScreen({
     </View>
   );
 }
+
+export default memo(MapScreen);
 
 export function DistanceBubble({ routeData }: { routeData: RouteData }) {
   const inset = useSafeAreaInsets();

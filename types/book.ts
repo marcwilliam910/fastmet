@@ -38,6 +38,7 @@ export type Booking = {
   status: string;
   driverRating: number | null;
   cancelledAt: string | null;
+  requestedDrivers: RequestedDriver[];
 };
 
 export type ActiveBooking = Booking & { driver: Driver };
@@ -77,4 +78,15 @@ export type RequestBooking = {
   photos: string[];
   note: string;
   itemType: string | null;
+};
+
+export type RequestedDriver = {
+  id: string;
+  name: string;
+  rating: number;
+  vehicleImage: string;
+  totalBookings: number;
+  distance?: number;
+  profilePicture: string;
+  bookingId?: string;
 };

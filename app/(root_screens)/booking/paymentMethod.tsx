@@ -98,7 +98,9 @@ export default function PaymentMethod() {
 
       // Send via socket
       if (bookingType.type === "asap") {
-        socket.emit("request_booking", payload);
+        socket.emit("request_asap_booking", payload);
+      } else if (bookingType.type === "schedule") {
+        socket.emit("request_schedule_booking", payload);
       }
     } catch (error) {
       console.error("Booking submission error:", error);
@@ -133,7 +135,7 @@ export default function PaymentMethod() {
           Toast.show({
             type: "success",
             text1: "Booking Request Saved",
-            text2: "You will be notified when a driver accepts your request",
+            text2: data.message,
             position: "top",
             visibilityTime: 5_000,
             swipeable: true,
@@ -155,7 +157,7 @@ export default function PaymentMethod() {
       Toast.show({
         type: "error",
         text1: "Booking Failed",
-        text2: data.message,
+        text2: data.message || "Something went wrong",
         position: "top",
         visibilityTime: 4000,
       });
