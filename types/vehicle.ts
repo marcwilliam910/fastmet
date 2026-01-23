@@ -19,7 +19,15 @@ export interface IVehicleType extends Document {
   variants: ILoadVariant[];
   freeServices: Service[];
   paidServices: Service[];
+  searchConfig: SearchConfig;
   isActive: boolean;
+}
+
+export interface SearchConfig {
+  initialRadiusKm: number;
+  incrementKm: number;
+  maxRadiusKm: number;
+  intervalMs: number;
 }
 
 export interface SelectedVehicle {
@@ -28,6 +36,7 @@ export interface SelectedVehicle {
   imageUrl: string;
   freeServices: Service[];
   paidServices: Service[];
+  searchConfig: SearchConfig;
   variant: ILoadVariant;
 }
 

@@ -1,16 +1,16 @@
 import DriverDetailsModal from "@/components/modals/driverDetailsModal";
-import { queryClient } from "@/lib/queryClient";
-import { useSocket } from "@/sockets/context/SocketProvider";
-import { useAppStore } from "@/store/useAppStore";
-import { RequestedDriver } from "@/types/book";
-import { STATIC_IMAGES } from "@/utils/constants";
-import { Ionicons } from "@expo/vector-icons";
-import { usePreventRemove } from "@react-navigation/native";
-import { Image, ImageBackground } from "expo-image";
-import { LinearGradient } from "expo-linear-gradient";
-import { router, useLocalSearchParams } from "expo-router";
-import { cssInterop } from "nativewind";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import {queryClient} from "@/lib/queryClient";
+import {useSocket} from "@/sockets/context/SocketProvider";
+import {useAppStore} from "@/store/useAppStore";
+import {RequestedDriver} from "@/types/book";
+import {STATIC_IMAGES} from "@/utils/constants";
+import {Ionicons} from "@expo/vector-icons";
+import {usePreventRemove} from "@react-navigation/native";
+import {Image, ImageBackground} from "expo-image";
+import {LinearGradient} from "expo-linear-gradient";
+import {router, useLocalSearchParams} from "expo-router";
+import {cssInterop} from "nativewind";
+import React, {useCallback, useEffect, useRef, useState} from "react";
 import {
   Alert,
   Animated,
@@ -23,10 +23,10 @@ import {
   Text,
   View,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import {useSafeAreaInsets} from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 
-const AnimatedView = cssInterop(Animated.View, { className: "style" });
+const AnimatedView = cssInterop(Animated.View, {className: "style"});
 
 const formatRadius = (km: number) => {
   if (km < 1) {
@@ -37,7 +37,7 @@ const formatRadius = (km: number) => {
 
 export default function SearchingDriver() {
   //get params
-  const { bookingId } = useLocalSearchParams<{ bookingId: string }>();
+  const {bookingId} = useLocalSearchParams<{bookingId: string}>();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const sweepAnim = useRef(new Animated.Value(0)).current;
@@ -107,13 +107,14 @@ export default function SearchingDriver() {
 
   //SOCKETS LISTENER
   useEffect(() => {
-    const handleCancelOffer = ({ driverId }: { driverId: string }) => {
+    const handleCancelOffer = ({driverId}: {driverId: string}) => {
       handleRemoveDriver(driverId);
     };
     const handleAcceptanceRequest = (data: RequestedDriver) => {
+      if (drivers.some((driver) => driver.id === data.id)) return;
       setDrivers((prev) => [...prev, data]);
     };
-    const handleBookingCancelled = ({ bookingId }: { bookingId: string }) => {
+    const handleBookingCancelled = ({bookingId}: {bookingId: string}) => {
       useAppStore.getState().clearStates();
       setShouldPrevent(false);
 
@@ -133,7 +134,7 @@ export default function SearchingDriver() {
       }, 50);
     };
 
-    const handleDriverAccepted = ({ bookingId }: { bookingId: string }) => {
+    const handleDriverAccepted = ({bookingId}: {bookingId: string}) => {
       setIsModalOpen(false);
       Toast.show({
         type: "driverAccepted",
@@ -158,7 +159,7 @@ export default function SearchingDriver() {
       });
     };
 
-    const errorHandler = ({ message }: { message: string }) => {
+    const errorHandler = ({message}: {message: string}) => {
       Toast.show({
         type: "error",
         text1: "Error",
@@ -201,7 +202,7 @@ export default function SearchingDriver() {
       },
       {
         text: "Yes",
-        onPress: () => socket.emit("cancelBookingRequest", { bookingId }),
+        onPress: () => socket.emit("cancelBookingRequest", {bookingId}),
       },
     ]);
   };
@@ -209,10 +210,10 @@ export default function SearchingDriver() {
   return (
     <ImageBackground
       source={STATIC_IMAGES.map_bg}
-      style={{ flex: 1 }}
+      style={{flex: 1}}
       contentFit="cover"
     >
-      <View className="flex-1 bg-black/70 items-center justify-between pt-10 px-6">
+      <View className="items-center justify-between flex-1 px-6 pt-10 bg-black/70">
         {/* Top Section: Status */}
         <SearchRadiusIndicator />
 
@@ -220,21 +221,21 @@ export default function SearchingDriver() {
         <View className="items-center justify-center">
           {/* Ambient Pulse Glow */}
           <AnimatedView
-            className="absolute size-64 rounded-full bg-orange-500/50"
+            className="absolute rounded-full size-64 bg-orange-500/50"
             style={{
-              transform: [{ scale: pulseScale }],
+              transform: [{scale: pulseScale}],
               opacity: pulseOpacity,
             }}
           />
 
           {/* Main Radar Disc */}
-          <View className="size-72 items-center justify-center rounded-full border border-white/10 bg-black/40 overflow-hidden">
+          <View className="items-center justify-center overflow-hidden border rounded-full size-72 border-white/10 bg-black/40">
             {/* Background Rings */}
             {[1, 2, 3].map((i) => (
               <View
                 key={i}
                 className="absolute rounded-full border-lightPrimary/20"
-                style={{ width: i * 80, height: i * 80, borderWidth: 4 - i }}
+                style={{width: i * 80, height: i * 80, borderWidth: 4 - i}}
               />
             ))}
 
@@ -242,14 +243,14 @@ export default function SearchingDriver() {
             <AnimatedView
               style={{
                 ...StyleSheet.absoluteFillObject,
-                transform: [{ rotate: sweepRotate }],
+                transform: [{rotate: sweepRotate}],
               }}
             >
               {/* This View creates the "Pie Slice" sweep */}
               <LinearGradient
                 colors={["rgba(251, 146, 60, 0.5)", "transparent"]}
-                start={{ x: 1, y: 0 }}
-                end={{ x: 0, y: 1 }}
+                start={{x: 1, y: 0}}
+                end={{x: 0, y: 1}}
                 style={{
                   position: "absolute",
                   top: 0,
@@ -264,10 +265,10 @@ export default function SearchingDriver() {
             </AnimatedView>
 
             {/* Center Logo Hub */}
-            <View className="size-28 rounded-full bg-slate-900 border-2 border-orange-500 items-center justify-center shadow-2xl shadow-orange-500/50">
+            <View className="items-center justify-center border-2 border-orange-500 rounded-full shadow-2xl size-28 bg-slate-900 shadow-orange-500/50">
               <Image
                 source={STATIC_IMAGES.fastmetLogo}
-                style={{ width: 50, height: 50 }}
+                style={{width: 50, height: 50}}
                 contentFit="fill"
               />
             </View>
@@ -280,18 +281,16 @@ export default function SearchingDriver() {
             drivers={drivers}
             handleRemoveDriver={handleRemoveDriver}
             bookingId={bookingId}
-            isModalOpen={isModalOpen}
-            setIsModalOpen={setIsModalOpen}
           />
         )}
 
         {/* Bottom Section: Actions */}
         <Pressable
           onPress={handleCancelRequest}
-          className="w-full items-center bg-white/30 py-4 rounded-2xl active:opacity-90 shadow-lg "
-          style={{ marginBottom: inset.bottom + 10 }}
+          className="items-center w-full py-4 shadow-lg bg-white/30 rounded-2xl active:opacity-90 "
+          style={{marginBottom: inset.bottom + 10}}
         >
-          <Text className="text-white text-lg font-bold">Cancel Request</Text>
+          <Text className="text-lg font-bold text-white">Cancel Request</Text>
         </Pressable>
       </View>
     </ImageBackground>
@@ -302,19 +301,31 @@ const DriverListCard = ({
   drivers,
   handleRemoveDriver,
   bookingId,
-  isModalOpen,
-  setIsModalOpen,
 }: {
   drivers: RequestedDriver[];
   handleRemoveDriver: (id: string) => void;
   bookingId: string;
-  isModalOpen: boolean;
-  setIsModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }) => {
   console.log("DriverListCard");
+
+  const [selectedDriver, setSelectedDriver] = useState<RequestedDriver | null>(
+    null,
+  );
+  const socket = useSocket();
+
+  const acceptDriver = () => {
+    if (!selectedDriver) return;
+
+    socket.emit("acceptDriver", {
+      driverId: selectedDriver.id,
+      bookingId,
+      type: "asap",
+    });
+  };
+
   return (
-    <View style={{ width: "100%", marginBottom: 24, paddingHorizontal: 8 }}>
-      <View style={{ marginBottom: 12, paddingHorizontal: 4 }}>
+    <View style={{width: "100%", marginBottom: 24, paddingHorizontal: 8}}>
+      <View style={{marginBottom: 12, paddingHorizontal: 4}}>
         <Text
           style={{
             color: "rgba(255, 255, 255, 0.9)",
@@ -328,19 +339,19 @@ const DriverListCard = ({
         </Text>
       </View>
 
-      <View style={{ height: 280 }}>
+      <View style={{height: 280}}>
         <ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ gap: 4 }}
+          contentContainerStyle={{gap: 4}}
         >
           {drivers.map((driver) => (
             <DriverRow
-              bookingId={bookingId}
               key={driver.id}
               driver={driver}
               onRemove={() => handleRemoveDriver(driver.id)}
-              isModalOpen={isModalOpen}
-              setIsModalOpen={setIsModalOpen}
+              setSelectedDriver={setSelectedDriver}
+              selectedDriver={selectedDriver}
+              acceptDriver={acceptDriver}
             />
           ))}
         </ScrollView>
@@ -351,16 +362,18 @@ const DriverListCard = ({
 
 const DriverRow = ({
   driver,
+  acceptDriver,
+  setSelectedDriver,
+  selectedDriver,
   onRemove,
-  bookingId,
-  isModalOpen,
-  setIsModalOpen,
 }: {
   driver: RequestedDriver;
   onRemove: () => void;
-  bookingId: string;
-  isModalOpen: boolean;
-  setIsModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  setSelectedDriver: React.Dispatch<
+    React.SetStateAction<RequestedDriver | null>
+  >;
+  selectedDriver: RequestedDriver | null;
+  acceptDriver: () => void;
 }) => {
   console.log("DriverRow");
   const translateX = useRef(new Animated.Value(-400)).current;
@@ -369,15 +382,6 @@ const DriverRow = ({
   const isPausedRef = useRef(false);
   const remainingTimeRef = useRef(6_000); // Track remaining time
   const animationRef = useRef<Animated.CompositeAnimation | null>(null);
-  const socket = useSocket();
-
-  const acceptDriver = () => {
-    socket.emit("acceptDriver", {
-      driverId: driver.id,
-      bookingId,
-      type: "asap",
-    });
-  };
 
   const startTimer = useCallback(
     (duration: number) => {
@@ -391,7 +395,7 @@ const DriverRow = ({
         easing: Easing.linear,
       });
 
-      animationRef.current.start(({ finished }) => {
+      animationRef.current.start(({finished}) => {
         if (finished && !isPausedRef.current) {
           // Trigger swipe-right removal animation
           Animated.parallel([
@@ -457,12 +461,12 @@ const DriverRow = ({
   };
 
   const handlePress = () => {
-    setIsModalOpen(true);
+    setSelectedDriver(driver);
     pauseTimer();
   };
 
   const handleCloseModal = () => {
-    setIsModalOpen(false);
+    setSelectedDriver(null);
     resumeTimer();
   };
 
@@ -483,11 +487,11 @@ const DriverRow = ({
       <Animated.View
         style={{
           opacity,
-          transform: [{ translateX }],
+          transform: [{translateX}],
         }}
       >
         <Pressable onPress={handlePress}>
-          <View className="relative flex-row items-center justify-between rounded-md bg-gray-100 px-4 py-3">
+          <View className="relative flex-row items-center justify-between px-4 py-3 bg-gray-100 rounded-md">
             {/* Progress Bar (background) */}
             <View className="absolute bottom-0 left-0 right-0 h-[3px] bg-black/5">
               <Animated.View
@@ -504,11 +508,11 @@ const DriverRow = ({
               <Image
                 source={
                   driver.profilePicture
-                    ? { uri: driver.profilePicture }
+                    ? {uri: driver.profilePicture}
                     : STATIC_IMAGES.userPlaceholder
                 }
                 contentFit="cover"
-                style={{ width: 40, height: 40, borderRadius: 999 }}
+                style={{width: 40, height: 40, borderRadius: 999}}
               />
 
               <View>
@@ -527,7 +531,7 @@ const DriverRow = ({
 
             {/* Right: Distance */}
             {driver.distance && (
-              <View className="items-center justify-center rounded-xl bg-orange-500 px-3 py-2">
+              <View className="items-center justify-center px-3 py-2 bg-orange-500 rounded-xl">
                 <Text className="text-[10px] uppercase tracking-wide text-white">
                   Distance
                 </Text>
@@ -542,12 +546,14 @@ const DriverRow = ({
         </Pressable>
       </Animated.View>
 
-      <DriverDetailsModal
-        isModalOpen={isModalOpen}
-        driver={driver}
-        handleCloseModal={handleCloseModal}
-        acceptDriver={acceptDriver}
-      />
+      {selectedDriver && (
+        <DriverDetailsModal
+          isModalOpen={selectedDriver !== null}
+          driver={selectedDriver}
+          handleCloseModal={handleCloseModal}
+          acceptDriver={acceptDriver}
+        />
+      )}
     </>
   );
 };
@@ -578,25 +584,25 @@ const SearchRadiusIndicator = () => {
 
   return (
     <View className="items-center mt-10">
-      <Text className="text-white text-2xl font-bold tracking-tight">
+      <Text className="text-2xl font-bold tracking-tight text-white">
         Searching...
       </Text>
-      <Text className="text-gray-400 text-sm mt-2">
+      <Text className="mt-2 text-sm text-gray-400">
         Connecting you with the best driver nearby
       </Text>
 
       {/* Search Radius Indicator */}
-      <View className="mt-4 px-4 py-2 bg-orange-500/20 border border-orange-500/30 rounded-full">
+      <View className="px-4 py-2 mt-4 border rounded-full bg-orange-500/20 border-orange-500/30">
         <View className="flex-row items-center gap-2">
           <Ionicons name="radio-outline" size={16} color="#FB923D" />
-          <Text className="text-orange-400 text-sm font-semibold">
+          <Text className="text-sm font-semibold text-orange-400">
             Searching within {formatRadius(searchRadius)} radius
           </Text>
         </View>
       </View>
 
       {/* Attempt counter */}
-      <Text className="text-gray-400 text-xs mt-2">
+      <Text className="mt-2 text-xs text-gray-400">
         Attempt {searchAttempt}
       </Text>
     </View>
