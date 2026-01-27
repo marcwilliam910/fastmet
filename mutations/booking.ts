@@ -55,3 +55,44 @@ export const useRateDriverMutation = () =>
       });
     },
   });
+
+// export const useCancelBookingMutation = () =>
+//   useMutation<
+//     { message: string },
+//     AxiosError<{ message: string }>,
+//     { bookingId: string; status: string }
+//   >({
+//     mutationFn: ({
+//       bookingId,
+//       status,
+//     }: {
+//       bookingId: string;
+//       status: string;
+//     }) => cancelBooking(bookingId, status),
+//     onSuccess: () => {
+//       queryClient.invalidateQueries({
+//         queryKey: ["userBookings", "pending"],
+//         exact: false,
+//       });
+//       Toast.show({
+//         type: "success",
+//         text1: "Booking Cancelled",
+//         text2: "Successfully cancelled booking",
+//         position: "top",
+//         visibilityTime: 3000,
+//         swipeable: true,
+//         topOffset: 50,
+//       });
+//     },
+//     onError: (error) => {
+//       Toast.show({
+//         type: "error",
+//         text1: "Failed to cancel booking",
+//         text2: error.response?.data?.message || "Please try again",
+//         position: "top",
+//         visibilityTime: 3000,
+//         swipeable: true,
+//         topOffset: 50,
+//       });
+//     },
+//   });

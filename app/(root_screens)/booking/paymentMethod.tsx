@@ -8,7 +8,7 @@ import { uploadBookingImages } from "@/utils/imagePicker";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Platform, Pressable, Text, View } from "react-native";
 import {
   SafeAreaView,
@@ -20,8 +20,8 @@ export default function PaymentMethod() {
   const insets = useSafeAreaInsets();
   const paymentMethod = useAppStore((state) => state.paymentMethod);
 
-  const { bookingType, setPaymentMethod, setLoading, routeData } =
-    useAppStore.getState();
+  const { bookingType, setPaymentMethod, routeData } = useAppStore.getState();
+  const [loading, setLoading] = useState(false);
 
   const { id } = useAuth();
   const socket = useSocket();
@@ -112,9 +112,10 @@ export default function PaymentMethod() {
         position: "top",
         visibilityTime: 4000,
       });
-    } finally {
-      setLoading(false);
     }
+    // finally {
+    //   setLoading(false);
+    // }
   };
 
   useEffect(() => {
@@ -305,11 +306,12 @@ export default function PaymentMethod() {
         </View>
 
         <Pressable
-          className={`flex-1 py-3 rounded-md bg-lightPrimary active:bg-darkPrimary`}
+          className={`flex-1 py-3 rounded-md bg-lightPrimary ${loading ? "opacity-50" : "active:bg-darkPrimary"}`}
           onPress={handleBookNow}
+          disabled={loading}
         >
           <Text className="font-bold text-center text-lg text-white">
-            Book Now
+            {loading ? "Loading..." : "Book Now"}
           </Text>
         </Pressable>
       </View>

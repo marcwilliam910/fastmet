@@ -1,3 +1,4 @@
+import { getSocket } from "@/sockets/socket";
 import { useAppStore } from "@/store/useAppStore";
 import axios, { InternalAxiosRequestConfig } from "axios";
 import { router } from "expo-router";
@@ -21,14 +22,20 @@ api.interceptors.request.use(
 
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => Promise.reject(error),
 );
 
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
+      // Disconnect existing socket if any
+      const socket = getSocket(""); // will return existing socket instance
+      if (socket?.connected) socket.disconnect();
+
+      // Log out
       useAppStore.getState().logout();
+
       Toast.show({
         type: "error",
         text1: "Session Expired",
@@ -37,9 +44,9 @@ api.interceptors.response.use(
         visibilityTime: 4000,
         swipeable: true,
       });
+
       router.replace("/(auth)/auth");
 
-      // Don't reject - return a special response instead
       return Promise.resolve({
         data: null,
         status: 401,
@@ -48,7 +55,6 @@ api.interceptors.response.use(
     }
 
     return Promise.reject(error);
-  }
+  },
 );
-
 export default api;

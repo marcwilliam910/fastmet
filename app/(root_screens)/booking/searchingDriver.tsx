@@ -1,16 +1,16 @@
 import DriverDetailsModal from "@/components/modals/driverDetailsModal";
-import {queryClient} from "@/lib/queryClient";
-import {useSocket} from "@/sockets/context/SocketProvider";
-import {useAppStore} from "@/store/useAppStore";
-import {RequestedDriver} from "@/types/book";
-import {STATIC_IMAGES} from "@/utils/constants";
-import {Ionicons} from "@expo/vector-icons";
-import {usePreventRemove} from "@react-navigation/native";
-import {Image, ImageBackground} from "expo-image";
-import {LinearGradient} from "expo-linear-gradient";
-import {router, useLocalSearchParams} from "expo-router";
-import {cssInterop} from "nativewind";
-import React, {useCallback, useEffect, useRef, useState} from "react";
+import { queryClient } from "@/lib/queryClient";
+import { useSocket } from "@/sockets/context/SocketProvider";
+import { useAppStore } from "@/store/useAppStore";
+import { RequestedDriver } from "@/types/book";
+import { STATIC_IMAGES } from "@/utils/constants";
+import { Ionicons } from "@expo/vector-icons";
+import { usePreventRemove } from "@react-navigation/native";
+import { Image, ImageBackground } from "expo-image";
+import { LinearGradient } from "expo-linear-gradient";
+import { router, useLocalSearchParams } from "expo-router";
+import { cssInterop } from "nativewind";
+import React, { memo, useCallback, useEffect, useRef, useState } from "react";
 import {
   Alert,
   Animated,
@@ -23,10 +23,10 @@ import {
   Text,
   View,
 } from "react-native";
-import {useSafeAreaInsets} from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 
-const AnimatedView = cssInterop(Animated.View, {className: "style"});
+const AnimatedView = cssInterop(Animated.View, { className: "style" });
 
 const formatRadius = (km: number) => {
   if (km < 1) {
@@ -37,9 +37,8 @@ const formatRadius = (km: number) => {
 
 export default function SearchingDriver() {
   //get params
-  const {bookingId} = useLocalSearchParams<{bookingId: string}>();
+  const { bookingId } = useLocalSearchParams<{ bookingId: string }>();
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const sweepAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(0)).current;
   const inset = useSafeAreaInsets();
@@ -107,14 +106,11 @@ export default function SearchingDriver() {
 
   //SOCKETS LISTENER
   useEffect(() => {
-    const handleCancelOffer = ({driverId}: {driverId: string}) => {
+    const handleCancelOffer = ({ driverId }: { driverId: string }) => {
       handleRemoveDriver(driverId);
     };
-    const handleAcceptanceRequest = (data: RequestedDriver) => {
-      if (drivers.some((driver) => driver.id === data.id)) return;
-      setDrivers((prev) => [...prev, data]);
-    };
-    const handleBookingCancelled = ({bookingId}: {bookingId: string}) => {
+
+    const handleBookingCancelled = ({ bookingId }: { bookingId: string }) => {
       useAppStore.getState().clearStates();
       setShouldPrevent(false);
 
@@ -129,13 +125,12 @@ export default function SearchingDriver() {
       });
 
       // Navigate after state update
-      setTimeout(() => {
+      setImmediate(() => {
         router.replace("/(drawer)/(tabs)/request?tab=cancelled");
-      }, 50);
+      });
     };
 
-    const handleDriverAccepted = ({bookingId}: {bookingId: string}) => {
-      setIsModalOpen(false);
+    const handleDriverAccepted = ({ bookingId }: { bookingId: string }) => {
       Toast.show({
         type: "driverAccepted",
         text1: "Driver Found! 🎉",
@@ -159,7 +154,7 @@ export default function SearchingDriver() {
       });
     };
 
-    const errorHandler = ({message}: {message: string}) => {
+    const errorHandler = ({ message }: { message: string }) => {
       Toast.show({
         type: "error",
         text1: "Error",
@@ -176,13 +171,11 @@ export default function SearchingDriver() {
     };
 
     socket.on("offerCancelled", handleCancelOffer);
-    socket.on("acceptanceRequestedASAP", handleAcceptanceRequest);
     socket.on("bookingCancelled", handleBookingCancelled);
     socket.on("driverAccepted", handleDriverAccepted);
     socket.on("error", errorHandler);
 
     return () => {
-      socket.off("acceptanceRequestedASAP", handleAcceptanceRequest);
       socket.off("offerCancelled", handleCancelOffer);
       socket.off("bookingCancelled", handleBookingCancelled);
       socket.off("driverAccepted", handleDriverAccepted);
@@ -190,40 +183,67 @@ export default function SearchingDriver() {
     };
   }, [socket]);
 
+  //SOCKETS LISTENER
+  useEffect(() => {
+    const handleAcceptanceRequest = (data: RequestedDriver) => {
+      if (drivers.some((driver) => driver.id === data.id)) return;
+      setDrivers((prev) => [...prev, data]);
+    };
+
+    socket.on("acceptanceRequestedASAP", handleAcceptanceRequest);
+
+    return () => {
+      socket.off("acceptanceRequestedASAP", handleAcceptanceRequest);
+    };
+  }, [socket, drivers]);
+
   const handleRemoveDriver = (id: string) => {
     setDrivers((prev) => prev.filter((driver) => driver.id !== id));
   };
 
   const handleCancelRequest = () => {
-    Alert.alert("Cancel Request", "Are you sure you want to cancel?", [
+    Alert.alert(
+      "Cancel Request",
+      "Are you sure you want to cancel?",
+      [
+        {
+          text: "No",
+          style: "cancel",
+          onPress: () => console.log("Alert cancelled"),
+        },
+        {
+          text: "Yes",
+          style: "destructive",
+          onPress: () => {
+            console.log("Confirming cancellation");
+            socket.emit("cancelBookingRequest", { bookingId });
+          },
+        },
+      ],
       {
-        text: "Cancel",
-        style: "cancel",
+        cancelable: true,
+        onDismiss: () => console.log("Alert dismissed"),
       },
-      {
-        text: "Yes",
-        onPress: () => socket.emit("cancelBookingRequest", {bookingId}),
-      },
-    ]);
+    );
   };
 
   return (
     <ImageBackground
       source={STATIC_IMAGES.map_bg}
-      style={{flex: 1}}
+      style={{ flex: 1 }}
       contentFit="cover"
     >
-      <View className="items-center justify-between flex-1 px-6 pt-10 bg-black/70">
+      <View className="flex-1 px-6 pt-10 bg-black/70">
         {/* Top Section: Status */}
         <SearchRadiusIndicator />
 
         {/* Center Section: The Radar */}
-        <View className="items-center justify-center">
+        <View className="items-center justify-center flex-1">
           {/* Ambient Pulse Glow */}
           <AnimatedView
             className="absolute rounded-full size-64 bg-orange-500/50"
             style={{
-              transform: [{scale: pulseScale}],
+              transform: [{ scale: pulseScale }],
               opacity: pulseOpacity,
             }}
           />
@@ -235,7 +255,7 @@ export default function SearchingDriver() {
               <View
                 key={i}
                 className="absolute rounded-full border-lightPrimary/20"
-                style={{width: i * 80, height: i * 80, borderWidth: 4 - i}}
+                style={{ width: i * 80, height: i * 80, borderWidth: 4 - i }}
               />
             ))}
 
@@ -243,14 +263,14 @@ export default function SearchingDriver() {
             <AnimatedView
               style={{
                 ...StyleSheet.absoluteFillObject,
-                transform: [{rotate: sweepRotate}],
+                transform: [{ rotate: sweepRotate }],
               }}
             >
               {/* This View creates the "Pie Slice" sweep */}
               <LinearGradient
                 colors={["rgba(251, 146, 60, 0.5)", "transparent"]}
-                start={{x: 1, y: 0}}
-                end={{x: 0, y: 1}}
+                start={{ x: 1, y: 0 }}
+                end={{ x: 0, y: 1 }}
                 style={{
                   position: "absolute",
                   top: 0,
@@ -268,30 +288,32 @@ export default function SearchingDriver() {
             <View className="items-center justify-center border-2 border-orange-500 rounded-full shadow-2xl size-28 bg-slate-900 shadow-orange-500/50">
               <Image
                 source={STATIC_IMAGES.fastmetLogo}
-                style={{width: 50, height: 50}}
+                style={{ width: 50, height: 50 }}
                 contentFit="fill"
               />
             </View>
           </View>
         </View>
 
-        {/* Bottom Section: Driver Card */}
-        {drivers.length > 0 && (
-          <DriverListCard
-            drivers={drivers}
-            handleRemoveDriver={handleRemoveDriver}
-            bookingId={bookingId}
-          />
-        )}
+        {/* Bottom Section: Driver Card and Cancel Button */}
+        <View style={{ marginBottom: inset.bottom + 10 }}>
+          {/* Driver Card */}
+          {drivers.length > 0 && (
+            <DriverListCard
+              drivers={drivers}
+              handleRemoveDriver={handleRemoveDriver}
+              bookingId={bookingId}
+            />
+          )}
 
-        {/* Bottom Section: Actions */}
-        <Pressable
-          onPress={handleCancelRequest}
-          className="items-center w-full py-4 shadow-lg bg-white/30 rounded-2xl active:opacity-90 "
-          style={{marginBottom: inset.bottom + 10}}
-        >
-          <Text className="text-lg font-bold text-white">Cancel Request</Text>
-        </Pressable>
+          {/* Cancel Button */}
+          <Pressable
+            onPress={handleCancelRequest}
+            className="items-center w-full py-4 mt-4 shadow-lg bg-white/30 rounded-2xl active:opacity-90"
+          >
+            <Text className="text-lg font-bold text-white">Cancel Request</Text>
+          </Pressable>
+        </View>
       </View>
     </ImageBackground>
   );
@@ -308,12 +330,16 @@ const DriverListCard = ({
 }) => {
   console.log("DriverListCard");
 
+  // Single modal state managed at parent level
   const [selectedDriver, setSelectedDriver] = useState<RequestedDriver | null>(
     null,
   );
   const socket = useSocket();
 
-  const acceptDriver = () => {
+  // Track which driver timers are paused - now pauses ALL when modal opens
+  const [areAllPaused, setAreAllPaused] = useState(false);
+
+  const acceptDriver = useCallback(() => {
     if (!selectedDriver) return;
 
     socket.emit("acceptDriver", {
@@ -321,173 +347,184 @@ const DriverListCard = ({
       bookingId,
       type: "asap",
     });
-  };
+  }, [bookingId, selectedDriver, socket]);
 
-  return (
-    <View style={{width: "100%", marginBottom: 24, paddingHorizontal: 8}}>
-      <View style={{marginBottom: 12, paddingHorizontal: 4}}>
-        <Text
-          style={{
-            color: "rgba(255, 255, 255, 0.9)",
-            fontSize: 12,
-            fontWeight: "600",
-            textTransform: "uppercase",
-            letterSpacing: 1,
-          }}
-        >
-          Available Drivers ({drivers.length})
-        </Text>
-      </View>
-
-      <View style={{height: 280}}>
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{gap: 4}}
-        >
-          {drivers.map((driver) => (
-            <DriverRow
-              key={driver.id}
-              driver={driver}
-              onRemove={() => handleRemoveDriver(driver.id)}
-              setSelectedDriver={setSelectedDriver}
-              selectedDriver={selectedDriver}
-              acceptDriver={acceptDriver}
-            />
-          ))}
-        </ScrollView>
-      </View>
-    </View>
-  );
-};
-
-const DriverRow = ({
-  driver,
-  acceptDriver,
-  setSelectedDriver,
-  selectedDriver,
-  onRemove,
-}: {
-  driver: RequestedDriver;
-  onRemove: () => void;
-  setSelectedDriver: React.Dispatch<
-    React.SetStateAction<RequestedDriver | null>
-  >;
-  selectedDriver: RequestedDriver | null;
-  acceptDriver: () => void;
-}) => {
-  console.log("DriverRow");
-  const translateX = useRef(new Animated.Value(-400)).current;
-  const opacity = useRef(new Animated.Value(0)).current;
-  const progressAnim = useRef(new Animated.Value(100)).current;
-  const isPausedRef = useRef(false);
-  const remainingTimeRef = useRef(6_000); // Track remaining time
-  const animationRef = useRef<Animated.CompositeAnimation | null>(null);
-
-  const startTimer = useCallback(
-    (duration: number) => {
-      const currentProgress = (duration / 6000) * 100;
-      progressAnim.setValue(currentProgress);
-
-      animationRef.current = Animated.timing(progressAnim, {
-        toValue: 0,
-        duration: duration,
-        useNativeDriver: false,
-        easing: Easing.linear,
-      });
-
-      animationRef.current.start(({finished}) => {
-        if (finished && !isPausedRef.current) {
-          // Trigger swipe-right removal animation
-          Animated.parallel([
-            Animated.timing(translateX, {
-              toValue: 400,
-              duration: 400,
-              useNativeDriver: true,
-            }),
-            Animated.timing(opacity, {
-              toValue: 0,
-              duration: 400,
-              useNativeDriver: true,
-            }),
-          ]).start(() => {
-            onRemove();
-          });
-        }
-      });
-    },
-    [progressAnim, isPausedRef, onRemove, translateX, opacity],
-  );
-  useEffect(() => {
-    // Entrance animation - slide in from left
-    Animated.parallel([
-      Animated.timing(translateX, {
-        toValue: 0,
-        duration: 500,
-        useNativeDriver: true,
-      }),
-      Animated.timing(opacity, {
-        toValue: 1,
-        duration: 500,
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
-      // Start timer after entrance animation
-      startTimer(remainingTimeRef.current);
-    });
-
-    return () => {
-      if (animationRef.current) {
-        animationRef.current.stop();
-      }
-    };
-  }, [opacity, startTimer, translateX]);
-
-  const pauseTimer = () => {
-    if (animationRef.current && !isPausedRef.current) {
-      isPausedRef.current = true;
-      animationRef.current.stop();
-
-      // Calculate remaining time based on current progress
-      const currentProgressValue = (progressAnim as any)._value;
-      remainingTimeRef.current = (currentProgressValue / 100) * 6000;
-    }
-  };
-
-  const resumeTimer = () => {
-    if (isPausedRef.current) {
-      isPausedRef.current = false;
-      startTimer(remainingTimeRef.current);
-    }
-  };
-
-  const handlePress = () => {
+  const handleDriverSelect = useCallback((driver: RequestedDriver) => {
     setSelectedDriver(driver);
-    pauseTimer();
-  };
+    setAreAllPaused(true); // Pause all driver timers
+  }, []);
 
-  const handleCloseModal = () => {
+  const handleCloseModal = useCallback(() => {
     setSelectedDriver(null);
-    resumeTimer();
-  };
-
-  // Interpolate progress to percentage string
-  const progressWidth = progressAnim.interpolate({
-    inputRange: [0, 100],
-    outputRange: ["0%", "100%"],
-  });
-
-  // Interpolate for color changes
-  const progressBackgroundColor = progressAnim.interpolate({
-    inputRange: [0, 33, 66, 100],
-    outputRange: ["#EF4444", "#F59E0B", "#F59E0B", "#10B981"],
-  });
+    setAreAllPaused(false); // Resume all driver timers
+  }, []);
 
   return (
     <>
+      <View style={{ width: "100%", paddingHorizontal: 8 }}>
+        <View style={{ marginBottom: 12, paddingHorizontal: 4 }}>
+          <Text
+            style={{
+              color: "rgba(255, 255, 255, 0.9)",
+              fontSize: 12,
+              fontWeight: "600",
+              textTransform: "uppercase",
+              letterSpacing: 1,
+            }}
+          >
+            Available Drivers ({drivers.length})
+          </Text>
+        </View>
+
+        <View style={{ maxHeight: 280 }}>
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ gap: 4, paddingBottom: 4 }}
+            nestedScrollEnabled={true}
+          >
+            {drivers.map((driver) => (
+              <DriverRow
+                key={driver.id}
+                driver={driver}
+                onRemove={handleRemoveDriver}
+                onSelect={handleDriverSelect}
+                isPaused={areAllPaused} // All drivers get the same pause state
+              />
+            ))}
+          </ScrollView>
+        </View>
+      </View>
+
+      {/* Single modal instance */}
+      {selectedDriver && (
+        <DriverDetailsModal
+          isModalOpen={true}
+          driver={selectedDriver}
+          handleCloseModal={handleCloseModal}
+          acceptDriver={acceptDriver}
+        />
+      )}
+    </>
+  );
+};
+
+const DriverRow = memo(
+  ({
+    driver,
+    onRemove,
+    onSelect,
+    isPaused,
+  }: {
+    driver: RequestedDriver;
+    onRemove: (id: string) => void;
+    onSelect: (driver: RequestedDriver) => void;
+    isPaused: boolean;
+  }) => {
+    console.log("DriverRow");
+    const translateX = useRef(new Animated.Value(-400)).current;
+    const opacity = useRef(new Animated.Value(0)).current;
+    const progressAnim = useRef(new Animated.Value(100)).current;
+    const remainingTimeRef = useRef(60_000); // Track remaining time
+    const animationRef = useRef<Animated.CompositeAnimation | null>(null);
+
+    const startTimer = useCallback(
+      (duration: number) => {
+        const currentProgress = (duration / 60_000) * 100;
+        progressAnim.setValue(currentProgress);
+
+        animationRef.current = Animated.timing(progressAnim, {
+          toValue: 0,
+          duration: duration,
+          useNativeDriver: false,
+          easing: Easing.linear,
+        });
+
+        animationRef.current.start(({ finished }) => {
+          if (finished && !isPaused) {
+            // Trigger swipe-right removal animation
+            Animated.parallel([
+              Animated.timing(translateX, {
+                toValue: 400,
+                duration: 400,
+                useNativeDriver: true,
+              }),
+              Animated.timing(opacity, {
+                toValue: 0,
+                duration: 400,
+                useNativeDriver: true,
+              }),
+            ]).start(() => {
+              onRemove(driver.id);
+            });
+          }
+        });
+      },
+      [progressAnim, isPaused, translateX, opacity, onRemove, driver.id],
+    );
+
+    useEffect(() => {
+      // Entrance animation - slide in from left
+      Animated.parallel([
+        Animated.timing(translateX, {
+          toValue: 0,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+        Animated.timing(opacity, {
+          toValue: 1,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+      ]).start(() => {
+        // Start timer after entrance animation
+        startTimer(remainingTimeRef.current);
+      });
+
+      return () => {
+        if (animationRef.current) {
+          animationRef.current.stop();
+        }
+      };
+    }, [opacity, startTimer, translateX]);
+
+    // Handle pause/resume based on isPaused prop
+    useEffect(() => {
+      if (isPaused) {
+        if (animationRef.current) {
+          animationRef.current.stop();
+          // Calculate remaining time based on current progress
+          const currentProgressValue = (progressAnim as any)._value;
+          remainingTimeRef.current = (currentProgressValue / 100) * 60_000;
+        }
+      } else {
+        // Resume if we have remaining time and we're not paused
+        if (remainingTimeRef.current < 60_000) {
+          startTimer(remainingTimeRef.current);
+        }
+      }
+    }, [isPaused, progressAnim, startTimer]);
+
+    const handlePress = () => {
+      onSelect(driver);
+    };
+
+    // Interpolate progress to percentage string
+    const progressWidth = progressAnim.interpolate({
+      inputRange: [0, 100],
+      outputRange: ["0%", "100%"],
+    });
+
+    // Interpolate for color changes
+    const progressBackgroundColor = progressAnim.interpolate({
+      inputRange: [0, 33, 66, 100],
+      outputRange: ["#EF4444", "#F59E0B", "#F59E0B", "#10B981"],
+    });
+
+    return (
       <Animated.View
         style={{
           opacity,
-          transform: [{translateX}],
+          transform: [{ translateX }],
         }}
       >
         <Pressable onPress={handlePress}>
@@ -508,11 +545,11 @@ const DriverRow = ({
               <Image
                 source={
                   driver.profilePicture
-                    ? {uri: driver.profilePicture}
+                    ? { uri: driver.profilePicture }
                     : STATIC_IMAGES.userPlaceholder
                 }
                 contentFit="cover"
-                style={{width: 40, height: 40, borderRadius: 999}}
+                style={{ width: 40, height: 40, borderRadius: 999 }}
               />
 
               <View>
@@ -545,18 +582,11 @@ const DriverRow = ({
           </View>
         </Pressable>
       </Animated.View>
+    );
+  },
+);
 
-      {selectedDriver && (
-        <DriverDetailsModal
-          isModalOpen={selectedDriver !== null}
-          driver={selectedDriver}
-          handleCloseModal={handleCloseModal}
-          acceptDriver={acceptDriver}
-        />
-      )}
-    </>
-  );
-};
+DriverRow.displayName = "DriverRow";
 
 const SearchRadiusIndicator = () => {
   const [searchRadius, setSearchRadius] = useState(0.1);

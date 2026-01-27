@@ -2,12 +2,12 @@ import { RequestedDriver } from "@/types/book";
 import { STATIC_IMAGES } from "@/utils/constants";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
-import React from "react";
+import React, { memo } from "react";
 import { Modal, Pressable, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import StarDisplay from "../StarDisplay";
 
-export default function DriverDetailsModal({
+function DriverDetailsModal({
   isModalOpen,
   driver,
   handleCloseModal,
@@ -141,3 +141,5 @@ export default function DriverDetailsModal({
     </Modal>
   );
 }
+
+export default memo(DriverDetailsModal);

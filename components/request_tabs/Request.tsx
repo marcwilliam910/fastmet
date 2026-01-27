@@ -2,13 +2,13 @@ import useSeeMoreDetails from "@/hooks/useSeeMoreDetails";
 import { queryClient } from "@/lib/queryClient";
 import { useUserBookings } from "@/queries/bookingQueries";
 import { useSocket } from "@/sockets/context/SocketProvider";
+import { useAppStore } from "@/store/useAppStore";
 import { Booking, LocationDetails, RequestedDriver } from "@/types/book";
 import { STATIC_IMAGES } from "@/utils/constants";
-import { formatDate } from "@/utils/date";
 import { formatLocation } from "@/utils/helper";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -21,6 +21,8 @@ import {
 } from "react-native";
 import Popover, { PopoverPlacement } from "react-native-popover-view";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Toast from "react-native-toast-message";
+import ConfirmCancelBookingModal from "../modals/confirmCancelBookingModal";
 import DriverDetailsModal from "../modals/driverDetailsModal";
 import SeeMoreModal from "../modals/seeMoreModal";
 
@@ -31,10 +33,10 @@ export default function RequestRoute() {
   const [selectedDriver, setSelectedDriver] = useState<RequestedDriver | null>(
     null,
   );
-  const [selectedFilters, setSelectedFilters] = useState([
-    "PENDING",
-    "SCHEDULE",
-  ]);
+  const [selectedFilters, setSelectedFilters] = useState(["PENDING"]);
+  const setLoading = useAppStore((state) => state.setLoading);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const socket = useSocket();
 
   // Fetch first page of both statuses on mount
   const pendingQuery = useUserBookings<Booking>("pending", 5);
@@ -51,13 +53,13 @@ export default function RequestRoute() {
 
   // Conditionally show data based on selected filter
   let bookings = selectedFilters.includes("PENDING") ? pendingBookings : [];
-  bookings = selectedFilters.includes("SCHEDULE")
+  bookings = selectedFilters.includes("SCHEDULED")
     ? [...bookings, ...scheduledBookings]
     : bookings;
 
   // Determine active queries for fetching / refreshing
   const activeQueries =
-    selectedFilters.includes("PENDING") && selectedFilters.includes("SCHEDULE")
+    selectedFilters.includes("PENDING") && selectedFilters.includes("SCHEDULED")
       ? [pendingQuery, scheduledQuery]
       : selectedFilters.includes("PENDING")
         ? [pendingQuery]
@@ -87,6 +89,45 @@ export default function RequestRoute() {
       setSelectedFilters([...selectedFilters, filter]);
     }
   };
+
+  const handleCancelBook = () => {
+    setLoading(true);
+    socket.emit("cancelBookingRequest", { bookingId: selectedId });
+    setSelectedId(null);
+  };
+
+  useEffect(() => {
+    const bookingCancelled = (bookingId: string) => {
+      setLoading(false);
+      queryClient.invalidateQueries({
+        queryKey: ["userBookings", "pending"],
+        exact: false,
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["userBookings", "cancelled"],
+        exact: false,
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["userBookingCounts"],
+      });
+
+      Toast.show({
+        type: "success",
+        text1: "Booking Cancelled",
+        text2: "Successfully cancelled booking",
+        position: "top",
+        visibilityTime: 3000,
+        swipeable: true,
+        topOffset: 50,
+      });
+    };
+    socket.on("bookingCancelled", bookingCancelled);
+    return () => {
+      socket.off("bookingCancelled", bookingCancelled);
+    };
+  }, [setLoading, socket]);
 
   if (isLoading)
     return (
@@ -127,7 +168,7 @@ export default function RequestRoute() {
             <View className="px-2 py-2 bg-lightPrimary">
               <Text className="text-lg font-bold text-white">Filter</Text>
             </View>
-            {["PENDING", "SCHEDULE"].map((option) => (
+            {["PENDING", "SCHEDULED"].map((option) => (
               <Pressable
                 onPress={() => handleFilterPress(option)}
                 key={option}
@@ -168,8 +209,8 @@ export default function RequestRoute() {
             distance={item.routeData.distance}
             amount={item.routeData.totalPrice}
             isCash={item.paymentMethod === "cash"}
-            onCancel={() => {}}
-            onUpdateNote={() => {}}
+            onCancel={() => setSelectedId(item._id)}
+            // onUpdateNote={() => setShowUpdateNoteModal(true)}
             onPressSeeMore={() => handleSeeMorePress(item)}
             driverOffers={item.requestedDrivers}
             showDriversModal={showDriversModal}
@@ -211,6 +252,14 @@ export default function RequestRoute() {
           setShowDriversModal={setShowDriversModal}
         />
       )}
+
+      {selectedId && (
+        <ConfirmCancelBookingModal
+          visible={selectedId !== null}
+          onClose={() => setSelectedId(null)}
+          onConfirm={handleCancelBook}
+        />
+      )}
     </>
   );
 }
@@ -219,8 +268,8 @@ type RequestCardProps = {
   status: string;
   vehicle: string;
   bookingType: {
-    type: string; // "asap" | "schedule"
-    value: string | null;
+    type: string;
+    value: string;
   };
   pickup: LocationDetails;
   dropoff: LocationDetails;
@@ -228,7 +277,7 @@ type RequestCardProps = {
   isCash: boolean;
   amount: number;
   onCancel: () => void;
-  onUpdateNote: () => void;
+  // onUpdateNote: () => void;
   onPressSeeMore: () => void;
   driverOffers?: RequestedDriver[];
   selectedDriver: RequestedDriver | null;
@@ -249,7 +298,7 @@ const RequestCard = ({
   isCash,
   amount,
   onCancel,
-  onUpdateNote,
+  // onUpdateNote,
   onPressSeeMore,
   driverOffers = [],
   selectedDriver,
@@ -263,13 +312,17 @@ const RequestCard = ({
   const remainingCount = Math.max(0, driverOffers.length - maxStackedAvatars);
   const socket = useSocket();
 
-  const acceptDriver = () => {
+  const acceptDriver = useCallback(() => {
     socket.emit("acceptDriver", {
       driverId: selectedDriver?.id,
       bookingId: selectedDriver?.bookingId,
       type: "schedule",
     });
-  };
+  }, [selectedDriver?.bookingId, selectedDriver?.id, socket]);
+
+  const handleCloseModal = useCallback(() => {
+    setSelectedDriver(null);
+  }, [setSelectedDriver]);
 
   useEffect(() => {
     const driverAcceptedSchedule = ({ bookingId }: { bookingId: string }) => {
@@ -317,11 +370,17 @@ const RequestCard = ({
         >
           {/* Header */}
           <View className="flex-row items-center justify-between px-5 py-3 bg-lightPrimary">
-            <Text className="text-lg font-semibold text-white">{vehicle}</Text>
+            <Text className="text-lg font-semibold text-white">
+              {vehicle}{" "}
+              {bookingType.value.toUpperCase() === "PRIORITY" && (
+                <Ionicons name="flash-sharp" size={20} color="red" />
+              )}
+            </Text>
             <Text className="text-sm text-white">
-              {bookingType.type === "schedule"
-                ? `Scheduled: ${formatDate(bookingType.value || "")}`
-                : bookingType.value}
+              {bookingType.type.toUpperCase()}
+
+              {bookingType.type.toUpperCase() === "ASAP" &&
+                ` (${bookingType.value})`}
             </Text>
           </View>
 
@@ -443,7 +502,7 @@ const RequestCard = ({
                 </Text>
               </Pressable>
 
-              <Pressable
+              {/* <Pressable
                 className="flex-row items-center justify-center flex-1 py-3 ml-2 border border-lightPrimary rounded-xl active:bg-gray-50"
                 onPress={onUpdateNote}
               >
@@ -451,7 +510,7 @@ const RequestCard = ({
                 <Text className="ml-2 font-medium text-gray-700">
                   Update Note
                 </Text>
-              </Pressable>
+              </Pressable> */}
             </View>
           </View>
         </Pressable>
@@ -472,7 +531,7 @@ const RequestCard = ({
         <DriverDetailsModal
           isModalOpen={selectedDriver !== null}
           driver={selectedDriver}
-          handleCloseModal={() => setSelectedDriver(null)}
+          handleCloseModal={handleCloseModal}
           acceptDriver={acceptDriver}
         />
       )}

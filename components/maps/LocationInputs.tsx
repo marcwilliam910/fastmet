@@ -1,7 +1,7 @@
 import { useAppStore } from "@/store/useAppStore";
 import { formatLocation } from "@/utils/helper";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { Pressable, Text, View } from "react-native";
 
 export default function LocationInputs({
@@ -12,12 +12,54 @@ export default function LocationInputs({
   const pickUp = useAppStore((state) => state.pickUp);
   const dropOff = useAppStore((state) => state.dropOff);
 
+  // Use ref to track if we're waiting for animation, persists across renders
+  const animationLockRef = useRef(false);
+  const lastLocationRef = useRef({ pickUp, dropOff });
+
+  useEffect(() => {
+    // Only lock if location actually changed
+    const locationChanged =
+      lastLocationRef.current.pickUp !== pickUp ||
+      lastLocationRef.current.dropOff !== dropOff;
+
+    if (locationChanged) {
+      animationLockRef.current = true;
+      lastLocationRef.current = { pickUp, dropOff };
+
+      // Use requestAnimationFrame for more reliable timing
+      let frameCount = 0;
+      const maxFrames = 90; // ~1.5s at 60fps
+
+      const animate = () => {
+        frameCount++;
+        if (frameCount < maxFrames) {
+          requestAnimationFrame(animate);
+        } else {
+          animationLockRef.current = false;
+        }
+      };
+
+      requestAnimationFrame(animate);
+    }
+  }, [pickUp, dropOff]);
+
+  const handleOpenSearch = (type: "pickup" | "dropoff") => {
+    // Double check lock status at press time
+    if (animationLockRef.current) {
+      return;
+    }
+    onOpenSearch(type);
+  };
+
+  const isLocked = animationLockRef.current;
+
   return (
     <View className="relative items-center justify-between gap-2 pl-8 ml-4 mr-3 border-l-2 border-gray-400 border-dashed">
       {/* Pickup Field */}
       <Pressable
-        onPress={() => onOpenSearch("pickup")}
-        className="flex-row items-center px-4 py-2 border-2 border-gray-200 bg-white rounded-xl  active:scale-[0.98] active:border-lightPrimary w-full"
+        onPress={() => handleOpenSearch("pickup")}
+        disabled={isLocked}
+        className={`flex-row items-center px-4 py-2 border-2 border-gray-200 bg-white rounded-xl active:scale-[0.98]  w-full ${isLocked ? "opacity-70" : "active:border-lightPrimary"}`}
       >
         <View className="flex-1 ml-1">
           <Text className="text-xs text-gray-500 font-medium mb-0.5">
@@ -35,9 +77,9 @@ export default function LocationInputs({
 
       {/* Dropoff Field */}
       <Pressable
-        disabled={!pickUp}
-        onPress={() => onOpenSearch("dropoff")}
-        className={`flex-row items-center px-4 py-2 border-2 border-gray-200 bg-white rounded-xl active:scale-[0.98] active:border-lightPrimary w-full ${!pickUp ? "opacity-50" : ""}`}
+        disabled={!pickUp || isLocked}
+        onPress={() => handleOpenSearch("dropoff")}
+        className={`flex-row items-center px-4 py-2 border-2 border-gray-200 bg-white rounded-xl active:scale-[0.98]  w-full ${!pickUp || isLocked ? "opacity-50" : "active:border-lightPrimary"}`}
       >
         <View className="flex-1 ml-1">
           <Text className="text-xs text-gray-500 font-medium mb-0.5">
