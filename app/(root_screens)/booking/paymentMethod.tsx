@@ -19,15 +19,25 @@ import Toast from "react-native-toast-message";
 export default function PaymentMethod() {
   const insets = useSafeAreaInsets();
   const paymentMethod = useAppStore((state) => state.paymentMethod);
+  const isLoading = useAppStore((state) => state.isLoading);
 
   const { bookingType, setPaymentMethod, routeData } = useAppStore.getState();
   const [loading, setLoading] = useState(false);
 
   const { id } = useAuth();
   const socket = useSocket();
+  const hasNavigatedRef = useRef(false);
+  const isSubmittingRef = useRef(false);
+  const lastBookingRefRef = useRef<string | null>(null);
 
   const handleBookNow = async () => {
+    // Immediate protection against rapid clicks (ref is synchronous, no render delay)
+    if (isSubmittingRef.current || isLoading) {
+      return;
+    }
+
     try {
+      isSubmittingRef.current = true;
       setLoading(true);
 
       const {
@@ -40,14 +50,30 @@ export default function PaymentMethod() {
         itemType,
       } = useAppStore.getState();
 
-      if (!selectedVehicle || !selectedVehicle.variant || !pickUp || !dropOff)
+      if (!selectedVehicle || !selectedVehicle.variant || !pickUp || !dropOff) {
+        setLoading(false);
+        isSubmittingRef.current = false;
         return;
+      }
 
       const bookingRef = generateBookingRef({
         bookingType: bookingType.type,
         vehicleType: selectedVehicle.key,
         priority: bookingType.type === "asap" ? bookingType.value : undefined,
       });
+
+      // Idempotency check: prevent duplicate submission with same booking ref
+      if (lastBookingRefRef.current === bookingRef) {
+        console.warn(
+          "⚠️ Duplicate booking ref detected, ignoring:",
+          bookingRef,
+        );
+        setLoading(false);
+        isSubmittingRef.current = false;
+        return;
+      }
+
+      lastBookingRefRef.current = bookingRef;
 
       // Upload images first
       const uploadResult = await uploadBookingImages(photos, bookingRef);
@@ -104,6 +130,8 @@ export default function PaymentMethod() {
       }
     } catch (error) {
       console.error("Booking submission error:", error);
+      setLoading(false);
+      isSubmittingRef.current = false;
 
       Toast.show({
         type: "error",
@@ -124,9 +152,14 @@ export default function PaymentMethod() {
       bookingId: string;
       message: string;
     }) => {
+      // Guard against duplicate events causing multiple navigations
+      if (hasNavigatedRef.current) return;
+
       setLoading(false);
 
       if (data.success) {
+        hasNavigatedRef.current = true;
+
         if (bookingType.type === "asap")
           router.push({
             pathname: "/(root_screens)/booking/searchingDriver",
@@ -155,6 +188,11 @@ export default function PaymentMethod() {
 
   useEffect(() => {
     const handleBookingFailed = (data: { message: string }) => {
+      setLoading(false);
+      isSubmittingRef.current = false;
+      // Reset booking ref on failure so user can retry
+      lastBookingRefRef.current = null;
+
       Toast.show({
         type: "error",
         text1: "Booking Failed",
@@ -168,12 +206,12 @@ export default function PaymentMethod() {
     return () => {
       socket.off("bookingRequestFailed", handleBookingFailed);
     };
-  }, [socket]);
+  }, [socket, setLoading]);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
       {/* header */}
-      <View className="relative flex-row items-center justify-center px-6 pt-2 pb-8">
+      <View className="relative flex-row justify-center items-center px-6 pt-2 pb-8">
         <Pressable
           className="absolute left-5 top-1.5"
           onPress={() => router.back()}
@@ -201,8 +239,8 @@ export default function PaymentMethod() {
               : "border-gray-300 bg-white"
           }`}
         >
-          <View className="flex-row items-center gap-3">
-            <View className="items-center justify-center w-10 h-10 rounded-full bg-blue-50">
+          <View className="flex-row gap-3 items-center">
+            <View className="justify-center items-center w-10 h-10 bg-blue-50 rounded-full">
               <Image
                 source={STATIC_IMAGES.cashPayment}
                 style={{ width: 24, height: 24 }}
@@ -232,8 +270,8 @@ export default function PaymentMethod() {
               : "border-gray-300 bg-white"
           }`}
         >
-          <View className="flex-row items-center gap-3">
-            <View className="items-center justify-center w-10 h-10 rounded-full bg-blue-50">
+          <View className="flex-row gap-3 items-center">
+            <View className="justify-center items-center w-10 h-10 bg-blue-50 rounded-full">
               <Image
                 source={STATIC_IMAGES.gcash}
                 style={{ width: 24, height: 24 }}
@@ -253,7 +291,7 @@ export default function PaymentMethod() {
         </Pressable>
       </View>
       <View
-        className="px-5 py-3 gap-2 bg-white z-30"
+        className="z-30 gap-2 px-5 py-3 bg-white"
         style={{
           position: "absolute",
           left: 0,
@@ -264,7 +302,7 @@ export default function PaymentMethod() {
       >
         {/* Fare Breakdown */}
         {routeData.basePrice > 0 && (
-          <View className="flex-row items-center justify-between">
+          <View className="flex-row justify-between items-center">
             <Text className="text-xs font-semibold text-gray-500">
               Base Fare
             </Text>
@@ -275,7 +313,7 @@ export default function PaymentMethod() {
         )}
 
         {routeData.distanceFee > 0 && (
-          <View className="flex-row items-center justify-between">
+          <View className="flex-row justify-between items-center">
             <Text className="text-xs font-semibold text-gray-500">
               Distance / Duration ({routeData.distance.toFixed(2)} km -{" "}
               {routeData.duration.toFixed(0)} min)
@@ -287,7 +325,7 @@ export default function PaymentMethod() {
         )}
 
         {routeData.serviceFee > 0 && (
-          <View className="flex-row items-center justify-between">
+          <View className="flex-row justify-between items-center">
             <Text className="text-xs font-semibold text-gray-500">
               Added Services ({useAppStore.getState().addedServices.length})
             </Text>
@@ -298,9 +336,9 @@ export default function PaymentMethod() {
         )}
 
         {/* Total */}
-        <View className="flex-row items-center justify-between mt-1">
+        <View className="flex-row justify-between items-center mt-1">
           <Text className="font-semibold">Total Amount</Text>
-          <Text className="font-bold text-lightPrimary text-lg">
+          <Text className="text-lg font-bold text-lightPrimary">
             Php {routeData.totalPrice.toFixed(2)}
           </Text>
         </View>

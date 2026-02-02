@@ -6,7 +6,10 @@ import { Text, View } from "react-native";
 
 export default function TabLayout() {
   const unreadConversationsCount = useAppStore(
-    (state) => state.unreadConversationsCount
+    (state) => state.unreadConversationsCount,
+  );
+  const unreadNotificationCount = useAppStore(
+    (state) => state.unreadNotificationCount,
   );
   return (
     <Tabs
@@ -78,9 +81,15 @@ export default function TabLayout() {
                 size={24}
                 color={color}
               />
-              {/* <View className="absolute flex items-center justify-center bg-red-500 rounded-full -top-1 -right-1 size-4">
-                <Text className="text-xs font-semibold text-white">4</Text>
-              </View> */}
+              {unreadNotificationCount > 0 && (
+                <View className="absolute flex items-center justify-center bg-red-500 rounded-full -top-1 -right-1.5 size-4">
+                  <Text className="text-xs font-semibold text-white">
+                    {unreadNotificationCount > 9
+                      ? "9+"
+                      : unreadNotificationCount}
+                  </Text>
+                </View>
+              )}
             </View>
           ),
         }}

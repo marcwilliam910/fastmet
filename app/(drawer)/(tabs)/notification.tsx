@@ -1,84 +1,233 @@
-import NotLoggedIn from "@/components/notLoggedIn";
-import { useAuth } from "@/hooks/useAuth";
-import { Image } from "expo-image";
+import {
+  useMarkAllNotificationsAsRead,
+  useNotifications,
+} from "@/queries/notification";
+import { useAppStore } from "@/store/useAppStore";
+import { Notification } from "@/types/notification";
+import { formatLastMessageTime } from "@/utils/date";
+import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import React from "react";
-import { FlatList, Pressable, Text, View } from "react-native";
+import React, { useEffect, useMemo } from "react";
+import {
+  ActivityIndicator,
+  Button,
+  FlatList,
+  Pressable,
+  Text,
+  View,
+} from "react-native";
 
-const DUMMYNOTIFICATIONS = [
-  {
-    id: "1",
-    title: "Truck is ready",
-    message: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-    sent: "2h ago",
-    image: require("@/assets/images/user.png"),
-  },
-  {
-    id: "2",
-    title: "Truck Arrived",
-    message: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-    sent: "1min ago",
-    image: require("@/assets/images/user.png"),
-  },
-  {
-    id: "3",
-    title: "Truck Driver Cancelled",
-    message: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-    sent: "Yesterday",
-    image: require("@/assets/images/user.png"),
-  },
-  {
-    id: "4",
-    title: "Truck on the way",
-    message: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-    sent: "3hrs ago",
-    image: require("@/assets/images/user.png"),
-  },
-];
+const NotificationScreen = () => {
+  const setNotifications = useAppStore((state) => state.setNotifications);
 
-const Notification = () => {
-  const { isLoggedIn } = useAuth();
+  const {
+    data,
+    isPending,
+    error,
+    refetch,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useNotifications(15);
 
-  if (!isLoggedIn) {
-    return <NotLoggedIn />;
-  }
+  const { mutate: markAllAsRead, isPending: isMarkingAll } =
+    useMarkAllNotificationsAsRead();
+
+  // Store notifications in Zustand when data changes
+  const notifications = useMemo(
+    () =>
+      data?.pages
+        .flatMap((page) => page?.notifications ?? [])
+        .filter((n): n is Notification => Boolean(n)) ?? [],
+    [data],
+  );
+
+  useEffect(() => {
+    if (notifications.length > 0) {
+      setNotifications(notifications);
+    }
+  }, [data, notifications, setNotifications]);
+
+  const hasUnread = notifications.some((n) => n && !n.isRead);
+
+  if (isPending)
+    return (
+      <View className="flex-1 justify-center items-center bg-white">
+        <ActivityIndicator size="large" color="#FFA840" />
+      </View>
+    );
+
+  if (error)
+    return (
+      <View className="flex-1 justify-center items-center bg-white">
+        <Text className="text-lg font-semibold text-gray-500">
+          {error.message}
+        </Text>
+        <Button title="Retry" onPress={() => refetch()} />
+      </View>
+    );
 
   return (
-    <View className="flex-1 gap-6 py-6 bg-white">
-      <FlatList
-        data={DUMMYNOTIFICATIONS}
-        showsVerticalScrollIndicator={false}
-        renderItem={({ item }) => <NotificationCard item={item} />}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={{ gap: 3, paddingBottom: 60 }}
-      />
+    <View className="flex-1 gap-4 pt-4 bg-white">
+      {notifications.length === 0 ? (
+        <View className="flex-1 justify-center items-center">
+          <Ionicons
+            name="notifications-off-outline"
+            size={64}
+            color="#9CA3AF"
+          />
+          <Text className="mt-4 text-lg text-gray-400">
+            No notifications yet
+          </Text>
+        </View>
+      ) : (
+        <>
+          {/* Mark all as read button */}
+          {hasUnread && (
+            <Pressable
+              className="flex-row gap-2 items-center self-end px-4 py-2 mr-4 rounded-full bg-ctaSecondary active:opacity-70"
+              onPress={() => markAllAsRead()}
+              disabled={isMarkingAll}
+            >
+              {isMarkingAll ? (
+                <ActivityIndicator size="small" color="#FFA840" />
+              ) : (
+                <>
+                  <Ionicons name="checkmark-done" size={18} color="#FFA840" />
+                  <Text className="text-sm font-medium text-primary">
+                    Mark all as read
+                  </Text>
+                </>
+              )}
+            </Pressable>
+          )}
+
+          <FlatList
+            data={notifications}
+            showsVerticalScrollIndicator={false}
+            renderItem={({ item }) => <NotificationCard item={item} />}
+            keyExtractor={(item, index) => item?._id ?? `notification-${index}`}
+            // pull to refresh
+            refreshing={isPending}
+            onRefresh={refetch}
+            // infinite scroll
+            onEndReached={() => {
+              if (hasNextPage && !isFetchingNextPage) {
+                fetchNextPage();
+              }
+            }}
+            onEndReachedThreshold={0.3}
+            // Loading indicator at bottom
+            ListFooterComponent={() => {
+              if (isFetchingNextPage) {
+                return (
+                  <View className="py-4">
+                    <ActivityIndicator size="small" color="#FFA840" />
+                  </View>
+                );
+              }
+              return null;
+            }}
+          />
+        </>
+      )}
     </View>
   );
 };
 
-export default Notification;
+export default NotificationScreen;
 
-const NotificationCard = ({ item }: any) => {
+const NotificationCard = ({ item }: { item: Notification }) => {
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case "booking_accepted":
+        return "checkmark-circle";
+      case "booking_completed":
+        return "checkmark-done-circle";
+      case "booking_cancelled":
+        return "close-circle";
+      case "driver_arrived":
+        return "location";
+      case "driver_on_the_way":
+        return "car";
+      case "payment":
+        return "card";
+      case "promo":
+        return "gift";
+      case "system":
+        return "information-circle";
+      default:
+        return "notifications";
+    }
+  };
+
+  const getNotificationColor = (type: string) => {
+    switch (type) {
+      case "booking_accepted":
+        return "#22C55E"; // green
+      case "booking_completed":
+        return "#22C55E"; // green
+      case "booking_cancelled":
+        return "#EF4444"; // red
+      case "driver_arrived":
+        return "#3B82F6"; // blue
+      case "driver_on_the_way":
+        return "#FFA840"; // orange
+      case "payment":
+        return "#8B5CF6"; // purple
+      case "promo":
+        return "#EC4899"; // pink
+      case "system":
+        return "#6B7280"; // gray
+      default:
+        return "#FFA840"; // orange
+    }
+  };
+
   return (
     <Pressable
-      className="flex-row items-center gap-4 px-4 py-2 active:bg-ctaSecondary"
-      onPress={() => router.push("/(root_screens)/notifViewer")}
+      className={`flex-row items-center gap-4 px-4 py-3 active:bg-ctaSecondary ${
+        !item.isRead ? "bg-orange-50" : ""
+      }`}
+      onPress={() =>
+        router.push({
+          pathname: "/(root_screens)/notifViewer",
+          params: { notificationId: item._id },
+        })
+      }
     >
-      <Image
-        source={item.image}
-        style={{ width: 50, height: 50, borderRadius: 999 }}
-        contentFit="contain"
-      />
+      <View
+        className="justify-center items-center rounded-full size-12"
+        style={{ backgroundColor: `${getNotificationColor(item.type)}20` }}
+      >
+        <Ionicons
+          name={getNotificationIcon(item.type) as any}
+          size={24}
+          color={getNotificationColor(item.type)}
+        />
+      </View>
       <View className="flex-1 gap-1">
-        <View className="flex-row items-center justify-between">
-          <Text className="font-bold max-w-[60%]" numberOfLines={1}>
+        <View className="flex-row justify-between items-center">
+          <Text
+            className={`max-w-[60%] ${!item.isRead ? "font-bold" : "font-semibold"}`}
+            numberOfLines={1}
+          >
             {item.title}
           </Text>
-          <Text className="text-xs text-gray-400">{item.sent}</Text>
+          <View className="flex-row gap-1 items-center">
+            {!item.isRead && (
+              <View className="bg-orange-500 rounded-full size-2" />
+            )}
+            <Text className="text-xs text-gray-400">
+              {formatLastMessageTime(item.createdAt)}
+            </Text>
+          </View>
         </View>
         <Text
-          className="text-sm font-medium text-gray-600 max-w-[80%]"
-          numberOfLines={1}
+          className={`text-sm max-w-[90%] ${
+            !item.isRead ? "text-gray-700" : "text-gray-500"
+          }`}
+          numberOfLines={2}
         >
           {item.message}
         </Text>

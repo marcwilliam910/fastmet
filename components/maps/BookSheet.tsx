@@ -1,11 +1,17 @@
-import {useAppStore} from "@/store/useAppStore";
-import {ILoadVariant, IVehicleType} from "@/types/vehicle";
-import {formatDate} from "@/utils/date";
-import {Ionicons} from "@expo/vector-icons";
-import BottomSheet, {BottomSheetScrollView} from "@gorhom/bottom-sheet";
-import {Image} from "expo-image";
-import {router} from "expo-router";
-import React, {useCallback, useEffect, useMemo, useRef, useState} from "react";
+import { useAppStore } from "@/store/useAppStore";
+import { ILoadVariant, IVehicleType } from "@/types/vehicle";
+import { formatDate } from "@/utils/date";
+import { Ionicons } from "@expo/vector-icons";
+import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
+import { Image } from "expo-image";
+import { router } from "expo-router";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   Dimensions,
   Platform,
@@ -14,10 +20,10 @@ import {
   Text,
   View,
 } from "react-native";
-import Animated, {FadeInDown} from "react-native-reanimated";
-import {useSafeAreaInsets} from "react-native-safe-area-context";
+import Animated, { FadeInDown } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import BookingTypeModal from "../modals/bookingTypeModal";
-import {VehicleInfoModal} from "../modals/vehicleInfoModal";
+import { VehicleInfoModal } from "../modals/vehicleInfoModal";
 import LocationInputs from "./LocationInputs";
 import SheetButton from "./SheetButton";
 
@@ -32,7 +38,7 @@ const BookSheet = ({
   const previousSnapIndex = useRef<number>(1); // Store the previous index (default to 1, second snap point)
 
   const insets = useSafeAreaInsets();
-  const {height: screenHeight} = Dimensions.get("window");
+  const { height: screenHeight } = Dimensions.get("window");
   const [infoModalVisible, setInfoModalVisible] = useState(false);
   const [selectTimeModalVisible, setSelectTimeModalVisible] = useState(false);
 
@@ -95,7 +101,7 @@ const BookSheet = ({
       const screenWidth = Dimensions.get("window").width;
       const scrollPosition =
         index * vehicleItemWidth - screenWidth / 2 + vehicleItemWidth / 2 + 15;
-      vehicleScrollRef.current.scrollTo({x: scrollPosition, animated: true});
+      vehicleScrollRef.current.scrollTo({ x: scrollPosition, animated: true });
     }
   };
 
@@ -109,7 +115,7 @@ const BookSheet = ({
       const screenWidth = Dimensions.get("window").width;
       const scrollPosition =
         index * variantItemWidth - screenWidth / 2 + variantItemWidth / 2 + 50; // Adjust -20 to move left/right
-      variantScrollRef.current.scrollTo({x: scrollPosition, animated: true});
+      variantScrollRef.current.scrollTo({ x: scrollPosition, animated: true });
     }
   };
 
@@ -138,9 +144,9 @@ const BookSheet = ({
         snapPoints={snapPoints}
         onChange={handleSheetChange}
         enableDynamicSizing={false}
-        handleIndicatorStyle={{backgroundColor: "#FFA840"}}
+        handleIndicatorStyle={{ backgroundColor: "#FFA840" }}
         enableContentPanningGesture={false} // 👈 This is the key
-        containerStyle={{zIndex: 20}}
+        containerStyle={{ zIndex: 20 }}
       >
         <View className="flex-row justify-between items-center pb-5 pt-1.5 px-3">
           <Text className="text-lg font-bold">Booking Type</Text>
@@ -185,7 +191,7 @@ const BookSheet = ({
                   <ScrollView
                     horizontal
                     showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={{gap: 10}}
+                    contentContainerStyle={{ gap: 10 }}
                   >
                     {[1, 2, 3, 4].map((item) => (
                       <View key={item} className="items-center gap-1">
@@ -217,7 +223,7 @@ const BookSheet = ({
                     horizontal
                     showsHorizontalScrollIndicator={false}
                     className="w-full px-2 py-2"
-                    contentContainerStyle={{gap: 10}}
+                    contentContainerStyle={{ gap: 10 }}
                   >
                     {vehicles.map((v, index) => (
                       <View key={v.key} className="relative items-center gap-1">
@@ -240,7 +246,7 @@ const BookSheet = ({
                           </Text>
                           <Image
                             source={v.imageUrl}
-                            style={{height: 35, width: 45}}
+                            style={{ height: 35, width: 45 }}
                             contentFit="contain"
                           />
                         </Pressable>
@@ -272,7 +278,7 @@ const BookSheet = ({
                                 horizontal
                                 showsHorizontalScrollIndicator={false}
                                 className="px-2"
-                                contentContainerStyle={{gap: 8}}
+                                contentContainerStyle={{ gap: 8 }}
                               >
                                 {vehicles
                                   .find((v) => v.key === selectedVehicle.key)!
