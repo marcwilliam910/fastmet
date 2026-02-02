@@ -3,7 +3,7 @@ import { STATIC_IMAGES } from "@/utils/constants";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import React, { memo } from "react";
-import { Modal, Pressable, ScrollView, Text, View } from "react-native";
+import { Modal, Platform, Pressable, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import StarDisplay from "../StarDisplay";
 
@@ -30,8 +30,8 @@ function DriverDetailsModal({
         <View className="max-h-[85%] rounded-t-3xl bg-white">
           {/* Header */}
           <View className="items-center justify-center border-b border-gray-200 py-4">
-            <Pressable onPress={handleCloseModal} className="absolute left-5">
-              <Ionicons name="chevron-back" size={28} color="#6B7280" />
+            <Pressable onPress={handleCloseModal} className="absolute left-5" hitSlop={20}>
+              <Ionicons name="chevron-back" size={Platform.OS === "ios"? 32 : 28} color="#6B7280" />
             </Pressable>
             <Text className="text-xl font-bold text-gray-900">
               Driver Details
@@ -121,7 +121,7 @@ function DriverDetailsModal({
             {/* Action Buttons */}
             <View className="mt-6 gap-3">
               <Pressable
-                className="items-center rounded-xl bg-lightPrimary py-4"
+                className="items-center rounded-xl bg-lightPrimary py-4 active:bg-darkPrimary"
                 onPress={acceptDriver}
               >
                 <Text className="text-base font-bold text-white">
@@ -130,7 +130,7 @@ function DriverDetailsModal({
               </Pressable>
               <Pressable
                 onPress={handleCloseModal}
-                className="items-center rounded-xl bg-gray-200 py-4"
+                className="items-center rounded-xl bg-gray-200 py-4 active:bg-gray-300"
               >
                 <Text className="text-base font-bold text-gray-700">Close</Text>
               </Pressable>

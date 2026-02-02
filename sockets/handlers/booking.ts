@@ -66,24 +66,34 @@ export const acceptanceRequestedSchedule = (socket: Socket) => {
   }: {
     driverOffer: RequestedDriver;
   }) => {
-    queryClient.setQueryData(["userBookings", "pending"], (oldData: any) => {
-      if (!oldData) return oldData;
-
-      return {
-        ...oldData,
-        pages: oldData.pages.map((page: any) => ({
-          ...page,
-          bookings: page.bookings.map((booking: Booking) =>
-            booking._id === driverOffer.bookingId
-              ? {
-                  ...booking,
-                  requestedDrivers: [...booking.requestedDrivers, driverOffer],
-                }
-              : booking,
-          ),
-        })),
-      };
-    });
+    console.log(JSON.stringify(driverOffer, null, 2));
+    
+   // Update ALL pending bookings queries regardless of limit
+queryClient.setQueriesData(
+  { queryKey: ["userBookings", "pending"] }, // Partial match
+  (oldData: any) => {
+    if (!oldData?.pages) return oldData;
+    
+    return {
+      ...oldData,
+      pages: oldData.pages.map((page: any) => ({
+        ...page,
+        bookings: page.bookings.map((booking: Booking) => {
+          if (booking._id === driverOffer.bookingId) {
+            return {
+              ...booking,
+              requestedDrivers: [
+                ...(booking.requestedDrivers || []),
+                driverOffer,
+              ],
+            };
+          }
+          return booking;
+        }),
+      })),
+    };
+  }
+);
 
     Toast.show({
       type: "success",
@@ -94,8 +104,5 @@ export const acceptanceRequestedSchedule = (socket: Socket) => {
 
   socket.on("acceptanceRequestedSchedule", handleAcceptanceRequestedSchedule);
   return () =>
-    socket.off(
-      "acceptanceRequestedSchedule",
-      handleAcceptanceRequestedSchedule,
-    );
+    socket.off("acceptanceRequestedSchedule", handleAcceptanceRequestedSchedule);
 };

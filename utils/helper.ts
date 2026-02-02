@@ -63,3 +63,16 @@ export const formatLocation = (loc: LocationDetails) => {
 export const createConversationId = (id1: string, id2: string): string => {
   return [id1, id2].sort().join("_");
 };
+
+export  const isSameLocation = (
+  lat1: number,
+  lng1: number,
+  lat2: number,
+  lng2: number,
+): boolean => {
+  // Compare coordinates with a small tolerance (about 10 meters)
+  const tolerance = 0.0001; // approximately 10 meters
+  return (
+    Math.abs(lat1 - lat2) < tolerance && Math.abs(lng1 - lng2) < tolerance
+  );
+};

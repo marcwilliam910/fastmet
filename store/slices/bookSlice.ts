@@ -85,7 +85,7 @@ export const createBookSlice: StateCreator<BookSlice> = (set, get) => ({
         routeData: {
           ...state.routeData,
           serviceFee,
-          totalPrice: basePrice + distanceFee + serviceFee,
+          totalPrice: Math.round(basePrice + distanceFee + serviceFee),
         },
       };
     }),
@@ -109,7 +109,7 @@ export const createBookSlice: StateCreator<BookSlice> = (set, get) => ({
         routeData: {
           ...state.routeData,
           serviceFee,
-          totalPrice: basePrice + distanceFee + serviceFee,
+          totalPrice: Math.round(basePrice + distanceFee + serviceFee),
         },
       };
     }),
@@ -179,10 +179,10 @@ export const createBookSlice: StateCreator<BookSlice> = (set, get) => ({
         routeData: {
           distance: distanceKm,
           duration: durationMin,
-          basePrice: Math.round(basePrice * 100) / 100,
-          distanceFee: Math.round(distanceFee * 100) / 100,
-          serviceFee: Math.round(serviceFee * 100) / 100,
-          totalPrice: Math.round(totalPrice * 100) / 100,
+          basePrice: Math.round(Math.round(basePrice * 100) / 100),
+          distanceFee: Math.round(Math.round(distanceFee * 100) / 100),
+          serviceFee: Math.round(Math.round(serviceFee * 100) / 100),
+          totalPrice: Math.round(Math.round(totalPrice * 100) / 100),
         },
       });
 

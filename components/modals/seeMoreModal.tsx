@@ -30,13 +30,13 @@ export default function SeeMoreModal({
   onClose,
   type,
   data,
-  setShowDriversModal,
+  onOpenDriverOffers,
 }: {
   visible: boolean;
   onClose: () => void;
   type: string;
   data: Booking | ActiveBooking;
-  setShowDriversModal?: React.Dispatch<React.SetStateAction<boolean>>;
+  onOpenDriverOffers?: () => void;
 }) {
   const insets = useSafeAreaInsets();
   const [imageViewerVisible, setImageViewerVisible] = useState(false);
@@ -364,7 +364,7 @@ export default function SeeMoreModal({
           </View>
 
           {/* Selected Services */}
-          {data.addedServices && data.addedServices.length > 0 && (
+          {(data.selectedVehicle.freeServices?.length > 0 || data.addedServices?.length > 0) && (
             <View className="p-4 border border-gray-200 rounded-2xl bg-white">
               <View className="flex-row items-center justify-between mb-3">
                 <Text className="text-base font-semibold text-gray-800">
@@ -372,91 +372,94 @@ export default function SeeMoreModal({
                 </Text>
                 <View className="px-2 py-1 bg-orange-100 rounded-full">
                   <Text className="text-xs font-semibold text-lightPrimary">
-                    {data.addedServices.length} add-ons
+                    {data.addedServices ? data.addedServices.length : 0} add-ons
                   </Text>
                 </View>
               </View>
 
               {/* Free Services */}
-              {data.selectedVehicle.freeServices &&
-                data.selectedVehicle.freeServices.length > 0 && (
-                  <View className="mb-3">
-                    <Text className="mb-2 text-xs font-medium text-gray-500 uppercase">
-                      Included (Free)
-                    </Text>
-                    <View className="gap-2">
-                      {data.selectedVehicle.freeServices.map(
-                        (service: Service) => (
-                          <View
-                            key={service.key}
-                            className="flex-row items-center justify-between py-2"
-                          >
-                            <View className="flex-row items-center flex-1 gap-2">
-                              <View className="w-1.5 h-1.5 bg-green-500 rounded-full" />
-                              <Text className="flex-1 text-sm text-gray-700">
-                                {service.name}
-                              </Text>
-                            </View>
-                            <Text className="text-xs font-medium text-green-600">
-                              FREE
+              {data.selectedVehicle.freeServices && data.selectedVehicle.freeServices.length > 0 && (
+                <View className="mb-3">
+                  <Text className="mb-2 text-xs font-medium text-gray-500 uppercase">
+                    Included (Free)
+                  </Text>
+                  <View className="gap-2">
+                    {data.selectedVehicle.freeServices.map(
+                      (service: Service) => (
+                        <View
+                          key={service.key}
+                          className="flex-row items-center justify-between py-2"
+                        >
+                          <View className="flex-row items-center flex-1 gap-2">
+                            <View className="w-1.5 h-1.5 bg-green-500 rounded-full" />
+                            <Text className="flex-1 text-sm text-gray-700">
+                              {service.name}
                             </Text>
                           </View>
-                        ),
-                      )}
-                    </View>
+                          <Text className="text-xs font-medium text-green-600">
+                            FREE
+                          </Text>
+                        </View>
+                      ),
+                    )}
                   </View>
-                )}
+                </View>
+              )}
 
               {/* Paid Services */}
-              <View className="pt-3 border-t border-gray-200">
-                <Text className="mb-2 text-xs font-medium text-gray-500 uppercase">
-                  Add-ons
-                </Text>
-                <View className="gap-2">
-                  {data.addedServices.map((service: Service) => (
-                    <View
-                      key={service.key}
-                      className="flex-row items-center justify-between py-2"
-                    >
-                      <View className="flex-1">
-                        <Text className="text-sm font-medium text-gray-800">
-                          {service.name}
-                        </Text>
-                        {service.quantity && service.quantity > 1 && (
-                          <Text className="text-xs text-gray-500">
-                            Qty: {service.quantity} × ₱{service.price}
+              {data.addedServices && data.addedServices.length > 0 && (
+                <View className="pt-3 border-t border-gray-200">
+                  <Text className="mb-2 text-xs font-medium text-gray-500 uppercase">
+                    Add-ons
+                  </Text>
+                  <View className="gap-2">
+                    {data.addedServices.map((service: Service) => (
+                      <View
+                        key={service.key}
+                        className="flex-row items-center justify-between py-2"
+                      >
+                        <View className="flex-1">
+                          <Text className="text-sm font-medium text-gray-800">
+                            {service.name}
                           </Text>
-                        )}
+                          {service.quantity && service.quantity > 1 && (
+                            <Text className="text-xs text-gray-500">
+                              Qty: {service.quantity} × ₱{service.price}
+                            </Text>
+                          )}
+                        </View>
+                        <Text className="font-semibold text-lightPrimary">
+                          ₱
+                          {service.quantity && service.quantity > 1
+                            ? (service.price * service.quantity).toLocaleString(
+                                "en-US",
+                              )
+                            : service.price > 0
+                              ? service.price.toLocaleString("en-US")
+                              : "0.00"}
+                        </Text>
                       </View>
-                      <Text className="font-semibold text-lightPrimary">
-                        ₱
-                        {service.quantity && service.quantity > 1
-                          ? (service.price * service.quantity).toLocaleString(
-                              "en-US",
-                            )
-                          : service.price > 0
-                            ? service.price.toLocaleString("en-US")
-                            : "0.00"}
-                      </Text>
-                    </View>
-                  ))}
+                    ))}
+                  </View>
                 </View>
-              </View>
+              )}
 
               {/* Total */}
-              <View className="flex-row items-center justify-between pt-3 mt-3 border-t border-gray-300">
-                <Text className="text-base font-semibold text-gray-800">
-                  Services Total
-                </Text>
-                <Text className="text-lg font-bold text-lightPrimary">
-                  {totalServicesPrice > 0
-                    ? `₱${totalServicesPrice.toLocaleString("en-US", {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}`
-                    : "FREE"}
-                </Text>
-              </View>
+              {data.addedServices && data.addedServices.length > 0 && (
+                <View className="flex-row items-center justify-between pt-3 mt-3 border-t border-gray-300">
+                  <Text className="text-base font-semibold text-gray-800">
+                    Services Total
+                  </Text>
+                  <Text className="text-lg font-bold text-lightPrimary">
+                    {totalServicesPrice > 0
+                      ? `₱${totalServicesPrice.toLocaleString("en-US", {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}`
+                      : "FREE"}
+                  </Text>
+                </View>
+              )}
             </View>
           )}
 
@@ -542,7 +545,7 @@ export default function SeeMoreModal({
           {type === "Request Booking" && data.requestedDrivers.length > 0 && (
             <Pressable
               className="items-center flex-row gap-2 justify-center py-3 mx-4 rounded-lg bg-lightPrimary active:bg-darkPrimary"
-              onPress={() => setShowDriversModal?.(true)}
+              onPress={() => onOpenDriverOffers?.()}
             >
               <Ionicons name="car-outline" size={22} color="#FFFFFF" />
               <Text className="text-lg font-bold text-white">

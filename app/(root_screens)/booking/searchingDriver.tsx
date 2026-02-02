@@ -45,6 +45,10 @@ export default function SearchingDriver() {
   const [drivers, setDrivers] = useState<RequestedDriver[]>([]);
   const socket = useSocket();
   const [shouldPrevent, setShouldPrevent] = useState(true);
+    // Single modal state managed at parent level
+    const [selectedDriver, setSelectedDriver] = useState<RequestedDriver | null>(
+      null,
+    );
 
   console.log("SearchingDriver");
 
@@ -140,6 +144,8 @@ export default function SearchingDriver() {
         swipeable: true,
         topOffset: 50,
       });
+
+      setSelectedDriver(null)
 
       queryClient.invalidateQueries({
         queryKey: ["userBookings", "active"],
@@ -303,6 +309,8 @@ export default function SearchingDriver() {
               drivers={drivers}
               handleRemoveDriver={handleRemoveDriver}
               bookingId={bookingId}
+              selectedDriver={selectedDriver}
+              setSelectedDriver={setSelectedDriver}
             />
           )}
 
@@ -323,17 +331,19 @@ const DriverListCard = ({
   drivers,
   handleRemoveDriver,
   bookingId,
+  selectedDriver,
+  setSelectedDriver
 }: {
   drivers: RequestedDriver[];
   handleRemoveDriver: (id: string) => void;
   bookingId: string;
+  selectedDriver:RequestedDriver |null,
+  setSelectedDriver:React.Dispatch<React.SetStateAction<RequestedDriver | null>>
 }) => {
   console.log("DriverListCard");
+  
 
-  // Single modal state managed at parent level
-  const [selectedDriver, setSelectedDriver] = useState<RequestedDriver | null>(
-    null,
-  );
+
   const socket = useSocket();
 
   // Track which driver timers are paused - now pauses ALL when modal opens
@@ -352,12 +362,12 @@ const DriverListCard = ({
   const handleDriverSelect = useCallback((driver: RequestedDriver) => {
     setSelectedDriver(driver);
     setAreAllPaused(true); // Pause all driver timers
-  }, []);
+  }, [setSelectedDriver]);
 
   const handleCloseModal = useCallback(() => {
     setSelectedDriver(null);
     setAreAllPaused(false); // Resume all driver timers
-  }, []);
+  }, [setSelectedDriver]);
 
   return (
     <>

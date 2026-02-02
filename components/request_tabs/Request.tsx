@@ -29,7 +29,10 @@ import SeeMoreModal from "../modals/seeMoreModal";
 export default function RequestRoute() {
   const { modalVisible, setModalVisible, selectedRequest, handleSeeMorePress } =
     useSeeMoreDetails<Booking>();
-  const [showDriversModal, setShowDriversModal] = useState(false);
+  /** Which booking's drivers list is open. Null = drivers modal closed. */
+  const [driversModalBookingId, setDriversModalBookingId] = useState<
+    string | null
+  >(null);
   const [selectedDriver, setSelectedDriver] = useState<RequestedDriver | null>(
     null,
   );
@@ -56,6 +59,11 @@ export default function RequestRoute() {
   bookings = selectedFilters.includes("SCHEDULED")
     ? [...bookings, ...scheduledBookings]
     : bookings;
+
+  const driversModalBooking = bookings.find(
+    (b) => b._id === driversModalBookingId,
+  );
+  const driversForModal = driversModalBooking?.requestedDrivers ?? [];
 
   // Determine active queries for fetching / refreshing
   const activeQueries =
@@ -96,6 +104,21 @@ export default function RequestRoute() {
     setSelectedId(null);
   };
 
+  const acceptDriver = useCallback(() => {
+    if (!selectedDriver?.id || !selectedDriver?.bookingId) return;
+    setLoading(true);
+    socket.emit("acceptDriver", {
+      driverId: selectedDriver.id,
+      bookingId: selectedDriver.bookingId,
+      type: "schedule",
+    });
+  }, [selectedDriver?.bookingId, selectedDriver?.id, setLoading, socket]);
+
+  const closeDriversModal = useCallback(() => {
+    setDriversModalBookingId(null);
+    setSelectedDriver(null);
+  }, []);
+
   useEffect(() => {
     const bookingCancelled = (bookingId: string) => {
       setLoading(false);
@@ -123,11 +146,58 @@ export default function RequestRoute() {
         topOffset: 50,
       });
     };
+    const errorHandler = ({ message }: { message: string }) => {
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: message,
+        position: "top",
+        visibilityTime: 5_000,
+        swipeable: true,
+        topOffset: 50,
+      });
+    };
     socket.on("bookingCancelled", bookingCancelled);
+    socket.on("error", errorHandler);
     return () => {
       socket.off("bookingCancelled", bookingCancelled);
+      socket.off("error", errorHandler);
     };
   }, [setLoading, socket]);
+
+  useEffect(() => {
+    const driverAcceptedSchedule = ({ bookingId, success }: { bookingId: string, success: boolean }) => {
+      if (bookingId !== selectedDriver?.bookingId) return;
+
+      setLoading(false);
+      closeDriversModal();
+      queryClient.invalidateQueries({
+        queryKey: ["userBookings", "scheduled"],
+        exact: false,
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["userBookings", "pending"],
+        exact: false,
+      });
+
+      Toast.show({
+        type: "success",
+        text1: "Offer Accepted!",
+        text2: `You have accepted ${selectedDriver?.name}'s offer.`,
+        position: "top",
+        visibilityTime: 5_000,
+        swipeable: true,
+        topOffset: 50,
+      });
+
+      setSelectedFilters(["SCHEDULED"])
+    }
+
+    socket.on("driverAcceptedSchedule", driverAcceptedSchedule);
+    return () => {
+      socket.off("driverAcceptedSchedule", driverAcceptedSchedule);
+    };
+  }, [closeDriversModal, selectedDriver?.bookingId, selectedDriver?.name, setLoading, socket]);
 
   if (isLoading)
     return (
@@ -210,13 +280,12 @@ export default function RequestRoute() {
             amount={item.routeData.totalPrice}
             isCash={item.paymentMethod === "cash"}
             onCancel={() => setSelectedId(item._id)}
-            // onUpdateNote={() => setShowUpdateNoteModal(true)}
             onPressSeeMore={() => handleSeeMorePress(item)}
             driverOffers={item.requestedDrivers}
-            showDriversModal={showDriversModal}
-            setShowDriversModal={setShowDriversModal}
-            selectedDriver={selectedDriver}
-            setSelectedDriver={setSelectedDriver}
+            onOpenDrivers={() => {
+              setSelectedDriver(null);
+              setDriversModalBookingId(item._id);
+            }}
           />
         )}
         refreshing={refreshing}
@@ -249,7 +318,11 @@ export default function RequestRoute() {
           onClose={() => setModalVisible(false)}
           type="Request Booking"
           data={selectedRequest}
-          setShowDriversModal={setShowDriversModal}
+          onOpenDriverOffers={() => {
+            setModalVisible(false);
+            setSelectedDriver(null);
+            setDriversModalBookingId(selectedRequest._id);
+          }}
         />
       )}
 
@@ -258,6 +331,27 @@ export default function RequestRoute() {
           visible={selectedId !== null}
           onClose={() => setSelectedId(null)}
           onConfirm={handleCancelBook}
+        />
+      )}
+
+      <DriversListModal
+        visible={driversModalBookingId !== null && selectedDriver === null}
+        drivers={driversForModal}
+        onClose={closeDriversModal}
+        onSelectDriver={(driver) =>
+          setSelectedDriver({
+            ...driver,
+            bookingId: driver.bookingId ?? driversModalBookingId ?? undefined,
+          })
+        }
+      />
+
+      {selectedDriver && (
+        <DriverDetailsModal
+          isModalOpen
+          driver={selectedDriver}
+          handleCloseModal={() => setSelectedDriver(null)}
+          acceptDriver={acceptDriver}
         />
       )}
     </>
@@ -277,15 +371,9 @@ type RequestCardProps = {
   isCash: boolean;
   amount: number;
   onCancel: () => void;
-  // onUpdateNote: () => void;
   onPressSeeMore: () => void;
   driverOffers?: RequestedDriver[];
-  selectedDriver: RequestedDriver | null;
-  showDriversModal: boolean;
-  setShowDriversModal: React.Dispatch<React.SetStateAction<boolean>>;
-  setSelectedDriver: React.Dispatch<
-    React.SetStateAction<RequestedDriver | null>
-  >;
+  onOpenDrivers: () => void;
 };
 
 const RequestCard = ({
@@ -298,59 +386,14 @@ const RequestCard = ({
   isCash,
   amount,
   onCancel,
-  // onUpdateNote,
   onPressSeeMore,
   driverOffers = [],
-  selectedDriver,
-  showDriversModal,
-  setShowDriversModal,
-  setSelectedDriver,
+  onOpenDrivers,
 }: RequestCardProps) => {
   const hasOffers = driverOffers.length > 0;
-  const maxStackedAvatars = 4; // Show max 4 stacked avatars
+  const maxStackedAvatars = 4;
   const displayedAvatars = driverOffers.slice(0, maxStackedAvatars);
   const remainingCount = Math.max(0, driverOffers.length - maxStackedAvatars);
-  const socket = useSocket();
-
-  const acceptDriver = useCallback(() => {
-    socket.emit("acceptDriver", {
-      driverId: selectedDriver?.id,
-      bookingId: selectedDriver?.bookingId,
-      type: "schedule",
-    });
-  }, [selectedDriver?.bookingId, selectedDriver?.id, socket]);
-
-  const handleCloseModal = useCallback(() => {
-    setSelectedDriver(null);
-  }, [setSelectedDriver]);
-
-  useEffect(() => {
-    const driverAcceptedSchedule = ({ bookingId }: { bookingId: string }) => {
-      if (bookingId !== selectedDriver?.bookingId) return;
-
-      setShowDriversModal(false);
-      setSelectedDriver(null);
-      queryClient.invalidateQueries({
-        queryKey: ["userBookings", "scheduled"],
-        exact: false,
-      });
-
-      queryClient.invalidateQueries({
-        queryKey: ["userBookings", "pending"],
-        exact: false,
-      });
-    };
-
-    socket.on("driverAcceptedSchedule", driverAcceptedSchedule);
-    return () => {
-      socket.off("driverAcceptedSchedule", driverAcceptedSchedule);
-    };
-  }, [
-    selectedDriver?.bookingId,
-    setSelectedDriver,
-    setShowDriversModal,
-    socket,
-  ]);
 
   return (
     <>
@@ -410,10 +453,10 @@ const RequestCard = ({
               />
             </View>
 
-            {/* 🆕 Driver Offers - Stacked Avatars */}
+            {/* Driver Offers - Stacked Avatars */}
             {hasOffers && (
               <Pressable
-                onPress={() => setShowDriversModal(true)}
+                onPress={onOpenDrivers}
                 className="mt-6 flex-row items-center justify-between bg-orange-50 p-3 rounded-xl active:bg-orange-100"
               >
                 <View className="flex-row items-center">
@@ -515,26 +558,6 @@ const RequestCard = ({
           </View>
         </Pressable>
       </View>
-
-      {/* 🆕 Drivers List Modal */}
-      <DriversListModal
-        visible={showDriversModal}
-        drivers={driverOffers}
-        onClose={() => setShowDriversModal(false)}
-        onSelectDriver={(driver) => {
-          setSelectedDriver(driver);
-        }}
-      />
-
-      {/* 🆕 Individual Driver Details Modal */}
-      {selectedDriver && (
-        <DriverDetailsModal
-          isModalOpen={selectedDriver !== null}
-          driver={selectedDriver}
-          handleCloseModal={handleCloseModal}
-          acceptDriver={acceptDriver}
-        />
-      )}
     </>
   );
 };
@@ -556,10 +579,17 @@ const DriversListModal = ({
     <Modal
       visible={visible}
       animationType="slide"
-      transparent={true}
+      transparent
       onRequestClose={onClose}
     >
-      <View className="flex-1 justify-end bg-black/50">
+      <View className="flex-1">
+        <Pressable
+          className="flex-1 bg-black/50"
+          onPress={onClose}
+          accessible
+          accessibilityRole="button"
+          accessibilityLabel="Close modal"
+        />
         <View
           className="max-h-[75%] rounded-t-3xl bg-white"
           style={{ paddingBottom: inset.bottom }}

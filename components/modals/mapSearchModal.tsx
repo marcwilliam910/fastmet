@@ -6,7 +6,7 @@ import {
   METRO_MANILA_POLYGON,
   requiresFerryFromMetroManila,
 } from "@/utils/constants";
-import { formatLocation } from "@/utils/helper";
+import { formatLocation, isSameLocation } from "@/utils/helper";
 import { getArray, pushToArray } from "@/utils/recentPlaceStorage";
 import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
@@ -109,6 +109,8 @@ const SearchModal: React.FC<SearchModalProps> = ({
   const canConfirm =
     selectedPlace !== null || (haveValue !== null && additionalDetailsChanged);
 
+
+
   const handleConfirm = async () => {
     // If a new place was selected
     if (selectedPlace?.details) {
@@ -122,6 +124,55 @@ const SearchModal: React.FC<SearchModalProps> = ({
           lng: details.location.longitude,
         },
       };
+
+      // Final check before confirming - ensure locations are not the same
+      if (type === "pickup" && dropOff) {
+        if (
+          isSameLocation(
+            locationData.coords.lat,
+            locationData.coords.lng,
+            dropOff.coords.lat,
+            dropOff.coords.lng,
+          )
+        ) {
+          const message = "Pick-up and drop-off locations cannot be the same.";
+
+          if (Platform.OS === "android") {
+            ToastAndroid.showWithGravity(
+              message,
+              ToastAndroid.LONG,
+              ToastAndroid.TOP,
+            );
+          } else {
+            Alert.alert("Invalid Location", message);
+          }
+          shake();
+          return;
+        }
+      } else if (type === "dropoff" && pickUp) {
+        if (
+          isSameLocation(
+            locationData.coords.lat,
+            locationData.coords.lng,
+            pickUp.coords.lat,
+            pickUp.coords.lng,
+          )
+        ) {
+          const message = "Pick-up and drop-off locations cannot be the same.";
+
+          if (Platform.OS === "android") {
+            ToastAndroid.showWithGravity(
+              message,
+              ToastAndroid.LONG,
+              ToastAndroid.TOP,
+            );
+          } else {
+            Alert.alert("Invalid Location", message);
+          }
+          shake();
+          return;
+        }
+      }
 
       await pushToArray(RECENT_PLACE_KEY, locationData);
 
@@ -151,6 +202,55 @@ const SearchModal: React.FC<SearchModalProps> = ({
 
     const loc = place.details?.location;
     if (!loc) return;
+
+    // Check if location matches the other location (pickup/dropoff)
+    if (type === "pickup" && dropOff) {
+      if (
+        isSameLocation(
+          loc.latitude,
+          loc.longitude,
+          dropOff.coords.lat,
+          dropOff.coords.lng,
+        )
+      ) {
+        const message = "Pick-up and drop-off locations cannot be the same.";
+
+        if (Platform.OS === "android") {
+          ToastAndroid.showWithGravity(
+            message,
+            ToastAndroid.LONG,
+            ToastAndroid.TOP,
+          );
+        } else {
+          Alert.alert("Invalid Location", message);
+        }
+        shake();
+        return;
+      }
+    } else if (type === "dropoff" && pickUp) {
+      if (
+        isSameLocation(
+          loc.latitude,
+          loc.longitude,
+          pickUp.coords.lat,
+          pickUp.coords.lng,
+        )
+      ) {
+        const message = "Pick-up and drop-off locations cannot be the same.";
+
+        if (Platform.OS === "android") {
+          ToastAndroid.showWithGravity(
+            message,
+            ToastAndroid.LONG,
+            ToastAndroid.TOP,
+          );
+        } else {
+          Alert.alert("Invalid Location", message);
+        }
+        shake();
+        return;
+      }
+    }
 
     // Check if pickup is within Metro Manila
     if (type === "pickup") {
@@ -206,6 +306,41 @@ const SearchModal: React.FC<SearchModalProps> = ({
   const handleRecentPlacePress = async (place: LocationDetails) => {
     if (!place) return;
     const { lat, lng } = place.coords;
+
+    // Check if location matches the other location (pickup/dropoff)
+    if (type === "pickup" && dropOff) {
+      if (isSameLocation(lat, lng, dropOff.coords.lat, dropOff.coords.lng)) {
+        const message = "Pick-up and drop-off locations cannot be the same.";
+
+        if (Platform.OS === "android") {
+          ToastAndroid.showWithGravity(
+            message,
+            ToastAndroid.LONG,
+            ToastAndroid.TOP,
+          );
+        } else {
+          Alert.alert("Invalid Location", message);
+        }
+        shake();
+        return;
+      }
+    } else if (type === "dropoff" && pickUp) {
+      if (isSameLocation(lat, lng, pickUp.coords.lat, pickUp.coords.lng)) {
+        const message = "Pick-up and drop-off locations cannot be the same.";
+
+        if (Platform.OS === "android") {
+          ToastAndroid.showWithGravity(
+            message,
+            ToastAndroid.LONG,
+            ToastAndroid.TOP,
+          );
+        } else {
+          Alert.alert("Invalid Location", message);
+        }
+        shake();
+        return;
+      }
+    }
 
     // Validate pickup location
     if (type === "pickup") {
@@ -307,6 +442,55 @@ const SearchModal: React.FC<SearchModalProps> = ({
       });
 
       const { latitude, longitude } = location.coords;
+
+      // Check if location matches the other location (pickup/dropoff)
+      if (type === "pickup" && dropOff) {
+        if (
+          isSameLocation(
+            latitude,
+            longitude,
+            dropOff.coords.lat,
+            dropOff.coords.lng,
+          )
+        ) {
+          const message = "Pick-up and drop-off locations cannot be the same.";
+
+          if (Platform.OS === "android") {
+            ToastAndroid.showWithGravity(
+              message,
+              ToastAndroid.LONG,
+              ToastAndroid.TOP,
+            );
+          } else {
+            Alert.alert("Invalid Location", message);
+          }
+          shake();
+          return;
+        }
+      } else if (type === "dropoff" && pickUp) {
+        if (
+          isSameLocation(
+            latitude,
+            longitude,
+            pickUp.coords.lat,
+            pickUp.coords.lng,
+          )
+        ) {
+          const message = "Pick-up and drop-off locations cannot be the same.";
+
+          if (Platform.OS === "android") {
+            ToastAndroid.showWithGravity(
+              message,
+              ToastAndroid.LONG,
+              ToastAndroid.TOP,
+            );
+          } else {
+            Alert.alert("Invalid Location", message);
+          }
+          shake();
+          return;
+        }
+      }
 
       // Validate location before proceeding
       if (type === "pickup") {

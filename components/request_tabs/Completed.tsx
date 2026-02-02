@@ -3,6 +3,7 @@ import { useRateDriverMutation } from "@/mutations/booking";
 import { useUserBookings } from "@/queries/bookingQueries";
 import { useAppStore } from "@/store/useAppStore";
 import { CompletedBooking, LocationDetails } from "@/types/book";
+import { Service } from "@/types/vehicle";
 import { formatDate } from "@/utils/date";
 import { createConversationId, formatLocation } from "@/utils/helper";
 import { Ionicons } from "@expo/vector-icons";
@@ -277,6 +278,12 @@ function SeeMoreModal({
 
     return () => clearTimeout(timeoutId);
   }, [visible, data.driverRating]);
+
+  
+  const totalServicesPrice = data.addedServices.reduce(
+    (total, service) => total + service.price,
+    0,
+  );
 
   return (
     <Modal
@@ -685,44 +692,103 @@ function SeeMoreModal({
             </View>
           </View>
 
-          {/* Selected Services */}
-          {data.addedServices && data.addedServices.length > 0 && (
-            <View className="p-5 bg-gray-50 rounded-2xl">
-              <Text className="mb-3 text-base font-semibold text-gray-800">
-                Selected Services ({data.addedServices.length})
-              </Text>
-              <View className="gap-2">
-                {data.addedServices.map((service: any) => (
-                  <View
-                    key={service.id}
-                    className="flex-row items-center justify-between p-4 bg-white rounded-xl"
-                  >
-                    <View className="flex-row items-center flex-1">
-                      <Text className="mr-3 text-2xl">{service.icon}</Text>
-                      <Text className="text-base text-gray-800">
-                        {service.name}
-                      </Text>
-                    </View>
-                    <Text className="font-semibold text-lightPrimary">
-                      ₱{service.price}
-                    </Text>
-                  </View>
-                ))}
+         {/* Selected Services */}
+         {(data.selectedVehicle.freeServices?.length > 0 || data.addedServices?.length > 0) && (
+            <View className="p-4 border border-gray-200 rounded-2xl bg-white">
+              <View className="flex-row items-center justify-between mb-3">
+                <Text className="text-base font-semibold text-gray-800">
+                  Selected Services
+                </Text>
+                <View className="px-2 py-1 bg-orange-100 rounded-full">
+                  <Text className="text-xs font-semibold text-lightPrimary">
+                    {data.addedServices ? data.addedServices.length : 0} add-ons
+                  </Text>
+                </View>
               </View>
 
-              <View className="flex-row items-center justify-between px-4 pt-4 rounded-xl">
-                <Text className="text-base font-semibold text-gray-800">
-                  Total
-                </Text>
-                <Text className="font-semibold text-lightPrimary">
-                  {data.routeData.serviceFee > 0
-                    ? `Php ${data.routeData.serviceFee.toLocaleString("en-US", {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}`
-                    : "FREE"}
-                </Text>
-              </View>
+              {/* Free Services */}
+              {data.selectedVehicle.freeServices && data.selectedVehicle.freeServices.length > 0 && (
+                <View className="mb-3">
+                  <Text className="mb-2 text-xs font-medium text-gray-500 uppercase">
+                    Included (Free)
+                  </Text>
+                  <View className="gap-2">
+                    {data.selectedVehicle.freeServices.map(
+                      (service: Service) => (
+                        <View
+                          key={service.key}
+                          className="flex-row items-center justify-between py-2"
+                        >
+                          <View className="flex-row items-center flex-1 gap-2">
+                            <View className="w-1.5 h-1.5 bg-green-500 rounded-full" />
+                            <Text className="flex-1 text-sm text-gray-700">
+                              {service.name}
+                            </Text>
+                          </View>
+                          <Text className="text-xs font-medium text-green-600">
+                            FREE
+                          </Text>
+                        </View>
+                      ),
+                    )}
+                  </View>
+                </View>
+              )}
+
+              {/* Paid Services */}
+              {data.addedServices && data.addedServices.length > 0 && (
+                <View className="pt-3 border-t border-gray-200">
+                  <Text className="mb-2 text-xs font-medium text-gray-500 uppercase">
+                    Add-ons
+                  </Text>
+                  <View className="gap-2">
+                    {data.addedServices.map((service: Service) => (
+                      <View
+                        key={service.key}
+                        className="flex-row items-center justify-between py-2"
+                      >
+                        <View className="flex-1">
+                          <Text className="text-sm font-medium text-gray-800">
+                            {service.name}
+                          </Text>
+                          {service.quantity && service.quantity > 1 && (
+                            <Text className="text-xs text-gray-500">
+                              Qty: {service.quantity} × ₱{service.price}
+                            </Text>
+                          )}
+                        </View>
+                        <Text className="font-semibold text-lightPrimary">
+                          ₱
+                          {service.quantity && service.quantity > 1
+                            ? (service.price * service.quantity).toLocaleString(
+                                "en-US",
+                              )
+                            : service.price > 0
+                              ? service.price.toLocaleString("en-US")
+                              : "0.00"}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              )}
+
+              {/* Total */}
+              {data.addedServices && data.addedServices.length > 0 && (
+                <View className="flex-row items-center justify-between pt-3 mt-3 border-t border-gray-300">
+                  <Text className="text-base font-semibold text-gray-800">
+                    Services Total
+                  </Text>
+                  <Text className="text-lg font-bold text-lightPrimary">
+                    {totalServicesPrice > 0
+                      ? `₱${totalServicesPrice.toLocaleString("en-US", {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}`
+                      : "FREE"}
+                  </Text>
+                </View>
+              )}
             </View>
           )}
 
