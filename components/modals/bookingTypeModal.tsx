@@ -12,6 +12,15 @@ const getMinTime = () => {
   return min;
 };
 
+const isToday = (date: Date) => {
+  const today = new Date();
+  return (
+    date.getDate() === today.getDate() &&
+    date.getMonth() === today.getMonth() &&
+    date.getFullYear() === today.getFullYear()
+  );
+};
+
 export default function BookingTypeModal({
   visible,
   onClose,
@@ -20,7 +29,7 @@ export default function BookingTypeModal({
   onClose: () => void;
 }) {
   const [step, setStep] = useState<"main" | "calendar">("main");
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(getMinTime());
   const [selectedTime, setSelectedTime] = useState(getMinTime());
 
   const [showCalendar, setShowCalendar] = useState(false);
@@ -51,12 +60,25 @@ export default function BookingTypeModal({
         );
       }
 
+      // Validate: combined datetime must be at least 2 hours from now
+      const minDateTime = new Date(Date.now() + 2 * 60 * 60 * 1000);
+      if (combined < minDateTime) {
+        Toast.show({
+          type: "info",
+          text1: "Invalid schedule time",
+          text2: "Pickup time must be at least 2 hours from now",
+        });
+        setSelectedDate(getMinTime());
+        setSelectedTime(getMinTime());
+        return;
+      }
+
       setBookingType({ type, value: combined.toISOString() });
     } else if (type === "asap") {
       setBookingType({ type, value });
     } else setBookingType({ type, value });
 
-    setSelectedDate(new Date());
+    setSelectedDate(getMinTime());
     setSelectedTime(getMinTime());
     setShowCalendar(false);
     setShowTimePicker(false);
@@ -97,7 +119,7 @@ export default function BookingTypeModal({
 
   const handleCancel = () => {
     onClose();
-    setSelectedDate(new Date());
+    setSelectedDate(getMinTime());
     setSelectedTime(getMinTime());
     setShowCalendar(false);
     setShowTimePicker(false);
@@ -125,11 +147,10 @@ export default function BookingTypeModal({
                 {OPTIONS.map((value) => (
                   <View key={value.id}>
                     <Pressable
-                      className={`flex-row items-center justify-between px-4 py-3 border rounded-lg ${
-                        value.id === bookingType?.type
-                          ? " border-darkPrimary bg-orange-50"
-                          : " border-gray-300"
-                      }`}
+                      className={`flex-row items-center justify-between px-4 py-3 border rounded-lg ${value.id === bookingType?.type
+                        ? " border-darkPrimary bg-orange-50"
+                        : " border-gray-300"
+                        }`}
                       onPress={value.onPress}
                     >
                       <View className="gap-0.5">
@@ -175,11 +196,10 @@ export default function BookingTypeModal({
                       <View className="mt-2 gap-2">
                         <View className="flex-row gap-2">
                           <Pressable
-                            className={`flex-1 px-1.5 py-2 border rounded-lg ${
-                              bookingType.value === "REGULAR"
-                                ? "border-darkPrimary bg-orange-50"
-                                : "border-gray-300 bg-white"
-                            }`}
+                            className={`flex-1 px-1.5 py-2 border rounded-lg ${bookingType.value === "REGULAR"
+                              ? "border-darkPrimary bg-orange-50"
+                              : "border-gray-300 bg-white"
+                              }`}
                             onPress={() => handleConfirm("asap", "REGULAR")}
                           >
                             <View className="flex-row items-center justify-center gap-1">
@@ -193,11 +213,10 @@ export default function BookingTypeModal({
                                 }
                               />
                               <Text
-                                className={`text-sm font-medium ${
-                                  bookingType.value === "REGULAR"
-                                    ? "text-lightPrimary"
-                                    : "text-gray-600"
-                                }`}
+                                className={`text-sm font-medium ${bookingType.value === "REGULAR"
+                                  ? "text-lightPrimary"
+                                  : "text-gray-600"
+                                  }`}
                               >
                                 Regular
                               </Text>
@@ -207,11 +226,10 @@ export default function BookingTypeModal({
                             </Text>
                           </Pressable>
                           <Pressable
-                            className={`flex-1 px-1.5 py-2 border rounded-lg ${
-                              bookingType.value === "PRIORITY"
-                                ? "border-darkPrimary bg-orange-50"
-                                : "border-gray-300 bg-white"
-                            }`}
+                            className={`flex-1 px-1.5 py-2 border rounded-lg ${bookingType.value === "PRIORITY"
+                              ? "border-darkPrimary bg-orange-50"
+                              : "border-gray-300 bg-white"
+                              }`}
                             onPress={() => handleConfirm("asap", "PRIORITY")}
                           >
                             <View className="flex-row items-center justify-center gap-1">
@@ -225,11 +243,10 @@ export default function BookingTypeModal({
                                 }
                               />
                               <Text
-                                className={`text-sm font-medium ${
-                                  bookingType.value === "PRIORITY"
-                                    ? "text-lightPrimary"
-                                    : "text-gray-600"
-                                }`}
+                                className={`text-sm font-medium ${bookingType.value === "PRIORITY"
+                                  ? "text-lightPrimary"
+                                  : "text-gray-600"
+                                  }`}
                               >
                                 Priority
                               </Text>
@@ -255,7 +272,7 @@ export default function BookingTypeModal({
                   className="absolute top-0 left-1"
                   onPress={() => {
                     setStep("main");
-                    setSelectedDate(new Date());
+                    setSelectedDate(getMinTime());
                     setSelectedTime(getMinTime());
                     setShowCalendar(false);
                     setShowTimePicker(false);
@@ -400,17 +417,14 @@ export default function BookingTypeModal({
                     <DateTimePicker
                       value={selectedTime}
                       mode="time"
-                      minimumDate={new Date(Date.now() + 2 * 60 * 60 * 1000)}
                       display="clock"
                       onChange={(event, time) => {
                         setShowTimePicker(false);
 
                         if (!time) return;
 
-                        const minTime = getMinTime();
-
-                        // Apply selected time to today's date
-                        const selected = new Date();
+                        // Apply selected time to the selected date
+                        const selected = new Date(selectedDate);
                         selected.setHours(
                           time.getHours(),
                           time.getMinutes(),
@@ -418,15 +432,19 @@ export default function BookingTypeModal({
                           0
                         );
 
-                        if (selected < minTime) {
-                          Toast.show({
-                            type: "info",
-                            text1: "Invalid time",
-                            text2:
-                              "Pickup time must be at least 2 hours from now",
-                          });
-                          setSelectedTime(minTime);
-                          return;
+                        // Validate: if selected date is today, time must be at least 2 hours from now
+                        if (isToday(selectedDate)) {
+                          const minTime = getMinTime();
+                          if (selected < minTime) {
+                            Toast.show({
+                              type: "info",
+                              text1: "Invalid time",
+                              text2:
+                                "Pickup time must be at least 2 hours from now",
+                            });
+                            setSelectedTime(minTime);
+                            return;
+                          }
                         }
 
                         setSelectedTime(selected);

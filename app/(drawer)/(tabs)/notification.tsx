@@ -106,7 +106,7 @@ const NotificationScreen = () => {
             data={notifications}
             showsVerticalScrollIndicator={false}
             renderItem={({ item }) => <NotificationCard item={item} />}
-            keyExtractor={(item, index) => item?._id ?? `notification-${index}`}
+            keyExtractor={(item, index) => item._id ?? `notification-${index}`}
             // pull to refresh
             refreshing={isPending}
             onRefresh={refetch}

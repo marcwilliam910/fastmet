@@ -12,6 +12,7 @@ export interface ILoadVariant {
 }
 
 export interface IVehicleType extends Document {
+  _id: string;
   key: string; // motorcycle, sedan, l300, closed_van, wing_van
   name: string; // UI display
   imageUrl: string; // Cloudinary
@@ -31,13 +32,14 @@ export interface SearchConfig {
 }
 
 export interface SelectedVehicle {
+  _id: string;
   key: string;
   name: string;
   imageUrl: string;
   freeServices: Service[];
   paidServices: Service[];
   searchConfig: SearchConfig;
-  variant: ILoadVariant;
+  variant: ILoadVariant | null;
 }
 
 export interface Service {

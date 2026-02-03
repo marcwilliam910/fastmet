@@ -8,7 +8,7 @@ import { uploadBookingImages } from "@/utils/imagePicker";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Platform, Pressable, Text, View } from "react-native";
 import {
   SafeAreaView,
@@ -90,8 +90,6 @@ export default function PaymentMethod() {
         return;
       }
 
-      const { paidServices, variant, ...rest } = selectedVehicle;
-
       const payload: RequestBooking = {
         customerId: id!,
         bookingRef,
@@ -99,13 +97,10 @@ export default function PaymentMethod() {
         dropOff: dropOff,
         bookingType: bookingType,
         selectedVehicle: {
-          ...rest,
-          freeServices: selectedVehicle.freeServices.map((service) => ({
-            key: service.key,
-            name: service.name,
-            price: service.price,
-            quantity: service.quantity,
-          })),
+          _id: selectedVehicle._id,
+          key: selectedVehicle.key,
+          variant: selectedVehicle.variant,
+          searchConfig: selectedVehicle.searchConfig,
         },
         routeData: routeData,
         paymentMethod: paymentMethod,
@@ -177,6 +172,9 @@ export default function PaymentMethod() {
           });
           router.replace("/(drawer)/(tabs)/request");
         }
+
+        useAppStore.getState().clearStates();
+
       }
     };
 
@@ -233,11 +231,10 @@ export default function PaymentMethod() {
         {/* Cash Payment Option */}
         <Pressable
           onPress={() => setPaymentMethod("cash")}
-          className={`flex-row items-center justify-between rounded-xl border px-4 py-3 ${
-            paymentMethod === "cash"
-              ? "border-[#FFA840] bg-[#FFF6EB]"
-              : "border-gray-300 bg-white"
-          }`}
+          className={`flex-row items-center justify-between rounded-xl border px-4 py-3 ${paymentMethod === "cash"
+            ? "border-[#FFA840] bg-[#FFF6EB]"
+            : "border-gray-300 bg-white"
+            }`}
         >
           <View className="flex-row gap-3 items-center">
             <View className="justify-center items-center w-10 h-10 bg-blue-50 rounded-full">
@@ -264,11 +261,10 @@ export default function PaymentMethod() {
         {/* GCash Payment Option */}
         <Pressable
           onPress={() => setPaymentMethod("gcash")}
-          className={`flex-row items-center justify-between rounded-xl border px-4 py-3 ${
-            paymentMethod === "gcash"
-              ? "border-[#FFA840] bg-[#FFF6EB]"
-              : "border-gray-300 bg-white"
-          }`}
+          className={`flex-row items-center justify-between rounded-xl border px-4 py-3 ${paymentMethod === "gcash"
+            ? "border-[#FFA840] bg-[#FFF6EB]"
+            : "border-gray-300 bg-white"
+            }`}
         >
           <View className="flex-row gap-3 items-center">
             <View className="justify-center items-center w-10 h-10 bg-blue-50 rounded-full">

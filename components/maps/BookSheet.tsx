@@ -56,27 +56,32 @@ const BookSheet = ({
   const variantScrollRef = useRef<ScrollView>(null);
   const [variantItemWidth] = useState(140);
 
+  // Memoize the selected vehicle's full data to avoid repeated .find() calls
+  const selectedVehicleData = useMemo(() => {
+    if (!selectedVehicle) return null;
+    return vehicles.find((v) => v.key === selectedVehicle.key) ?? null;
+  }, [selectedVehicle, vehicles]);
+
+  // Memoize active variants for the selected vehicle
+  const activeVariants = useMemo(() => {
+    if (!selectedVehicleData?.variants) return [];
+    return selectedVehicleData.variants.filter((v) => v.isActive);
+  }, [selectedVehicleData]);
+
+  const hasMultipleVariants = (selectedVehicleData?.variants?.length ?? 0) > 1;
+
   // to adjust the height of the sheet
   const snapPoints = useMemo(() => {
-    let variantExist = false;
-    if (
-      selectedVehicle &&
-      vehicles.find((v) => v.key === selectedVehicle.key)?.variants &&
-      vehicles.find((v) => v.key === selectedVehicle.key)!.variants.length > 1
-    ) {
-      variantExist = true;
-    }
-
     const first =
       (Platform.OS === "ios" ? 0.19 : 0.23) * screenHeight + insets.bottom;
 
     const second =
       (Platform.OS === "ios" ? 0.5 : 0.6) * screenHeight +
       insets.bottom +
-      (variantExist ? 50 : 0);
+      (hasMultipleVariants ? 50 : 0);
 
     return [first, second];
-  }, [insets.bottom, screenHeight, selectedVehicle, vehicles]);
+  }, [insets.bottom, screenHeight, hasMultipleVariants]);
 
   const bookingTypeDisplay = useMemo(() => {
     if (bookingType.type === "asap") {
@@ -88,6 +93,7 @@ const BookSheet = ({
 
   const handleVehicleSelect = (vehicle: IVehicleType, index: number) => {
     setSelectedVehicle({
+      _id: vehicle._id,
       key: vehicle.key,
       name: vehicle.name,
       imageUrl: vehicle.imageUrl,
@@ -228,19 +234,17 @@ const BookSheet = ({
                     {vehicles.map((v, index) => (
                       <View key={v.key} className="relative items-center gap-1">
                         <Pressable
-                          className={`items-center gap-3 px-4 py-2 rounded-lg ${
-                            selectedVehicle?.key === v.key
-                              ? "border-2 border-lightPrimary"
-                              : ""
-                          }`}
+                          className={`items-center gap-3 px-4 py-2 rounded-lg ${selectedVehicle?.key === v.key
+                            ? "border-2 border-lightPrimary"
+                            : ""
+                            }`}
                           onPress={() => handleVehicleSelect(v, index)}
                         >
                           <Text
-                            className={`text-xs text-gray-500 ${
-                              selectedVehicle?.key === v.key
-                                ? "font-semibold"
-                                : ""
-                            }`}
+                            className={`text-xs text-gray-500 ${selectedVehicle?.key === v.key
+                              ? "font-semibold"
+                              : ""
+                              }`}
                           >
                             {v.name}
                           </Text>
@@ -254,67 +258,44 @@ const BookSheet = ({
                     ))}
                   </ScrollView>
 
-                  {selectedVehicle &&
-                    vehicles.find((v) => v.key === selectedVehicle.key)
-                      ?.variants &&
-                    vehicles.find((v) => v.key === selectedVehicle.key)!
-                      .variants.length > 1 && (
-                      <Animated.View
-                        entering={FadeInDown.duration(300).springify()}
-                        className="flex-row flex-wrap gap-2 px-2 py-1"
+                  {hasMultipleVariants && (
+                    <Animated.View
+                      key={selectedVehicle!.key}
+                      entering={FadeInDown.duration(300).springify()}
+                      className="w-full px-2 py-1"
+                    >
+                      <ScrollView
+                        ref={variantScrollRef}
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        className="px-2"
+                        contentContainerStyle={{ gap: 8 }}
                       >
-                        {selectedVehicle &&
-                          vehicles.find((v) => v.key === selectedVehicle.key)
-                            ?.variants &&
-                          vehicles.find((v) => v.key === selectedVehicle.key)!
-                            .variants.length > 1 && (
-                            <Animated.View
-                              key={selectedVehicle.key}
-                              entering={FadeInDown.duration(300).springify()}
-                              className="w-full"
+                        {activeVariants.map((variant, index) => {
+                          const isSelected =
+                            selectedVehicle!.variant?.maxLoadKg === variant.maxLoadKg;
+
+                          return (
+                            <Pressable
+                              key={variant.maxLoadKg}
+                              className={`px-5 py-3 rounded-xl ${isSelected ? "bg-lightPrimary" : "bg-gray-200"
+                                }`}
+                              onPress={() => handleVariantSelect(variant, index)}
                             >
-                              <ScrollView
-                                ref={variantScrollRef}
-                                horizontal
-                                showsHorizontalScrollIndicator={false}
-                                className="px-2"
-                                contentContainerStyle={{ gap: 8 }}
+                              <Text
+                                className={`text-sm ${isSelected
+                                  ? "text-white font-semibold"
+                                  : "text-gray-700 font-medium"
+                                  }`}
                               >
-                                {vehicles
-                                  .find((v) => v.key === selectedVehicle.key)!
-                                  .variants.filter(
-                                    (variant) => variant.isActive,
-                                  )
-                                  .map((variant, index) => (
-                                    <Pressable
-                                      key={index}
-                                      className={`px-5 py-3 rounded-xl ${
-                                        selectedVehicle.variant?.maxLoadKg ===
-                                        variant.maxLoadKg
-                                          ? "bg-lightPrimary"
-                                          : "bg-gray-200"
-                                      }`}
-                                      onPress={() =>
-                                        handleVariantSelect(variant, index)
-                                      }
-                                    >
-                                      <Text
-                                        className={`text-sm ${
-                                          selectedVehicle.variant?.maxLoadKg ===
-                                          variant.maxLoadKg
-                                            ? "text-white font-semibold"
-                                            : "text-gray-700 font-medium"
-                                        }`}
-                                      >
-                                        Max Load: {variant.maxLoadKg}kg
-                                      </Text>
-                                    </Pressable>
-                                  ))}
-                              </ScrollView>
-                            </Animated.View>
-                          )}
-                      </Animated.View>
-                    )}
+                                Max Load: {variant.maxLoadKg}kg
+                              </Text>
+                            </Pressable>
+                          );
+                        })}
+                      </ScrollView>
+                    </Animated.View>
+                  )}
                 </>
               )}
             </View>

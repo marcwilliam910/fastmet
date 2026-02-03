@@ -66,34 +66,32 @@ export const acceptanceRequestedSchedule = (socket: Socket) => {
   }: {
     driverOffer: RequestedDriver;
   }) => {
-    console.log(JSON.stringify(driverOffer, null, 2));
-    
-   // Update ALL pending bookings queries regardless of limit
-queryClient.setQueriesData(
-  { queryKey: ["userBookings", "pending"] }, // Partial match
-  (oldData: any) => {
-    if (!oldData?.pages) return oldData;
-    
-    return {
-      ...oldData,
-      pages: oldData.pages.map((page: any) => ({
-        ...page,
-        bookings: page.bookings.map((booking: Booking) => {
-          if (booking._id === driverOffer.bookingId) {
-            return {
-              ...booking,
-              requestedDrivers: [
-                ...(booking.requestedDrivers || []),
-                driverOffer,
-              ],
-            };
-          }
-          return booking;
-        }),
-      })),
-    };
-  }
-);
+    // Update ALL pending bookings queries regardless of limit
+    queryClient.setQueriesData(
+      { queryKey: ["userBookings", "pending"] }, // Partial match
+      (oldData: any) => {
+        if (!oldData?.pages) return oldData;
+
+        return {
+          ...oldData,
+          pages: oldData.pages.map((page: any) => ({
+            ...page,
+            bookings: page.bookings.map((booking: Booking) => {
+              if (booking._id === driverOffer.bookingId) {
+                return {
+                  ...booking,
+                  requestedDrivers: [
+                    ...(booking.requestedDrivers || []),
+                    driverOffer,
+                  ],
+                };
+              }
+              return booking;
+            }),
+          })),
+        };
+      }
+    );
 
     Toast.show({
       type: "success",
@@ -104,5 +102,8 @@ queryClient.setQueriesData(
 
   socket.on("acceptanceRequestedSchedule", handleAcceptanceRequestedSchedule);
   return () =>
-    socket.off("acceptanceRequestedSchedule", handleAcceptanceRequestedSchedule);
+    socket.off(
+      "acceptanceRequestedSchedule",
+      handleAcceptanceRequestedSchedule
+    );
 };

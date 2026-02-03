@@ -9,7 +9,7 @@ import { createConversationId, formatLocation } from "@/utils/helper";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -279,11 +279,27 @@ function SeeMoreModal({
     return () => clearTimeout(timeoutId);
   }, [visible, data.driverRating]);
 
-  
-  const totalServicesPrice = data.addedServices.reduce(
-    (total, service) => total + service.price,
-    0,
-  );
+
+  // Memoize calculations to prevent recalculation on every render
+  const { totalServicesPrice, hasAddedServices, hasFreeServices } = useMemo(() => {
+    if (!data) return { totalServicesPrice: 0, hasAddedServices: false, hasFreeServices: false };
+
+    const addedServices = data.addedServices ?? [];
+    const freeServices = data.selectedVehicle?.freeServices ?? [];
+
+    return {
+      // service.price is already total (unit price × quantity) from bookSlice
+      totalServicesPrice: addedServices.reduce(
+        (total, service) => total + service.price,
+        0,
+      ),
+      hasAddedServices: addedServices.length > 0,
+      hasFreeServices: freeServices.length > 0,
+    };
+  }, [data]);
+
+  if (!data) return null;
+
 
   return (
     <Modal
@@ -536,9 +552,9 @@ function SeeMoreModal({
                 <Text className="text-xs font-semibold text-gray-700">
                   {data.routeData.serviceFee > 0
                     ? `Php ${data.routeData.serviceFee.toLocaleString("en-US", {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}`
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}`
                     : "FREE"}
                 </Text>
               </View>
@@ -692,8 +708,8 @@ function SeeMoreModal({
             </View>
           </View>
 
-         {/* Selected Services */}
-         {(data.selectedVehicle.freeServices?.length > 0 || data.addedServices?.length > 0) && (
+          {/* Selected Services */}
+          {(hasFreeServices || hasAddedServices) && (
             <View className="p-4 border border-gray-200 rounded-2xl bg-white">
               <View className="flex-row items-center justify-between mb-3">
                 <Text className="text-base font-semibold text-gray-800">
@@ -701,71 +717,31 @@ function SeeMoreModal({
                 </Text>
                 <View className="px-2 py-1 bg-orange-100 rounded-full">
                   <Text className="text-xs font-semibold text-lightPrimary">
-                    {data.addedServices ? data.addedServices.length : 0} add-ons
+                    {data.addedServices?.length ?? 0} add-ons
                   </Text>
                 </View>
               </View>
 
               {/* Free Services */}
-              {data.selectedVehicle.freeServices && data.selectedVehicle.freeServices.length > 0 && (
+              {hasFreeServices && (
                 <View className="mb-3">
                   <Text className="mb-2 text-xs font-medium text-gray-500 uppercase">
                     Included (Free)
                   </Text>
-                  <View className="gap-2">
-                    {data.selectedVehicle.freeServices.map(
-                      (service: Service) => (
-                        <View
-                          key={service.key}
-                          className="flex-row items-center justify-between py-2"
-                        >
-                          <View className="flex-row items-center flex-1 gap-2">
-                            <View className="w-1.5 h-1.5 bg-green-500 rounded-full" />
-                            <Text className="flex-1 text-sm text-gray-700">
-                              {service.name}
-                            </Text>
-                          </View>
-                          <Text className="text-xs font-medium text-green-600">
-                            FREE
-                          </Text>
-                        </View>
-                      ),
-                    )}
-                  </View>
-                </View>
-              )}
-
-              {/* Paid Services */}
-              {data.addedServices && data.addedServices.length > 0 && (
-                <View className="pt-3 border-t border-gray-200">
-                  <Text className="mb-2 text-xs font-medium text-gray-500 uppercase">
-                    Add-ons
-                  </Text>
-                  <View className="gap-2">
-                    {data.addedServices.map((service: Service) => (
+                  <View>
+                    {data.selectedVehicle.freeServices.map((service: Service) => (
                       <View
                         key={service.key}
                         className="flex-row items-center justify-between py-2"
                       >
-                        <View className="flex-1">
-                          <Text className="text-sm font-medium text-gray-800">
+                        <View className="flex-row items-center flex-1 gap-2">
+                          <View className="w-1.5 h-1.5 bg-green-500 rounded-full" />
+                          <Text className="flex-1 text-sm text-gray-700">
                             {service.name}
                           </Text>
-                          {service.quantity && service.quantity > 1 && (
-                            <Text className="text-xs text-gray-500">
-                              Qty: {service.quantity} × ₱{service.price}
-                            </Text>
-                          )}
                         </View>
-                        <Text className="font-semibold text-lightPrimary">
-                          ₱
-                          {service.quantity && service.quantity > 1
-                            ? (service.price * service.quantity).toLocaleString(
-                                "en-US",
-                              )
-                            : service.price > 0
-                              ? service.price.toLocaleString("en-US")
-                              : "0.00"}
+                        <Text className="text-xs font-medium text-green-600">
+                          FREE
                         </Text>
                       </View>
                     ))}
@@ -773,8 +749,46 @@ function SeeMoreModal({
                 </View>
               )}
 
+              {/* Paid Services */}
+              {hasAddedServices && (
+                <View className="pt-3 border-t border-gray-200">
+                  <Text className="mb-2 text-xs font-medium text-gray-500 uppercase">
+                    Add-ons
+                  </Text>
+                  <View>
+                    {data.addedServices.map((service: Service) => {
+                      const qty = service.quantity ?? 1;
+                      const hasMultiple = qty > 1;
+                      // service.price is already total (unit × quantity) from bookSlice
+                      const unitPrice = hasMultiple ? service.price / qty : service.price;
+
+                      return (
+                        <View
+                          key={service.key}
+                          className="flex-row items-center justify-between py-2"
+                        >
+                          <View className="flex-1">
+                            <Text className="text-sm font-medium text-gray-800">
+                              {service.name}
+                            </Text>
+                            {hasMultiple && (
+                              <Text className="text-xs text-gray-500">
+                                Qty: {qty} × ₱{unitPrice.toLocaleString("en-US")}
+                              </Text>
+                            )}
+                          </View>
+                          <Text className="font-semibold text-lightPrimary">
+                            ₱{service.price > 0 ? service.price.toLocaleString("en-US") : "0.00"}
+                          </Text>
+                        </View>
+                      );
+                    })}
+                  </View>
+                </View>
+              )}
+
               {/* Total */}
-              {data.addedServices && data.addedServices.length > 0 && (
+              {hasAddedServices && (
                 <View className="flex-row items-center justify-between pt-3 mt-3 border-t border-gray-300">
                   <Text className="text-base font-semibold text-gray-800">
                     Services Total
@@ -782,16 +796,15 @@ function SeeMoreModal({
                   <Text className="text-lg font-bold text-lightPrimary">
                     {totalServicesPrice > 0
                       ? `₱${totalServicesPrice.toLocaleString("en-US", {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })}`
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}`
                       : "FREE"}
                   </Text>
                 </View>
               )}
             </View>
           )}
-
           {/* Item Type */}
           {data.itemType && (
             <View className="p-5 bg-blue-50 rounded-2xl">
@@ -903,9 +916,8 @@ function SeeMoreModal({
             <Pressable
               onPress={handleRateDriver}
               disabled={userRating === 0 || isPending}
-              className={`py-3 rounded-xl ${
-                userRating > 0 ? "bg-lightPrimary" : "bg-gray-300"
-              }`}
+              className={`py-3 rounded-xl ${userRating > 0 ? "bg-lightPrimary" : "bg-gray-300"
+                }`}
             >
               <Text className="text-base font-semibold text-center text-white">
                 {isPending

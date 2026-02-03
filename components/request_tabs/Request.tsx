@@ -3,8 +3,9 @@ import { queryClient } from "@/lib/queryClient";
 import { useUserBookings } from "@/queries/bookingQueries";
 import { useSocket } from "@/sockets/context/SocketProvider";
 import { useAppStore } from "@/store/useAppStore";
-import { Booking, LocationDetails, RequestedDriver } from "@/types/book";
+import { Booking, Driver, LocationDetails, RequestedDriver } from "@/types/book";
 import { STATIC_IMAGES } from "@/utils/constants";
+import { formatDate } from "@/utils/date";
 import { formatLocation } from "@/utils/helper";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
@@ -25,6 +26,7 @@ import Toast from "react-native-toast-message";
 import ConfirmCancelBookingModal from "../modals/confirmCancelBookingModal";
 import DriverDetailsModal from "../modals/driverDetailsModal";
 import SeeMoreModal from "../modals/seeMoreModal";
+import StarDisplay from "../StarDisplay";
 
 export default function RequestRoute() {
   const { modalVisible, setModalVisible, selectedRequest, handleSeeMorePress } =
@@ -59,6 +61,9 @@ export default function RequestRoute() {
   bookings = selectedFilters.includes("SCHEDULED")
     ? [...bookings, ...scheduledBookings]
     : bookings;
+
+  console.log(JSON.stringify(scheduledBookings, null, 2))
+
 
   const driversModalBooking = bookings.find(
     (b) => b._id === driversModalBookingId,
@@ -215,6 +220,7 @@ export default function RequestRoute() {
       </View>
     );
 
+
   return (
     <>
       <View className="flex-row items-center justify-between px-4 py-2">
@@ -271,7 +277,8 @@ export default function RequestRoute() {
         }}
         renderItem={({ item }) => (
           <RequestCard
-            status={item.status}
+            driver={item.driver}
+            status={item.status as "pending" | "scheduled"}
             vehicle={item.selectedVehicle.name}
             bookingType={item.bookingType}
             pickup={item.pickUp}
@@ -359,7 +366,6 @@ export default function RequestRoute() {
 }
 
 type RequestCardProps = {
-  status: string;
   vehicle: string;
   bookingType: {
     type: string;
@@ -374,10 +380,13 @@ type RequestCardProps = {
   onPressSeeMore: () => void;
   driverOffers?: RequestedDriver[];
   onOpenDrivers: () => void;
+  driver?: Driver;
+  status: "pending" | "scheduled";
 };
 
 const RequestCard = ({
   status,
+  driver,
   vehicle,
   bookingType,
   pickup,
@@ -414,16 +423,10 @@ const RequestCard = ({
           {/* Header */}
           <View className="flex-row items-center justify-between px-5 py-3 bg-lightPrimary">
             <Text className="text-lg font-semibold text-white">
-              {vehicle}{" "}
-              {bookingType.value.toUpperCase() === "PRIORITY" && (
-                <Ionicons name="flash-sharp" size={20} color="red" />
-              )}
+              {vehicle}
             </Text>
             <Text className="text-sm text-white">
-              {bookingType.type.toUpperCase()}
-
-              {bookingType.type.toUpperCase() === "ASAP" &&
-                ` (${bookingType.value})`}
+              {status === "pending" ? bookingType.type.toUpperCase() : formatDate(bookingType.value)}
             </Text>
           </View>
 
@@ -452,6 +455,40 @@ const RequestCard = ({
                 className="absolute -left-3.5 -bottom-1 bg-white"
               />
             </View>
+
+            {/* Assigned Driver */}
+            {driver && (
+              <View className="mt-6 flex-row items-center bg-green-50 p-3 rounded-xl">
+                <Image
+                  source={
+                    driver.profilePictureUrl
+                      ? { uri: driver.profilePictureUrl }
+                      : STATIC_IMAGES.userPlaceholder
+                  }
+                  style={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: 24,
+                    borderWidth: 2,
+                    borderColor: "white",
+                  }}
+                />
+                <View className="ml-3 flex-1">
+                  <Text className="text-base font-semibold text-green-900">
+                    {driver.name}
+                  </Text>
+                  <View className="flex-row items-center mt-1">
+                    <StarDisplay rating={driver.rating} />
+                    <Text className="text-xs text-green-700 ml-2">
+                      {driver.rating.toFixed(1)}
+                    </Text>
+                  </View>
+                </View>
+                <View className="bg-green-500 px-2 py-1 rounded-md">
+                  <Text className="text-xs font-medium text-white">Assigned</Text>
+                </View>
+              </View>
+            )}
 
             {/* Driver Offers - Stacked Avatars */}
             {hasOffers && (
@@ -534,18 +571,20 @@ const RequestCard = ({
             </View>
 
             {/* Buttons */}
-            <View className="flex-row justify-between mt-6">
-              <Pressable
-                className="flex-row items-center justify-center flex-1 py-3 mr-2 border border-lightPrimary rounded-xl active:bg-gray-50"
-                onPress={onCancel}
-              >
-                <Ionicons name="close" size={18} color="#333" />
-                <Text className="ml-2 font-medium text-gray-700">
-                  Cancel Book
-                </Text>
-              </Pressable>
+            {
+              status === "pending" && (
+                <View className="flex-row justify-between mt-6">
+                  <Pressable
+                    className="flex-row items-center justify-center flex-1 py-3 mr-2 border border-lightPrimary rounded-xl active:bg-gray-50"
+                    onPress={onCancel}
+                  >
+                    <Ionicons name="close" size={18} color="#333" />
+                    <Text className="ml-2 font-medium text-gray-700">
+                      Cancel Book
+                    </Text>
+                  </Pressable>
 
-              {/* <Pressable
+                  {/* <Pressable
                 className="flex-row items-center justify-center flex-1 py-3 ml-2 border border-lightPrimary rounded-xl active:bg-gray-50"
                 onPress={onUpdateNote}
               >
@@ -554,7 +593,9 @@ const RequestCard = ({
                   Update Note
                 </Text>
               </Pressable> */}
-            </View>
+                </View>
+              )
+            }
           </View>
         </Pressable>
       </View>
