@@ -1,8 +1,10 @@
 import useSeeMoreDetails from "@/hooks/useSeeMoreDetails";
+import { useMarkAsReadMutation } from "@/mutations/booking";
 import { useUserBookings } from "@/queries/bookingQueries";
 import { ActiveBooking, Booking } from "@/types/book";
 import { formatDate } from "@/utils/date";
 import { Ionicons } from "@expo/vector-icons";
+import { useEffect } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -13,7 +15,7 @@ import {
 } from "react-native";
 import SeeMoreModal from "../modals/seeMoreModal";
 
-export default function CancelledRoute() {
+export default function CancelledRoute({ count }: { count: number }) {
   const { modalVisible, setModalVisible, selectedRequest, handleSeeMorePress } =
     useSeeMoreDetails<Booking>();
 
@@ -27,7 +29,14 @@ export default function CancelledRoute() {
     isFetchingNextPage,
   } = useUserBookings<ActiveBooking>("cancelled", 5);
 
-  if (isPending)
+
+  const { mutate: markAsReadBooking, isPending: isMarkingAsRead } = useMarkAsReadMutation("cancelled");
+
+  useEffect(() => {
+    if (count > 0) markAsReadBooking();
+  }, [count, markAsReadBooking]);
+
+  if (isPending || isMarkingAsRead)
     return (
       <View className="flex-1 items-center justify-center">
         <ActivityIndicator size="large" color="#FFA840" />

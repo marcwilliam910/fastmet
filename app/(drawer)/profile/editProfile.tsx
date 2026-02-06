@@ -112,7 +112,7 @@ const EditProfile = () => {
           UIManager.measureLayout(
             node,
             findNodeHandle(scrollRef.current) as number,
-            () => {},
+            () => { },
             (x, y) => {
               scrollRef.current?.scrollTo({ y: y, animated: true });
             }
@@ -218,7 +218,7 @@ const EditProfile = () => {
       Alert.alert(
         "Error",
         error.response?.data?.message ||
-          "Failed to update profile. Please try again."
+        "Failed to update profile. Please try again."
       );
     } finally {
       setLoading(false);
@@ -287,9 +287,8 @@ const EditProfile = () => {
               submitBehavior="submit"
               placeholder="Enter Name"
               placeholderTextColor="#9CA3AF"
-              className={`p-4 text-base bg-gray-200 rounded-lg ${
-                errors.fullName ? "border border-red-500" : ""
-              }`}
+              className={`p-4 text-base bg-gray-200 rounded-lg ${errors.fullName ? "border border-red-500" : ""
+                }`}
             />
             {errors.fullName && (
               <Text className="text-xs ml-2 text-red-500">

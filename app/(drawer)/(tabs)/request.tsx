@@ -50,9 +50,8 @@ function CustomTabBar({ navigationState, jumpTo, counts }: CustomTabBarProps) {
           >
             <View className="relative">
               <Text
-                className={`text-sm font-medium ${
-                  isFocused ? "text-[#0F2535]" : "text-gray-400"
-                }`}
+                className={`text-sm font-medium ${isFocused ? "text-[#0F2535]" : "text-gray-400"
+                  }`}
               >
                 {route.title}
               </Text>
@@ -114,9 +113,9 @@ export default function Request() {
       case "active":
         return <ActiveRoute />;
       case "completed":
-        return <CompletedRoute />;
+        return <CompletedRoute count={counts?.completed ?? 0} />;
       case "cancelled":
-        return <CancelledRoute />;
+        return <CancelledRoute count={counts?.cancelled ?? 0} />;
       default:
         return null;
     }

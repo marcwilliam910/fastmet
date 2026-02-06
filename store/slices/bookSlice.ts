@@ -216,7 +216,6 @@ export const createBookSlice: StateCreator<BookSlice> = (set, get) => ({
         serviceFee: 0,
         totalPrice: 0,
       },
-
       note: "",
       itemType: null,
       photos: [],

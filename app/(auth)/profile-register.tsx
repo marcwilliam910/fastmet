@@ -54,7 +54,7 @@ export default function ProfileRegistration() {
     setLoading(true);
     // Create FormData for file upload
     const formData = new FormData();
-    formData.append("fullName", form.fullName);
+    formData.append("fullName", form.fullName.trim());
     formData.append("address", form.address);
     formData.append("gender", form.gender || "");
 
@@ -139,9 +139,8 @@ export default function ProfileRegistration() {
               onChangeText={(text) => onFormChange("fullName", text)}
               placeholder="Enter Name"
               placeholderTextColor="#9CA3AF"
-              className={`p-4 text-base bg-gray-100 rounded-lg ${
-                errors.fullName ? "border border-red-500" : ""
-              }`}
+              className={`p-4 text-base bg-gray-100 rounded-lg ${errors.fullName ? "border border-red-500" : ""
+                }`}
             />
             {errors.fullName && (
               <Text className="text-xs ml-2 text-red-500">
@@ -160,9 +159,8 @@ export default function ProfileRegistration() {
               onChangeText={(text) => onFormChange("address", text)}
               placeholder="Enter Address"
               placeholderTextColor="#9CA3AF"
-              className={`p-4 text-base bg-gray-100 rounded-lg ${
-                errors.address ? "border border-red-500" : ""
-              }`}
+              className={`p-4 text-base bg-gray-100 rounded-lg ${errors.address ? "border border-red-500" : ""
+                }`}
             />
             {errors.address && (
               <Text className="text-xs ml-2 text-red-500">

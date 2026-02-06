@@ -45,10 +45,10 @@ export default function SearchingDriver() {
   const [drivers, setDrivers] = useState<RequestedDriver[]>([]);
   const socket = useSocket();
   const [shouldPrevent, setShouldPrevent] = useState(true);
-    // Single modal state managed at parent level
-    const [selectedDriver, setSelectedDriver] = useState<RequestedDriver | null>(
-      null,
-    );
+  // Single modal state managed at parent level
+  const [selectedDriver, setSelectedDriver] = useState<RequestedDriver | null>(
+    null,
+  );
 
   console.log("SearchingDriver");
 
@@ -193,7 +193,7 @@ export default function SearchingDriver() {
   useEffect(() => {
     const handleAcceptanceRequest = (data: RequestedDriver) => {
       if (drivers.some((driver) => driver.id === data.id)) return;
-      setDrivers((prev) => [...prev, data]);
+      setDrivers((prev) => [data, ...prev]);
     };
 
     socket.on("acceptanceRequestedASAP", handleAcceptanceRequest);
@@ -337,11 +337,11 @@ const DriverListCard = ({
   drivers: RequestedDriver[];
   handleRemoveDriver: (id: string) => void;
   bookingId: string;
-  selectedDriver:RequestedDriver |null,
-  setSelectedDriver:React.Dispatch<React.SetStateAction<RequestedDriver | null>>
+  selectedDriver: RequestedDriver | null,
+  setSelectedDriver: React.Dispatch<React.SetStateAction<RequestedDriver | null>>
 }) => {
   console.log("DriverListCard");
-  
+
 
 
   const socket = useSocket();

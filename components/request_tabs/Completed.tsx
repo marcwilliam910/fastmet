@@ -1,5 +1,5 @@
 import useSeeMoreDetails from "@/hooks/useSeeMoreDetails";
-import { useRateDriverMutation } from "@/mutations/booking";
+import { useMarkAsReadMutation, useRateDriverMutation } from "@/mutations/booking";
 import { useUserBookings } from "@/queries/bookingQueries";
 import { useAppStore } from "@/store/useAppStore";
 import { CompletedBooking, LocationDetails } from "@/types/book";
@@ -24,7 +24,7 @@ import ImageView from "react-native-image-viewing";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import StarDisplay from "../StarDisplay";
 
-export default function CompletedRoute() {
+export default function CompletedRoute({ count }: { count: number }) {
   const { modalVisible, setModalVisible, selectedRequest, handleSeeMorePress } =
     useSeeMoreDetails<CompletedBooking>();
 
@@ -38,7 +38,14 @@ export default function CompletedRoute() {
     isFetchingNextPage,
   } = useUserBookings<CompletedBooking>("completed", 5);
 
-  if (isPending)
+
+  const { mutate: markAsReadBooking, isPending: isMarkingAsRead } = useMarkAsReadMutation("completed");
+
+  useEffect(() => {
+    if (count > 0) markAsReadBooking();
+  }, [count, markAsReadBooking]);
+
+  if (isPending || isMarkingAsRead)
     return (
       <View className="flex-1 items-center justify-center">
         <ActivityIndicator size="large" color="#FFA840" />

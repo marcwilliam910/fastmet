@@ -136,9 +136,6 @@ export default function PaymentMethod() {
         visibilityTime: 4000,
       });
     }
-    // finally {
-    //   setLoading(false);
-    // }
   };
 
   useEffect(() => {
@@ -147,7 +144,7 @@ export default function PaymentMethod() {
       bookingId: string;
       message: string;
     }) => {
-      // Guard against duplicate events causing multiple navigations
+      // Guard against duplicate events causing multiple navigation
       if (hasNavigatedRef.current) return;
 
       setLoading(false);

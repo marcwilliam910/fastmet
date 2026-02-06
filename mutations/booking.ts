@@ -1,4 +1,5 @@
 import { rateDriver } from "@/api/book";
+import api from "@/lib/axios";
 import { queryClient } from "@/lib/queryClient";
 import { useMutation } from "@tanstack/react-query";
 import { AxiosError } from "axios";
@@ -56,43 +57,14 @@ export const useRateDriverMutation = () =>
     },
   });
 
-// export const useCancelBookingMutation = () =>
-//   useMutation<
-//     { message: string },
-//     AxiosError<{ message: string }>,
-//     { bookingId: string; status: string }
-//   >({
-//     mutationFn: ({
-//       bookingId,
-//       status,
-//     }: {
-//       bookingId: string;
-//       status: string;
-//     }) => cancelBooking(bookingId, status),
-//     onSuccess: () => {
-//       queryClient.invalidateQueries({
-//         queryKey: ["userBookings", "pending"],
-//         exact: false,
-//       });
-//       Toast.show({
-//         type: "success",
-//         text1: "Booking Cancelled",
-//         text2: "Successfully cancelled booking",
-//         position: "top",
-//         visibilityTime: 3000,
-//         swipeable: true,
-//         topOffset: 50,
-//       });
-//     },
-//     onError: (error) => {
-//       Toast.show({
-//         type: "error",
-//         text1: "Failed to cancel booking",
-//         text2: error.response?.data?.message || "Please try again",
-//         position: "top",
-//         visibilityTime: 3000,
-//         swipeable: true,
-//         topOffset: 50,
-//       });
-//     },
-//   });
+export const useMarkAsReadMutation = (status: "completed" | "cancelled") =>
+  useMutation({
+    mutationFn: () => api.patch(`/booking/mark-as-read`, { status }),
+    onSuccess: () => {
+      // ✅ Automatically refetch count
+      queryClient.invalidateQueries({ queryKey: ["userBookingCounts"] });
+    },
+    onError: (error) => {
+      console.error("Error marking booking as read:", error);
+    },
+  });
