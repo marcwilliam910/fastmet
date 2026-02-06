@@ -1,6 +1,17 @@
+export type UserAddress = {
+  name: string;
+  fullAddress: string;
+  coords: { lat: number; lng: number };
+  street?: string;
+  barangay?: string;
+  city?: string;
+  province?: string;
+  postalCode?: string;
+} | null;
+
 export type NewUser = {
   fullName: string;
-  address: string;
+  address: UserAddress;
   gender?: string;
 
   profilePictureUrl?: string;

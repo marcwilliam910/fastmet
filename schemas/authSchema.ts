@@ -26,8 +26,7 @@ export const ProfileSchema = z.object({
     .string()
     .trim()
     .min(4, "Full name must be at least 4 characters")
-    .max(70, "Full name must not exceed 70 characters")
-    .regex(/^[a-zA-Z\s.'-]+$/, "Full name contains invalid characters"),
+    .max(70, "Full name must not exceed 70 characters"),
 
   address: z
     .string()

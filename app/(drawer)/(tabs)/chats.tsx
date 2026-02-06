@@ -5,6 +5,7 @@ import { ConversationResponse } from "@/types/chat";
 import { STATIC_IMAGES } from "@/utils/constants";
 import { formatLastMessageTime } from "@/utils/date";
 import { Ionicons } from "@expo/vector-icons";
+import * as Sentry from '@sentry/react-native';
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import React from "react";
@@ -62,6 +63,7 @@ const Chats = () => {
           <Text className="text-center text-lg text-gray-400">
             You have no messages
           </Text>
+          <Button title='Try! Test Sentry' onPress={() => { Sentry.captureException(new Error('First error')) }} />
         </View>
       ) : (
         <>

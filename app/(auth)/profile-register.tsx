@@ -1,31 +1,31 @@
 import CustomKeyAvoidingView from "@/components/CustomKeyAvoid";
+import AddressInput from "@/components/inputs/AddressInput";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
 import api from "@/lib/axios";
 import { ProfileSchema } from "@/schemas/authSchema";
 import { useAppStore } from "@/store/useAppStore";
-import { NewUser } from "@/types/user";
+import { NewUser, UserAddress } from "@/types/user";
 import { openGallery } from "@/utils/imagePicker";
 import { validateForm } from "@/utils/validateForm";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
-import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import { router } from "expo-router";
+import React, { useCallback, useState } from "react";
 import { Alert, Pressable, Text, TextInput, View } from "react-native";
 import { Dropdown } from "react-native-element-dropdown";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function ProfileRegistration() {
-  const router = useRouter();
   const [form, setForm] = useState<NewUser>({
     fullName: "",
-    address: "",
+    address: null,
     gender: "",
     profilePictureUrl: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const { isAuthenticated } = useAuthGuard();
   const [selectedAsset, setSelectedAsset] = useState<any>(null);
-
+  const inset = useSafeAreaInsets();
   const setLoading = useAppStore((state) => state.setLoading);
   const loading = useAppStore((state) => state.isLoading);
 
@@ -41,8 +41,18 @@ export default function ProfileRegistration() {
     setForm({ ...form, [name]: value });
   };
 
+  const onAddressChange = useCallback(
+    (address: UserAddress) => {
+      setForm((prev) => ({ ...prev, address }));
+    },
+    []
+  );
+
   const onSubmit = async () => {
-    const result = validateForm(ProfileSchema, form);
+    const result = validateForm(ProfileSchema, {
+      fullName: form.fullName,
+      address: form.address?.fullAddress,
+    });
     if (!result.success) {
       setErrors(result.errors);
       return;
@@ -55,8 +65,20 @@ export default function ProfileRegistration() {
     // Create FormData for file upload
     const formData = new FormData();
     formData.append("fullName", form.fullName.trim());
-    formData.append("address", form.address);
     formData.append("gender", form.gender || "");
+
+    // Send structured address data
+    if (form.address) {
+      formData.append("addressName", form.address.name);
+      formData.append("addressFullAddress", form.address.fullAddress);
+      formData.append("addressLat", String(form.address.coords.lat));
+      formData.append("addressLng", String(form.address.coords.lng));
+      if (form.address.street) formData.append("addressStreet", form.address.street);
+      if (form.address.barangay) formData.append("addressBarangay", form.address.barangay);
+      if (form.address.city) formData.append("addressCity", form.address.city);
+      if (form.address.province) formData.append("addressProvince", form.address.province);
+      if (form.address.postalCode) formData.append("addressPostalCode", form.address.postalCode);
+    }
 
     if (selectedAsset) {
       formData.append("profilePicture", {
@@ -97,7 +119,7 @@ export default function ProfileRegistration() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
       <CustomKeyAvoidingView>
-        <View className="flex-1 p-6 gap-6">
+        <View className="flex-1 p-6 pb-36 gap-6">
           {/* Profile Picture */}
           <View className="items-center gap-3">
             <Pressable
@@ -150,30 +172,18 @@ export default function ProfileRegistration() {
           </View>
 
           {/* Address */}
-          <View className="gap-2">
-            <Text className="text-sm font-medium text-gray-700">
-              Address <Text className="text-red-500">*</Text>
-            </Text>
-            <TextInput
-              value={form.address}
-              onChangeText={(text) => onFormChange("address", text)}
-              placeholder="Enter Address"
-              placeholderTextColor="#9CA3AF"
-              className={`p-4 text-base bg-gray-100 rounded-lg ${errors.address ? "border border-red-500" : ""
-                }`}
-            />
-            {errors.address && (
-              <Text className="text-xs ml-2 text-red-500">
-                {errors.address}
-              </Text>
-            )}
-          </View>
+          <AddressInput
+            value={form.address}
+            onChange={onAddressChange}
+            error={errors.address}
+          />
 
           {/* Gender Dropdown */}
           <View className="gap-2">
             <Text className="text-sm font-medium text-gray-700">Gender</Text>
 
             <Dropdown
+              dropdownPosition="top"
               style={{
                 backgroundColor: "#F3F4F6",
                 paddingHorizontal: 16,
@@ -195,27 +205,27 @@ export default function ProfileRegistration() {
             />
           </View>
 
-          {/* Buttons */}
-          <View className="absolute bottom-0 left-0 right-0 mx-6">
-            <Pressable
-              className="items-center py-4 my-2 rounded-lg bg-lightPrimary active:bg-darkPrimary"
-              onPress={onSubmit}
-              disabled={loading}
-            >
-              <Text className="text-base font-bold text-white">Create</Text>
-            </Pressable>
-
-            <Pressable
-              onPress={() => router.push("/(drawer)/book")}
-              className="items-center py-4 my-2 border rounded-lg bg-white border-lightPrimary active:border-darkPrimary"
-            >
-              <Text className="text-base font-bold text-lightPrimary">
-                Skip for now
-              </Text>
-            </Pressable>
-          </View>
         </View>
       </CustomKeyAvoidingView>
+      {/* Buttons */}
+      <View className="absolute bg-white left-0 right-0 mx-6" style={{ bottom: inset.bottom + 10 }}>
+        <Pressable
+          className="items-center py-4 my-2 rounded-lg bg-lightPrimary active:bg-darkPrimary"
+          onPress={onSubmit}
+          disabled={loading}
+        >
+          <Text className="text-base font-bold text-white">Create</Text>
+        </Pressable>
+
+        <Pressable
+          onPress={() => router.push("/(drawer)/book")}
+          className="items-center py-4 my-2 border rounded-lg bg-white border-lightPrimary active:bg-gray-100"
+        >
+          <Text className="text-base font-bold text-lightPrimary">
+            Skip for now
+          </Text>
+        </Pressable>
+      </View>
     </SafeAreaView>
   );
 }

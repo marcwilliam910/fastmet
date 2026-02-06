@@ -1,3 +1,4 @@
+import {UserAddress} from "@/types/user";
 import {create} from "zustand";
 import {persist} from "zustand/middleware";
 import {createSecureStorage} from "./secureStorage";
@@ -38,6 +39,7 @@ export const useAppStore = create<AppStore>()(
         name: string;
         profilePictureUrl: string;
         gender: string | null;
+        address: UserAddress;
       }>(),
       // Only persist auth data (prevents persisting temporary data)
       partialize: (state) => ({
@@ -48,6 +50,7 @@ export const useAppStore = create<AppStore>()(
         name: state.name,
         profilePictureUrl: state.profilePictureUrl,
         gender: state.gender,
+        address: state.address,
       }),
     },
   ),

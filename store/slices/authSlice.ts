@@ -1,3 +1,4 @@
+import { UserAddress } from "@/types/user";
 import { StateCreator } from "zustand";
 
 export interface AuthSlice {
@@ -7,7 +8,7 @@ export interface AuthSlice {
   name: string;
   token: string | null;
   gender: string | null;
-  address: string | null;
+  address: UserAddress;
   // email: string;
   profilePictureUrl: string;
 

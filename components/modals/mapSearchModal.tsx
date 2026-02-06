@@ -77,6 +77,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
 
   const dropOff = useAppStore((state) => state.dropOff);
   const pickUp = useAppStore((state) => state.pickUp);
+  const homeAddress = useAppStore((state) => state.address);
   const { shake, animatedStyle } = useShake();
   const [additionalDetails, setAdditionalDetails] = useState("");
   const [loading, setLoading] = useState(false);
@@ -729,6 +730,146 @@ const SearchModal: React.FC<SearchModalProps> = ({
               )}
             </Pressable>
           </View>
+
+          {/* Home Address Button */}
+          {homeAddress && (
+            <View className="px-4 mb-2">
+              <Pressable
+                onPress={() => {
+                  const homeLocation: LocationDetails = {
+                    name: homeAddress.name,
+                    address: homeAddress.fullAddress,
+                    coords: {
+                      lat: homeAddress.coords.lat,
+                      lng: homeAddress.coords.lng,
+                    },
+                  };
+
+                  // Validate: same location check
+                  if (type === "pickup" && dropOff) {
+                    if (
+                      isSameLocation(
+                        homeLocation.coords.lat,
+                        homeLocation.coords.lng,
+                        dropOff.coords.lat,
+                        dropOff.coords.lng,
+                      )
+                    ) {
+                      const message =
+                        "Pick-up and drop-off locations cannot be the same.";
+                      if (Platform.OS === "android") {
+                        ToastAndroid.showWithGravity(
+                          message,
+                          ToastAndroid.LONG,
+                          ToastAndroid.TOP,
+                        );
+                      } else {
+                        Alert.alert("Invalid Location", message);
+                      }
+                      shake();
+                      return;
+                    }
+                  } else if (type === "dropoff" && pickUp) {
+                    if (
+                      isSameLocation(
+                        homeLocation.coords.lat,
+                        homeLocation.coords.lng,
+                        pickUp.coords.lat,
+                        pickUp.coords.lng,
+                      )
+                    ) {
+                      const message =
+                        "Pick-up and drop-off locations cannot be the same.";
+                      if (Platform.OS === "android") {
+                        ToastAndroid.showWithGravity(
+                          message,
+                          ToastAndroid.LONG,
+                          ToastAndroid.TOP,
+                        );
+                      } else {
+                        Alert.alert("Invalid Location", message);
+                      }
+                      shake();
+                      return;
+                    }
+                  }
+
+                  // Validate: Metro Manila for pickup
+                  if (type === "pickup") {
+                    const allowed = isWithinMetroManila(
+                      homeLocation.coords.lat,
+                      homeLocation.coords.lng,
+                    );
+                    if (!allowed) {
+                      const message =
+                        "Pick-up is only available within Metro Manila.";
+                      if (Platform.OS === "android") {
+                        ToastAndroid.showWithGravity(
+                          message,
+                          ToastAndroid.LONG,
+                          ToastAndroid.TOP,
+                        );
+                      } else {
+                        Alert.alert("Not Available", message);
+                      }
+                      shake();
+                      return;
+                    }
+                  }
+
+                  // Validate: ferry check for dropoff
+                  if (type === "dropoff") {
+                    const requiresFerry = requiresFerryFromMetroManila(
+                      homeLocation.coords.lat,
+                      homeLocation.coords.lng,
+                    );
+                    if (requiresFerry) {
+                      const message =
+                        "Drop-off location requires ferry access and is not available.";
+                      if (Platform.OS === "android") {
+                        ToastAndroid.showWithGravity(
+                          message,
+                          ToastAndroid.LONG,
+                          ToastAndroid.TOP,
+                        );
+                      } else {
+                        Alert.alert("Not Available", message);
+                      }
+                      shake();
+                      return;
+                    }
+                  }
+
+                  if (type === "pickup") {
+                    setPickUp(homeLocation);
+                    setPickUpAdditionalDetails(additionalDetails);
+                  } else {
+                    setDropOff(homeLocation);
+                    setDropOffAdditionalDetails(additionalDetails);
+                  }
+
+                  onClose();
+                }}
+                className="flex-row items-center px-4 py-3 bg-white border border-gray-200 rounded-xl active:bg-gray-50"
+              >
+                <View className="items-center justify-center mr-3 rounded-full w-11 h-11 bg-amber-500">
+                  <Ionicons name="home" size={20} color="#FFFFFF" />
+                </View>
+                <View className="flex-1">
+                  <Text className="text-base font-semibold text-gray-900">
+                    Home
+                  </Text>
+                  <Text
+                    className="text-sm text-gray-500"
+                    numberOfLines={1}
+                  >
+                    {homeAddress.fullAddress}
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+              </Pressable>
+            </View>
+          )}
 
           {/* Recent Places */}
           {recentPlaces.length > 0 && (

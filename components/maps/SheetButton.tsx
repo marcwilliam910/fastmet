@@ -29,7 +29,7 @@ const SheetButton = ({
     if (!isLoggedIn) setShowModal(true);
     else if (!isProfileComplete) {
       Toast.show({
-        type: "error",
+        type: "info",
         text1: "Incomplete Profile",
         text2: "Please complete your profile to continue",
         position: "top",

@@ -12,6 +12,7 @@ export default function MyProfile() {
   const { isLoggedIn } = useAuth();
   const name = useAppStore((state) => state.name);
   const profilePictureUrl = useAppStore((state) => state.profilePictureUrl);
+  const address = useAppStore((state) => state.address);
   const options = [
     {
       icon: "person",
@@ -49,6 +50,14 @@ export default function MyProfile() {
           <Text className="text-base text-gray-400">
             {useAppStore.getState().phoneNumber.replace("+63", "+63 ")}
           </Text>
+          {address && (
+            <View className="flex-row items-center gap-1">
+              <Ionicons name="location-outline" size={20} color="#FFA840" />
+              <Text className="text-base text-gray-400 max-w-[70%]" numberOfLines={1}>
+                {address?.fullAddress}
+              </Text>
+            </View>
+          )}
         </View>
       </View>
 

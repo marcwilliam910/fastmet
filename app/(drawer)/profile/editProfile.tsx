@@ -1,24 +1,25 @@
 import CustomKeyAvoidingView from "@/components/CustomKeyAvoid";
+import AddressInput from "@/components/inputs/AddressInput";
 import { useAuthGuard } from "@/hooks/useAuthGuard";
 import api from "@/lib/axios";
 import { ProfileSchema } from "@/schemas/authSchema";
 import { useAppStore } from "@/store/useAppStore";
+import { NewUser, UserAddress } from "@/types/user";
 import { STATIC_IMAGES } from "@/utils/constants";
 import { openGallery } from "@/utils/imagePicker";
 import { validateForm } from "@/utils/validateForm";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
-  Alert,
   findNodeHandle,
   Pressable,
   ScrollView,
   Text,
   TextInput,
   UIManager,
-  View,
+  View
 } from "react-native";
 import { Dropdown } from "react-native-element-dropdown";
 import {
@@ -34,20 +35,18 @@ const EditProfile = () => {
 
   const numRef = useRef<TextInput>(null);
   const scrollRef = useRef<ScrollView>(null);
-  const [form, setForm] = useState<{ [key: string]: string }>({
+  const [form, setForm] = useState<NewUser>({
     fullName: "",
-    profilePictureUrl: "",
-    phoneNumber: "",
-    address: "",
+    address: null,
     gender: "",
+    profilePictureUrl: "",
   });
   // Store original values to compare against
-  const [originalForm, setOriginalForm] = useState<{ [key: string]: string }>({
+  const [originalForm, setOriginalForm] = useState<NewUser>({
     fullName: "",
-    profilePictureUrl: "",
-    phoneNumber: "",
-    address: "",
+    address: null,
     gender: "",
+    profilePictureUrl: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [selectedAsset, setSelectedAsset] = useState<any>(null);
@@ -56,7 +55,6 @@ const EditProfile = () => {
 
   const name = useAppStore((state) => state.name);
   const profilePictureUrl = useAppStore((state) => state.profilePictureUrl);
-  const phoneNumber = useAppStore((state) => state.phoneNumber);
   const address = useAppStore((state) => state.address);
   const gender = useAppStore((state) => state.gender);
 
@@ -66,14 +64,13 @@ const EditProfile = () => {
     const initialData = {
       fullName: name,
       profilePictureUrl: profilePictureUrl,
-      phoneNumber: phoneNumber,
-      address: address || "",
+      address: address,
       gender: gender || "",
     };
 
     setForm(initialData);
     setOriginalForm(initialData); // Store original values
-  }, [name, profilePictureUrl, phoneNumber, address, gender]);
+  }, [name, profilePictureUrl, address, gender]);
 
   // Check if form has changes
   const hasChanges = () => {
@@ -91,9 +88,11 @@ const EditProfile = () => {
     }
 
     // Check text fields
+    const addressChanged =
+      (form.address?.fullAddress || "") !== (originalForm.address?.fullAddress || "");
     return (
       form.fullName !== originalForm.fullName ||
-      form.address !== originalForm.address ||
+      addressChanged ||
       form.gender !== originalForm.gender
     );
   };
@@ -103,6 +102,13 @@ const EditProfile = () => {
   const onFormChange = (name: string, value: string) => {
     setForm({ ...form, [name]: value });
   };
+
+  const onAddressChange = useCallback(
+    (address: UserAddress) => {
+      setForm((prev) => ({ ...prev, address }));
+    },
+    []
+  );
 
   const scrollToInput = (ref: React.RefObject<TextInput | null>) => {
     setTimeout(() => {
@@ -132,7 +138,10 @@ const EditProfile = () => {
   };
 
   const onSubmit = async () => {
-    const result = validateForm(ProfileSchema, form);
+    const result = validateForm(ProfileSchema, {
+      fullName: form.fullName,
+      address: form.address?.fullAddress,
+    });
 
     if (!result.success) {
       setErrors(result.errors);
@@ -146,8 +155,20 @@ const EditProfile = () => {
 
     const formData = new FormData();
     formData.append("fullName", form.fullName);
-    formData.append("address", form.address);
     formData.append("gender", form.gender || "");
+
+    // Send structured address data
+    if (form.address) {
+      formData.append("addressName", form.address.name);
+      formData.append("addressFullAddress", form.address.fullAddress);
+      formData.append("addressLat", String(form.address.coords.lat));
+      formData.append("addressLng", String(form.address.coords.lng));
+      if (form.address.street) formData.append("addressStreet", form.address.street);
+      if (form.address.barangay) formData.append("addressBarangay", form.address.barangay);
+      if (form.address.city) formData.append("addressCity", form.address.city);
+      if (form.address.province) formData.append("addressProvince", form.address.province);
+      if (form.address.postalCode) formData.append("addressPostalCode", form.address.postalCode);
+    }
 
     // Handle profile picture deletion
     if (!form.profilePictureUrl) {
@@ -190,36 +211,20 @@ const EditProfile = () => {
 
         useAppStore.getState().setAuthData(updatedData);
 
-        // Reset selectedAsset since image is now uploaded
-        setSelectedAsset(null);
-
-        // Update originalForm to match new current state
-        setOriginalForm({
-          fullName: response.data.user.fullName,
-          profilePictureUrl: response.data.user.profilePictureUrl || "",
-          phoneNumber: form.phoneNumber,
-          address: response.data.user.address,
-          gender: response.data.user.gender,
-        });
-
-        // Update form with server response (in case server modified anything)
-        setForm({
-          fullName: response.data.user.fullName,
-          profilePictureUrl: response.data.user.profilePictureUrl || "",
-          phoneNumber: form.phoneNumber,
-          address: response.data.user.address,
-          gender: response.data.user.gender,
-        });
-
+        router.back();
         console.log("Profile updated successfully");
       }
     } catch (error: any) {
       console.error("Error updating profile:", error);
-      Alert.alert(
-        "Error",
-        error.response?.data?.message ||
-        "Failed to update profile. Please try again."
-      );
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: error.response?.data?.message || "Failed to update profile. Please try again.",
+        position: "top",
+        visibilityTime: 5_000,
+        swipeable: true,
+        topOffset: 50,
+      });
     } finally {
       setLoading(false);
     }
@@ -231,7 +236,7 @@ const EditProfile = () => {
       edges={["bottom"]}
     >
       <CustomKeyAvoidingView ref={scrollRef}>
-        <View className="gap-6 px-6 pt-6 flex-1">
+        <View className="gap-6 px-6 pt-6 flex-1" style={{ paddingBottom: inset.bottom + 100 }}>
           {/* profile picture */}
           <Pressable
             className="border border-[#FFA840] rounded-full p-2 self-center active:bg-gray-100"
@@ -272,7 +277,7 @@ const EditProfile = () => {
             </View>
           </Pressable>
 
-          {/* first name */}
+          {/* full name */}
           <View className="gap-2">
             <Text className="text-sm font-medium text-gray-700 ">
               Full Name <Text className="text-red-500">*</Text>
@@ -287,7 +292,7 @@ const EditProfile = () => {
               submitBehavior="submit"
               placeholder="Enter Name"
               placeholderTextColor="#9CA3AF"
-              className={`p-4 text-base bg-gray-200 rounded-lg ${errors.fullName ? "border border-red-500" : ""
+              className={`p-4 text-base bg-gray-100 rounded-lg ${errors.fullName ? "border border-red-500" : ""
                 }`}
             />
             {errors.fullName && (
@@ -297,39 +302,13 @@ const EditProfile = () => {
             )}
           </View>
 
-          {/* phone number */}
-          <View className="gap-2">
-            <Text className="text-sm font-medium text-gray-700 ">
-              Phone Number <Text className="text-red-500">*</Text>
-            </Text>
-            {/* display the phone number, not as input. disabled */}
-            <Text className="p-4 text-base bg-gray-200 opacity-50 rounded-lg ">
-              {useAppStore.getState().phoneNumber.replace("+63", "+63 ")}
-            </Text>
-          </View>
-
           {/* Address */}
-          {/* <View className="gap-2">
-            <Text className="text-sm font-medium text-gray-700">
-              Address <Text className="text-red-500">*</Text>
-            </Text>
-            <TextInput
-              ref={input2Ref}
-              onFocus={() => scrollToInput(input2Ref)}
-              value={form.address}
-              onChangeText={(text) => onFormChange("address", text)}
-              placeholder="Enter Address"
-              placeholderTextColor="#9CA3AF"
-              className={`p-4 text-base bg-gray-100 rounded-lg ${
-                errors.address ? "border border-red-500" : ""
-              }`}
-            />
-            {errors.address && (
-              <Text className="text-xs ml-2 text-red-500">
-                {errors.address}
-              </Text>
-            )}
-          </View> */}
+          <AddressInput
+            value={form.address}
+            onChange={onAddressChange}
+            error={errors.address}
+          />
+
 
           {/* Gender Dropdown */}
           <View className="gap-2">
@@ -337,7 +316,7 @@ const EditProfile = () => {
 
             <Dropdown
               style={{
-                backgroundColor: "#e5e7eb",
+                backgroundColor: "#F3F4F6",
                 paddingHorizontal: 16,
                 paddingVertical: 14,
                 borderRadius: 10,
@@ -362,7 +341,7 @@ const EditProfile = () => {
       {/*  Button */}
       <View
         className="absolute left-0 right-0 px-6 bg-white"
-        style={{ bottom: inset.bottom + 10 }}
+        style={{ bottom: inset.bottom }}
       >
         <Pressable
           className={`items-center py-4 rounded-lg bg-lightPrimary  ${isButtonDisabled || form.fullName === "" ? "opacity-65" : "active:bg-darkPrimary"}`}
