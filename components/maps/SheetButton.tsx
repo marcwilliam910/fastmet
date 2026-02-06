@@ -1,8 +1,10 @@
 import { useAuth } from "@/hooks/useAuth";
 import { useAppStore } from "@/store/useAppStore";
+import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Toast from "react-native-toast-message";
 import NotLoggedInModal from "../modals/notLoggedInModal";
 
 const SheetButton = ({
@@ -21,9 +23,22 @@ const SheetButton = ({
   const dropOff = useAppStore((state) => state.dropOff);
   const routeData = useAppStore((state) => state.routeData);
   const calculatePrice = useAppStore((state) => state.calculatePrice);
+  const isProfileComplete = useAppStore((state) => state.isProfileComplete);
 
   const handleNext = () => {
     if (!isLoggedIn) setShowModal(true);
+    else if (!isProfileComplete) {
+      Toast.show({
+        type: "error",
+        text1: "Incomplete Profile",
+        text2: "Please complete your profile to continue",
+        position: "top",
+        visibilityTime: 5_000,
+        swipeable: true,
+        topOffset: 50,
+      });
+      router.replace("/(auth)/profile-register");
+    }
     else next();
   };
 

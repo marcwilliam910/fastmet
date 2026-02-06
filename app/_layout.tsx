@@ -16,10 +16,25 @@ import { toastConfig } from "@/config/toastConfig";
 import SocketProvider from "@/sockets/context/SocketProvider";
 import Toast from "react-native-toast-message";
 import "../global.css";
+import * as Sentry from '@sentry/react-native';
+
+Sentry.init({
+  dsn: 'https://aceadef3929e78209242fa356db6b552@o4510836378697728.ingest.us.sentry.io/4510836521435136',
+
+  // Adds more context data to events (IP address, cookies, user, etc.)
+  // For more information, visit: https://docs.sentry.io/platforms/react-native/data-management/data-collected/
+  sendDefaultPii: true,
+
+  // Enable Logs
+  enableLogs: true,
+
+  // uncomment the line below to enable Spotlight (https://spotlightjs.com)
+  // spotlight: __DEV__,
+});
 
 SplashScreen.preventAutoHideAsync();
 
-export default function RootLayout() {
+export default Sentry.wrap(function RootLayout() {
   const [fontsLoaded] = useFonts({
     Montserrat_400Regular,
     Montserrat_700Bold,
@@ -72,4 +87,4 @@ export default function RootLayout() {
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );
-}
+});

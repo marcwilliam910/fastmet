@@ -176,16 +176,38 @@ export default function SearchingDriver() {
       router.push("/(drawer)/book");
     };
 
+    const handleBookingExpired = ({ message }: { message: string }) => {
+      setShouldPrevent(false);
+
+      Toast.show({
+        type: "error",
+        text1: "Request Expired",
+        text2: message,
+        position: "top",
+        visibilityTime: 5_000,
+        swipeable: true,
+        topOffset: 50,
+      });
+
+      useAppStore.getState().clearStates();
+
+      setImmediate(() => {
+        router.replace("/(drawer)/book");
+      });
+    };
+
     socket.on("offerCancelled", handleCancelOffer);
     socket.on("bookingCancelled", handleBookingCancelled);
     socket.on("driverAccepted", handleDriverAccepted);
     socket.on("error", errorHandler);
+    socket.on("bookingExpired", handleBookingExpired);
 
     return () => {
       socket.off("offerCancelled", handleCancelOffer);
       socket.off("bookingCancelled", handleBookingCancelled);
       socket.off("driverAccepted", handleDriverAccepted);
       socket.off("error", errorHandler);
+      socket.off("bookingExpired", handleBookingExpired);
     };
   }, [socket]);
 

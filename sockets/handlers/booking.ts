@@ -1,64 +1,29 @@
 import { queryClient } from "@/lib/queryClient";
-import { useAppStore } from "@/store/useAppStore";
 import { Booking, RequestedDriver } from "@/types/book";
-import { router } from "expo-router";
 import Toast from "react-native-toast-message";
 import { Socket } from "socket.io-client";
 
-// export const bookingAccepted = (socket: Socket) => {
-//   const bookingAcceptedHandler = (data: { customerId: string }) => {
-//     console.log("✅ Booking accepted:", data);
-
+// export const bookingExpired = (socket: Socket) => {
+//   const handleBookingExpired = ({ message }: { message: string }) => {
 //     Toast.show({
-//       type: "bookingAccepted",
-//       text1: "Driver Found! 🎉",
-//       text2: "Your driver is on the way",
+//       type: "error",
+//       text1: "Request Expired",
+//       text2: message,
 //       position: "top",
-//       visibilityTime: 10_000,
+//       visibilityTime: 5_000,
 //       swipeable: true,
 //       topOffset: 50,
 //     });
 
-//     queryClient.invalidateQueries({
-//       queryKey: ["userBookings", "active"],
-//       exact: false,
-//     });
+//     useAppStore.getState().clearStates();
 
-//     queryClient.invalidateQueries({
-//       queryKey: ["userBookings", "pending"],
-//       exact: false,
-//     });
-
-//     queryClient.invalidateQueries({
-//       queryKey: ["userBookingCounts"],
-//     });
+//     // Navigate to home - works from any screen
+//     router.replace("/(drawer)/book");
 //   };
 
-//   socket.on("bookingAccepted", bookingAcceptedHandler);
-//   return () => socket.off("bookingAccepted", bookingAcceptedHandler); // return for cleanup
+//   socket.on("bookingExpired", handleBookingExpired);
+//   return () => socket.off("bookingExpired", handleBookingExpired);
 // };
-
-export const bookingExpired = (socket: Socket) => {
-  const handleBookingExpired = ({ message }: { message: string }) => {
-    Toast.show({
-      type: "error",
-      text1: "Request Expired",
-      text2: message,
-      position: "top",
-      visibilityTime: 5_000,
-      swipeable: true,
-      topOffset: 50,
-    });
-
-    useAppStore.getState().clearStates();
-
-    // Navigate to home - works from any screen
-    router.replace("/(drawer)/book");
-  };
-
-  socket.on("bookingExpired", handleBookingExpired);
-  return () => socket.off("bookingExpired", handleBookingExpired);
-};
 
 export const acceptanceRequestedSchedule = (socket: Socket) => {
   const handleAcceptanceRequestedSchedule = ({
@@ -90,7 +55,7 @@ export const acceptanceRequestedSchedule = (socket: Socket) => {
             }),
           })),
         };
-      }
+      },
     );
 
     Toast.show({
@@ -104,6 +69,6 @@ export const acceptanceRequestedSchedule = (socket: Socket) => {
   return () =>
     socket.off(
       "acceptanceRequestedSchedule",
-      handleAcceptanceRequestedSchedule
+      handleAcceptanceRequestedSchedule,
     );
 };

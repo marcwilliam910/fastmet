@@ -80,6 +80,14 @@ export default {
           color: "#fff",
         },
       ],
+      [
+        "@sentry/react-native/expo",
+        {
+          url: "https://sentry.io/",
+          project: "fastmet-client",
+          organization: "guildsman-technology",
+        },
+      ],
     ],
     experiments: {
       typedRoutes: true,
