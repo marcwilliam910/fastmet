@@ -46,6 +46,13 @@ export default function RootScreenLayout() {
           headerShown: false,
         }}
       />
+      <Stack.Screen
+        name="searchChat"
+        options={{
+          title: "Search",
+          headerShown: false,
+        }}
+      />
     </Stack>
   );
 }

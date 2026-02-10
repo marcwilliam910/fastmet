@@ -13,7 +13,7 @@ import {
   Text,
   View,
 } from "react-native";
-import SeeMoreModal from "../modals/seeMoreModal";
+import SeeMoreModalDisplay from "../modals/seeMoreModalDisplay";
 
 export default function CancelledRoute({ count }: { count: number }) {
   const { modalVisible, setModalVisible, selectedRequest, handleSeeMorePress } =
@@ -114,7 +114,7 @@ export default function CancelledRoute({ count }: { count: number }) {
       />
 
       {selectedRequest && (
-        <SeeMoreModal
+        <SeeMoreModalDisplay
           visible={modalVisible}
           onClose={() => setModalVisible(false)}
           type="Cancelled Booking"

@@ -1,4 +1,8 @@
-import { fetchConversations, getConversationById } from "@/api/conversation";
+import {
+  fetchConversations,
+  getConversationById,
+  getConversationsByName,
+} from "@/api/conversation";
 import { useAuth } from "@/hooks/useAuth";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 
@@ -18,5 +22,13 @@ export const useConversationById = (conversationId: string) => {
     queryKey: ["conversation", conversationId],
     queryFn: () => getConversationById(conversationId),
     enabled: !!conversationId,
+  });
+};
+
+export const useConversationsByName = (name: string) => {
+  return useQuery({
+    queryKey: ["conversations", "search", name],
+    queryFn: () => getConversationsByName(name),
+    enabled: name.trim().length > 0,
   });
 };

@@ -14,7 +14,7 @@ import {
   Text,
   View,
 } from "react-native";
-import SeeMoreModal from "../modals/seeMoreModal";
+import SeeMoreModalDisplay from "../modals/seeMoreModalDisplay";
 import StarDisplay from "../StarDisplay";
 
 export default function ActiveRoute() {
@@ -109,7 +109,7 @@ export default function ActiveRoute() {
       />
 
       {selectedRequest && (
-        <SeeMoreModal
+        <SeeMoreModalDisplay
           visible={modalVisible}
           onClose={() => setModalVisible(false)}
           type="Active Booking"

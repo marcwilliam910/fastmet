@@ -25,7 +25,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 import ConfirmCancelBookingModal from "../modals/confirmCancelBookingModal";
 import DriverDetailsModal from "../modals/driverDetailsModal";
-import SeeMoreModal from "../modals/seeMoreModal";
+import SeeMoreModalDisplay from "../modals/seeMoreModalDisplay";
 import StarDisplay from "../StarDisplay";
 
 export default function RequestRoute() {
@@ -320,7 +320,7 @@ export default function RequestRoute() {
       />
 
       {selectedRequest && (
-        <SeeMoreModal
+        <SeeMoreModalDisplay
           visible={modalVisible}
           onClose={() => setModalVisible(false)}
           type="Request Booking"

@@ -3,7 +3,6 @@ import { useMarkAsReadMutation, useRateDriverMutation } from "@/mutations/bookin
 import { useUserBookings } from "@/queries/bookingQueries";
 import { useAppStore } from "@/store/useAppStore";
 import { CompletedBooking, LocationDetails } from "@/types/book";
-import { Service } from "@/types/vehicle";
 import { formatDate } from "@/utils/date";
 import { createConversationId, formatLocation } from "@/utils/helper";
 import { Ionicons } from "@expo/vector-icons";
@@ -22,6 +21,7 @@ import {
 } from "react-native";
 import ImageView from "react-native-image-viewing";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { AttachedImages, ItemType, LocationUI, Note, PaymentInfo, SeeMoreHeader, SelectedServices } from "../BookingSeeMoreInfo";
 import StarDisplay from "../StarDisplay";
 
 export default function CompletedRoute({ count }: { count: number }) {
@@ -325,22 +325,7 @@ function SeeMoreModal({
         }}
       >
         {/* Header */}
-        <View className="flex-row items-center justify-center px-4 pt-2 pb-4">
-          <Pressable
-            onPress={onClose}
-            className="absolute left-4 top-1"
-            hitSlop={30}
-          >
-            <Ionicons
-              name="chevron-back-outline"
-              size={Platform.OS === "ios" ? 34 : 28}
-              color="#FFA840"
-            />
-          </Pressable>
-          <Text className="text-lg font-semibold uppercase">
-            {data.bookingType.type}
-          </Text>
-        </View>
+        <SeeMoreHeader onClose={onClose} bookingType={data.bookingType.type} />
 
         {/* Content - Scrollable */}
         <ScrollView
@@ -439,55 +424,10 @@ function SeeMoreModal({
               Trip Details
             </Text>
 
-            <View className="relative flex-row items-start justify-between ml-5 mr-2 border-l border-dashed border-lightPrimary pl-7">
-              <View className="gap-5 flex-1">
-                {/* Pickup */}
-                <View>
-                  <Text className="text-sm font-medium text-gray-900">
-                    {formatLocation(data.pickUp)}
-                  </Text>
-
-                  {data.pickUp?.additionalDetails && (
-                    <Text
-                      className="mt-1 text-xs text-gray-500"
-                      numberOfLines={3}
-                    >
-                      {data.pickUp.additionalDetails}
-                    </Text>
-                  )}
-                </View>
-
-                {/* Dropoff */}
-                <View>
-                  <Text className="text-sm font-medium text-gray-900">
-                    {formatLocation(data.dropOff)}
-                  </Text>
-
-                  {data.dropOff?.additionalDetails && (
-                    <Text
-                      className="mt-1 text-xs text-gray-500"
-                      numberOfLines={3}
-                    >
-                      {data.dropOff.additionalDetails}
-                    </Text>
-                  )}
-                </View>
-              </View>
-
-              <Ionicons
-                name="location-sharp"
-                size={24}
-                color="#FFA840"
-                className="absolute -left-3.5 -top-1  bg-gray-50"
-              />
-
-              <Ionicons
-                name="locate-sharp"
-                size={24}
-                color="#FFA840"
-                className="absolute -left-3.5 -bottom-3 pb-2  bg-gray-50"
-              />
-            </View>
+            <LocationUI
+              pickUp={data.pickUp}
+              dropOff={data.dropOff}
+            />
 
             {/* Distance */}
             <View className="flex-row items-center justify-between p-3 mt-4 bg-white rounded-lg">
@@ -523,67 +463,7 @@ function SeeMoreModal({
           </View>
 
           {/* Payment Info */}
-          <View className="p-5 bg-gray-50 rounded-2xl">
-            <Text className="mb-3 text-base font-semibold text-gray-800">
-              Payment Information (
-              {data.paymentMethod === "cash" ? "Cash Payment" : "Gcash Payment"}
-              )
-            </Text>
-
-            {/* Price Breakdown */}
-            <View className="p-4 bg-white rounded-xl gap-2">
-              <View className="flex-row justify-between">
-                <Text className="text-xs text-gray-500">Base Fare</Text>
-                <Text className="text-xs font-semibold text-gray-700">
-                  Php{" "}
-                  {data.routeData.basePrice.toLocaleString("en-US", {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}
-                </Text>
-              </View>
-
-              <View className="flex-row justify-between">
-                <Text className="text-xs text-gray-500">Distance Fee</Text>
-                <Text className="text-xs font-semibold text-gray-700">
-                  Php{" "}
-                  {data.routeData.distanceFee.toLocaleString("en-US", {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}
-                </Text>
-              </View>
-
-              <View className="flex-row justify-between">
-                <Text className="text-xs text-gray-500">Service Fee</Text>
-                <Text className="text-xs font-semibold text-gray-700">
-                  {data.routeData.serviceFee > 0
-                    ? `Php ${data.routeData.serviceFee.toLocaleString("en-US", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}`
-                    : "FREE"}
-                </Text>
-              </View>
-
-              {/* Divider */}
-              <View className="h-px my-2 bg-gray-200" />
-
-              {/* Total */}
-              <View className="flex-row justify-between ">
-                <Text className="text-base font-semibold text-gray-800">
-                  Total Amount
-                </Text>
-                <Text className="text-xl font-bold text-darkPrimary">
-                  Php{" "}
-                  {data.routeData.totalPrice.toLocaleString("en-US", {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}
-                </Text>
-              </View>
-            </View>
-          </View>
+          <PaymentInfo paymentMethod={data.paymentMethod} routeData={data.routeData} />
 
           {/* Delivery Proof Images */}
           <View className="p-5 bg-gray-50 rounded-2xl">
@@ -717,159 +597,30 @@ function SeeMoreModal({
 
           {/* Selected Services */}
           {(hasFreeServices || hasAddedServices) && (
-            <View className="p-4 border border-gray-200 rounded-2xl bg-white">
-              <View className="flex-row items-center justify-between mb-3">
-                <Text className="text-base font-semibold text-gray-800">
-                  Selected Services
-                </Text>
-                <View className="px-2 py-1 bg-orange-100 rounded-full">
-                  <Text className="text-xs font-semibold text-lightPrimary">
-                    {data.addedServices?.length ?? 0} add-ons
-                  </Text>
-                </View>
-              </View>
-
-              {/* Free Services */}
-              {hasFreeServices && (
-                <View className="mb-3">
-                  <Text className="mb-2 text-xs font-medium text-gray-500 uppercase">
-                    Included (Free)
-                  </Text>
-                  <View>
-                    {data.selectedVehicle.freeServices.map((service: Service) => (
-                      <View
-                        key={service.key}
-                        className="flex-row items-center justify-between py-2"
-                      >
-                        <View className="flex-row items-center flex-1 gap-2">
-                          <View className="w-1.5 h-1.5 bg-green-500 rounded-full" />
-                          <Text className="flex-1 text-sm text-gray-700">
-                            {service.name}
-                          </Text>
-                        </View>
-                        <Text className="text-xs font-medium text-green-600">
-                          FREE
-                        </Text>
-                      </View>
-                    ))}
-                  </View>
-                </View>
-              )}
-
-              {/* Paid Services */}
-              {hasAddedServices && (
-                <View className="pt-3 border-t border-gray-200">
-                  <Text className="mb-2 text-xs font-medium text-gray-500 uppercase">
-                    Add-ons
-                  </Text>
-                  <View>
-                    {data.addedServices.map((service: Service) => {
-                      const qty = service.quantity ?? 1;
-                      const hasMultiple = qty > 1;
-                      // service.price is already total (unit × quantity) from bookSlice
-                      const unitPrice = hasMultiple ? service.price / qty : service.price;
-
-                      return (
-                        <View
-                          key={service.key}
-                          className="flex-row items-center justify-between py-2"
-                        >
-                          <View className="flex-1">
-                            <Text className="text-sm font-medium text-gray-800">
-                              {service.name}
-                            </Text>
-                            {hasMultiple && (
-                              <Text className="text-xs text-gray-500">
-                                Qty: {qty} × ₱{unitPrice.toLocaleString("en-US")}
-                              </Text>
-                            )}
-                          </View>
-                          <Text className="font-semibold text-lightPrimary">
-                            ₱{service.price > 0 ? service.price.toLocaleString("en-US") : "0.00"}
-                          </Text>
-                        </View>
-                      );
-                    })}
-                  </View>
-                </View>
-              )}
-
-              {/* Total */}
-              {hasAddedServices && (
-                <View className="flex-row items-center justify-between pt-3 mt-3 border-t border-gray-300">
-                  <Text className="text-base font-semibold text-gray-800">
-                    Services Total
-                  </Text>
-                  <Text className="text-lg font-bold text-lightPrimary">
-                    {totalServicesPrice > 0
-                      ? `₱${totalServicesPrice.toLocaleString("en-US", {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      })}`
-                      : "FREE"}
-                  </Text>
-                </View>
-              )}
-            </View>
+            <SelectedServices
+              addedServices={data.addedServices}
+              hasFreeServices={hasFreeServices}
+              hasAddedServices={hasAddedServices}
+              totalServicesPrice={totalServicesPrice}
+              freeServices={data.selectedVehicle?.freeServices}
+            />
           )}
+
           {/* Item Type */}
           {data.itemType && (
-            <View className="p-5 bg-blue-50 rounded-2xl">
-              <View className="flex-row items-center mb-2">
-                <Ionicons name="cube-outline" size={20} color="#3B82F6" />
-                <Text className="ml-2 text-base font-semibold text-gray-800">
-                  Item Type
-                </Text>
-              </View>
-              <Text className="leading-5 text-gray-700">{data.itemType}</Text>
-            </View>
+            <ItemType itemType={data.itemType} />
           )}
 
           {/* Note */}
           {data.note && (
-            <View className="p-5 bg-amber-50 rounded-2xl">
-              <View className="flex-row items-center mb-2">
-                <Ionicons
-                  name="document-text-outline"
-                  size={20}
-                  color="#FFA840"
-                />
-                <Text className="ml-2 text-base font-semibold text-gray-800">
-                  Note
-                </Text>
-              </View>
-              <Text className="leading-5 text-gray-700">{data.note}</Text>
-            </View>
+            <Note note={data.note} />
           )}
 
           {/* Images */}
           {data.photos && data.photos.length > 0 && (
-            <View className="p-5 bg-gray-50 rounded-2xl">
-              <View className="flex-row items-center mb-3">
-                <Ionicons name="image-outline" size={20} color="#666" />
-                <Text className="ml-2 text-base font-semibold text-gray-800">
-                  Attached Images ({data.photos.length})
-                </Text>
-              </View>
-              <View className="flex-row flex-wrap gap-2">
-                {data.photos.map((img: any, index: number) => (
-                  <Pressable
-                    key={index}
-                    onPress={() => openImageViewer(img)}
-                    className="flex-1"
-                  >
-                    <Image
-                      source={{ uri: img }}
-                      style={{
-                        flex: 1,
-                        height: data.photos.length > 1 ? 100 : 200,
-                      }}
-                    />
-                  </Pressable>
-                ))}
-              </View>
-            </View>
+            <AttachedImages photos={data.photos} setImageViewerVisible={setIsImageViewVisible} setSelectedImageUrl={setSelectedImage} />
           )}
+
         </ScrollView>
 
         {/* Floating Rating Card */}

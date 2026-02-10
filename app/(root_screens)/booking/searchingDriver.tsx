@@ -196,14 +196,14 @@ export default function SearchingDriver() {
       });
     };
 
-    socket.on("offerCancelled", handleCancelOffer);
+    socket.on("offerCancelledAsap", handleCancelOffer);
     socket.on("bookingCancelled", handleBookingCancelled);
     socket.on("driverAccepted", handleDriverAccepted);
     socket.on("error", errorHandler);
     socket.on("bookingExpired", handleBookingExpired);
 
     return () => {
-      socket.off("offerCancelled", handleCancelOffer);
+      socket.off("offerCancelledAsap", handleCancelOffer);
       socket.off("bookingCancelled", handleBookingCancelled);
       socket.off("driverAccepted", handleDriverAccepted);
       socket.off("error", errorHandler);

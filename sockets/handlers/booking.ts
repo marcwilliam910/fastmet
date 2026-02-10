@@ -72,3 +72,42 @@ export const acceptanceRequestedSchedule = (socket: Socket) => {
       handleAcceptanceRequestedSchedule,
     );
 };
+
+export const cancelScheduleDriverOffer = (socket: Socket) => {
+  const handleCancelScheduleDriverOffer = ({
+    driverId,
+    bookingId,
+  }: {
+    driverId: string;
+    bookingId: string;
+  }) => {
+    queryClient.setQueriesData(
+      { queryKey: ["userBookings", "pending"] },
+      (oldData: any) => {
+        if (!oldData?.pages) return oldData;
+
+        return {
+          ...oldData,
+          pages: oldData.pages.map((page: any) => ({
+            ...page,
+            bookings: page.bookings.map((booking: Booking) => {
+              if (booking._id === bookingId) {
+                return {
+                  ...booking,
+                  requestedDrivers: (booking.requestedDrivers || []).filter(
+                    (driver) => driver.id !== driverId,
+                  ),
+                };
+              }
+              return booking;
+            }),
+          })),
+        };
+      },
+    );
+  };
+
+  socket.on("offerCancelledSchedule", handleCancelScheduleDriverOffer);
+  return () =>
+    socket.off("offerCancelledSchedule", handleCancelScheduleDriverOffer);
+};
