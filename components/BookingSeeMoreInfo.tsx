@@ -73,7 +73,7 @@ export const LocationUI = ({ pickUp, dropOff }: { pickUp: LocationDetails, dropO
             />
 
             <Ionicons
-                name="locate-sharp"
+                name="flag-outline"
                 size={24}
                 color="#FFA840"
                 className="absolute -left-3.5 -bottom-3 pb-2  bg-gray-50"

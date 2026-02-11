@@ -106,7 +106,7 @@ export default function LocationInputs({
         <View
           className={`bg-red-500 rounded-full p-1.5 ${!pickUp ? "opacity-50" : ""}`}
         >
-          <Ionicons name="locate-sharp" size={16} color="white" />
+          <Ionicons name="flag-outline" size={16} color="white" />
         </View>
       </View>
     </View>

@@ -18,7 +18,7 @@ export const acceptanceRequestedSchedule = (socket: Socket) => {
   }) => {
     // Update ALL pending bookings to add the driver offer
     queryClient.setQueriesData(
-      { queryKey: ["userBookings", "pending"] }, // Partial match
+      { queryKey: ["userBookings", "pending"] },
       (oldData: any) => {
         if (!oldData?.pages) return oldData;
 
@@ -43,8 +43,9 @@ export const acceptanceRequestedSchedule = (socket: Socket) => {
       },
     );
 
-    // updating notification
+    // Update notification
     useAppStore.getState().setUnreadNotificationCount(unreadNotifications);
+
     const notificationsQueries = queryClient.getQueriesData<
       InfiniteData<NotificationsResponse>
     >({ queryKey: ["notifications"] });
@@ -59,33 +60,60 @@ export const acceptanceRequestedSchedule = (socket: Socket) => {
         (old) => {
           if (!old?.pages?.length) return old;
 
-          const alreadyExists = old.pages.some((p) =>
-            p.notifications.some((n) => n._id === notification._id),
-          );
-          if (alreadyExists) return old;
+          // Check if notification for this booking already exists
+          let notificationExists = false;
+
+          const updatedPages = old.pages.map((page) => ({
+            ...page,
+            notifications: page.notifications.map((n) => {
+              // Update existing notification for the same booking
+              if (
+                n.type === "driver_offer" &&
+                n.data?.bookingId === notification.data?.bookingId
+              ) {
+                notificationExists = true;
+                // Replace with the updated notification from server
+                return {
+                  ...notification,
+                  isRead: false, // Ensure it's marked as unread
+                };
+              }
+              return n;
+            }),
+          }));
+
+          // If notification doesn't exist, add it to the first page
+          if (!notificationExists) {
+            updatedPages[0] = {
+              ...updatedPages[0],
+              notifications: [notification, ...updatedPages[0].notifications],
+            };
+          }
 
           return {
             ...old,
-            pages: old.pages.map((page, idx) =>
-              idx === 0
-                ? {
-                    ...page,
-                    notifications: [notification, ...page.notifications],
-                  }
-                : page,
-            ),
+            pages: updatedPages,
           };
         },
       );
     }
+
     queryClient.setQueryData(["notificationUnreadCount"], {
       unreadCount: unreadNotifications,
     });
 
+    // Dynamic toast message based on driver count
+    const driverCount = notification.data?.drivers
+      ? Object.keys(notification.data.drivers).length
+      : 1;
+
     Toast.show({
       type: "success",
       text1: "New Driver Offer!",
-      text2: `${driverOffer.name} has offered`,
+      text2:
+        driverCount === 1
+          ? `${driverOffer.name} has offered`
+          : `${driverCount} drivers have offered for your booking`,
     });
   };
 

@@ -448,7 +448,7 @@ const RequestCard = ({
                 className="absolute -left-3.5 -top-1 bg-white"
               />
               <Ionicons
-                name="locate-sharp"
+                name="flag-outline"
                 size={24}
                 className="absolute -left-3.5 -bottom-1 bg-white"
               />
