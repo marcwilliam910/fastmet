@@ -3,7 +3,6 @@ import NotLoggedIn from "@/components/notLoggedIn";
 import { useAuth } from "@/hooks/useAuth";
 import { useConversations } from "@/queries/conversation";
 import { Ionicons } from "@expo/vector-icons";
-import * as Sentry from "@sentry/react-native";
 import { router } from "expo-router";
 import React from "react";
 import {
@@ -59,17 +58,16 @@ const Chats = () => {
   return (
     <View className="flex-1 gap-6 py-6 bg-white">
       {conversations.length === 0 ? (
-        <View className="flex-1 items-center justify-center">
-          {/* show no message screen */}
-          <Text className="text-center text-lg text-gray-400">
-            You have no messages
+        <View className="flex-1 items-center justify-center px-8">
+          <View className="bg-[#FFF3E0] rounded-full p-5 mb-6">
+            <Ionicons name="chatbubble-ellipses-outline" size={54} color="#FFA840" />
+          </View>
+          <Text className="text-center text-xl font-semibold text-gray-600 mb-2">
+            No Messages
           </Text>
-          <Button
-            title="Try! Test Sentry"
-            onPress={() => {
-              Sentry.captureException(new Error("First error"));
-            }}
-          />
+          <Text className="text-center text-base text-gray-400">
+            Looks like you don&apos;t have any conversations yet. Start a new chat to see messages here!
+          </Text>
         </View>
       ) : (
         <>

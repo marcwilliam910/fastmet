@@ -39,10 +39,10 @@ export default function CompletedRoute({ count }: { count: number }) {
   } = useUserBookings<CompletedBooking>("completed", 5);
 
 
-  const { mutate: markAsReadBooking, isPending: isMarkingAsRead } = useMarkAsReadMutation("completed");
+  const { mutate: markAsReadBooking, isPending: isMarkingAsRead } = useMarkAsReadMutation();
 
   useEffect(() => {
-    if (count > 0) markAsReadBooking();
+    if (count > 0) markAsReadBooking("completed");
   }, [count, markAsReadBooking]);
 
   if (isPending || isMarkingAsRead)

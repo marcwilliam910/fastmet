@@ -56,7 +56,7 @@ function CustomTabBar({ navigationState, jumpTo, counts }: CustomTabBarProps) {
                 {route.title}
               </Text>
               {count !== undefined && count > 0 && (
-                <View className="absolute -top-3 -right-4 bg-red-500 rounded-full size-[16px] justify-center items-center">
+                <View className="absolute -top-3 -right-4 bg-red-500 rounded-full size-[18px] justify-center items-center">
                   <Text className="text-white text-[8px] scale-125 font-bold">
                     {count > 9 ? "9+" : count}
                   </Text>

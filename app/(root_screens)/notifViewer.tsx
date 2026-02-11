@@ -1,103 +1,45 @@
-import {useMarkNotificationAsRead} from "@/queries/notification";
-import {useAppStore} from "@/store/useAppStore";
-import {formatDate} from "@/utils/date";
-import {Ionicons} from "@expo/vector-icons";
-import {router, useLocalSearchParams} from "expo-router";
-import React, {useEffect} from "react";
-import {Pressable, ScrollView, Text, View} from "react-native";
+import { useMarkNotificationAsRead } from "@/mutations/notification";
+import { useNotificationById } from "@/queries/notification";
+import { STATIC_IMAGES } from "@/utils/constants";
+import { formatDate } from "@/utils/date";
+import { formatLocation } from "@/utils/helper";
+import { getNotificationConfig, NOTIFICATION_TYPES } from "@/utils/notification";
+import { Ionicons } from "@expo/vector-icons";
+import { Image } from "expo-image";
+import { router, useLocalSearchParams } from "expo-router";
+import React, { useEffect } from "react";
+import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const NotifViewer = () => {
-  const {notificationId} = useLocalSearchParams<{notificationId: string}>();
+  const { notificationId } = useLocalSearchParams<{ notificationId: string }>();
+  const insets = useSafeAreaInsets();
 
-  // Get notification from store by ID
-  const notification = useAppStore((state) =>
-    state.getNotificationById(notificationId || ""),
-  );
+  const { mutate: markAsRead } = useMarkNotificationAsRead();
+  const { data: notification, isPending, error } = useNotificationById(notificationId);
 
-  const {mutate: markAsRead} = useMarkNotificationAsRead();
 
   // Mark as read when viewing
   useEffect(() => {
     if (notification && !notification.isRead && notificationId) {
       markAsRead(notificationId);
     }
-  }, [notification, notificationId]);
+  }, [markAsRead, notification, notificationId]);
 
-  const getNotificationIcon = (type: string) => {
-    switch (type) {
-      case "booking_accepted":
-        return "checkmark-circle";
-      case "booking_completed":
-        return "checkmark-done-circle";
-      case "booking_cancelled":
-        return "close-circle";
-      case "driver_arrived":
-        return "location";
-      case "driver_on_the_way":
-        return "car";
-      case "payment":
-        return "card";
-      case "promo":
-        return "gift";
-      case "system":
-        return "information-circle";
-      default:
-        return "notifications";
-    }
-  };
+  if (isPending) {
+    return (
+      <View className="flex-1 justify-center items-center bg-white">
+        <ActivityIndicator size="large" color="#9CA3AF" />
+      </View>
+    );
+  }
 
-  const getNotificationColor = (type: string) => {
-    switch (type) {
-      case "booking_accepted":
-        return "#22C55E"; // green
-      case "booking_completed":
-        return "#22C55E"; // green
-      case "booking_cancelled":
-        return "#EF4444"; // red
-      case "driver_arrived":
-        return "#3B82F6"; // blue
-      case "driver_on_the_way":
-        return "#FFA840"; // orange
-      case "payment":
-        return "#8B5CF6"; // purple
-      case "promo":
-        return "#EC4899"; // pink
-      case "system":
-        return "#6B7280"; // gray
-      default:
-        return "#FFA840"; // orange
-    }
-  };
-
-  const getTypeLabel = (type: string) => {
-    switch (type) {
-      case "booking_accepted":
-        return "Booking Accepted";
-      case "booking_completed":
-        return "Booking Completed";
-      case "booking_cancelled":
-        return "Booking Cancelled";
-      case "driver_arrived":
-        return "Driver Arrived";
-      case "driver_on_the_way":
-        return "Driver On The Way";
-      case "payment":
-        return "Payment";
-      case "promo":
-        return "Promotion";
-      case "system":
-        return "System";
-      default:
-        return type.charAt(0).toUpperCase() + type.slice(1).replace(/_/g, " ");
-    }
-  };
-
-  if (!notification) {
+  if (error) {
     return (
       <View className="flex-1 justify-center items-center bg-white">
         <Ionicons name="notifications-off-outline" size={64} color="#9CA3AF" />
         <Text className="mt-4 text-lg text-gray-400">
-          Notification not found
+          {error ? error.message : "Notification not found"}
         </Text>
         <Pressable
           className="px-6 py-3 mt-4 rounded-full bg-primary"
@@ -109,81 +51,188 @@ const NotifViewer = () => {
     );
   }
 
+  const config = getNotificationConfig(notification.type);
+
   return (
-    <ScrollView className="flex-1 bg-white">
-      <View className="p-4">
-        {/* Header with icon */}
-        <View className="items-center py-6">
+    <ScrollView
+      className="flex-1 bg-white"
+      contentContainerStyle={{ paddingBottom: insets.bottom }}
+    >
+      <View className="p-6">
+        {/* Header */}
+        <View className="items-center mb-8">
           <View
-            className="justify-center items-center mb-4 rounded-full size-20"
-            style={{
-              backgroundColor: `${getNotificationColor(notification.type)}20`,
-            }}
+            className="justify-center items-center mb-4 rounded-full size-16"
+            style={{ backgroundColor: `${config.color}20` }}
           >
-            <Ionicons
-              name={getNotificationIcon(notification.type) as any}
-              size={40}
-              color={getNotificationColor(notification.type)}
-            />
+            <Ionicons name={config.icon as any} size={32} color={config.color} />
           </View>
-          <View
-            className="px-3 py-1 mb-2 rounded-full"
-            style={{
-              backgroundColor: `${getNotificationColor(notification.type)}20`,
-            }}
-          >
-            <Text
-              className="text-xs font-semibold"
-              style={{color: getNotificationColor(notification.type)}}
-            >
-              {getTypeLabel(notification.type)}
-            </Text>
-          </View>
-          <Text className="text-sm text-gray-400">
+          <Text className="text-2xl font-bold text-gray-900 text-center mb-2">
+            {notification.title}
+          </Text>
+          <Text className="text-sm text-gray-500">
             {formatDate(notification.createdAt)}
           </Text>
         </View>
 
-        {/* Title */}
-        <View className="pb-4 mb-4 border-b border-gray-100">
-          <Text className="text-xl font-bold text-gray-900">
-            {notification.title}
-          </Text>
-        </View>
-
         {/* Message */}
-        <View className="mb-6">
-          <Text className="text-base leading-6 text-justify text-gray-700">
+        <View className="mb-6 px-4">
+          <Text className="text-base leading-6 text-gray-600 text-center">
             {notification.message}
           </Text>
         </View>
 
-        {/* Additional data if available */}
-        {notification.data && Object.keys(notification.data).length > 0 && (
-          <View className="p-4 mb-6 bg-gray-50 rounded-xl">
-            <Text className="mb-3 text-sm font-semibold text-gray-600">
-              Additional Details
-            </Text>
-            {Object.entries(notification.data).map(([key, value]) => (
-              <View
-                key={key}
-                className="flex-row justify-between items-center py-2 border-b border-gray-100 last:border-b-0"
-              >
-                <Text className="text-sm text-gray-500 capitalize">
-                  {key.replace(/_/g, " ")}
-                </Text>
-                <Text className="text-sm font-medium text-gray-700">
-                  {typeof value === "object"
-                    ? JSON.stringify(value)
-                    : String(value)}
-                </Text>
-              </View>
-            ))}
-          </View>
-        )}
+        {/* Type-specific details */}
+        {renderNotificationContent(notification.type, notification.data)}
       </View>
     </ScrollView>
   );
 };
 
 export default NotifViewer;
+
+// Type-specific content renderers
+// Add new notification types here
+const renderNotificationContent = (
+  type: NOTIFICATION_TYPES,
+  data: Record<string, any> | undefined
+) => {
+  if (!data) return null;
+
+  switch (type) {
+    case "driver_offer":
+      return <DriverOfferContent data={data} />;
+    case "booking_expired":
+      return <BookingExpiredContent data={data} />;
+    default:
+      return <DefaultContent data={data} />;
+  }
+};
+
+// Driver Offer notification content
+const DriverOfferContent = ({ data }: { data: Record<string, any> }) => {
+  const { driverName, driverRating, driverProfilePicture } = data;
+
+  return (
+    <View className="bg-blue-50 rounded-2xl p-5 border border-blue-100">
+      <View className="flex-row items-center">
+        <View className="bg-blue-100 rounded-full size-12 justify-center items-center mr-4">
+          <Image
+            source={
+              driverProfilePicture
+                ? { uri: driverProfilePicture }
+                : STATIC_IMAGES.userPlaceholder
+            }
+            style={{
+              width: 48,
+              height: 48,
+              borderRadius: 24,
+              borderWidth: 1,
+              borderColor: "skyblue"
+            }}
+          />
+        </View>
+        <View className="flex-1">
+          <Text className="text-sm text-gray-500 mb-1">Driver</Text>
+          <Text className="text-lg font-bold text-gray-900">{driverName}</Text>
+          {driverRating && (
+            <View className="flex-row items-center mt-1">
+              <Ionicons name="star" size={14} color="#F59E0B" />
+              <Text className="text-sm text-gray-600 ml-1">
+                {driverRating.toFixed(1)}
+              </Text>
+            </View>
+          )}
+        </View>
+      </View>
+    </View>
+  );
+};
+
+// Booking Expired notification content
+const BookingExpiredContent = ({ data }: { data: Record<string, any> }) => {
+  const { pickUp, dropOff } = data;
+
+  return (
+    <View className="space-y-3">
+      {/* Pick-up */}
+      {pickUp && (
+        <View className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+          <View className="flex-row items-start">
+            <View className="bg-green-100 rounded-full size-10 justify-center items-center mr-3">
+              <Ionicons name="location" size={20} color="#10B981" />
+            </View>
+            <View className="flex-1">
+              <Text className="text-xs text-gray-500 mb-1">Pick-up</Text>
+              <Text className="text-base font-semibold text-gray-900">
+                {pickUp.name}
+              </Text>
+              {formatLocation(pickUp) && (
+                <Text className="text-sm text-gray-500 mt-1">
+                  {formatLocation(pickUp)}
+                </Text>
+              )}
+            </View>
+          </View>
+        </View>
+      )}
+
+      {/* Drop-off */}
+      {dropOff && (
+        <View className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+          <View className="flex-row items-start">
+            <View className="bg-red-100 rounded-full size-10 justify-center items-center mr-3">
+              <Ionicons name="flag" size={20} color="#EF4444" />
+            </View>
+            <View className="flex-1">
+              <Text className="text-xs text-gray-500 mb-1">Drop-off</Text>
+              <Text className="text-base font-semibold text-gray-900">
+                {dropOff.name}
+              </Text>
+              {formatLocation(dropOff) && (
+                <Text className="text-sm text-gray-500 mt-1">
+                  {formatLocation(dropOff)}
+                </Text>
+              )}
+            </View>
+          </View>
+        </View>
+      )}
+    </View>
+  );
+};
+
+// Default fallback content for unknown notification types
+const DefaultContent = ({ data }: { data: Record<string, any> }) => {
+  const displayableData = Object.entries(data).filter(
+    ([key, value]) =>
+      key !== "bookingId" &&
+      key !== "_id" &&
+      key !== "driverId" &&
+      value !== null &&
+      value !== undefined &&
+      typeof value !== "object"
+  );
+
+  if (displayableData.length === 0) return null;
+
+  return (
+    <View className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+      {displayableData.map(([key, value], index) => (
+        <View key={key}>
+          <View className="py-2">
+            <Text className="text-xs text-gray-500 mb-1">
+              {key.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())}
+            </Text>
+            <Text className="text-base font-semibold text-gray-900">
+              {String(value)}
+            </Text>
+          </View>
+          {index < displayableData.length - 1 && (
+            <View className="h-px bg-gray-200" />
+          )}
+        </View>
+      ))}
+    </View>
+  );
+};

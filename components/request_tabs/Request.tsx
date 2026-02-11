@@ -38,7 +38,7 @@ export default function RequestRoute() {
   const [selectedDriver, setSelectedDriver] = useState<RequestedDriver | null>(
     null,
   );
-  const [selectedFilters, setSelectedFilters] = useState(["PENDING"]);
+  const [selectedFilters, setSelectedFilters] = useState(["PENDING", "SCHEDULED"]);
   const setLoading = useAppStore((state) => state.setLoading);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const socket = useSocket();
@@ -61,8 +61,6 @@ export default function RequestRoute() {
   bookings = selectedFilters.includes("SCHEDULED")
     ? [...bookings, ...scheduledBookings]
     : bookings;
-
-  console.log(JSON.stringify(scheduledBookings, null, 2))
 
 
   const driversModalBooking = bookings.find(

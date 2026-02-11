@@ -28,3 +28,9 @@ export type MessageResponse = {
     phoneNumber: string;
   };
 };
+
+export interface MessagesLoadedData {
+  messages: any[];
+  skip: number;
+  hasMore: boolean;
+}

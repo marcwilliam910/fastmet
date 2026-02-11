@@ -8,7 +8,7 @@ import Toast from "react-native-toast-message";
 
 const getMinTime = () => {
   const min = new Date();
-  min.setHours(min.getHours() + 2);
+  min.setHours(min.getHours() + 3);
   return min;
 };
 
@@ -269,7 +269,7 @@ export default function BookingTypeModal({
               <View className="relative flex-row items-center justify-center">
                 <Pressable
                   hitSlop={20}
-                  className="absolute top-0 left-1"
+                  className="absolute -top-1 left-1"
                   onPress={() => {
                     setStep("main");
                     setSelectedDate(getMinTime());
@@ -281,7 +281,7 @@ export default function BookingTypeModal({
                   <Ionicons
                     name="chevron-back-outline"
                     color="#FFA840"
-                    size={Platform.OS === "ios" ? 34 : 28}
+                    size={Platform.OS === "ios" ? 32 : 28}
                   />
                 </Pressable>
                 <Text className="text-lg font-bold">Max schedule: 1 month</Text>
@@ -324,7 +324,7 @@ export default function BookingTypeModal({
                             setSelectedDate(date);
                           }
                         }}
-                        minimumDate={new Date(Date.now() + 2 * 60 * 60 * 1000)}
+                        minimumDate={new Date(Date.now() + 2.5 * 60 * 60 * 1000)}
                         maximumDate={
                           new Date(
                             new Date().setMonth(new Date().getMonth() + 1)
@@ -348,7 +348,10 @@ export default function BookingTypeModal({
                   {!showCalendar && (
                     <Pressable
                       onPress={() => handleConfirm("schedule", "")}
-                      className="py-3 bg-lightPrimary rounded-xl"
+                      className="bg-lightPrimary rounded-xl"
+                      style={{
+                        paddingVertical: Platform.OS === "ios" ? 15 : 12,
+                      }}
                     >
                       <Text className="font-semibold text-center text-white">
                         Confirm

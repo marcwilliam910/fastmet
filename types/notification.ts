@@ -1,3 +1,5 @@
+import { NOTIFICATION_TYPES } from "@/utils/notification";
+
 export interface Notification {
   _id: string;
   userId: string;
@@ -5,7 +7,7 @@ export interface Notification {
   isBroadcast: boolean;
   title: string;
   message: string;
-  type: string;
+  type: NOTIFICATION_TYPES;
   isRead: boolean;
   readAt: string | null;
   data?: Record<string, any>;

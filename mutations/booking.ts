@@ -57,14 +57,15 @@ export const useRateDriverMutation = () =>
     },
   });
 
-export const useMarkAsReadMutation = (status: "completed" | "cancelled") =>
+export const useMarkAsReadMutation = () =>
   useMutation({
-    mutationFn: () => api.patch(`/booking/mark-as-read`, { status }),
+    mutationFn: (status: "completed" | "cancelled") =>
+      api.patch(`/booking/mark-as-read/${status}`),
     onSuccess: () => {
       // ✅ Automatically refetch count
       queryClient.invalidateQueries({ queryKey: ["userBookingCounts"] });
     },
     onError: (error) => {
-      console.error("Error marking booking as read:", error);
+      console.error("Error marking booking as read:", error.message);
     },
   });

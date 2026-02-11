@@ -1,13 +1,13 @@
+import { useMarkAllNotificationsAsRead } from "@/mutations/notification";
 import {
-  useMarkAllNotificationsAsRead,
   useNotifications,
 } from "@/queries/notification";
-import { useAppStore } from "@/store/useAppStore";
 import { Notification } from "@/types/notification";
 import { formatLastMessageTime } from "@/utils/date";
+import { getNotificationConfig } from "@/utils/notification";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import React, { useEffect, useMemo } from "react";
+import React, { useMemo } from "react";
 import {
   ActivityIndicator,
   Button,
@@ -18,7 +18,6 @@ import {
 } from "react-native";
 
 const NotificationScreen = () => {
-  const setNotifications = useAppStore((state) => state.setNotifications);
 
   const {
     data,
@@ -33,20 +32,11 @@ const NotificationScreen = () => {
   const { mutate: markAllAsRead, isPending: isMarkingAll } =
     useMarkAllNotificationsAsRead();
 
-  // Store notifications in Zustand when data changes
-  const notifications = useMemo(
-    () =>
-      data?.pages
-        .flatMap((page) => page?.notifications ?? [])
-        .filter((n): n is Notification => Boolean(n)) ?? [],
-    [data],
-  );
-
-  useEffect(() => {
-    if (notifications.length > 0) {
-      setNotifications(notifications);
-    }
-  }, [data, notifications, setNotifications]);
+  const notifications = useMemo(() => {
+    return data?.pages
+      .flatMap((page) => page?.notifications ?? [])
+      .filter((n): n is Notification => Boolean(n)) ?? [];
+  }, [data]);
 
   const hasUnread = notifications.some((n) => n && !n.isRead);
 
@@ -68,17 +58,20 @@ const NotificationScreen = () => {
     );
 
   return (
-    <View className="flex-1 gap-4 pt-4 bg-white">
+    <View className="flex-1 gap-4 py-4 bg-white">
       {notifications.length === 0 ? (
         <View className="flex-1 justify-center items-center">
-          <Ionicons
-            name="notifications-off-outline"
-            size={64}
-            color="#9CA3AF"
-          />
-          <Text className="mt-4 text-lg text-gray-400">
-            No notifications yet
-          </Text>
+          <View className="flex-1 items-center justify-center px-8">
+            <View className="bg-[#FFF3E0] rounded-full p-5 mb-6">
+              <Ionicons name="notifications-off-outline" size={54} color="#FFA840" />
+            </View>
+            <Text className="text-center text-xl font-semibold text-gray-600 mb-2">
+              No Notifications
+            </Text>
+            <Text className="text-center text-base text-gray-400">
+              Looks like you don&apos;t have any notifications yet.
+            </Text>
+          </View>
         </View>
       ) : (
         <>
@@ -106,7 +99,8 @@ const NotificationScreen = () => {
             data={notifications}
             showsVerticalScrollIndicator={false}
             renderItem={({ item }) => <NotificationCard item={item} />}
-            keyExtractor={(item, index) => item._id ?? `notification-${index}`}
+            keyExtractor={(item, index) => item?._id ?? `notification-${index}`}
+            contentContainerStyle={{ paddingBottom: 60 }}
             // pull to refresh
             refreshing={isPending}
             onRefresh={refetch}
@@ -138,57 +132,11 @@ const NotificationScreen = () => {
 export default NotificationScreen;
 
 const NotificationCard = ({ item }: { item: Notification }) => {
-  const getNotificationIcon = (type: string) => {
-    switch (type) {
-      case "booking_accepted":
-        return "checkmark-circle";
-      case "booking_completed":
-        return "checkmark-done-circle";
-      case "booking_cancelled":
-        return "close-circle";
-      case "driver_arrived":
-        return "location";
-      case "driver_on_the_way":
-        return "car";
-      case "payment":
-        return "card";
-      case "promo":
-        return "gift";
-      case "system":
-        return "information-circle";
-      default:
-        return "notifications";
-    }
-  };
-
-  const getNotificationColor = (type: string) => {
-    switch (type) {
-      case "booking_accepted":
-        return "#22C55E"; // green
-      case "booking_completed":
-        return "#22C55E"; // green
-      case "booking_cancelled":
-        return "#EF4444"; // red
-      case "driver_arrived":
-        return "#3B82F6"; // blue
-      case "driver_on_the_way":
-        return "#FFA840"; // orange
-      case "payment":
-        return "#8B5CF6"; // purple
-      case "promo":
-        return "#EC4899"; // pink
-      case "system":
-        return "#6B7280"; // gray
-      default:
-        return "#FFA840"; // orange
-    }
-  };
+  const config = getNotificationConfig(item.type);
 
   return (
     <Pressable
-      className={`flex-row items-center gap-4 px-4 py-3 active:bg-ctaSecondary ${
-        !item.isRead ? "bg-orange-50" : ""
-      }`}
+      className={`flex-row items-center gap-4 px-4 py-3 active:bg-ctaSecondary ${!item.isRead ? "bg-orange-50" : ""}`}
       onPress={() =>
         router.push({
           pathname: "/(root_screens)/notifViewer",
@@ -198,13 +146,9 @@ const NotificationCard = ({ item }: { item: Notification }) => {
     >
       <View
         className="justify-center items-center rounded-full size-12"
-        style={{ backgroundColor: `${getNotificationColor(item.type)}20` }}
+        style={{ backgroundColor: `${config.color}20` }}
       >
-        <Ionicons
-          name={getNotificationIcon(item.type) as any}
-          size={24}
-          color={getNotificationColor(item.type)}
-        />
+        <Ionicons name={config.icon as any} size={24} color={config.color} />
       </View>
       <View className="flex-1 gap-1">
         <View className="flex-row justify-between items-center">
@@ -224,9 +168,7 @@ const NotificationCard = ({ item }: { item: Notification }) => {
           </View>
         </View>
         <Text
-          className={`text-sm max-w-[90%] ${
-            !item.isRead ? "text-gray-700" : "text-gray-500"
-          }`}
+          className={`text-sm max-w-[90%] ${!item.isRead ? "text-gray-700" : "text-gray-500"}`}
           numberOfLines={2}
         >
           {item.message}

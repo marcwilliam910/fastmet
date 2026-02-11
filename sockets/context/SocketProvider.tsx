@@ -55,7 +55,6 @@ export default function SocketProvider({
     const cleanupAcceptanceRequestedSchedule =
       acceptanceRequestedSchedule(socket);
     const cleanupCancelScheduleDriverOffer = cancelScheduleDriverOffer(socket);
-    socket.emit("get_unread_conversations_count");
 
     return () => {
       socket.off("connect_error"); // Clean up the listener

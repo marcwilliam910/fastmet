@@ -30,10 +30,10 @@ export default function CancelledRoute({ count }: { count: number }) {
   } = useUserBookings<ActiveBooking>("cancelled", 5);
 
 
-  const { mutate: markAsReadBooking, isPending: isMarkingAsRead } = useMarkAsReadMutation("cancelled");
+  const { mutate: markAsReadBooking, isPending: isMarkingAsRead } = useMarkAsReadMutation();
 
   useEffect(() => {
-    if (count > 0) markAsReadBooking();
+    if (count > 0) markAsReadBooking("cancelled");
   }, [count, markAsReadBooking]);
 
   if (isPending || isMarkingAsRead)

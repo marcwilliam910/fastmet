@@ -11,7 +11,7 @@ export const fetchConversations = async (
   const res = await api.get<{
     conversations: ConversationResponse[];
     nextPage: number | null;
-  }>(`/message/conversations`, { params: { page, limit } });
+  }>(`/message`, { params: { page, limit } });
 
   return res.data;
 };
@@ -19,7 +19,7 @@ export const fetchConversations = async (
 export const getConversationById = async (
   conversationId: string,
 ): Promise<MessageResponse> => {
-  const response = await api.get(`/message/conversations/${conversationId}`);
+  const response = await api.get(`/message/conversation/${conversationId}`);
   return response.data;
 };
 
@@ -30,7 +30,14 @@ export const getConversationsByName = async (
 }> => {
   const response = await api.get<{
     conversations: ConversationResponse[];
-  }>(`/message/conversations/name/${encodeURIComponent(name)}`);
+  }>(`/message/by-name/${encodeURIComponent(name)}`);
 
   return response.data;
+};
+
+export const fetchUnreadChatCount = async () => {
+  const res = await api.get<{ unreadConversationsCount: number }>(
+    "/message/unread-count",
+  );
+  return res.data;
 };

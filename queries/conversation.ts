@@ -1,9 +1,11 @@
 import {
   fetchConversations,
+  fetchUnreadChatCount,
   getConversationById,
   getConversationsByName,
 } from "@/api/conversation";
 import { useAuth } from "@/hooks/useAuth";
+import { useAppStore } from "@/store/useAppStore";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 
 export const useConversations = (limit: number) => {
@@ -30,5 +32,21 @@ export const useConversationsByName = (name: string) => {
     queryKey: ["conversations", "search", name],
     queryFn: () => getConversationsByName(name),
     enabled: name.trim().length > 0,
+  });
+};
+
+export const useUnreadChatCount = () => {
+  const { isLoggedIn } = useAuth();
+
+  return useQuery({
+    queryKey: ["unreadChatCount"],
+    queryFn: async () => {
+      const data = await fetchUnreadChatCount();
+      useAppStore
+        .getState()
+        .setUnreadConversationsCount(data.unreadConversationsCount);
+      return data;
+    },
+    enabled: isLoggedIn,
   });
 };

@@ -2,16 +2,14 @@ import { queryClient } from "@/lib/queryClient";
 import { useConversationById } from "@/queries/conversation";
 import { useSocket } from "@/sockets/context/SocketProvider";
 import { useAppStore } from "@/store/useAppStore";
+import { ConversationResponse, MessagesLoadedData } from "@/types/chat";
 import { STATIC_IMAGES } from "@/utils/constants";
-import {
-  convertImageToBase64,
-  openGallery,
-  takePhoto,
-} from "@/utils/imagePicker";
+import { convertImageToBase64, openGallery, takePhoto } from "@/utils/imagePicker";
 import { Ionicons } from "@expo/vector-icons";
+import { InfiniteData } from "@tanstack/react-query";
 import { Image } from "expo-image";
-import { router, useLocalSearchParams } from "expo-router";
-import React, { useCallback, useEffect, useState } from "react";
+import { router, useLocalSearchParams, useNavigation } from "expo-router";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Keyboard,
@@ -26,19 +24,18 @@ import { Bubble, GiftedChat, IMessage } from "react-native-gifted-chat";
 import ImageView from "react-native-image-viewing";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-interface MessagesLoadedData {
-  messages: any[];
-  skip: number;
-  hasMore: boolean;
-}
-
 const Message = () => {
   const params = useLocalSearchParams();
   const conversationId = params.conversationId as string;
-  const { data: conversation, isPending } = useConversationById(conversationId);
+  const {
+    data: conversation,
+    isPending,
+    isError,
+  } = useConversationById(conversationId);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
 
   const [messages, setMessages] = useState<IMessage[]>([]);
+  const messagesRef = useRef<IMessage[]>([]);
   const [text, setText] = useState("");
   const socket = useSocket();
 
@@ -49,6 +46,8 @@ const Message = () => {
   const [imageViewerVisible, setImageViewerVisible] = useState(false);
   const [selectedImageUrl, setSelectedImageUrl] = useState("");
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const navigation = useNavigation();
+
 
   // Format message for GiftedChat
   const formatMessage = useCallback(
@@ -62,31 +61,21 @@ const Message = () => {
         createdAt: new Date(msg.createdAt),
         user: isMyMessage
           ? {
-              _id: useAppStore.getState().id || "unknown",
-              name: useAppStore.getState().name || "Me",
-              avatar: useAppStore.getState().profilePictureUrl || "",
-            }
+            _id: useAppStore.getState().id || "unknown",
+            name: useAppStore.getState().name || "Me",
+            avatar: useAppStore.getState().profilePictureUrl || "",
+          }
           : {
-              _id: conversation?.driver._id || "unknown",
-              name:
-                `${conversation?.driver.firstName} ${conversation?.driver.lastName}` ||
-                "Driver",
-              avatar: conversation?.driver.profilePictureUrl || "",
-            },
+            _id: conversation?.driver._id || "unknown",
+            name:
+              `${conversation?.driver.firstName} ${conversation?.driver.lastName}` ||
+              "Driver",
+            avatar: conversation?.driver.profilePictureUrl || "",
+          },
       };
     },
-    [conversation],
+    [conversation]
   );
-
-  // Set flag when entering message screen
-  useEffect(() => {
-    useAppStore.getState().setIsInMessageScreen(true);
-
-    return () => {
-      // Clear flag when leaving message screen
-      useAppStore.getState().setIsInMessageScreen(false);
-    };
-  }, []);
 
   const handleLoadEarlier = () => {
     if (!conversationId || isLoadingEarlier) return;
@@ -119,7 +108,7 @@ const Message = () => {
       console.log("Room joined:", data.conversationId);
 
       // Request message history
-      socket.emit("get_messages", { conversationId: data.conversationId });
+      socket.emit("get_messages", { conversationId: data.conversationId, limit: 20, skip: 0 });
     };
 
     // Handle message history loaded
@@ -192,7 +181,7 @@ const Message = () => {
         });
       });
     },
-    [conversation, conversationId, socket],
+    [conversation, conversationId, socket]
   );
 
   useEffect(() => {
@@ -202,12 +191,70 @@ const Message = () => {
     const hideSub = Keyboard.addListener("keyboardDidHide", () => {
       setKeyboardVisible(false);
     });
+    useAppStore.getState().setIsInMessageScreen(true);
+    useAppStore.getState().setActiveConversationId(conversationId);
 
     return () => {
       showSub.remove();
       hideSub.remove();
+      useAppStore.getState().setIsInMessageScreen(false);
+      useAppStore.getState().setActiveConversationId(null);
     };
-  }, []);
+  }, [conversationId]);
+
+  // Keep ref in sync so beforeRemove has access to the latest messages
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('beforeRemove', (e) => {
+      socket.emit("leave_room", { conversationId });
+
+      // Reset unread count in conversations cache for this conversation
+      type ConversationsPage = {
+        conversations: ConversationResponse[];
+        nextPage: number | null;
+      };
+
+      const latestMsg = messagesRef.current[0];
+      const driverId = useAppStore.getState().id;
+
+      queryClient.setQueriesData<InfiniteData<ConversationsPage>>(
+        { queryKey: ["conversations"] },
+        (old) => {
+          if (!old?.pages?.length) return old;
+          return {
+            ...old,
+            pages: old.pages.map((page) => ({
+              ...page,
+              conversations: page.conversations.map((c) => {
+                if (c._id !== conversationId) return c;
+                const updated = {
+                  ...c,
+                  unreadCount: { ...c.unreadCount, client: 0 },
+                };
+                if (latestMsg) {
+                  updated.lastMessage = latestMsg.text || (latestMsg.image ? "Sent an image" : c.lastMessage);
+                  updated.lastMessageAt = new Date(latestMsg.createdAt).toISOString();
+                  updated.lastMessageBy = latestMsg.user._id === driverId ? "client" : "driver";
+                }
+                return updated;
+              }),
+            })),
+          };
+        },
+      );
+    });
+
+    return () => unsubscribe();
+  }, [navigation, conversationId, socket]);
+
+  useEffect(() => {
+    if (isError) {
+      router.back();
+    }
+  }, [isError]);
 
   // Pick image from gallery
   const handlePickImage = async () => {
@@ -315,14 +362,6 @@ const Message = () => {
               <ActivityIndicator size="small" color="#FFA840" />
             ) : (
               <>
-                {/* Emoji */}
-                <Pressable hitSlop={20}>
-                  <Ionicons
-                    name="happy"
-                    size={Platform.OS === "ios" ? 32 : 28}
-                    color="#FFA840"
-                  />
-                </Pressable>
 
                 {/* Send */}
                 <Pressable
@@ -352,6 +391,7 @@ const Message = () => {
           </View>
         </View>
 
+        {/* Optional: Show uploading text */}
         {isUploadingImage && (
           <Text className="text-center text-sm text-gray-400 mt-2">
             Uploading image...
@@ -407,18 +447,16 @@ const Message = () => {
         <View className="flex-row items-center justify-between px-4 py-3 bg-secondary">
           <View className="flex-row items-center flex-1 gap-2">
             <Pressable
+              hitSlop={20}
               onPress={() => {
-                socket.emit("leave_room", { conversationId });
-                queryClient.invalidateQueries({
-                  queryKey: ["conversations"],
-                });
+
                 router.back();
               }}
               className="p-2"
             >
               <Ionicons
                 name="chevron-back"
-                size={Platform.OS === "ios" ? 30 : 24}
+                size={Platform.OS === "ios" ? 30 : 28}
                 color="#FFA840"
               />
             </Pressable>
@@ -450,7 +488,6 @@ const Message = () => {
           </Pressable>
         </View>
 
-        {/* Gifted Chat */}
         <GiftedChat
           messages={messages}
           onSend={(messages) => onSend(messages)}
@@ -464,8 +501,8 @@ const Message = () => {
           renderBubble={renderBubble}
           renderInputToolbar={renderInputToolbar}
           renderSend={() => null}
-          keyboardShouldPersistTaps="handled"
           renderMessageImage={renderMessageImage}
+          keyboardShouldPersistTaps="handled"
           isKeyboardInternallyHandled={false}
           renderChatEmpty={renderChatEmpty}
           listViewProps={
@@ -517,18 +554,23 @@ const renderBubble = (props: any) => {
   );
 };
 
-const renderChatEmpty = () => {
+export const renderChatEmpty = () => {
   return (
     <View
       className="pb-20 items-center px-6"
-      style={{ transform: [{ scaleY: -1 }, { scaleX: -1 }] }}
+      style={{
+        transform: [
+          { scaleY: -1 },
+          { scaleX: Platform.OS === "android" ? -1 : 1 },
+        ],
+      }}
     >
       <Ionicons name="chatbubbles-outline" size={100} color="#9CA3AF" />
       <Text className="text-gray-300 text-xl font-semibold mt-4">
         No conversation yet
       </Text>
       <Text className="text-gray-400 text-base text-center mt-2">
-        Start a conversation with the driver
+        Start a conversation with the customer
       </Text>
     </View>
   );

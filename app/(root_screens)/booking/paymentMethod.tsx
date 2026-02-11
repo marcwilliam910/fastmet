@@ -1,11 +1,13 @@
 import { useAuth } from "@/hooks/useAuth";
+import { queryClient } from "@/lib/queryClient";
 import { useSocket } from "@/sockets/context/SocketProvider";
 import { useAppStore } from "@/store/useAppStore";
-import { RequestBooking } from "@/types/book";
+import { Booking, RequestBooking } from "@/types/book";
 import { STATIC_IMAGES } from "@/utils/constants";
 import { generateBookingRef } from "@/utils/helper";
 import { uploadBookingImages } from "@/utils/imagePicker";
 import { Ionicons } from "@expo/vector-icons";
+import { InfiniteData } from "@tanstack/react-query";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
@@ -152,6 +154,35 @@ export default function PaymentMethod() {
       if (data.success) {
         hasNavigatedRef.current = true;
 
+        // Build a Booking from store state and prepend to pending cache
+        const state = useAppStore.getState();
+        const newBooking: Booking = {
+          _id: data.bookingId,
+          bookingRef: lastBookingRefRef.current ?? "",
+          customerId: id!,
+          pickUp: state.pickUp,
+          dropOff: state.dropOff,
+          bookingType: {
+            type: state.bookingType.type,
+            value: state.bookingType.value,
+          },
+          selectedVehicle: {
+            name: state.selectedVehicle?.name ?? "",
+            freeServices: state.selectedVehicle?.freeServices ?? [],
+          },
+          routeData: state.routeData,
+          paymentMethod: state.paymentMethod,
+          addedServices: state.addedServices,
+          note: state.note.trim(),
+          itemType: state.itemType,
+          photos: state.photos,
+          createdAt: new Date().toISOString(),
+          status: "pending",
+          driverRating: null,
+          cancelledAt: null,
+          requestedDrivers: [],
+        };
+
         if (bookingType.type === "asap")
           router.push({
             pathname: "/(root_screens)/booking/searchingDriver",
@@ -168,10 +199,22 @@ export default function PaymentMethod() {
             topOffset: 50,
           });
           router.replace("/(drawer)/(tabs)/request");
+
+          // Prepend to pending cache so the Request tab shows it immediately
+          queryClient.setQueriesData<
+            InfiniteData<{ bookings: Booking[]; nextPage: number | null }>
+          >({ queryKey: ["userBookings", "pending"] }, (oldData) => {
+            if (!oldData) return oldData;
+            const newPages = [...oldData.pages];
+            newPages[0] = {
+              ...newPages[0],
+              bookings: [newBooking, ...newPages[0].bookings],
+            };
+            return { ...oldData, pages: newPages };
+          });
         }
 
-        useAppStore.getState().clearStates();
-
+        state.clearStates();
       }
     };
 
@@ -179,7 +222,7 @@ export default function PaymentMethod() {
     return () => {
       socket.off("bookingRequestSaved", bookingSaved);
     };
-  }, [setLoading, socket, bookingType.type]);
+  }, [id, setLoading, socket, bookingType.type]);
 
   useEffect(() => {
     const handleBookingFailed = (data: { message: string }) => {

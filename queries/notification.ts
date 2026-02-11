@@ -1,20 +1,18 @@
 import {
   fetchNotifications,
   fetchUnreadCount,
-  markAllNotificationsAsRead,
-  markNotificationAsRead,
+  getNotificationById,
 } from "@/api/notification";
-import {useAuth} from "@/hooks/useAuth";
-import {queryClient} from "@/lib/queryClient";
-import {useAppStore} from "@/store/useAppStore";
-import {useInfiniteQuery, useMutation, useQuery} from "@tanstack/react-query";
+import { useAuth } from "@/hooks/useAuth";
+import { useAppStore } from "@/store/useAppStore";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 
 export const useNotifications = (limit = 10) => {
-  const {isLoggedIn} = useAuth();
+  const { isLoggedIn } = useAuth();
 
   return useInfiniteQuery({
     queryKey: ["notifications", limit],
-    queryFn: ({pageParam = 1}) => fetchNotifications(pageParam, limit),
+    queryFn: ({ pageParam = 1 }) => fetchNotifications(pageParam, limit),
     getNextPageParam: (lastPage) => lastPage.nextPage,
     initialPageParam: 1,
     enabled: isLoggedIn,
@@ -22,7 +20,7 @@ export const useNotifications = (limit = 10) => {
 };
 
 export const useUnreadNotificationCount = () => {
-  const {isLoggedIn} = useAuth();
+  const { isLoggedIn } = useAuth();
   const setUnreadNotificationCount = useAppStore(
     (state) => state.setUnreadNotificationCount,
   );
@@ -35,29 +33,13 @@ export const useUnreadNotificationCount = () => {
       return data;
     },
     enabled: isLoggedIn,
-    // refetchInterval: 30000, // Refetch every 30 seconds
   });
 };
 
-export const useMarkNotificationAsRead = () => {
-  return useMutation({
-    mutationFn: (notificationId: string) =>
-      markNotificationAsRead(notificationId),
-    onSuccess: () => {
-      // Invalidate queries to refresh the list and count
-      queryClient.invalidateQueries({queryKey: ["notifications"]});
-      queryClient.invalidateQueries({queryKey: ["notificationUnreadCount"]});
-    },
-  });
-};
-
-export const useMarkAllNotificationsAsRead = () => {
-  return useMutation({
-    mutationFn: markAllNotificationsAsRead,
-    onSuccess: () => {
-      // Invalidate queries to refresh the list and count
-      queryClient.invalidateQueries({queryKey: ["notifications"]});
-      queryClient.invalidateQueries({queryKey: ["notificationUnreadCount"]});
-    },
+export const useNotificationById = (notificationId: string) => {
+  return useQuery({
+    queryKey: ["notification", notificationId],
+    queryFn: () => getNotificationById(notificationId),
+    enabled: !!notificationId,
   });
 };

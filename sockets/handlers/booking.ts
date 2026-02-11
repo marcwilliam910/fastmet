@@ -1,37 +1,22 @@
 import { queryClient } from "@/lib/queryClient";
+import { useAppStore } from "@/store/useAppStore";
 import { Booking, RequestedDriver } from "@/types/book";
+import { Notification, NotificationsResponse } from "@/types/notification";
+import { InfiniteData } from "@tanstack/react-query";
 import Toast from "react-native-toast-message";
 import { Socket } from "socket.io-client";
-
-// export const bookingExpired = (socket: Socket) => {
-//   const handleBookingExpired = ({ message }: { message: string }) => {
-//     Toast.show({
-//       type: "error",
-//       text1: "Request Expired",
-//       text2: message,
-//       position: "top",
-//       visibilityTime: 5_000,
-//       swipeable: true,
-//       topOffset: 50,
-//     });
-
-//     useAppStore.getState().clearStates();
-
-//     // Navigate to home - works from any screen
-//     router.replace("/(drawer)/book");
-//   };
-
-//   socket.on("bookingExpired", handleBookingExpired);
-//   return () => socket.off("bookingExpired", handleBookingExpired);
-// };
 
 export const acceptanceRequestedSchedule = (socket: Socket) => {
   const handleAcceptanceRequestedSchedule = ({
     driverOffer,
+    notification,
+    unreadNotifications,
   }: {
     driverOffer: RequestedDriver;
+    notification: Notification;
+    unreadNotifications: number;
   }) => {
-    // Update ALL pending bookings queries regardless of limit
+    // Update ALL pending bookings to add the driver offer
     queryClient.setQueriesData(
       { queryKey: ["userBookings", "pending"] }, // Partial match
       (oldData: any) => {
@@ -57,6 +42,45 @@ export const acceptanceRequestedSchedule = (socket: Socket) => {
         };
       },
     );
+
+    // updating notification
+    useAppStore.getState().setUnreadNotificationCount(unreadNotifications);
+    const notificationsQueries = queryClient.getQueriesData<
+      InfiniteData<NotificationsResponse>
+    >({ queryKey: ["notifications"] });
+
+    const hasNotificationsCache = notificationsQueries.some(
+      ([, data]) => !!data?.pages?.length,
+    );
+
+    if (hasNotificationsCache) {
+      queryClient.setQueriesData<InfiniteData<NotificationsResponse>>(
+        { queryKey: ["notifications"] },
+        (old) => {
+          if (!old?.pages?.length) return old;
+
+          const alreadyExists = old.pages.some((p) =>
+            p.notifications.some((n) => n._id === notification._id),
+          );
+          if (alreadyExists) return old;
+
+          return {
+            ...old,
+            pages: old.pages.map((page, idx) =>
+              idx === 0
+                ? {
+                    ...page,
+                    notifications: [notification, ...page.notifications],
+                  }
+                : page,
+            ),
+          };
+        },
+      );
+    }
+    queryClient.setQueryData(["notificationUnreadCount"], {
+      unreadCount: unreadNotifications,
+    });
 
     Toast.show({
       type: "success",

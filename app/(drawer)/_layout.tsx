@@ -3,14 +3,14 @@ import LogoutModal from "@/components/modals/logoutModal";
 import NotLoggedInModal from "@/components/modals/notLoggedInModal";
 import { useAuth } from "@/hooks/useAuth";
 import { usePushNotifications } from "@/hooks/usePushNotification";
-import { queryClient } from "@/lib/queryClient";
+import { useUnreadChatCount } from "@/queries/conversation";
 import { useUnreadNotificationCount } from "@/queries/notification";
 import { useAppStore } from "@/store/useAppStore";
 import { Ionicons } from "@expo/vector-icons";
 import { DrawerContentScrollView, DrawerItem } from "@react-navigation/drawer";
 import { router } from "expo-router";
 import { Drawer } from "expo-router/drawer";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -97,40 +97,41 @@ const CustomDrawerContent = (props: any) => {
 export default function DrawerLayout() {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showNotLoggedInModal, setShowNotLoggedInModal] = useState(false);
-  const { notification } = usePushNotifications();
 
+  const { notification } = usePushNotifications();
   // Fetch and sync unread notification count
   useUnreadNotificationCount();
+  useUnreadChatCount();
 
-  useEffect(() => {
-    if (notification) {
-      // Invalidate notification queries to refresh the list and count
-      queryClient.invalidateQueries({
-        queryKey: ["notifications"],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["notificationUnreadCount"],
-      });
+  // useEffect(() => {
+  //   if (notification) {
+  //     // Invalidate notification queries to refresh the list and count
+  //     queryClient.invalidateQueries({
+  //       queryKey: ["notifications"],
+  //     });
+  //     queryClient.invalidateQueries({
+  //       queryKey: ["notificationUnreadCount"],
+  //     });
 
-      if (notification.request?.content?.data?.type === "booking_completed") {
-        // show modal or something
+  //     if (notification.request?.content?.data?.type === "booking_completed") {
+  //       // show modal or something
 
-        queryClient.invalidateQueries({
-          queryKey: ["userBookings", "active"],
-          exact: false,
-        });
+  //       queryClient.invalidateQueries({
+  //         queryKey: ["userBookings", "active"],
+  //         exact: false,
+  //       });
 
-        queryClient.invalidateQueries({
-          queryKey: ["userBookings", "completed"],
-          exact: false,
-        });
+  //       queryClient.invalidateQueries({
+  //         queryKey: ["userBookings", "completed"],
+  //         exact: false,
+  //       });
 
-        queryClient.invalidateQueries({
-          queryKey: ["userBookingCounts"],
-        });
-      }
-    }
-  }, [notification]);
+  //       queryClient.invalidateQueries({
+  //         queryKey: ["userBookingCounts"],
+  //       });
+  //     }
+  //   }
+  // }, [notification]);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

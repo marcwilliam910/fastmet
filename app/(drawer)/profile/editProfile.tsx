@@ -14,6 +14,7 @@ import { router } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   findNodeHandle,
+  Keyboard,
   Pressable,
   ScrollView,
   Text,
@@ -50,6 +51,7 @@ const EditProfile = () => {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [selectedAsset, setSelectedAsset] = useState<any>(null);
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
   const setLoading = useAppStore((state) => state.setLoading);
   const loading = useAppStore((state) => state.isLoading);
 
@@ -71,6 +73,23 @@ const EditProfile = () => {
     setForm(initialData);
     setOriginalForm(initialData); // Store original values
   }, [name, profilePictureUrl, address, gender]);
+
+  // Track keyboard visibility
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener(
+      'keyboardDidShow',
+      () => setKeyboardVisible(true)
+    );
+    const keyboardDidHideListener = Keyboard.addListener(
+      'keyboardDidHide',
+      () => setKeyboardVisible(false)
+    );
+
+    return () => {
+      keyboardDidShowListener.remove();
+      keyboardDidHideListener.remove();
+    };
+  }, []);
 
   // Check if form has changes
   const hasChanges = () => {
@@ -230,13 +249,19 @@ const EditProfile = () => {
     }
   };
 
+  // Calculate bottom padding based on keyboard visibility
+  const bottomPadding = keyboardVisible ? 20 : inset.bottom + 120;
+
   return (
     <SafeAreaView
       style={{ flex: 1, backgroundColor: "#fff" }}
       edges={["bottom"]}
     >
       <CustomKeyAvoidingView ref={scrollRef}>
-        <View className="gap-6 px-6 pt-6 flex-1" style={{ paddingBottom: inset.bottom + 100 }}>
+        <View
+          className="gap-6 px-6 pt-6 flex-1"
+          style={{ paddingBottom: bottomPadding }}
+        >
           {/* profile picture */}
           <Pressable
             className="border border-[#FFA840] rounded-full p-2 self-center active:bg-gray-100"
@@ -338,25 +363,32 @@ const EditProfile = () => {
           </View>
         </View>
       </CustomKeyAvoidingView>
-      {/*  Button */}
-      <View
-        className="absolute left-0 right-0 px-6 bg-white"
-        style={{ bottom: inset.bottom }}
-      >
-        <Pressable
-          className={`items-center py-4 rounded-lg bg-lightPrimary  ${isButtonDisabled || form.fullName === "" ? "opacity-65" : "active:bg-darkPrimary"}`}
-          disabled={isButtonDisabled || form.fullName === ""}
-          onPress={onSubmit}
+
+      {/* Fixed buttons at bottom - only show when keyboard is hidden */}
+      {!keyboardVisible && (
+        <View
+          className="absolute left-0 right-0 px-6 bg-white border-t border-gray-100"
+          style={{
+            bottom: inset.bottom,
+            paddingTop: 8,
+            paddingBottom: 8,
+          }}
         >
-          <Text className="text-base font-bold text-white">Update Profile</Text>
-        </Pressable>
-        <Pressable
-          className="items-center py-4 my-2  border-gray-200 rounded-lg bg-ctaSecondary active:bg-ctaSecondaryActive"
-          onPress={() => router.back()}
-        >
-          <Text className="text-base font-bold ">Back</Text>
-        </Pressable>
-      </View>
+          <Pressable
+            className={`items-center py-4 rounded-lg bg-lightPrimary  ${isButtonDisabled || form.fullName === "" ? "opacity-65" : "active:bg-darkPrimary"}`}
+            disabled={isButtonDisabled || form.fullName === ""}
+            onPress={onSubmit}
+          >
+            <Text className="text-base font-bold text-white">Update Profile</Text>
+          </Pressable>
+          <Pressable
+            className="items-center py-4 my-2  border-gray-200 rounded-lg bg-ctaSecondary active:bg-ctaSecondaryActive"
+            onPress={() => router.back()}
+          >
+            <Text className="text-base font-bold ">Back</Text>
+          </Pressable>
+        </View>
+      )}
     </SafeAreaView>
   );
 };

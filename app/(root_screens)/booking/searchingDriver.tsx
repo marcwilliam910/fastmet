@@ -3,9 +3,11 @@ import { queryClient } from "@/lib/queryClient";
 import { useSocket } from "@/sockets/context/SocketProvider";
 import { useAppStore } from "@/store/useAppStore";
 import { RequestedDriver } from "@/types/book";
+import type { Notification, NotificationsResponse } from "@/types/notification";
 import { STATIC_IMAGES } from "@/utils/constants";
 import { Ionicons } from "@expo/vector-icons";
 import { usePreventRemove } from "@react-navigation/native";
+import type { InfiniteData } from "@tanstack/react-query";
 import { Image, ImageBackground } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
@@ -176,7 +178,7 @@ export default function SearchingDriver() {
       router.push("/(drawer)/book");
     };
 
-    const handleBookingExpired = ({ message }: { message: string }) => {
+    const handleBookingExpired = ({ message, notification, unreadNotifications }: { message: string, notification: Notification, unreadNotifications: number }) => {
       setShouldPrevent(false);
 
       Toast.show({
@@ -190,6 +192,44 @@ export default function SearchingDriver() {
       });
 
       useAppStore.getState().clearStates();
+      useAppStore.getState().setUnreadNotificationCount(unreadNotifications);
+
+      // If notifications have been fetched before, prepend this notif in the cache
+      const notificationsQueries = queryClient.getQueriesData<
+        InfiniteData<NotificationsResponse>
+      >({ queryKey: ["notifications"] });
+
+      const hasNotificationsCache = notificationsQueries.some(
+        ([, data]) => !!data?.pages?.length,
+      );
+
+      if (hasNotificationsCache) {
+        queryClient.setQueriesData<InfiniteData<NotificationsResponse>>(
+          { queryKey: ["notifications"] },
+          (old) => {
+            if (!old?.pages?.length) return old;
+
+            const alreadyExists = old.pages.some((p) =>
+              p.notifications.some((n) => n._id === notification._id),
+            );
+            if (alreadyExists) return old;
+
+            return {
+              ...old,
+              pages: old.pages.map((page, idx) =>
+                idx === 0
+                  ? { ...page, notifications: [notification, ...page.notifications] }
+                  : page,
+              ),
+            };
+          },
+        );
+      }
+
+      // Keep unread count query cache in sync with backend-provided count
+      queryClient.setQueryData(["notificationUnreadCount"], {
+        unreadCount: unreadNotifications,
+      });
 
       setImmediate(() => {
         router.replace("/(drawer)/book");

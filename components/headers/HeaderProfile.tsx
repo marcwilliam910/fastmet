@@ -6,11 +6,11 @@ import { Platform, Pressable, Text, View } from "react-native";
 const HeaderProfile = ({ title }: { title: string }) => {
   return (
     <View className="flex-row items-center justify-center">
-      {/* Left: Hamburger Menu */}
       <Pressable
         className={`absolute ${Platform.OS === "ios" ? "-top-2 -left-2" : "-top-1 left-0"}`}
         onPress={() => router.back()}
-        hitSlop={20}
+        hitSlop={30}
+
       >
         <Ionicons
           name="chevron-back"

@@ -11,11 +11,11 @@ export const fetchNotifications = async (
   limit = 10,
 ): Promise<NotificationsResponse> => {
   const res = await api.get<NotificationsApiResponse>("/notifications", {
-    params: {page, limit},
+    params: { page, limit },
   });
 
-  const {data} = res.data;
-  const {pagination, notifications} = data;
+  const { data } = res.data;
+  const { pagination, notifications } = data;
 
   // Transform to expected format
   return {
@@ -26,7 +26,7 @@ export const fetchNotifications = async (
 };
 
 export const fetchUnreadCount = async (): Promise<UnreadCountResponse> => {
-  const res = await api.get<{success: boolean; data: UnreadCountResponse}>(
+  const res = await api.get<{ success: boolean; data: UnreadCountResponse }>(
     "/notifications/unread",
   );
   return res.data.data;
@@ -50,10 +50,19 @@ export const markAllNotificationsAsRead = async (): Promise<{
   const res = await api.patch<{
     success: boolean;
     message: string;
-    data: {modifiedCount: number};
+    data: { modifiedCount: number };
   }>("/notifications/read-all");
   return {
     message: res.data.message,
     modifiedCount: res.data.data.modifiedCount,
   };
+};
+
+export const getNotificationById = async (
+  notificationId: string,
+): Promise<Notification> => {
+  const response = await api.get(
+    `/notifications/get-notification/${notificationId}`,
+  );
+  return response.data;
 };
