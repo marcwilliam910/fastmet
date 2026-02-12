@@ -113,7 +113,7 @@ export default function SearchingDriver() {
   //SOCKETS LISTENER
   useEffect(() => {
     const handleCancelOffer = ({ driverId }: { driverId: string }) => {
-      handleRemoveDriver(driverId);
+      setDrivers((prev) => prev.filter((driver) => driver.id !== driverId));
     };
 
     const handleBookingCancelled = ({ bookingId }: { bookingId: string }) => {
@@ -267,6 +267,8 @@ export default function SearchingDriver() {
 
   const handleRemoveDriver = (id: string) => {
     setDrivers((prev) => prev.filter((driver) => driver.id !== id));
+    socket.emit("asapTimerEnd", { driverId: id, bookingId: bookingId });
+
   };
 
   const handleCancelRequest = () => {
@@ -492,6 +494,7 @@ const DriverRow = memo(
     onSelect: (driver: RequestedDriver) => void;
     isPaused: boolean;
   }) => {
+
     console.log("DriverRow");
     const translateX = useRef(new Animated.Value(-400)).current;
     const opacity = useRef(new Animated.Value(0)).current;
