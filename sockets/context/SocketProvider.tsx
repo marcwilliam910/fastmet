@@ -8,6 +8,7 @@ import { Socket } from "socket.io-client";
 import {
   acceptanceRequestedSchedule,
   cancelScheduleDriverOffer,
+  driverUnavailable,
 } from "../handlers/booking";
 import { receiveMessage } from "../handlers/chat";
 import { getSocket } from "../socket";
@@ -55,12 +56,14 @@ export default function SocketProvider({
     const cleanupAcceptanceRequestedSchedule =
       acceptanceRequestedSchedule(socket);
     const cleanupCancelScheduleDriverOffer = cancelScheduleDriverOffer(socket);
+    const cleanupDriverUnavailable = driverUnavailable(socket);
 
     return () => {
       socket.off("connect_error"); // Clean up the listener
       cleanupReceiveMessage();
       cleanupAcceptanceRequestedSchedule();
       cleanupCancelScheduleDriverOffer();
+      cleanupDriverUnavailable();
       socket.disconnect();
     };
   }, [socket, token]);

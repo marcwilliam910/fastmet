@@ -1,5 +1,6 @@
 import { LocationDetails, RouteData } from "@/types/book";
 import { GOOGLE_MAPS_API_KEY, STATIC_IMAGES } from "@/utils/constants";
+import { Image } from "expo-image";
 import * as Location from "expo-location";
 import { useFocusEffect } from "expo-router";
 import React, { memo, useCallback, useEffect, useRef, useState } from "react";
@@ -7,7 +8,6 @@ import { Alert, StatusBar, StyleSheet, Text, View } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import MapViewDirections from "react-native-maps-directions";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-
 type Region = {
   latitude: number;
   longitude: number;
@@ -109,9 +109,16 @@ function MapScreen({
                 longitude: pickUp.coords.lng,
               }}
               title="Pick Up"
-              image={STATIC_IMAGES.pickup}
-              zIndex={1000}
-            />
+              anchor={{ x: 0.5, y: 0.5 }}
+              centerOffset={{ x: 0, y: 0 }}
+              tracksViewChanges={false}
+            >
+              <Image
+                source={STATIC_IMAGES.pickup}
+                style={{ width: 50, height: 50 }}
+                contentFit="contain"
+              />
+            </Marker>
           )}
 
           {dropOff && (
@@ -121,11 +128,17 @@ function MapScreen({
                 longitude: dropOff.coords.lng,
               }}
               title="Drop Off"
-              image={STATIC_IMAGES.dropoff}
-              zIndex={1000}
-            />
+              anchor={{ x: 0.5, y: 0.5 }}
+              centerOffset={{ x: 0, y: 0 }}
+              tracksViewChanges={false}
+            >
+              <Image
+                source={STATIC_IMAGES.dropoff}
+                style={{ width: 50, height: 50 }}
+                contentFit="contain"
+              />
+            </Marker>
           )}
-
           {pickUp && dropOff && (
             <MapViewDirections
               origin={{

@@ -1,5 +1,5 @@
 import { STATIC_IMAGES } from "@/utils/constants";
-import { formatLocation } from "@/utils/helper";
+import { formatLocation } from "@/utils/helpers/location";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import React from "react";

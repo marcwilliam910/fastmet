@@ -3,8 +3,9 @@ import { useMarkAsReadMutation, useRateDriverMutation } from "@/mutations/bookin
 import { useUserBookings } from "@/queries/bookingQueries";
 import { useAppStore } from "@/store/useAppStore";
 import { CompletedBooking, LocationDetails } from "@/types/book";
-import { formatDate } from "@/utils/date";
-import { createConversationId, formatLocation } from "@/utils/helper";
+import { createConversationId } from "@/utils/helpers/booking";
+import { formatDate } from "@/utils/helpers/date";
+import { formatLocation } from "@/utils/helpers/location";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { router } from "expo-router";

@@ -3,7 +3,7 @@ import {
   useNotifications,
 } from "@/queries/notification";
 import { Notification } from "@/types/notification";
-import { formatLastMessageTime } from "@/utils/date";
+import { formatLastMessageTime } from "@/utils/helpers/date";
 import { getNotificationConfig } from "@/utils/notification";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";

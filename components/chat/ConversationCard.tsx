@@ -1,6 +1,6 @@
 import { ConversationResponse } from "@/types/chat";
 import { STATIC_IMAGES } from "@/utils/constants";
-import { formatLastMessageTime } from "@/utils/date";
+import { formatLastMessageTime } from "@/utils/helpers/date";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import React from "react";

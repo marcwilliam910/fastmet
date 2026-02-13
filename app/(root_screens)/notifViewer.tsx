@@ -1,7 +1,7 @@
 import { BookingExpiredContent, DefaultContent, DriverOfferContent, ScheduledAutoAssignedContent, ScheduledAutoAssignWarningContent, ScheduledAutoCancelledContent, ScheduledChooseDriverContent, ScheduledNoDriversContent } from "@/components/NotifContentUI";
 import { useMarkNotificationAsRead } from "@/mutations/notification";
 import { useNotificationById } from "@/queries/notification";
-import { formatDate } from "@/utils/date";
+import { formatDate } from "@/utils/helpers/date";
 import { getNotificationConfig, NOTIFICATION_TYPES } from "@/utils/notification";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";

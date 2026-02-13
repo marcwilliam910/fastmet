@@ -2,7 +2,7 @@ import LiveTrackingMapScreen from "@/components/maps/LiveTrackingMapScreen";
 import StarDisplay from "@/components/StarDisplay";
 import { useBooking } from "@/queries/bookingQueries";
 import { useAppStore } from "@/store/useAppStore";
-import { createConversationId } from "@/utils/helper";
+import { createConversationId } from "@/utils/helpers/booking";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";

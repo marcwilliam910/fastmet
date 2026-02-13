@@ -1,6 +1,6 @@
 import SheetButton from "@/components/maps/SheetButton";
 import { useAppStore } from "@/store/useAppStore";
-import { openGallery, takePhoto } from "@/utils/imagePicker";
+import { openGallery, takePhoto } from "@/utils/helpers/imagePicker";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { router } from "expo-router";

@@ -12,6 +12,7 @@ export enum NOTIFICATION_TYPES {
   scheduled_auto_assign_warning = "scheduled_auto_assign_warning",
   scheduled_auto_assigned = "scheduled_auto_assigned",
   scheduled_auto_cancelled = "scheduled_auto_cancelled",
+  driver_unavailable = "driver_unavailable",
   // Add new notification types here as needed
   // Example: payment_received = "payment_received",
 }
@@ -54,6 +55,11 @@ export const NOTIFICATION_CONFIG: Record<
     icon: "close-circle",
     color: "#DC2626", // red
     label: "Booking Cancelled",
+  },
+  [NOTIFICATION_TYPES.driver_unavailable]: {
+    icon: "alert-circle",
+    color: "#DC2626", // red
+    label: "Driver Unavailable",
   },
   // Add new notification configs here
 };

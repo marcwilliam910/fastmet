@@ -1,6 +1,6 @@
 import { useAppStore } from "@/store/useAppStore";
 import { ILoadVariant, IVehicleType } from "@/types/vehicle";
-import { formatDate } from "@/utils/date";
+import { formatDate } from "@/utils/helpers/date";
 import { Ionicons } from "@expo/vector-icons";
 import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { Image } from "expo-image";

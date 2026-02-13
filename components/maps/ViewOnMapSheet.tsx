@@ -1,6 +1,6 @@
 import { useAppStore } from "@/store/useAppStore";
 import { Driver } from "@/types/book";
-import { createConversationId } from "@/utils/helper";
+import { createConversationId } from "@/utils/helpers/booking";
 import { Ionicons } from "@expo/vector-icons";
 import BottomSheet from "@gorhom/bottom-sheet";
 import { router } from "expo-router";

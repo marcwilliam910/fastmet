@@ -1,7 +1,7 @@
 import { useAppStore } from "@/store/useAppStore";
 import { ActiveBooking, Booking } from "@/types/book";
-import { formatDate } from "@/utils/date";
-import { createConversationId } from "@/utils/helper";
+import { createConversationId } from "@/utils/helpers/booking";
+import { formatDate } from "@/utils/helpers/date";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { router } from "expo-router";

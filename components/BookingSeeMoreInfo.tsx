@@ -1,7 +1,7 @@
 
 import { LocationDetails, RouteData } from "@/types/book"
 import { Service } from "@/types/vehicle"
-import { formatLocation } from "@/utils/helper"
+import { formatLocation } from "@/utils/helpers/location"
 import { Ionicons } from "@expo/vector-icons"
 import { Image } from "expo-image"
 import { Platform, Pressable, Text, View } from "react-native"

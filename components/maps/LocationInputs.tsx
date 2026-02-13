@@ -1,5 +1,5 @@
 import { useAppStore } from "@/store/useAppStore";
-import { formatLocation } from "@/utils/helper";
+import { formatLocation } from "@/utils/helpers/location";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import React, { useEffect, useRef } from "react";
 import { Pressable, Text, View } from "react-native";

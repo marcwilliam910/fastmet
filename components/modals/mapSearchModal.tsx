@@ -6,8 +6,8 @@ import {
   METRO_MANILA_POLYGON,
   requiresFerryFromMetroManila,
 } from "@/utils/constants";
-import { formatLocation, isSameLocation } from "@/utils/helper";
-import { getArray, pushToArray } from "@/utils/recentPlaceStorage";
+import { formatLocation, isSameLocation } from "@/utils/helpers/location";
+import { getArray, pushToArray } from "@/utils/helpers/recentPlaceStorage";
 import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
 import { router } from "expo-router";

@@ -4,7 +4,7 @@ import { useSocket } from "@/sockets/context/SocketProvider";
 import { useAppStore } from "@/store/useAppStore";
 import { ConversationResponse, MessagesLoadedData } from "@/types/chat";
 import { STATIC_IMAGES } from "@/utils/constants";
-import { convertImageToBase64, openGallery, takePhoto } from "@/utils/imagePicker";
+import { convertImageToBase64, openGallery, takePhoto } from "@/utils/helpers/imagePicker";
 import { Ionicons } from "@expo/vector-icons";
 import { InfiniteData } from "@tanstack/react-query";
 import { Image } from "expo-image";

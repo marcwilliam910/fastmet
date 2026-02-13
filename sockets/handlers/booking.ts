@@ -1,8 +1,8 @@
 import { queryClient } from "@/lib/queryClient";
-import { useAppStore } from "@/store/useAppStore";
 import { Booking, RequestedDriver } from "@/types/book";
-import { Notification, NotificationsResponse } from "@/types/notification";
-import { InfiniteData } from "@tanstack/react-query";
+import { Notification } from "@/types/notification";
+import { updateNotificationHelper } from "@/utils/helpers/query";
+import { NOTIFICATION_TYPES } from "@/utils/notification";
 import Toast from "react-native-toast-message";
 import { Socket } from "socket.io-client";
 
@@ -43,64 +43,11 @@ export const acceptanceRequestedSchedule = (socket: Socket) => {
       },
     );
 
-    // Update notification
-    useAppStore.getState().setUnreadNotificationCount(unreadNotifications);
-
-    const notificationsQueries = queryClient.getQueriesData<
-      InfiniteData<NotificationsResponse>
-    >({ queryKey: ["notifications"] });
-
-    const hasNotificationsCache = notificationsQueries.some(
-      ([, data]) => !!data?.pages?.length,
+    updateNotificationHelper(
+      notification,
+      unreadNotifications,
+      NOTIFICATION_TYPES.driver_offer,
     );
-
-    if (hasNotificationsCache) {
-      queryClient.setQueriesData<InfiniteData<NotificationsResponse>>(
-        { queryKey: ["notifications"] },
-        (old) => {
-          if (!old?.pages?.length) return old;
-
-          // Check if notification for this booking already exists
-          let notificationExists = false;
-
-          const updatedPages = old.pages.map((page) => ({
-            ...page,
-            notifications: page.notifications.map((n) => {
-              // Update existing notification for the same booking
-              if (
-                n.type === "driver_offer" &&
-                n.data?.bookingId === notification.data?.bookingId
-              ) {
-                notificationExists = true;
-                // Replace with the updated notification from server
-                return {
-                  ...notification,
-                  isRead: false, // Ensure it's marked as unread
-                };
-              }
-              return n;
-            }),
-          }));
-
-          // If notification doesn't exist, add it to the first page
-          if (!notificationExists) {
-            updatedPages[0] = {
-              ...updatedPages[0],
-              notifications: [notification, ...updatedPages[0].notifications],
-            };
-          }
-
-          return {
-            ...old,
-            pages: updatedPages,
-          };
-        },
-      );
-    }
-
-    queryClient.setQueryData(["notificationUnreadCount"], {
-      unreadCount: unreadNotifications,
-    });
 
     // Dynamic toast message based on driver count
     const driverCount = notification.data?.drivers
@@ -162,4 +109,92 @@ export const cancelScheduleDriverOffer = (socket: Socket) => {
   socket.on("offerCancelledSchedule", handleCancelScheduleDriverOffer);
   return () =>
     socket.off("offerCancelledSchedule", handleCancelScheduleDriverOffer);
+};
+
+export const driverUnavailable = (socket: Socket) => {
+  const handleDriverUnavailable = ({
+    bookingId,
+    driverId,
+    notification,
+    unreadNotifications,
+  }: {
+    bookingId: string;
+    driverId: string;
+    notification: Notification;
+    unreadNotifications: number;
+  }) => {
+    console.log("🔔 Driver unavailable:", bookingId, driverId);
+
+    // Remove from scheduled and capture the booking in a single pass
+    let bookingToRestore: Booking | null = null;
+
+    queryClient.setQueriesData(
+      { queryKey: ["userBookings", "scheduled"] },
+      (oldData: any) => {
+        if (!oldData?.pages) return oldData;
+
+        return {
+          ...oldData,
+          pages: oldData.pages.map((page: any) => ({
+            ...page,
+            bookings: page.bookings.filter((booking: Booking) => {
+              if (booking._id === bookingId) {
+                bookingToRestore = booking;
+                return false;
+              }
+              return true;
+            }),
+          })),
+        };
+      },
+    );
+
+    // Add back to pending bookings with updated status (remove unavailable driver)
+    if (bookingToRestore) {
+      const { driver: _, ...rest } = bookingToRestore as Booking;
+      const updatedBooking: Booking = {
+        ...rest,
+        status: "pending",
+        requestedDrivers: (
+          (bookingToRestore as Booking).requestedDrivers || []
+        ).filter((d) => d.id !== driverId),
+      };
+
+      queryClient.setQueriesData(
+        { queryKey: ["userBookings", "pending"] },
+        (oldData: any) => {
+          if (!oldData?.pages) return oldData;
+          const newPages = [...oldData.pages];
+          newPages[0] = {
+            ...newPages[0],
+            bookings: [updatedBooking, ...(newPages[0]?.bookings || [])],
+          };
+          return { ...oldData, pages: newPages };
+        },
+      );
+
+      Toast.show({
+        type: "info",
+        text1: "Driver Unavailable",
+        text2:
+          "Your driver was removed due to a delay that may impact your pickup time. Please confirm if you would like to reschedule the pickup or wait for a new driver assignment.",
+        position: "top",
+        visibilityTime: 4000,
+        swipeable: true,
+        topOffset: 50,
+      });
+    }
+
+    updateNotificationHelper(
+      notification,
+      unreadNotifications,
+      NOTIFICATION_TYPES.driver_unavailable,
+    );
+  };
+
+  socket.on("driverUnavailable", handleDriverUnavailable);
+
+  return () => {
+    socket.off("driverUnavailable", handleDriverUnavailable);
+  };
 };

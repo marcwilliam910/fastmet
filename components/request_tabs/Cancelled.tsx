@@ -2,7 +2,7 @@ import useSeeMoreDetails from "@/hooks/useSeeMoreDetails";
 import { useMarkAsReadMutation } from "@/mutations/booking";
 import { useUserBookings } from "@/queries/bookingQueries";
 import { ActiveBooking, Booking } from "@/types/book";
-import { formatDate } from "@/utils/date";
+import { formatDate } from "@/utils/helpers/date";
 import { Ionicons } from "@expo/vector-icons";
 import { useEffect } from "react";
 import {
