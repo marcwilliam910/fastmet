@@ -97,10 +97,10 @@ const NotificationScreen = () => {
 
           <FlatList
             data={notifications}
-            showsVerticalScrollIndicator={false}
+            // showsVerticalScrollIndicator={false}
             renderItem={({ item }) => <NotificationCard item={item} />}
             keyExtractor={(item, index) => item?._id ?? `notification-${index}`}
-            contentContainerStyle={{ paddingBottom: 60 }}
+            // contentContainerStyle={{ paddingBottom: 60 }}
             // pull to refresh
             refreshing={isPending}
             onRefresh={refetch}
@@ -153,7 +153,7 @@ const NotificationCard = ({ item }: { item: Notification }) => {
       <View className="flex-1 gap-1">
         <View className="flex-row justify-between items-center">
           <Text
-            className={`max-w-[60%] ${!item.isRead ? "font-bold" : "font-semibold"}`}
+            className={`max-w-[70%] ${!item.isRead ? "font-bold" : "font-semibold"}`}
             numberOfLines={1}
           >
             {item.title}

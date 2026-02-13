@@ -285,6 +285,7 @@ export default function RequestRoute() {
             amount={item.routeData.totalPrice}
             isCash={item.paymentMethod === "cash"}
             onCancel={() => setSelectedId(item._id)}
+            onReschedule={() => { }}
             onPressSeeMore={() => handleSeeMorePress(item)}
             driverOffers={item.requestedDrivers}
             onOpenDrivers={() => {
@@ -375,6 +376,7 @@ type RequestCardProps = {
   isCash: boolean;
   amount: number;
   onCancel: () => void;
+  onReschedule: () => void;
   onPressSeeMore: () => void;
   driverOffers?: RequestedDriver[];
   onOpenDrivers: () => void;
@@ -393,6 +395,7 @@ const RequestCard = ({
   isCash,
   amount,
   onCancel,
+  onReschedule,
   onPressSeeMore,
   driverOffers = [],
   onOpenDrivers,
@@ -582,15 +585,15 @@ const RequestCard = ({
                     </Text>
                   </Pressable>
 
-                  {/* <Pressable
-                className="flex-row items-center justify-center flex-1 py-3 ml-2 border border-lightPrimary rounded-xl active:bg-gray-50"
-                onPress={onUpdateNote}
-              >
-                <Ionicons name="create-outline" size={18} color="#333" />
-                <Text className="ml-2 font-medium text-gray-700">
-                  Update Note
-                </Text>
-              </Pressable> */}
+                  <Pressable
+                    className="flex-row items-center justify-center flex-1 py-3 ml-2 border border-lightPrimary rounded-xl active:bg-gray-50"
+                    onPress={onReschedule}
+                  >
+                    <Ionicons name="create-outline" size={18} color="#333" />
+                    <Text className="ml-2 font-medium text-gray-700">
+                      Reschedule
+                    </Text>
+                  </Pressable>
                 </View>
               )
             }
