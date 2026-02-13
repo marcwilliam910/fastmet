@@ -1,6 +1,6 @@
 import type { LocationDetails, RouteData } from "@/types/book";
 import { SelectedVehicle, Service } from "@/types/vehicle";
-import { fetchDrivingDistance } from "@/utils/calculatePrice";
+import { fetchDrivingDistance } from "@/utils/helpers/calculatePrice";
 import { StateCreator } from "zustand";
 
 export type Type = "asap" | "pooling" | "schedule";

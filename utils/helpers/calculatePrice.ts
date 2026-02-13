@@ -1,6 +1,6 @@
 import { LocationDetails } from "@/types/book";
 import axios from "axios";
-import { GOOGLE_MAPS_API_KEY } from "./constants";
+import { GOOGLE_MAPS_API_KEY } from "../constants";
 
 const VEHICLE_SPEED_FACTORS = {
   motorcycle: 1.15, // 15% faster in traffic
