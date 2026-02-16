@@ -5,6 +5,7 @@ export type LocationDetails = {
   name: string;
   address: string;
   coords: { lat: number; lng: number };
+  placeId?: string;
   additionalDetails?: string;
 } | null;
 

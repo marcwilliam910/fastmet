@@ -120,6 +120,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
       const locationData: LocationDetails = {
         name: details.displayName.text || "Unknown location",
         address: details.formattedAddress || "Unknown address",
+        placeId: selectedPlace.placeId,
         coords: {
           lat: details.location.latitude,
           lng: details.location.longitude,
