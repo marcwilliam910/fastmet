@@ -56,7 +56,6 @@ export default function ProfileRegistration() {
       barangay: form.address?.barangay,
       city: form.address?.city,
       province: form.address?.province,
-      postalCode: form.address?.postalCode,
     });
     if (!result.success) {
       setErrors(result.errors);
@@ -85,8 +84,6 @@ export default function ProfileRegistration() {
       if (form.address.city) formData.append("addressCity", form.address.city);
       if (form.address.province)
         formData.append("addressProvince", form.address.province);
-      if (form.address.postalCode)
-        formData.append("addressPostalCode", form.address.postalCode);
     }
 
     if (selectedAsset) {

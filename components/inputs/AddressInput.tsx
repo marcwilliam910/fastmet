@@ -19,7 +19,6 @@ type AddressFields = {
   barangay: string;
   city: string;
   province: string;
-  postalCode: string;
 };
 
 /**
@@ -52,8 +51,6 @@ function parseAddressComponents(
       result.city = component.longText || component.long_name || "";
     } else if (types.includes("administrative_area_level_1")) {
       result.province = component.longText || component.long_name || "";
-    } else if (types.includes("postal_code")) {
-      result.postalCode = component.longText || component.long_name || "";
     }
   }
 
@@ -76,7 +73,6 @@ export default function AddressInput({
     barangay: value?.barangay || "",
     city: value?.city || "",
     province: value?.province || "",
-    postalCode: value?.postalCode || "",
   });
   const [placeName, setPlaceName] = useState(value?.name || "");
   const [coords, setCoords] = useState(value?.coords || null);
@@ -94,7 +90,6 @@ export default function AddressInput({
         barangay: value.barangay || "",
         city: value.city || "",
         province: value.province || "",
-        postalCode: value.postalCode || "",
       });
       setPlaceName(value.name || "");
       setCoords(value.coords || null);
@@ -115,7 +110,6 @@ export default function AddressInput({
         updatedFields.barangay,
         updatedFields.city,
         updatedFields.province,
-        updatedFields.postalCode,
       ].filter(Boolean);
 
       if (parts.length === 0 || !latLng) {
@@ -133,7 +127,6 @@ export default function AddressInput({
         barangay: updatedFields.barangay || undefined,
         city: updatedFields.city || undefined,
         province: updatedFields.province || undefined,
-        postalCode: updatedFields.postalCode || undefined,
       });
     },
     [onChange],
@@ -157,7 +150,6 @@ export default function AddressInput({
         barangay: parsed.barangay || "",
         city: parsed.city || "",
         province: parsed.province || "",
-        postalCode: parsed.postalCode || "",
       };
 
       setFields(newFields);
@@ -186,7 +178,6 @@ export default function AddressInput({
       barangay: "",
       city: "",
       province: "",
-      postalCode: "",
     });
     setPlaceName("");
     setCoords(null);
@@ -231,13 +222,7 @@ export default function AddressInput({
               {placeName || "Home"}
             </Text>
             <Text className="text-xs text-gray-500 mt-0.5" numberOfLines={2}>
-              {[
-                fields.street,
-                fields.barangay,
-                fields.city,
-                fields.province,
-                fields.postalCode,
-              ]
+              {[fields.street, fields.barangay, fields.city, fields.province]
                 .filter(Boolean)
                 .join(", ")}
             </Text>
@@ -360,7 +345,7 @@ export default function AddressInput({
             </View>
           </View>
 
-          {/* Postal Code */}
+          {/* Postal Code
           <View className="gap-1 w-1/2">
             <Text className="text-xs font-medium text-gray-600">
               Postal Code
@@ -374,7 +359,7 @@ export default function AddressInput({
               maxLength={6}
               className="p-3 text-sm bg-white rounded-lg border border-gray-200"
             />
-          </View>
+          </View> */}
         </View>
       )}
 

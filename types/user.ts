@@ -6,7 +6,6 @@ export type UserAddress = {
   barangay?: string;
   city?: string;
   province?: string;
-  postalCode?: string;
 } | null;
 
 export type NewUser = {

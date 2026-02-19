@@ -39,7 +39,6 @@ export const ProfileSchema = z.object({
   barangay: z.string().trim(),
   city: z.string().trim(),
   province: z.string().trim(),
-  postalCode: z.string().trim(),
 });
 
 export const ChangePassSchema = z

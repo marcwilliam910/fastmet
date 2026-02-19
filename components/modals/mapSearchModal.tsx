@@ -110,8 +110,6 @@ const SearchModal: React.FC<SearchModalProps> = ({
   const canConfirm =
     selectedPlace !== null || (haveValue !== null && additionalDetailsChanged);
 
-
-
   const handleConfirm = async () => {
     // If a new place was selected
     if (selectedPlace?.details) {
@@ -843,10 +841,14 @@ const SearchModal: React.FC<SearchModalProps> = ({
 
                   if (type === "pickup") {
                     setPickUp(homeLocation);
-                    setPickUpAdditionalDetails(additionalDetails);
+                    setPickUpAdditionalDetails(
+                      `${homeAddress.street ? homeAddress.street + ", " : ""}${homeAddress.barangay}`,
+                    );
                   } else {
                     setDropOff(homeLocation);
-                    setDropOffAdditionalDetails(additionalDetails);
+                    setDropOffAdditionalDetails(
+                      `${homeAddress.street ? homeAddress.street + ", " : ""}${homeAddress.barangay}`,
+                    );
                   }
 
                   onClose();
@@ -860,10 +862,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
                   <Text className="text-base font-semibold text-gray-900">
                     Home
                   </Text>
-                  <Text
-                    className="text-sm text-gray-500"
-                    numberOfLines={1}
-                  >
+                  <Text className="text-sm text-gray-500" numberOfLines={1}>
                     {homeAddress.fullAddress}
                   </Text>
                 </View>

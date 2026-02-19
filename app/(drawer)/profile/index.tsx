@@ -53,7 +53,10 @@ export default function MyProfile() {
           {address && (
             <View className="flex-row items-center gap-1">
               <Ionicons name="location-outline" size={20} color="#FFA840" />
-              <Text className="text-base text-gray-400 max-w-[70%]" numberOfLines={1}>
+              <Text
+                className="text-base text-gray-400 max-w-[70%]"
+                numberOfLines={1}
+              >
                 {address?.fullAddress}
               </Text>
             </View>

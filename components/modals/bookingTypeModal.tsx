@@ -42,8 +42,6 @@ export default function BookingTypeModal({
     (typeof OPTIONS)[number] | null
   >(null);
 
-  console.log(bookingType);
-
   const handleConfirm = (type: Type, value: string) => {
     if (type === "schedule") {
       let combined: Date;
