@@ -34,6 +34,12 @@ export const ProfileSchema = z.object({
     .refine((val) => !val || val.length >= 5, {
       message: "Address must be at least 5 characters",
     }),
+
+  street: z.string().trim(),
+  barangay: z.string().trim(),
+  city: z.string().trim(),
+  province: z.string().trim(),
+  postalCode: z.string().trim(),
 });
 
 export const ChangePassSchema = z

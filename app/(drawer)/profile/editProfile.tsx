@@ -10,7 +10,7 @@ import { openGallery } from "@/utils/helpers/imagePicker";
 import { validateForm } from "@/utils/helpers/validateForm";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   findNodeHandle,
@@ -20,7 +20,7 @@ import {
   Text,
   TextInput,
   UIManager,
-  View
+  View,
 } from "react-native";
 import { Dropdown } from "react-native-element-dropdown";
 import {
@@ -77,12 +77,12 @@ const EditProfile = () => {
   // Track keyboard visibility
   useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener(
-      'keyboardDidShow',
-      () => setKeyboardVisible(true)
+      "keyboardDidShow",
+      () => setKeyboardVisible(true),
     );
     const keyboardDidHideListener = Keyboard.addListener(
-      'keyboardDidHide',
-      () => setKeyboardVisible(false)
+      "keyboardDidHide",
+      () => setKeyboardVisible(false),
     );
 
     return () => {
@@ -90,6 +90,18 @@ const EditProfile = () => {
       keyboardDidHideListener.remove();
     };
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      // optional: reset on focus
+      // setErrors({});
+
+      return () => {
+        // this runs when screen is unfocused (leaving)
+        setErrors({});
+      };
+    }, []),
+  );
 
   // Check if form has changes
   const hasChanges = () => {
@@ -108,7 +120,8 @@ const EditProfile = () => {
 
     // Check text fields
     const addressChanged =
-      (form.address?.fullAddress || "") !== (originalForm.address?.fullAddress || "");
+      (form.address?.fullAddress || "") !==
+      (originalForm.address?.fullAddress || "");
     return (
       form.fullName !== originalForm.fullName ||
       addressChanged ||
@@ -122,12 +135,9 @@ const EditProfile = () => {
     setForm({ ...form, [name]: value });
   };
 
-  const onAddressChange = useCallback(
-    (address: UserAddress) => {
-      setForm((prev) => ({ ...prev, address }));
-    },
-    []
-  );
+  const onAddressChange = useCallback((address: UserAddress) => {
+    setForm((prev) => ({ ...prev, address }));
+  }, []);
 
   const scrollToInput = (ref: React.RefObject<TextInput | null>) => {
     setTimeout(() => {
@@ -137,10 +147,10 @@ const EditProfile = () => {
           UIManager.measureLayout(
             node,
             findNodeHandle(scrollRef.current) as number,
-            () => { },
+            () => {},
             (x, y) => {
               scrollRef.current?.scrollTo({ y: y, animated: true });
-            }
+            },
           );
         }
       }
@@ -160,8 +170,12 @@ const EditProfile = () => {
     const result = validateForm(ProfileSchema, {
       fullName: form.fullName,
       address: form.address?.fullAddress,
+      street: form.address?.street,
+      barangay: form.address?.barangay,
+      city: form.address?.city,
+      province: form.address?.province,
+      postalCode: form.address?.postalCode,
     });
-
     if (!result.success) {
       setErrors(result.errors);
       return;
@@ -182,11 +196,15 @@ const EditProfile = () => {
       formData.append("addressFullAddress", form.address.fullAddress);
       formData.append("addressLat", String(form.address.coords.lat));
       formData.append("addressLng", String(form.address.coords.lng));
-      if (form.address.street) formData.append("addressStreet", form.address.street);
-      if (form.address.barangay) formData.append("addressBarangay", form.address.barangay);
+      if (form.address.street)
+        formData.append("addressStreet", form.address.street);
+      if (form.address.barangay)
+        formData.append("addressBarangay", form.address.barangay);
       if (form.address.city) formData.append("addressCity", form.address.city);
-      if (form.address.province) formData.append("addressProvince", form.address.province);
-      if (form.address.postalCode) formData.append("addressPostalCode", form.address.postalCode);
+      if (form.address.province)
+        formData.append("addressProvince", form.address.province);
+      if (form.address.postalCode)
+        formData.append("addressPostalCode", form.address.postalCode);
     }
 
     // Handle profile picture deletion
@@ -238,7 +256,9 @@ const EditProfile = () => {
       Toast.show({
         type: "error",
         text1: "Error",
-        text2: error.response?.data?.message || "Failed to update profile. Please try again.",
+        text2:
+          error.response?.data?.message ||
+          "Failed to update profile. Please try again.",
         position: "top",
         visibilityTime: 5_000,
         swipeable: true,
@@ -317,8 +337,9 @@ const EditProfile = () => {
               submitBehavior="submit"
               placeholder="Enter Name"
               placeholderTextColor="#9CA3AF"
-              className={`p-4 text-base bg-gray-100 rounded-lg ${errors.fullName ? "border border-red-500" : ""
-                }`}
+              className={`p-4 text-base bg-gray-100 rounded-lg ${
+                errors.fullName ? "border border-red-500" : ""
+              }`}
             />
             {errors.fullName && (
               <Text className="text-xs ml-2 text-red-500">
@@ -331,9 +352,12 @@ const EditProfile = () => {
           <AddressInput
             value={form.address}
             onChange={onAddressChange}
-            error={errors.address}
+            error={
+              Object.keys(errors || {}).length === 0
+                ? undefined
+                : "All fields in address are required and must be valid."
+            }
           />
-
 
           {/* Gender Dropdown */}
           <View className="gap-2">
@@ -379,7 +403,9 @@ const EditProfile = () => {
             disabled={isButtonDisabled || form.fullName === ""}
             onPress={onSubmit}
           >
-            <Text className="text-base font-bold text-white">Update Profile</Text>
+            <Text className="text-base font-bold text-white">
+              Update Profile
+            </Text>
           </Pressable>
           <Pressable
             className="items-center py-4 my-2  border-gray-200 rounded-lg bg-ctaSecondary active:bg-ctaSecondaryActive"

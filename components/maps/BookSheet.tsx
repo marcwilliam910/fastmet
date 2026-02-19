@@ -50,6 +50,8 @@ const BookSheet = ({
   const fetchVehicles = useAppStore((state) => state.fetchVehicles);
   const vehicleLoading = useAppStore((state) => state.vehicleLoading);
 
+  const hasDistanceFee = useAppStore((state) => state.routeData.distanceFee);
+
   const vehicleScrollRef = useRef<ScrollView>(null);
   const [vehicleItemWidth] = useState(90);
 
@@ -141,6 +143,10 @@ const BookSheet = ({
     },
     [isDragging],
   );
+
+  useEffect(() => {
+    if (hasDistanceFee) sheetRef.current?.snapToIndex(0);
+  }, [hasDistanceFee]);
 
   return (
     <>
@@ -234,17 +240,19 @@ const BookSheet = ({
                     {vehicles.map((v, index) => (
                       <View key={v.key} className="relative items-center gap-1">
                         <Pressable
-                          className={`items-center gap-3 px-4 py-2 rounded-lg ${selectedVehicle?.key === v.key
-                            ? "border-2 border-lightPrimary"
-                            : ""
-                            }`}
+                          className={`items-center gap-3 px-4 py-2 rounded-lg ${
+                            selectedVehicle?.key === v.key
+                              ? "border-2 border-lightPrimary"
+                              : ""
+                          }`}
                           onPress={() => handleVehicleSelect(v, index)}
                         >
                           <Text
-                            className={`text-xs text-gray-500 ${selectedVehicle?.key === v.key
-                              ? "font-semibold"
-                              : ""
-                              }`}
+                            className={`text-xs text-gray-500 ${
+                              selectedVehicle?.key === v.key
+                                ? "font-semibold"
+                                : ""
+                            }`}
                           >
                             {v.name}
                           </Text>
@@ -273,20 +281,25 @@ const BookSheet = ({
                       >
                         {activeVariants.map((variant, index) => {
                           const isSelected =
-                            selectedVehicle!.variant?.maxLoadKg === variant.maxLoadKg;
+                            selectedVehicle!.variant?.maxLoadKg ===
+                            variant.maxLoadKg;
 
                           return (
                             <Pressable
                               key={variant.maxLoadKg}
-                              className={`px-5 py-3 rounded-xl ${isSelected ? "bg-lightPrimary" : "bg-gray-200"
-                                }`}
-                              onPress={() => handleVariantSelect(variant, index)}
+                              className={`px-5 py-3 rounded-xl ${
+                                isSelected ? "bg-lightPrimary" : "bg-gray-200"
+                              }`}
+                              onPress={() =>
+                                handleVariantSelect(variant, index)
+                              }
                             >
                               <Text
-                                className={`text-sm ${isSelected
-                                  ? "text-white font-semibold"
-                                  : "text-gray-700 font-medium"
-                                  }`}
+                                className={`text-sm ${
+                                  isSelected
+                                    ? "text-white font-semibold"
+                                    : "text-gray-700 font-medium"
+                                }`}
                               >
                                 Max Load: {variant.maxLoadKg}kg
                               </Text>

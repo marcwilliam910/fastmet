@@ -47,11 +47,13 @@ api.interceptors.response.use(
 
       router.replace("/(auth)/auth");
 
-      return Promise.resolve({
-        data: null,
-        status: 401,
-        handled: true,
-      });
+      // return Promise.resolve({
+      //   data: null,
+      //   status: 401,
+      //   handled: true,
+      // });
+
+      return new Promise(() => {});
     }
 
     return Promise.reject(error);

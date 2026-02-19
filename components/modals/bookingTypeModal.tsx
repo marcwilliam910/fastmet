@@ -42,6 +42,8 @@ export default function BookingTypeModal({
     (typeof OPTIONS)[number] | null
   >(null);
 
+  console.log(bookingType);
+
   const handleConfirm = (type: Type, value: string) => {
     if (type === "schedule") {
       let combined: Date;
@@ -56,7 +58,7 @@ export default function BookingTypeModal({
           selectedDate.getMonth(),
           selectedDate.getDate(),
           selectedTime.getHours(),
-          selectedTime.getMinutes()
+          selectedTime.getMinutes(),
         );
       }
 
@@ -93,7 +95,7 @@ export default function BookingTypeModal({
       icon: "rocket-outline",
       description:
         "The ASAP option prioritizes immediate dispatch. Once your booking is confirmed, the system automatically searches for the nearest available driver and assigns the job as quickly as possible. This is ideal for urgent deliveries, time-sensitive pickups, or situations where delays may impact operations. Pricing may be higher due to priority matching and reduced flexibility in routing.",
-      onPress: () => setBookingType({ type: "asap", value: "" }),
+      onPress: () => setBookingType({ type: "asap", value: "REGULAR" }),
     },
     {
       id: "pooling",
@@ -147,10 +149,11 @@ export default function BookingTypeModal({
                 {OPTIONS.map((value) => (
                   <View key={value.id}>
                     <Pressable
-                      className={`flex-row items-center justify-between px-4 py-3 border rounded-lg ${value.id === bookingType?.type
-                        ? " border-darkPrimary bg-orange-50"
-                        : " border-gray-300"
-                        }`}
+                      className={`flex-row items-center justify-between px-4 py-3 border rounded-lg ${
+                        value.id === bookingType?.type
+                          ? " border-darkPrimary bg-orange-50"
+                          : " border-gray-300"
+                      }`}
                       onPress={value.onPress}
                     >
                       <View className="gap-0.5">
@@ -196,10 +199,11 @@ export default function BookingTypeModal({
                       <View className="mt-2 gap-2">
                         <View className="flex-row gap-2">
                           <Pressable
-                            className={`flex-1 px-1.5 py-2 border rounded-lg ${bookingType.value === "REGULAR"
-                              ? "border-darkPrimary bg-orange-50"
-                              : "border-gray-300 bg-white"
-                              }`}
+                            className={`flex-1 px-1.5 py-2 border rounded-lg ${
+                              bookingType.value === "REGULAR"
+                                ? "border-darkPrimary bg-orange-50"
+                                : "border-gray-300 bg-white"
+                            }`}
                             onPress={() => handleConfirm("asap", "REGULAR")}
                           >
                             <View className="flex-row items-center justify-center gap-1">
@@ -213,10 +217,11 @@ export default function BookingTypeModal({
                                 }
                               />
                               <Text
-                                className={`text-sm font-medium ${bookingType.value === "REGULAR"
-                                  ? "text-lightPrimary"
-                                  : "text-gray-600"
-                                  }`}
+                                className={`text-sm font-medium ${
+                                  bookingType.value === "REGULAR"
+                                    ? "text-lightPrimary"
+                                    : "text-gray-600"
+                                }`}
                               >
                                 Regular
                               </Text>
@@ -226,10 +231,11 @@ export default function BookingTypeModal({
                             </Text>
                           </Pressable>
                           <Pressable
-                            className={`flex-1 px-1.5 py-2 border rounded-lg ${bookingType.value === "PRIORITY"
-                              ? "border-darkPrimary bg-orange-50"
-                              : "border-gray-300 bg-white"
-                              }`}
+                            className={`flex-1 px-1.5 py-2 border rounded-lg ${
+                              bookingType.value === "PRIORITY"
+                                ? "border-darkPrimary bg-orange-50"
+                                : "border-gray-300 bg-white"
+                            }`}
                             onPress={() => handleConfirm("asap", "PRIORITY")}
                           >
                             <View className="flex-row items-center justify-center gap-1">
@@ -243,10 +249,11 @@ export default function BookingTypeModal({
                                 }
                               />
                               <Text
-                                className={`text-sm font-medium ${bookingType.value === "PRIORITY"
-                                  ? "text-lightPrimary"
-                                  : "text-gray-600"
-                                  }`}
+                                className={`text-sm font-medium ${
+                                  bookingType.value === "PRIORITY"
+                                    ? "text-lightPrimary"
+                                    : "text-gray-600"
+                                }`}
                               >
                                 Priority
                               </Text>
@@ -324,10 +331,12 @@ export default function BookingTypeModal({
                             setSelectedDate(date);
                           }
                         }}
-                        minimumDate={new Date(Date.now() + 2.5 * 60 * 60 * 1000)}
+                        minimumDate={
+                          new Date(Date.now() + 2.5 * 60 * 60 * 1000)
+                        }
                         maximumDate={
                           new Date(
-                            new Date().setMonth(new Date().getMonth() + 1)
+                            new Date().setMonth(new Date().getMonth() + 1),
                           )
                         }
                         textColor="#000000"
@@ -432,7 +441,7 @@ export default function BookingTypeModal({
                           time.getHours(),
                           time.getMinutes(),
                           0,
-                          0
+                          0,
                         );
 
                         // Validate: if selected date is today, time must be at least 2 hours from now

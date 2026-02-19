@@ -13,7 +13,10 @@ import { router } from "expo-router";
 import React, { useCallback, useState } from "react";
 import { Alert, Pressable, Text, TextInput, View } from "react-native";
 import { Dropdown } from "react-native-element-dropdown";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 export default function ProfileRegistration() {
   const [form, setForm] = useState<NewUser>({
@@ -41,17 +44,19 @@ export default function ProfileRegistration() {
     setForm({ ...form, [name]: value });
   };
 
-  const onAddressChange = useCallback(
-    (address: UserAddress) => {
-      setForm((prev) => ({ ...prev, address }));
-    },
-    []
-  );
+  const onAddressChange = useCallback((address: UserAddress) => {
+    setForm((prev) => ({ ...prev, address }));
+  }, []);
 
   const onSubmit = async () => {
     const result = validateForm(ProfileSchema, {
       fullName: form.fullName,
       address: form.address?.fullAddress,
+      street: form.address?.street,
+      barangay: form.address?.barangay,
+      city: form.address?.city,
+      province: form.address?.province,
+      postalCode: form.address?.postalCode,
     });
     if (!result.success) {
       setErrors(result.errors);
@@ -73,11 +78,15 @@ export default function ProfileRegistration() {
       formData.append("addressFullAddress", form.address.fullAddress);
       formData.append("addressLat", String(form.address.coords.lat));
       formData.append("addressLng", String(form.address.coords.lng));
-      if (form.address.street) formData.append("addressStreet", form.address.street);
-      if (form.address.barangay) formData.append("addressBarangay", form.address.barangay);
+      if (form.address.street)
+        formData.append("addressStreet", form.address.street);
+      if (form.address.barangay)
+        formData.append("addressBarangay", form.address.barangay);
       if (form.address.city) formData.append("addressCity", form.address.city);
-      if (form.address.province) formData.append("addressProvince", form.address.province);
-      if (form.address.postalCode) formData.append("addressPostalCode", form.address.postalCode);
+      if (form.address.province)
+        formData.append("addressProvince", form.address.province);
+      if (form.address.postalCode)
+        formData.append("addressPostalCode", form.address.postalCode);
     }
 
     if (selectedAsset) {
@@ -104,6 +113,7 @@ export default function ProfileRegistration() {
           isProfileComplete: true,
           profilePictureUrl: response.data.user.profilePictureUrl,
           address: response.data.user.address,
+          gender: response.data.user.gender,
         });
 
         router.replace("/(drawer)/book");
@@ -161,8 +171,9 @@ export default function ProfileRegistration() {
               onChangeText={(text) => onFormChange("fullName", text)}
               placeholder="Enter Name"
               placeholderTextColor="#9CA3AF"
-              className={`p-4 text-base bg-gray-100 rounded-lg ${errors.fullName ? "border border-red-500" : ""
-                }`}
+              className={`p-4 text-base bg-gray-100 rounded-lg ${
+                errors.fullName ? "border border-red-500" : ""
+              }`}
             />
             {errors.fullName && (
               <Text className="text-xs ml-2 text-red-500">
@@ -175,7 +186,11 @@ export default function ProfileRegistration() {
           <AddressInput
             value={form.address}
             onChange={onAddressChange}
-            error={errors.address}
+            error={
+              Object.keys(errors || {}).length === 0
+                ? undefined
+                : "All fields in address are required and must be valid."
+            }
           />
 
           {/* Gender Dropdown */}
@@ -204,11 +219,13 @@ export default function ProfileRegistration() {
               onChange={(item) => onFormChange("gender", item.value)}
             />
           </View>
-
         </View>
       </CustomKeyAvoidingView>
       {/* Buttons */}
-      <View className="absolute bg-white left-0 right-0 mx-6" style={{ bottom: inset.bottom + 10 }}>
+      <View
+        className="absolute bg-white left-0 right-0 mx-6"
+        style={{ bottom: inset.bottom + 10 }}
+      >
         <Pressable
           className="items-center py-4 my-2 rounded-lg bg-lightPrimary active:bg-darkPrimary"
           onPress={onSubmit}

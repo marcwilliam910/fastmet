@@ -45,26 +45,43 @@ function MapScreen({
   useEffect(() => {
     if (!GOOGLE_MAPS_API_KEY) return;
 
-    (async () => {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") {
-        Alert.alert(
-          "Permission Required",
-          "Location permission is needed to show your position.",
-        );
-        return;
-      }
+    let isMounted = true;
 
-      const location = await Location.getCurrentPositionAsync({});
-      const userRegion = {
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
-        latitudeDelta: 0.01,
-        longitudeDelta: 0.01,
-      };
-      setRegion(userRegion);
-      mapRef.current?.animateToRegion(userRegion, 1000);
+    (async () => {
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== "granted") {
+          Alert.alert(
+            "Permission Required",
+            "Location permission is needed to show your position.",
+          );
+          return;
+        }
+
+        const location = await Location.getCurrentPositionAsync({});
+        if (!isMounted) return;
+
+        const userRegion = {
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+          latitudeDelta: 0.01,
+          longitudeDelta: 0.01,
+        };
+
+        setRegion(userRegion);
+        mapRef.current?.animateToRegion(userRegion, 1000);
+      } catch (err) {
+        console.error("Failed to get user location:", err);
+        Alert.alert(
+          "Location Error",
+          "Unable to retrieve your current location. Please ensure location services are enabled.",
+        );
+      }
     })();
+
+    return () => {
+      isMounted = false;
+    };
   }, [setRegion]);
 
   // Update the useEffect
@@ -112,6 +129,7 @@ function MapScreen({
               anchor={{ x: 0.5, y: 0.5 }}
               centerOffset={{ x: 0, y: 0 }}
               tracksViewChanges={false}
+              zIndex={1000}
             >
               <Image
                 source={STATIC_IMAGES.pickup}
@@ -131,6 +149,7 @@ function MapScreen({
               anchor={{ x: 0.5, y: 0.5 }}
               centerOffset={{ x: 0, y: 0 }}
               tracksViewChanges={false}
+              zIndex={1000}
             >
               <Image
                 source={STATIC_IMAGES.dropoff}

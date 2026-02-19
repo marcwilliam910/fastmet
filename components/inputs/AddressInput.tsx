@@ -27,7 +27,7 @@ type AddressFields = {
  * Uses the Google Places API (new) `addressComponents` format.
  */
 function parseAddressComponents(
-  components: any[] | undefined
+  components: any[] | undefined,
 ): Partial<AddressFields> {
   if (!components || !Array.isArray(components)) return {};
 
@@ -108,7 +108,7 @@ export default function AddressInput({
     (
       updatedFields: AddressFields,
       name: string,
-      latLng: { lat: number; lng: number } | null
+      latLng: { lat: number; lng: number } | null,
     ) => {
       const parts = [
         updatedFields.street,
@@ -136,7 +136,7 @@ export default function AddressInput({
         postalCode: updatedFields.postalCode || undefined,
       });
     },
-    [onChange]
+    [onChange],
   );
 
   const handlePlaceSelect = useCallback(
@@ -168,7 +168,7 @@ export default function AddressInput({
       initializedRef.current = true;
       buildAddress(newFields, name, newCoords);
     },
-    [buildAddress]
+    [buildAddress],
   );
 
   const handleFieldChange = useCallback(
@@ -177,7 +177,7 @@ export default function AddressInput({
       setFields(updated);
       buildAddress(updated, placeName, coords);
     },
-    [fields, placeName, coords, buildAddress]
+    [fields, placeName, coords, buildAddress],
   );
 
   const handleClear = useCallback(() => {
@@ -224,11 +224,20 @@ export default function AddressInput({
             <Ionicons name="home" size={18} color="#FFFFFF" />
           </View>
           <View className="flex-1">
-            <Text className="text-sm font-semibold text-gray-900" numberOfLines={1}>
+            <Text
+              className="text-sm font-semibold text-gray-900"
+              numberOfLines={1}
+            >
               {placeName || "Home"}
             </Text>
             <Text className="text-xs text-gray-500 mt-0.5" numberOfLines={2}>
-              {[fields.street, fields.barangay, fields.city, fields.province, fields.postalCode]
+              {[
+                fields.street,
+                fields.barangay,
+                fields.city,
+                fields.province,
+                fields.postalCode,
+              ]
                 .filter(Boolean)
                 .join(", ")}
             </Text>
@@ -289,7 +298,9 @@ export default function AddressInput({
 
       {/* Structured fields - shown when address is selected */}
       {hasSelected && (
-        <View className="gap-3 p-4 bg-gray-50 rounded-xl">
+        <View
+          className={`gap-3 p-4 bg-gray-50 rounded-xl ${error ? "border border-red-400" : ""}`}
+        >
           <Text className="text-xs font-semibold tracking-wider text-gray-500 uppercase">
             Address Details
           </Text>
@@ -368,7 +379,9 @@ export default function AddressInput({
       )}
 
       {error && (
-        <Text className="text-xs ml-2 text-red-500">{error}</Text>
+        <Text className="text-xs text-center font-semibold text-red-500">
+          {error}
+        </Text>
       )}
     </View>
   );

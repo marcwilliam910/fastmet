@@ -20,20 +20,18 @@ const CustomDrawerContent = (props: any) => {
   const { isLoggedIn } = useAuth();
   const isProfileComplete = useAppStore((state) => state.isProfileComplete);
 
-  console.log(isProfileComplete)
-
   const { state, descriptors, navigation } = props;
 
   const handlePress = (routeName: string) => {
-    if (!isProfileComplete && routeName === "profile") {
-      router.replace("/(auth)/profile-register");
-      return;
-    }
+
     if (!isLoggedIn && routeName !== "book") {
       props.setShowNotLoggedInModal(true); // open login modal
       return;
     }
-
+    if (!isProfileComplete && routeName === "profile") {
+      router.replace("/(auth)/profile-register");
+      return;
+    }
     navigation.navigate(routeName);
   };
 
