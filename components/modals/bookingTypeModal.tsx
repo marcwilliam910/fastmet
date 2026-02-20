@@ -1,9 +1,17 @@
 import { Type } from "@/store/slices/bookSlice";
 import { useAppStore } from "@/store/useAppStore";
+import { BookingTypeConfig, SubOption } from "@/types/bookingType";
 import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useState } from "react";
-import { Modal, Platform, Pressable, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Modal,
+  Platform,
+  Pressable,
+  Text,
+  View,
+} from "react-native";
 import Toast from "react-native-toast-message";
 
 const getMinTime = () => {
@@ -31,105 +39,100 @@ export default function BookingTypeModal({
   const [step, setStep] = useState<"main" | "calendar">("main");
   const [selectedDate, setSelectedDate] = useState(getMinTime());
   const [selectedTime, setSelectedTime] = useState(getMinTime());
-
   const [showCalendar, setShowCalendar] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
+  const [infoVisible, setInfoVisible] = useState(false);
+  const [infoOption, setInfoOption] = useState<{
+    name: string;
+    description: string;
+  } | null>(null);
+
   const bookingType = useAppStore((state) => state.bookingType);
   const setBookingType = useAppStore((state) => state.setBookingType);
+  const bookingTypes = useAppStore((state) => state.bookingTypes);
+  const bookingTypesLoading = useAppStore((state) => state.bookingTypesLoading);
 
-  const [infoVisible, setInfoVisible] = useState(false);
-  const [selectedOption, setSelectedOption] = useState<
-    (typeof OPTIONS)[number] | null
-  >(null);
-
-  const handleConfirm = (type: Type, value: string) => {
-    if (type === "schedule") {
-      let combined: Date;
-
-      if (Platform.OS === "ios") {
-        // On iOS, selectedDate already contains both date and time
-        combined = selectedDate;
-      } else {
-        // On Android, combine separate date and time
-        combined = new Date(
-          selectedDate.getFullYear(),
-          selectedDate.getMonth(),
-          selectedDate.getDate(),
-          selectedTime.getHours(),
-          selectedTime.getMinutes(),
-        );
-      }
-
-      // Validate: combined datetime must be at least 2 hours from now
-      const minDateTime = new Date(Date.now() + 2 * 60 * 60 * 1000);
-      if (combined < minDateTime) {
-        Toast.show({
-          type: "info",
-          text1: "Invalid schedule time",
-          text2: "Pickup time must be at least 2 hours from now",
-        });
-        setSelectedDate(getMinTime());
-        setSelectedTime(getMinTime());
-        return;
-      }
-
-      setBookingType({ type, value: combined.toISOString() });
-    } else if (type === "asap") {
-      setBookingType({ type, value });
-    } else setBookingType({ type, value });
-
+  const resetCalendar = () => {
     setSelectedDate(getMinTime());
     setSelectedTime(getMinTime());
     setShowCalendar(false);
     setShowTimePicker(false);
+  };
+
+  const handleCancel = () => {
+    resetCalendar();
     setStep("main");
     onClose();
   };
 
-  const OPTIONS = [
-    {
-      id: "asap",
-      name: "ASAP",
-      icon: "rocket-outline",
-      description:
-        "The ASAP option prioritizes immediate dispatch. Once your booking is confirmed, the system automatically searches for the nearest available driver and assigns the job as quickly as possible. This is ideal for urgent deliveries, time-sensitive pickups, or situations where delays may impact operations. Pricing may be higher due to priority matching and reduced flexibility in routing.",
-      onPress: () => setBookingType({ type: "asap", value: "REGULAR" }),
-    },
-    {
-      id: "pooling",
-      name: "Pooling",
-      icon: "people-outline",
-      subtext: "Most affordable – share ride with others",
-      description:
-        "Pooling allows your booking to be grouped with other requests that have similar routes and destinations. This option optimizes vehicle capacity and reduces overall transport costs by sharing space and travel time. Delivery and pickup times may vary depending on route optimization, making it best suited for non-urgent shipments where cost efficiency is a priority.",
-      onPress: () => handleConfirm("pooling", "POOLING"),
-    },
-    {
-      id: "schedule",
-      name: "Schedule",
-      icon: "calendar-outline",
-      subtext: "Book up to 1 month in advance",
-      description:
-        "The Schedule option lets you pre-book a vehicle at a specific date and time, up to one month in advance. This is recommended for planned logistics operations such as scheduled deliveries, recurring pickups, or coordinated transport activities. Scheduling ensures better driver availability, predictable timelines, and smoother operational planning.",
-      onPress: () => {
-        setStep("calendar");
-      },
-    },
-  ];
+  const handleSelectType = (config: BookingTypeConfig) => {
+    if (config.key === "schedule") {
+      setStep("calendar");
+      return;
+    }
 
-  const handleCancel = () => {
+    if (config.subOptions.length > 0) {
+      // Auto-select the first active sub-option so the type actually gets set
+      const firstSub = config.subOptions
+        .filter((s) => s.isActive)
+        .sort((a, b) => a.order - b.order)[0];
+
+      if (firstSub) {
+        setBookingType({ type: config.key as Type, value: firstSub.key });
+      }
+      return;
+    }
+
+    // Flat types (pooling): confirm immediately
+    setBookingType({
+      type: config.key as Type,
+      value: config.key.toUpperCase(),
+    });
     onClose();
-    setSelectedDate(getMinTime());
-    setSelectedTime(getMinTime());
-    setShowCalendar(false);
-    setShowTimePicker(false);
+  };
+
+  const handleSelectSubOption = (type: Type, subOption: SubOption) => {
+    setBookingType({ type, value: subOption.key });
+    onClose();
+  };
+
+  const handleConfirmSchedule = () => {
+    let combined: Date;
+
+    if (Platform.OS === "ios") {
+      combined = selectedDate;
+    } else {
+      combined = new Date(
+        selectedDate.getFullYear(),
+        selectedDate.getMonth(),
+        selectedDate.getDate(),
+        selectedTime.getHours(),
+        selectedTime.getMinutes(),
+      );
+    }
+
+    const minDateTime = new Date(Date.now() + 2 * 60 * 60 * 1000);
+    if (combined < minDateTime) {
+      Toast.show({
+        type: "info",
+        text1: "Invalid schedule time",
+        text2: "Pickup time must be at least 2 hours from now",
+      });
+      resetCalendar();
+      return;
+    }
+
+    setBookingType({ type: "schedule", value: combined.toISOString() });
+    resetCalendar();
     setStep("main");
+    onClose();
   };
 
   return (
     <Modal visible={visible} transparent animationType="fade">
       <View className="items-center justify-center flex-1 bg-black/40">
         <View className="w-11/12 p-5 bg-white rounded-2xl">
+          {/* ── MAIN STEP ── */}
           {step === "main" && (
             <>
               <View className="flex-row items-center justify-between mb-4">
@@ -143,132 +146,144 @@ export default function BookingTypeModal({
                 </Pressable>
               </View>
 
-              <View className="gap-3">
-                {OPTIONS.map((value) => (
-                  <View key={value.id}>
-                    <Pressable
-                      className={`flex-row items-center justify-between px-4 py-3 border rounded-lg ${
-                        value.id === bookingType?.type
-                          ? " border-darkPrimary bg-orange-50"
-                          : " border-gray-300"
-                      }`}
-                      onPress={value.onPress}
-                    >
-                      <View className="gap-0.5">
-                        <View className="flex-row gap-2 items-center">
-                          <Ionicons
-                            name={value.icon as keyof typeof Ionicons.glyphMap}
-                            size={20}
-                            color={
-                              value.id === bookingType?.type
-                                ? "#FFA840"
-                                : "gray"
-                            }
-                          />
-                          <Text
-                            className={`text-base font-medium ${value.id === bookingType?.type ? "text-lightPrimary" : ""}`}
+              {bookingTypesLoading ? (
+                <View className="py-8 items-center">
+                  <ActivityIndicator color="#FFA840" />
+                </View>
+              ) : (
+                <View className="gap-3">
+                  {bookingTypes.map((config) => {
+                    const isSelected = bookingType?.type === config.key;
+
+                    return (
+                      <View key={config.key}>
+                        {/* Parent row */}
+                        <Pressable
+                          className={`flex-row items-center justify-between px-4 py-3 border rounded-lg ${
+                            isSelected
+                              ? "border-darkPrimary bg-orange-50"
+                              : "border-gray-300"
+                          }`}
+                          onPress={() => handleSelectType(config)}
+                        >
+                          <View className="gap-0.5">
+                            <View className="flex-row gap-2 items-center">
+                              <Ionicons
+                                name={
+                                  config.icon as keyof typeof Ionicons.glyphMap
+                                }
+                                size={20}
+                                color={isSelected ? "#FFA840" : "gray"}
+                              />
+                              <Text
+                                className={`text-base font-medium ${isSelected ? "text-lightPrimary" : ""}`}
+                              >
+                                {config.name}
+                              </Text>
+                            </View>
+                            {config.subtext && (
+                              <Text className="text-xs text-gray-500 mt-0.5">
+                                {config.subtext}
+                              </Text>
+                            )}
+                          </View>
+                          <Pressable
+                            onPress={() => {
+                              setInfoOption({
+                                name: config.name,
+                                description: config.description,
+                              });
+                              setInfoVisible(true);
+                            }}
+                            hitSlop={20}
                           >
-                            {value.name}
-                          </Text>
-                        </View>
-                        {value.subtext && (
-                          <Text className="text-xs text-gray-500 mt-0.5">
-                            {value.subtext}
-                          </Text>
+                            <Ionicons
+                              name="information-circle"
+                              color="#FFA840"
+                              size={Platform.OS === "ios" ? 25 : 22}
+                            />
+                          </Pressable>
+                        </Pressable>
+
+                        {/* Sub-options row — only when this type is selected and has sub-options */}
+                        {isSelected && config.subOptions.length > 0 && (
+                          <View className="mt-2 flex-row gap-2">
+                            {config.subOptions
+                              .filter((s) => s.isActive)
+                              .sort((a, b) => a.order - b.order)
+                              .map((subOption) => {
+                                const isSubSelected =
+                                  bookingType.value === subOption.key;
+                                return (
+                                  <Pressable
+                                    key={subOption.key}
+                                    className={`flex-1 px-1.5 py-2 border rounded-lg ${
+                                      isSubSelected
+                                        ? "border-darkPrimary bg-orange-50"
+                                        : "border-gray-300 bg-white"
+                                    }`}
+                                    onPress={() =>
+                                      handleSelectSubOption(
+                                        config.key as Type,
+                                        subOption,
+                                      )
+                                    }
+                                  >
+                                    <View className="flex-row items-center justify-center gap-1">
+                                      <Ionicons
+                                        name={
+                                          subOption.icon as keyof typeof Ionicons.glyphMap
+                                        }
+                                        size={16}
+                                        color={
+                                          isSubSelected ? "#FFA840" : "gray"
+                                        }
+                                      />
+                                      <Text
+                                        className={`text-sm font-medium ${
+                                          isSubSelected
+                                            ? "text-lightPrimary"
+                                            : "text-gray-600"
+                                        }`}
+                                      >
+                                        {subOption.name}
+                                      </Text>
+                                      <Pressable
+                                        hitSlop={12}
+                                        onPress={() => {
+                                          setInfoOption({
+                                            name: subOption.name,
+                                            description: subOption.description,
+                                          });
+                                          setInfoVisible(true);
+                                        }}
+                                      >
+                                        <Ionicons
+                                          name="information-circle-outline"
+                                          color="#FFA840"
+                                          size={14}
+                                        />
+                                      </Pressable>
+                                    </View>
+                                    {subOption.subtext && (
+                                      <Text className="text-xs text-gray-500 text-center mt-1">
+                                        {subOption.subtext}
+                                      </Text>
+                                    )}
+                                  </Pressable>
+                                );
+                              })}
+                          </View>
                         )}
                       </View>
-                      <Pressable
-                        onPress={() => {
-                          setSelectedOption(value);
-                          setInfoVisible(true);
-                        }}
-                        hitSlop={20}
-                      >
-                        <Ionicons
-                          name="information-circle"
-                          color="#FFA840"
-                          size={Platform.OS === "ios" ? 25 : 22}
-                        />
-                      </Pressable>
-                    </Pressable>
-
-                    {/* ASAP Sub-picker */}
-                    {value.id === "asap" && bookingType?.type === "asap" && (
-                      <View className="mt-2 gap-2">
-                        <View className="flex-row gap-2">
-                          <Pressable
-                            className={`flex-1 px-1.5 py-2 border rounded-lg ${
-                              bookingType.value === "REGULAR"
-                                ? "border-darkPrimary bg-orange-50"
-                                : "border-gray-300 bg-white"
-                            }`}
-                            onPress={() => handleConfirm("asap", "REGULAR")}
-                          >
-                            <View className="flex-row items-center justify-center gap-1">
-                              <Ionicons
-                                name="time-outline"
-                                size={16}
-                                color={
-                                  bookingType.value === "REGULAR"
-                                    ? "#FFA840"
-                                    : "gray"
-                                }
-                              />
-                              <Text
-                                className={`text-sm font-medium ${
-                                  bookingType.value === "REGULAR"
-                                    ? "text-lightPrimary"
-                                    : "text-gray-600"
-                                }`}
-                              >
-                                Regular
-                              </Text>
-                            </View>
-                            <Text className="text-xs text-gray-500 text-center mt-1">
-                              Standard &#8226; pickup in ~2hrs
-                            </Text>
-                          </Pressable>
-                          <Pressable
-                            className={`flex-1 px-1.5 py-2 border rounded-lg ${
-                              bookingType.value === "PRIORITY"
-                                ? "border-darkPrimary bg-orange-50"
-                                : "border-gray-300 bg-white"
-                            }`}
-                            onPress={() => handleConfirm("asap", "PRIORITY")}
-                          >
-                            <View className="flex-row items-center justify-center gap-1">
-                              <Ionicons
-                                name="flash-outline"
-                                size={16}
-                                color={
-                                  bookingType.value === "PRIORITY"
-                                    ? "#FFA840"
-                                    : "gray"
-                                }
-                              />
-                              <Text
-                                className={`text-sm font-medium ${
-                                  bookingType.value === "PRIORITY"
-                                    ? "text-lightPrimary"
-                                    : "text-gray-600"
-                                }`}
-                              >
-                                Priority
-                              </Text>
-                            </View>
-                            <Text className="text-xs text-gray-500 text-center mt-1">
-                              Quickest &#8226; pickup in &lt;1hr
-                            </Text>
-                          </Pressable>
-                        </View>
-                      </View>
-                    )}
-                  </View>
-                ))}
-              </View>
+                    );
+                  })}
+                </View>
+              )}
             </>
           )}
 
+          {/* ── CALENDAR STEP ── */}
           {step === "calendar" && (
             <View className="gap-6">
               <View className="relative flex-row items-center justify-center">
@@ -277,10 +292,7 @@ export default function BookingTypeModal({
                   className="absolute -top-1 left-1"
                   onPress={() => {
                     setStep("main");
-                    setSelectedDate(getMinTime());
-                    setSelectedTime(getMinTime());
-                    setShowCalendar(false);
-                    setShowTimePicker(false);
+                    resetCalendar();
                   }}
                 >
                   <Ionicons
@@ -293,7 +305,7 @@ export default function BookingTypeModal({
               </View>
 
               {Platform.OS === "ios" ? (
-                // iOS: Combined Date & Time Picker
+                // iOS: single combined datetime picker
                 <>
                   <View className="gap-1">
                     <Text className="ml-1 font-semibold text-lg">
@@ -324,10 +336,8 @@ export default function BookingTypeModal({
                         value={selectedDate}
                         mode="datetime"
                         display="spinner"
-                        onChange={(event, date) => {
-                          if (date) {
-                            setSelectedDate(date);
-                          }
+                        onChange={(_, date) => {
+                          if (date) setSelectedDate(date);
                         }}
                         minimumDate={
                           new Date(Date.now() + 2.5 * 60 * 60 * 1000)
@@ -340,7 +350,6 @@ export default function BookingTypeModal({
                         textColor="#000000"
                         themeVariant="light"
                       />
-
                       <Pressable
                         onPress={() => setShowCalendar(false)}
                         className="py-3 bg-lightPrimary rounded-xl"
@@ -354,7 +363,7 @@ export default function BookingTypeModal({
 
                   {!showCalendar && (
                     <Pressable
-                      onPress={() => handleConfirm("schedule", "")}
+                      onPress={handleConfirmSchedule}
                       className="bg-lightPrimary rounded-xl"
                       style={{
                         paddingVertical: Platform.OS === "ios" ? 15 : 12,
@@ -367,9 +376,8 @@ export default function BookingTypeModal({
                   )}
                 </>
               ) : (
-                // Android: Separate Date & Time Pickers
+                // Android: separate date + time pickers
                 <>
-                  {/* DATE PICKER */}
                   <View className="gap-1">
                     <Text className="ml-1 font-semibold text-lg">Date:</Text>
                     <Pressable
@@ -390,7 +398,7 @@ export default function BookingTypeModal({
                       value={selectedDate}
                       mode="date"
                       display="calendar"
-                      onChange={(event, date) => {
+                      onChange={(_, date) => {
                         setShowCalendar(false);
                         if (date) {
                           setSelectedDate(date);
@@ -404,7 +412,6 @@ export default function BookingTypeModal({
                     />
                   )}
 
-                  {/* TIME PICKER */}
                   <View className="gap-1">
                     <Text className="ml-1 font-semibold text-lg">Time:</Text>
                     <Pressable
@@ -428,12 +435,10 @@ export default function BookingTypeModal({
                       value={selectedTime}
                       mode="time"
                       display="clock"
-                      onChange={(event, time) => {
+                      onChange={(_, time) => {
                         setShowTimePicker(false);
-
                         if (!time) return;
 
-                        // Apply selected time to the selected date
                         const selected = new Date(selectedDate);
                         selected.setHours(
                           time.getHours(),
@@ -442,7 +447,6 @@ export default function BookingTypeModal({
                           0,
                         );
 
-                        // Validate: if selected date is today, time must be at least 2 hours from now
                         if (isToday(selectedDate)) {
                           const minTime = getMinTime();
                           if (selected < minTime) {
@@ -463,10 +467,9 @@ export default function BookingTypeModal({
                     />
                   )}
 
-                  {/* CONFIRM BUTTON */}
                   {!showCalendar && !showTimePicker && (
                     <Pressable
-                      onPress={() => handleConfirm("schedule", "")}
+                      onPress={handleConfirmSchedule}
                       className="py-3 bg-lightPrimary rounded-xl"
                     >
                       <Text className="font-semibold text-center text-white">
@@ -480,9 +483,10 @@ export default function BookingTypeModal({
           )}
         </View>
       </View>
+
       <BookingInfoModal
         visible={infoVisible}
-        option={selectedOption}
+        option={infoOption}
         onClose={() => setInfoVisible(false)}
       />
     </Modal>
@@ -496,7 +500,7 @@ const BookingInfoModal = ({
 }: {
   visible: boolean;
   onClose: () => void;
-  option: any;
+  option: { name: string; description: string } | null;
 }) => {
   if (!option) return null;
 
@@ -507,11 +511,9 @@ const BookingInfoModal = ({
           <Text className="text-xl font-semibold text-gray-900">
             {option.name}
           </Text>
-
           <Text className="mt-3 leading-6 text-gray-600">
             {option.description}
           </Text>
-
           <Pressable
             onPress={onClose}
             className="mt-5 self-end rounded-lg bg-[#FFA840] px-5 py-3"

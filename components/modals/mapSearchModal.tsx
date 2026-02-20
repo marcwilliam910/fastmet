@@ -253,26 +253,26 @@ const SearchModal: React.FC<SearchModalProps> = ({
     }
 
     // Check if pickup is within Metro Manila
-    if (type === "pickup") {
-      const allowed = isWithinMetroManila(loc.latitude, loc.longitude);
+    // if (type === "pickup") {
+    //   const allowed = isWithinMetroManila(loc.latitude, loc.longitude);
 
-      if (!allowed) {
-        const message = "Pick-up is only available within Metro Manila.";
+    //   if (!allowed) {
+    //     const message = "Pick-up is only available within Metro Manila.";
 
-        if (Platform.OS === "android") {
-          ToastAndroid.showWithGravity(
-            message,
-            ToastAndroid.LONG,
-            ToastAndroid.TOP,
-          );
-        } else {
-          Alert.alert("Not Available", message);
-        }
+    //     if (Platform.OS === "android") {
+    //       ToastAndroid.showWithGravity(
+    //         message,
+    //         ToastAndroid.LONG,
+    //         ToastAndroid.TOP,
+    //       );
+    //     } else {
+    //       Alert.alert("Not Available", message);
+    //     }
 
-        shake();
-        return;
-      }
-    }
+    //     shake();
+    //     return;
+    //   }
+    // }
 
     // Check if drop-off requires ferry
     if (type === "dropoff") {

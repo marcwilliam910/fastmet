@@ -3,7 +3,12 @@ import { queryClient } from "@/lib/queryClient";
 import { useUserBookings } from "@/queries/bookingQueries";
 import { useSocket } from "@/sockets/context/SocketProvider";
 import { useAppStore } from "@/store/useAppStore";
-import { Booking, Driver, LocationDetails, RequestedDriver } from "@/types/book";
+import {
+  Booking,
+  Driver,
+  LocationDetails,
+  RequestedDriver,
+} from "@/types/book";
 import { STATIC_IMAGES } from "@/utils/constants";
 import { formatDate } from "@/utils/helpers/date";
 import { formatLocation } from "@/utils/helpers/location";
@@ -38,7 +43,10 @@ export default function RequestRoute() {
   const [selectedDriver, setSelectedDriver] = useState<RequestedDriver | null>(
     null,
   );
-  const [selectedFilters, setSelectedFilters] = useState(["PENDING", "SCHEDULED"]);
+  const [selectedFilters, setSelectedFilters] = useState([
+    "PENDING",
+    "SCHEDULED",
+  ]);
   const setLoading = useAppStore((state) => state.setLoading);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const socket = useSocket();
@@ -61,7 +69,6 @@ export default function RequestRoute() {
   bookings = selectedFilters.includes("SCHEDULED")
     ? [...bookings, ...scheduledBookings]
     : bookings;
-
 
   const driversModalBooking = bookings.find(
     (b) => b._id === driversModalBookingId,
@@ -169,7 +176,13 @@ export default function RequestRoute() {
   }, [setLoading, socket]);
 
   useEffect(() => {
-    const driverAcceptedSchedule = ({ bookingId, success }: { bookingId: string, success: boolean }) => {
+    const driverAcceptedSchedule = ({
+      bookingId,
+      success,
+    }: {
+      bookingId: string;
+      success: boolean;
+    }) => {
       if (bookingId !== selectedDriver?.bookingId) return;
 
       setLoading(false);
@@ -193,14 +206,20 @@ export default function RequestRoute() {
         topOffset: 50,
       });
 
-      setSelectedFilters(["SCHEDULED"])
-    }
+      setSelectedFilters(["SCHEDULED"]);
+    };
 
     socket.on("driverAcceptedSchedule", driverAcceptedSchedule);
     return () => {
       socket.off("driverAcceptedSchedule", driverAcceptedSchedule);
     };
-  }, [closeDriversModal, selectedDriver?.bookingId, selectedDriver?.name, setLoading, socket]);
+  }, [
+    closeDriversModal,
+    selectedDriver?.bookingId,
+    selectedDriver?.name,
+    setLoading,
+    socket,
+  ]);
 
   if (isLoading)
     return (
@@ -217,7 +236,6 @@ export default function RequestRoute() {
         </Text>
       </View>
     );
-
 
   return (
     <>
@@ -285,7 +303,7 @@ export default function RequestRoute() {
             amount={item.routeData.totalPrice}
             isCash={item.paymentMethod === "cash"}
             onCancel={() => setSelectedId(item._id)}
-            onReschedule={() => { }}
+            onReschedule={() => {}}
             onPressSeeMore={() => handleSeeMorePress(item)}
             driverOffers={item.requestedDrivers}
             onOpenDrivers={() => {
@@ -423,11 +441,11 @@ const RequestCard = ({
         >
           {/* Header */}
           <View className="flex-row items-center justify-between px-5 py-3 bg-lightPrimary">
-            <Text className="text-lg font-semibold text-white">
-              {vehicle}
-            </Text>
+            <Text className="text-lg font-semibold text-white">{vehicle}</Text>
             <Text className="text-sm text-white">
-              {status === "pending" ? bookingType.type.toUpperCase() : formatDate(bookingType.value)}
+              {status === "pending"
+                ? bookingType.type.toUpperCase()
+                : formatDate(bookingType.value)}
             </Text>
           </View>
 
@@ -486,7 +504,9 @@ const RequestCard = ({
                   </View>
                 </View>
                 <View className="bg-green-500 px-2 py-1 rounded-md">
-                  <Text className="text-xs font-medium text-white">Assigned</Text>
+                  <Text className="text-xs font-medium text-white">
+                    Assigned
+                  </Text>
                 </View>
               </View>
             )}
@@ -572,31 +592,29 @@ const RequestCard = ({
             </View>
 
             {/* Buttons */}
-            {
-              status === "pending" && (
-                <View className="flex-row justify-between mt-6">
-                  <Pressable
-                    className="flex-row items-center justify-center flex-1 py-3 mr-2 border border-lightPrimary rounded-xl active:bg-gray-50"
-                    onPress={onCancel}
-                  >
-                    <Ionicons name="close" size={18} color="#333" />
-                    <Text className="ml-2 font-medium text-gray-700">
-                      Cancel Book
-                    </Text>
-                  </Pressable>
+            {status === "pending" && (
+              <View className="flex-row justify-between mt-6">
+                <Pressable
+                  className="flex-row items-center justify-center flex-1 py-3 mr-2 border border-lightPrimary rounded-xl active:bg-gray-50"
+                  onPress={onCancel}
+                >
+                  <Ionicons name="close" size={18} color="#333" />
+                  <Text className="ml-2 font-medium text-gray-700">
+                    Cancel Book
+                  </Text>
+                </Pressable>
 
-                  <Pressable
-                    className="flex-row items-center justify-center flex-1 py-3 ml-2 border border-lightPrimary rounded-xl active:bg-gray-50"
-                    onPress={onReschedule}
-                  >
-                    <Ionicons name="create-outline" size={18} color="#333" />
-                    <Text className="ml-2 font-medium text-gray-700">
-                      Reschedule
-                    </Text>
-                  </Pressable>
-                </View>
-              )
-            }
+                <Pressable
+                  className="flex-row items-center justify-center flex-1 py-3 ml-2 border border-lightPrimary rounded-xl active:bg-gray-50"
+                  onPress={onReschedule}
+                >
+                  <Ionicons name="time-outline" size={18} color="#333" />
+                  <Text className="ml-2 font-medium text-gray-700">
+                    Reschedule
+                  </Text>
+                </Pressable>
+              </View>
+            )}
           </View>
         </Pressable>
       </View>

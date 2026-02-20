@@ -17,7 +17,7 @@ const Book = () => {
   const [region, setRegion] = useState<Region | null>(null);
   const navigation = useNavigation();
   const [isDragging, setIsDragging] = useState(false);
-  const fetchVehicles = useAppStore((state) => state.fetchVehicles);
+
   const [searchModalVisible, setSearchModalVisible] = useState(false);
   const [searchType, setSearchType] = useState<"pickup" | "dropoff" | null>(
     null,
@@ -26,8 +26,9 @@ const Book = () => {
   console.log("render", Date.now());
 
   useEffect(() => {
-    fetchVehicles();
-  }, [fetchVehicles]);
+    useAppStore.getState().fetchBookingTypes();
+    useAppStore.getState().fetchVehicles();
+  }, []);
 
   return (
     <SafeAreaView

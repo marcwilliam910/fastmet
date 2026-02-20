@@ -1,23 +1,28 @@
-import {UserAddress} from "@/types/user";
-import {create} from "zustand";
-import {persist} from "zustand/middleware";
-import {createSecureStorage} from "./secureStorage";
-import {AuthSlice, createAuthSlice} from "./slices/authSlice";
-import {BookSlice, createBookSlice} from "./slices/bookSlice";
-import {ChatSlice, createChatSlice} from "./slices/chatSlice";
-import {createLoadingSlice, LoadingSlice} from "./slices/loadingStore";
+import { UserAddress } from "@/types/user";
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import { createSecureStorage } from "./secureStorage";
+import { AuthSlice, createAuthSlice } from "./slices/authSlice";
+import {
+  BookingTypeSlice,
+  createBookingTypeSlice,
+} from "./slices/bookingTypeSlice";
+import { BookSlice, createBookSlice } from "./slices/bookSlice";
+import { ChatSlice, createChatSlice } from "./slices/chatSlice";
+import { createLoadingSlice, LoadingSlice } from "./slices/loadingStore";
 import {
   createNotificationSlice,
   NotificationSlice,
 } from "./slices/notificationSlice";
-import {createVehicleSlice, VehicleSlice} from "./slices/vehicleSlice";
+import { createVehicleSlice, VehicleSlice } from "./slices/vehicleSlice";
 
 export type AppStore = BookSlice &
   LoadingSlice &
   AuthSlice &
   ChatSlice &
   VehicleSlice &
-  NotificationSlice;
+  NotificationSlice &
+  BookingTypeSlice;
 
 export const useAppStore = create<AppStore>()(
   persist(
@@ -28,6 +33,7 @@ export const useAppStore = create<AppStore>()(
       ...createChatSlice(...a),
       ...createVehicleSlice(...a),
       ...createNotificationSlice(...a),
+      ...createBookingTypeSlice(...a),
     }),
     {
       name: "fastmet-client-storage",

@@ -13,6 +13,7 @@ import React, {
   useState,
 } from "react";
 import {
+  ActivityIndicator,
   Dimensions,
   Platform,
   Pressable,
@@ -49,6 +50,10 @@ const BookSheet = ({
   const vehicleError = useAppStore((state) => state.vehicleError);
   const fetchVehicles = useAppStore((state) => state.fetchVehicles);
   const vehicleLoading = useAppStore((state) => state.vehicleLoading);
+
+  const fetchBookingTypes = useAppStore((state) => state.fetchBookingTypes);
+  const bookingTypesError = useAppStore((state) => state.bookingTypesError);
+  const bookingTypesLoading = useAppStore((state) => state.bookingTypesLoading);
 
   const hasDistanceFee = useAppStore((state) => state.routeData.distanceFee);
 
@@ -163,20 +168,43 @@ const BookSheet = ({
         <View className="flex-row justify-between items-center pb-5 pt-1.5 px-3">
           <Text className="text-lg font-bold">Booking Type</Text>
 
-          <Pressable
-            onPress={() => setSelectTimeModalVisible(true)}
-            className="relative flex-row items-center gap-2 px-4 py-2 bg-white border-2 rounded-full border-lightPrimary active:scale-95"
-          >
-            <Text className="absolute text-sm font-semibold bg-white text-darkPrimary -top-3 -left-1">
-              Option:
-            </Text>
+          {bookingTypesLoading ? (
+            <View className="flex-row items-center gap-2 px-4 py-2 bg-white border-2 rounded-full border-lightPrimary opacity-70">
+              <ActivityIndicator size="small" color="#6366F1" />
+              <Text className="text-sm font-semibold text-gray-500">
+                Loading options...
+              </Text>
+            </View>
+          ) : bookingTypesError ? (
+            <View className="flex-row items-center gap-2 px-4 py-2 border border-red-400 rounded-full bg-red-50">
+              <Ionicons name="alert-circle-outline" size={16} color="#EF4444" />
+              <Text className="text-sm font-semibold text-red-500">
+                Failed to load
+              </Text>
 
-            <Text className="text-sm font-bold text-gray-900">
-              {bookingTypeDisplay}
-            </Text>
+              <Pressable
+                onPress={fetchBookingTypes}
+                className="px-3 py-1 ml-2 bg-red-500 rounded-full active:scale-95"
+              >
+                <Text className="text-xs font-bold text-white">Retry</Text>
+              </Pressable>
+            </View>
+          ) : (
+            <Pressable
+              onPress={() => setSelectTimeModalVisible(true)}
+              className="relative flex-row items-center gap-2 px-4 py-2 bg-white border-2 rounded-full border-lightPrimary active:scale-95"
+            >
+              <Text className="absolute text-sm font-semibold bg-white text-darkPrimary -top-3 -left-1">
+                Option:
+              </Text>
 
-            <Ionicons name="chevron-down" size={14} color="#9CA3AF" />
-          </Pressable>
+              <Text className="text-sm font-bold text-gray-900">
+                {bookingTypeDisplay}
+              </Text>
+
+              <Ionicons name="chevron-down" size={14} color="#9CA3AF" />
+            </Pressable>
+          )}
         </View>
 
         <BottomSheetScrollView className="flex-1 px-3">

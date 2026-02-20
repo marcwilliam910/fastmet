@@ -24,6 +24,7 @@ const SheetButton = ({
   const routeData = useAppStore((state) => state.routeData);
   const calculatePrice = useAppStore((state) => state.calculatePrice);
   const isProfileComplete = useAppStore((state) => state.isProfileComplete);
+  const bookingType = useAppStore((state) => state.bookingType);
 
   const handleNext = () => {
     if (!isLoggedIn) setShowModal(true);
@@ -38,8 +39,7 @@ const SheetButton = ({
         topOffset: 50,
       });
       router.replace("/(auth)/profile-register");
-    }
-    else next();
+    } else next();
   };
 
   const isDisable =
@@ -48,7 +48,7 @@ const SheetButton = ({
     if (pickUp && dropOff && selectedVehicle?.variant) {
       calculatePrice();
     }
-  }, [pickUp, dropOff, selectedVehicle?.variant, calculatePrice]);
+  }, [pickUp, dropOff, selectedVehicle?.variant, calculatePrice, bookingType]);
 
   return (
     <View

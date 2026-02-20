@@ -1,13 +1,35 @@
 import type { LocationDetails, RouteData } from "@/types/book";
+import { BookingTypeConfig } from "@/types/bookingType";
 import { SelectedVehicle, Service } from "@/types/vehicle";
 import { fetchDrivingDistance } from "@/utils/helpers/calculatePrice";
 import { StateCreator } from "zustand";
+import { BookingTypeSlice } from "./bookingTypeSlice";
 
 export type Type = "asap" | "pooling" | "schedule";
 
 export type BookingType = {
   type: Type;
   value: string;
+  priceModifier: number; // resolved from DB config at selection time
+};
+
+// Decoupled so it's reusable in both setBookingType and clearStates
+const resolveModifier = (
+  configs: BookingTypeConfig[],
+  type: Type,
+  value: string,
+): number => {
+  const config = configs.find((c) => c.key === type);
+  if (!config) return 1.0;
+
+  if (config.subOptions?.length > 0) {
+    // ASAP-like: modifier lives on the sub-option (REGULAR, PRIORITY)
+    const sub = config.subOptions.find((s) => s.key === value);
+    return sub?.priceModifier ?? 1.0;
+  }
+
+  // Flat types (pooling, schedule): modifier lives on the parent
+  return config.priceModifier ?? 1.0;
 };
 
 export interface BookSlice {
@@ -33,7 +55,7 @@ export interface BookSlice {
   setPickUpAdditionalDetails: (details: string) => void;
   setDropOff: (details: LocationDetails) => void;
   setDropOffAdditionalDetails: (details: string) => void;
-  setBookingType: (type: BookingType) => void;
+  setBookingType: (payload: { type: Type; value: string }) => void;
   setSelectedVehicle: (vehicle: SelectedVehicle) => void;
 
   setNote: (note: string) => void;
@@ -43,15 +65,20 @@ export interface BookSlice {
   setPhoto: (photo: string) => void;
   removePhoto: (photo: string) => void;
 
-  calculatePrice: () => Promise<number>; // Now returns Promise since it's async
+  calculatePrice: () => Promise<number>;
 
   clearStates: () => void;
 }
 
-export const createBookSlice: StateCreator<BookSlice> = (set, get) => ({
+export const createBookSlice: StateCreator<
+  BookSlice & BookingTypeSlice, // gives get() visibility into bookingTypes
+  [],
+  [],
+  BookSlice
+> = (set, get) => ({
   pickUp: null,
   dropOff: null,
-  bookingType: { type: "asap", value: "REGULAR" },
+  bookingType: { type: "asap", value: "REGULAR", priceModifier: 1.0 },
   selectedVehicle: null,
   routeData: {
     distance: 0,
@@ -61,7 +88,6 @@ export const createBookSlice: StateCreator<BookSlice> = (set, get) => ({
     serviceFee: 0,
     totalPrice: 0,
   },
-
   paymentMethod: "cash",
   note: "",
   itemType: null,
@@ -71,13 +97,11 @@ export const createBookSlice: StateCreator<BookSlice> = (set, get) => ({
   toggleService: (service: Service) =>
     set((state) => {
       const exists = state.addedServices.some((s) => s.key === service.key);
-
       const updatedServices = exists
         ? state.addedServices.filter((s) => s.key !== service.key)
         : [...state.addedServices, service];
 
       const serviceFee = updatedServices.reduce((sum, s) => sum + s.price, 0);
-
       const { basePrice, distanceFee } = state.routeData;
 
       return {
@@ -89,18 +113,14 @@ export const createBookSlice: StateCreator<BookSlice> = (set, get) => ({
         },
       };
     }),
-  updateServiceQuantity: (
-    serviceKey: string,
-    originalPrice: number,
-    quantity: number,
-  ) =>
+
+  updateServiceQuantity: (serviceKey, originalPrice, quantity) =>
     set((state) => {
       const updatedServices = state.addedServices.map((service) =>
         service.key === serviceKey
           ? { ...service, quantity, price: originalPrice * quantity }
           : service,
       );
-
       const serviceFee = updatedServices.reduce((sum, s) => sum + s.price, 0);
       const { basePrice, distanceFee } = state.routeData;
 
@@ -114,31 +134,35 @@ export const createBookSlice: StateCreator<BookSlice> = (set, get) => ({
       };
     }),
 
-  setPickUp: (details: LocationDetails) => set({ pickUp: details }),
-  setPickUpAdditionalDetails: (additionalDetails: string) =>
+  setPickUp: (details) => set({ pickUp: details }),
+  setPickUpAdditionalDetails: (additionalDetails) =>
     set((state) => ({
       pickUp: state.pickUp
         ? { ...state.pickUp, additionalDetails: additionalDetails.trim() }
         : null,
     })),
-  setDropOff: (details: LocationDetails) => set({ dropOff: details }),
-  setDropOffAdditionalDetails: (additionalDetails: string) =>
+  setDropOff: (details) => set({ dropOff: details }),
+  setDropOffAdditionalDetails: (additionalDetails) =>
     set((state) => ({
       dropOff: state.dropOff ? { ...state.dropOff, additionalDetails } : null,
     })),
-  setBookingType: (type) => set({ bookingType: type }),
-  setSelectedVehicle: (vehicle) => set({ selectedVehicle: vehicle }),
 
+  setBookingType: ({ type, value }) => {
+    const priceModifier = resolveModifier(get().bookingTypes, type, value);
+    set({ bookingType: { type, value, priceModifier } });
+  },
+
+  setSelectedVehicle: (vehicle) => set({ selectedVehicle: vehicle }),
   setNote: (note) => set({ note }),
   setItemType: (itemType) => set({ itemType }),
-  setPhoto: (photos) => set((state) => ({ photos: [...state.photos, photos] })),
+  setPhoto: (photo) => set((state) => ({ photos: [...state.photos, photo] })),
   removePhoto: (photo) =>
     set((state) => ({ photos: state.photos.filter((p) => p !== photo) })),
-  setPaymentMethod: (method: "cash" | "gcash") =>
-    set({ paymentMethod: method }),
+  setPaymentMethod: (method) => set({ paymentMethod: method }),
 
   calculatePrice: async () => {
-    const { selectedVehicle, addedServices, pickUp, dropOff } = get();
+    const { selectedVehicle, addedServices, pickUp, dropOff, bookingType } =
+      get();
 
     if (!pickUp || !dropOff || !selectedVehicle || !selectedVehicle.variant) {
       set({
@@ -164,14 +188,15 @@ export const createBookSlice: StateCreator<BookSlice> = (set, get) => ({
       const variant = selectedVehicle.variant;
       const basePrice = variant.baseFare;
 
-      // Find the appropriate pricing tier based on distance
       const tier = variant.pricingTiers.find(
         (t) =>
           distanceKm >= t.minKm &&
           (t.maxKm === undefined || distanceKm <= t.maxKm),
       );
 
-      const distanceFee = tier ? distanceKm * tier.pricePerKm : 0;
+      let distanceFee = tier ? distanceKm * tier.pricePerKm : 0;
+      distanceFee *= bookingType.priceModifier; // driven by DB — no more hardcoded string checks
+
       const serviceFee = addedServices.reduce((sum, s) => sum + s.price, 0);
       const totalPrice = basePrice + distanceFee + serviceFee;
 
@@ -202,11 +227,17 @@ export const createBookSlice: StateCreator<BookSlice> = (set, get) => ({
       return 0;
     }
   },
+
   clearStates: () =>
-    set({
+    set((state) => ({
       pickUp: null,
       dropOff: null,
-      bookingType: { type: "asap", value: "REGULAR" },
+      // Re-resolve so default reflects configs even if they loaded after app boot
+      bookingType: {
+        type: "asap",
+        value: "REGULAR",
+        priceModifier: resolveModifier(state.bookingTypes, "asap", "REGULAR"),
+      },
       selectedVehicle: null,
       routeData: {
         distance: 0,
@@ -221,5 +252,5 @@ export const createBookSlice: StateCreator<BookSlice> = (set, get) => ({
       photos: [],
       paymentMethod: "cash",
       addedServices: [],
-    }),
+    })),
 });

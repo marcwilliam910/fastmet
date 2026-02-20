@@ -1,5 +1,8 @@
 import useSeeMoreDetails from "@/hooks/useSeeMoreDetails";
-import { useMarkAsReadMutation, useRateDriverMutation } from "@/mutations/booking";
+import {
+  useMarkAsReadMutation,
+  useRateDriverMutation,
+} from "@/mutations/booking";
 import { useUserBookings } from "@/queries/bookingQueries";
 import { useAppStore } from "@/store/useAppStore";
 import { CompletedBooking, LocationDetails } from "@/types/book";
@@ -22,7 +25,15 @@ import {
 } from "react-native";
 import ImageView from "react-native-image-viewing";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { AttachedImages, ItemType, LocationUI, Note, PaymentInfo, SeeMoreHeader, SelectedServices } from "../BookingSeeMoreInfo";
+import {
+  AttachedImages,
+  ItemType,
+  LocationUI,
+  Note,
+  PaymentInfo,
+  SeeMoreHeader,
+  SelectedServices,
+} from "../BookingSeeMoreInfo";
 import StarDisplay from "../StarDisplay";
 
 export default function CompletedRoute({ count }: { count: number }) {
@@ -39,8 +50,8 @@ export default function CompletedRoute({ count }: { count: number }) {
     isFetchingNextPage,
   } = useUserBookings<CompletedBooking>("completed", 5);
 
-
-  const { mutate: markAsReadBooking, isPending: isMarkingAsRead } = useMarkAsReadMutation();
+  const { mutate: markAsReadBooking, isPending: isMarkingAsRead } =
+    useMarkAsReadMutation();
 
   useEffect(() => {
     if (count > 0) markAsReadBooking("completed");
@@ -273,7 +284,7 @@ function SeeMoreModal({
             setUserRating(0);
             onClose();
           },
-        }
+        },
       );
     }
   };
@@ -287,27 +298,31 @@ function SeeMoreModal({
     return () => clearTimeout(timeoutId);
   }, [visible, data.driverRating]);
 
-
   // Memoize calculations to prevent recalculation on every render
-  const { totalServicesPrice, hasAddedServices, hasFreeServices } = useMemo(() => {
-    if (!data) return { totalServicesPrice: 0, hasAddedServices: false, hasFreeServices: false };
+  const { totalServicesPrice, hasAddedServices, hasFreeServices } =
+    useMemo(() => {
+      if (!data)
+        return {
+          totalServicesPrice: 0,
+          hasAddedServices: false,
+          hasFreeServices: false,
+        };
 
-    const addedServices = data.addedServices ?? [];
-    const freeServices = data.selectedVehicle?.freeServices ?? [];
+      const addedServices = data.addedServices ?? [];
+      const freeServices = data.selectedVehicle?.freeServices ?? [];
 
-    return {
-      // service.price is already total (unit price × quantity) from bookSlice
-      totalServicesPrice: addedServices.reduce(
-        (total, service) => total + service.price,
-        0,
-      ),
-      hasAddedServices: addedServices.length > 0,
-      hasFreeServices: freeServices.length > 0,
-    };
-  }, [data]);
+      return {
+        // service.price is already total (unit price × quantity) from bookSlice
+        totalServicesPrice: addedServices.reduce(
+          (total, service) => total + service.price,
+          0,
+        ),
+        hasAddedServices: addedServices.length > 0,
+        hasFreeServices: freeServices.length > 0,
+      };
+    }, [data]);
 
   if (!data) return null;
-
 
   return (
     <Modal
@@ -359,65 +374,67 @@ function SeeMoreModal({
           </View>
 
           {/* Driver Info */}
-          <View className="px-4 py-3">
-            <Text className="mb-1 text-sm font-semibold text-gray-500">
-              Driver
-            </Text>
-            <View className="flex-row items-center justify-between">
-              <View className="flex-row items-center justify-center gap-2">
-                {data.driver.profilePictureUrl ? (
-                  <Pressable
-                    className="w-[48px] h-[48px] rounded-full overflow-hidden"
-                    onPress={() =>
-                      openImageViewer(data.driver.profilePictureUrl)
-                    }
-                  >
-                    <Image
-                      source={{ uri: data.driver.profilePictureUrl }}
-                      style={{ width: "100%", height: "100%" }}
-                      contentFit="cover"
-                    />
-                  </Pressable>
-                ) : (
-                  <Ionicons name="person-circle" size={44} color="#F7931E" />
-                )}
-                <View>
-                  <Text className="text-lg font-semibold text-gray-800">
-                    {data.driver.name}
-                  </Text>
-                  <View className="flex-row items-center gap-2 ">
-                    <StarDisplay rating={data.driver.rating} />
-                    <Text className="text-sm font-semibold text-gray-600">
-                      ({data.driver.rating})
+          {data.driverRating !== null && (
+            <View className="px-4 py-3">
+              <Text className="mb-1 text-sm font-semibold text-gray-500">
+                Driver
+              </Text>
+              <View className="flex-row items-center justify-between">
+                <View className="flex-row items-center justify-center gap-2">
+                  {data.driver.profilePictureUrl ? (
+                    <Pressable
+                      className="w-[48px] h-[48px] rounded-full overflow-hidden"
+                      onPress={() =>
+                        openImageViewer(data.driver.profilePictureUrl)
+                      }
+                    >
+                      <Image
+                        source={{ uri: data.driver.profilePictureUrl }}
+                        style={{ width: "100%", height: "100%" }}
+                        contentFit="cover"
+                      />
+                    </Pressable>
+                  ) : (
+                    <Ionicons name="person-circle" size={44} color="#F7931E" />
+                  )}
+                  <View>
+                    <Text className="text-lg font-semibold text-gray-800">
+                      {data.driver.name}
                     </Text>
+                    <View className="flex-row items-center gap-2 ">
+                      <StarDisplay rating={data.driver.rating} />
+                      <Text className="text-sm font-semibold text-gray-600">
+                        ({data.driver.rating})
+                      </Text>
+                    </View>
                   </View>
                 </View>
-              </View>
 
-              <Pressable
-                className="items-center active:scale-110"
-                onPress={() =>
-                  router.push({
-                    pathname: "/message",
-                    params: {
-                      conversationId: createConversationId(
-                        useAppStore.getState().id!,
-                        data.driver.id
-                      ),
-                    },
-                  })
-                }
-                hitSlop={20}
-              >
-                <Ionicons
-                  name="chatbubble-ellipses"
-                  size={Platform.OS === "ios" ? 28 : 24}
-                  color="#F7931E"
-                />
-                <Text className="text-sm text-gray-600">Chat</Text>
-              </Pressable>
+                <Pressable
+                  className="items-center active:scale-110"
+                  onPress={() =>
+                    router.push({
+                      pathname: "/message",
+                      params: {
+                        conversationId: createConversationId(
+                          useAppStore.getState().id!,
+                          data.driver.id,
+                        ),
+                      },
+                    })
+                  }
+                  hitSlop={20}
+                >
+                  <Ionicons
+                    name="chatbubble-ellipses"
+                    size={Platform.OS === "ios" ? 28 : 24}
+                    color="#F7931E"
+                  />
+                  <Text className="text-sm text-gray-600">Chat</Text>
+                </Pressable>
+              </View>
             </View>
-          </View>
+          )}
 
           {/* Location Details */}
           <View className="p-5 bg-gray-50 rounded-2xl">
@@ -425,10 +442,7 @@ function SeeMoreModal({
               Trip Details
             </Text>
 
-            <LocationUI
-              pickUp={data.pickUp}
-              dropOff={data.dropOff}
-            />
+            <LocationUI pickUp={data.pickUp} dropOff={data.dropOff} />
 
             {/* Distance */}
             <View className="flex-row items-center justify-between p-3 mt-4 bg-white rounded-lg">
@@ -464,7 +478,10 @@ function SeeMoreModal({
           </View>
 
           {/* Payment Info */}
-          <PaymentInfo paymentMethod={data.paymentMethod} routeData={data.routeData} />
+          <PaymentInfo
+            paymentMethod={data.paymentMethod}
+            routeData={data.routeData}
+          />
 
           {/* Delivery Proof Images */}
           <View className="p-5 bg-gray-50 rounded-2xl">
@@ -493,7 +510,7 @@ function SeeMoreModal({
                     <Pressable
                       onPress={() =>
                         openImageViewer(
-                          data.bookingImages.pickup.beforeImageUrl
+                          data.bookingImages.pickup.beforeImageUrl,
                         )
                       }
                       className="flex-1"
@@ -548,7 +565,7 @@ function SeeMoreModal({
                     <Pressable
                       onPress={() =>
                         openImageViewer(
-                          data.bookingImages.dropoff.receiptImageUrl
+                          data.bookingImages.dropoff.receiptImageUrl,
                         )
                       }
                       className="flex-1"
@@ -572,7 +589,7 @@ function SeeMoreModal({
                     <Pressable
                       onPress={() =>
                         openImageViewer(
-                          data.bookingImages.dropoff.packageImageUrl
+                          data.bookingImages.dropoff.packageImageUrl,
                         )
                       }
                       className="flex-1"
@@ -608,20 +625,19 @@ function SeeMoreModal({
           )}
 
           {/* Item Type */}
-          {data.itemType && (
-            <ItemType itemType={data.itemType} />
-          )}
+          {data.itemType && <ItemType itemType={data.itemType} />}
 
           {/* Note */}
-          {data.note && (
-            <Note note={data.note} />
-          )}
+          {data.note && <Note note={data.note} />}
 
           {/* Images */}
           {data.photos && data.photos.length > 0 && (
-            <AttachedImages photos={data.photos} setImageViewerVisible={setIsImageViewVisible} setSelectedImageUrl={setSelectedImage} />
+            <AttachedImages
+              photos={data.photos}
+              setImageViewerVisible={setIsImageViewVisible}
+              setSelectedImageUrl={setSelectedImage}
+            />
           )}
-
         </ScrollView>
 
         {/* Floating Rating Card */}
@@ -675,8 +691,9 @@ function SeeMoreModal({
             <Pressable
               onPress={handleRateDriver}
               disabled={userRating === 0 || isPending}
-              className={`py-3 rounded-xl ${userRating > 0 ? "bg-lightPrimary" : "bg-gray-300"
-                }`}
+              className={`py-3 rounded-xl ${
+                userRating > 0 ? "bg-lightPrimary" : "bg-gray-300"
+              }`}
             >
               <Text className="text-base font-semibold text-center text-white">
                 {isPending

@@ -1,6 +1,7 @@
 import { useSocket } from "@/sockets/context/SocketProvider";
 import { Driver, LocationDetails, RouteData } from "@/types/book";
 import { GOOGLE_MAPS_API_KEY, STATIC_IMAGES } from "@/utils/constants";
+import { Image } from "expo-image";
 import { useFocusEffect } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { StatusBar, StyleSheet, View } from "react-native";
@@ -48,7 +49,7 @@ export default function LiveTrackingMapScreen({
     useCallback(() => {
       StatusBar.setHidden(true);
       return () => StatusBar.setHidden(false);
-    }, [])
+    }, []),
   );
 
   // request driver location
@@ -84,7 +85,7 @@ export default function LiveTrackingMapScreen({
         socket.off("driverLocationResponse", handleDriverLocationResponse);
         console.log("🔌 Unsubscribed from driver location");
       };
-    }, [bookingId, driver.id, socket])
+    }, [bookingId, driver.id, socket]),
   );
 
   useEffect(() => {
@@ -117,23 +118,37 @@ export default function LiveTrackingMapScreen({
                 longitude: pickUp.coords.lng,
               }}
               title="Pick Up"
-              image={STATIC_IMAGES.pickup}
-            />
+              anchor={{ x: 0.5, y: 0.5 }}
+              centerOffset={{ x: 0, y: 0 }}
+              tracksViewChanges={false}
+              zIndex={1000}
+            >
+              <Image
+                source={STATIC_IMAGES.pickup}
+                style={{ width: 50, height: 50 }}
+                contentFit="contain"
+              />
+            </Marker>
           )}
-
           {/* DRIVER LOCATION */}
           {driverLocation && !isLoadingDriverLocation && (
             <Marker
-              image={STATIC_IMAGES.driver}
               coordinate={{
                 latitude: driverLocation.lat,
                 longitude: driverLocation.lng,
               }}
               title={driver.name ? `Driver - ${driver.name}` : "Your Driver"}
               // rotation={driverLocation.heading}
+              centerOffset={{ x: 0, y: 0 }}
               anchor={{ x: 0.5, y: 0.5 }}
               zIndex={1000}
-            />
+            >
+              <Image
+                source={STATIC_IMAGES.driver}
+                style={{ width: 40, height: 40 }}
+                contentFit="contain"
+              />
+            </Marker>
           )}
 
           {/* route line */}
@@ -144,8 +159,17 @@ export default function LiveTrackingMapScreen({
                 longitude: dropOff.coords.lng,
               }}
               title="Drop Off"
-              image={STATIC_IMAGES.dropoff}
-            />
+              anchor={{ x: 0.5, y: 0.5 }}
+              centerOffset={{ x: 0, y: 0 }}
+              tracksViewChanges={false}
+              zIndex={1000}
+            >
+              <Image
+                source={STATIC_IMAGES.dropoff}
+                style={{ width: 50, height: 50 }}
+                contentFit="contain"
+              />
+            </Marker>
           )}
 
           {pickUp && dropOff && (

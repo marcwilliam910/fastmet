@@ -24,11 +24,11 @@ export const createVehicleSlice: StateCreator<VehicleSlice> = (set) => ({
           headers: {
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       if (!res.ok) {
-        throw new Error(`Failed to fetch fare rates: ${res.status}`);
+        throw new Error(`Failed to fetch vehicles: ${res.status}`);
       }
 
       const vehicle = await res.json();
