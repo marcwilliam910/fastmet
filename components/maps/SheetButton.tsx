@@ -1,7 +1,7 @@
 import { useAuth } from "@/hooks/useAuth";
 import { useAppStore } from "@/store/useAppStore";
 import { router } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
@@ -22,9 +22,7 @@ const SheetButton = ({
   const pickUp = useAppStore((state) => state.pickUp);
   const dropOff = useAppStore((state) => state.dropOff);
   const routeData = useAppStore((state) => state.routeData);
-  const calculatePrice = useAppStore((state) => state.calculatePrice);
   const isProfileComplete = useAppStore((state) => state.isProfileComplete);
-  const bookingType = useAppStore((state) => state.bookingType);
 
   const handleNext = () => {
     if (!isLoggedIn) setShowModal(true);
@@ -44,11 +42,6 @@ const SheetButton = ({
 
   const isDisable =
     !selectedVehicle || !pickUp || !dropOff || !routeData.totalPrice;
-  useEffect(() => {
-    if (pickUp && dropOff && selectedVehicle?.variant) {
-      calculatePrice();
-    }
-  }, [pickUp, dropOff, selectedVehicle?.variant, calculatePrice, bookingType]);
 
   return (
     <View

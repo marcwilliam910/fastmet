@@ -45,6 +45,7 @@ export default function PhoneOTPScreen() {
     };
 
     initCountdown();
+    setTimeout(() => inputRefs.current[0]?.focus(), 50);
   }, []);
 
   // Separate effect for countdown logic
@@ -149,8 +150,8 @@ export default function PhoneOTPScreen() {
         ) {
           Toast.show({
             type: "success",
-            text1: "Login successful",
-            text2: "Welcome back!",
+            text1: "Verified!",
+            text2: "Welcome to Fastmet",
             position: "top",
             visibilityTime: 5_000,
             swipeable: true,
@@ -169,7 +170,7 @@ export default function PhoneOTPScreen() {
           error.response?.data?.error ||
             (minutes
               ? `Too many failed attempts. Try again in ${minutes} minute${minutes > 1 ? "s" : ""}.`
-              : "Too many attempts. Please try again later.")
+              : "Too many attempts. Please try again later."),
         );
       } else {
         setError(error.response?.data?.error || "Something went wrong");

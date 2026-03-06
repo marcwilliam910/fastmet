@@ -600,19 +600,21 @@ const RequestCard = ({
                 >
                   <Ionicons name="close" size={18} color="#333" />
                   <Text className="ml-2 font-medium text-gray-700">
-                    Cancel Book
+                    Cancel Booking
                   </Text>
                 </Pressable>
 
-                <Pressable
-                  className="flex-row items-center justify-center flex-1 py-3 ml-2 border border-lightPrimary rounded-xl active:bg-gray-50"
-                  onPress={onReschedule}
-                >
-                  <Ionicons name="time-outline" size={18} color="#333" />
-                  <Text className="ml-2 font-medium text-gray-700">
-                    Reschedule
-                  </Text>
-                </Pressable>
+                {bookingType.type === "schedule" && (
+                  <Pressable
+                    className="flex-row items-center justify-center flex-1 py-3 ml-2 border border-lightPrimary rounded-xl active:bg-gray-50"
+                    onPress={onReschedule}
+                  >
+                    <Ionicons name="time-outline" size={18} color="#333" />
+                    <Text className="ml-2 font-medium text-gray-700">
+                      Reschedule
+                    </Text>
+                  </Pressable>
+                )}
               </View>
             )}
           </View>

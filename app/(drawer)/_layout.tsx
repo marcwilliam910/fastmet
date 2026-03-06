@@ -23,7 +23,6 @@ const CustomDrawerContent = (props: any) => {
   const { state, descriptors, navigation } = props;
 
   const handlePress = (routeName: string) => {
-
     if (!isLoggedIn && routeName !== "book") {
       props.setShowNotLoggedInModal(true); // open login modal
       return;
@@ -222,14 +221,14 @@ export default function DrawerLayout() {
         />
 
         <Drawer.Screen
-          name="favorite"
+          name="support"
           options={{
-            drawerLabel: "Favorite",
-            title: "Favorite",
+            drawerLabel: "Customer Support",
+            title: "Customer Support",
             headerShown: true,
             drawerIcon: ({ focused }) => (
               <Ionicons
-                name={focused ? "heart" : "heart-outline"}
+                name={focused ? "headset" : "headset-outline"}
                 size={24}
                 color={focused ? "#FFA840" : "#FFFFFF"}
               />

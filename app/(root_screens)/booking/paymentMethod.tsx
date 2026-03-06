@@ -124,6 +124,8 @@ export default function PaymentMethod() {
         socket.emit("request_asap_booking", payload);
       } else if (bookingType.type === "schedule") {
         socket.emit("request_schedule_booking", payload);
+      } else if (bookingType.type === "pooling") {
+        socket.emit("request_pooling_booking", payload);
       }
     } catch (error) {
       console.error("Booking submission error:", error);
@@ -271,10 +273,11 @@ export default function PaymentMethod() {
         {/* Cash Payment Option */}
         <Pressable
           onPress={() => setPaymentMethod("cash")}
-          className={`flex-row items-center justify-between rounded-xl border px-4 py-3 ${paymentMethod === "cash"
-            ? "border-[#FFA840] bg-[#FFF6EB]"
-            : "border-gray-300 bg-white"
-            }`}
+          className={`flex-row items-center justify-between rounded-xl border px-4 py-3 ${
+            paymentMethod === "cash"
+              ? "border-[#FFA840] bg-[#FFF6EB]"
+              : "border-gray-300 bg-white"
+          }`}
         >
           <View className="flex-row gap-3 items-center">
             <View className="justify-center items-center w-10 h-10 bg-blue-50 rounded-full">
@@ -301,10 +304,11 @@ export default function PaymentMethod() {
         {/* GCash Payment Option */}
         <Pressable
           onPress={() => setPaymentMethod("gcash")}
-          className={`flex-row items-center justify-between rounded-xl border px-4 py-3 ${paymentMethod === "gcash"
-            ? "border-[#FFA840] bg-[#FFF6EB]"
-            : "border-gray-300 bg-white"
-            }`}
+          className={`flex-row items-center justify-between rounded-xl border px-4 py-3 ${
+            paymentMethod === "gcash"
+              ? "border-[#FFA840] bg-[#FFF6EB]"
+              : "border-gray-300 bg-white"
+          }`}
         >
           <View className="flex-row gap-3 items-center">
             <View className="justify-center items-center w-10 h-10 bg-blue-50 rounded-full">

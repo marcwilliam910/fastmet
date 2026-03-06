@@ -1,10 +1,11 @@
+import { Type } from "@/store/slices/bookSlice";
+import { useAppStore } from "@/store/useAppStore";
 import { LocationDetails, RouteData } from "@/types/book";
 import { GOOGLE_MAPS_API_KEY, STATIC_IMAGES } from "@/utils/constants";
-import { Image } from "expo-image";
 import * as Location from "expo-location";
 import { useFocusEffect } from "expo-router";
 import React, { memo, useCallback, useEffect, useRef, useState } from "react";
-import { Alert, StatusBar, StyleSheet, Text, View } from "react-native";
+import { Alert, Image, StatusBar, StyleSheet, Text, View } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import MapViewDirections from "react-native-maps-directions";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -22,6 +23,7 @@ type Props = {
   region: Region | null;
   setRegion: React.Dispatch<React.SetStateAction<Region | null>>;
   setIsDragging: React.Dispatch<React.SetStateAction<boolean>>;
+  bookingType: Type;
 };
 
 function MapScreen({
@@ -31,9 +33,13 @@ function MapScreen({
   region,
   setRegion,
   setIsDragging,
+  bookingType,
 }: Props) {
   const mapRef = useRef<MapView>(null);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [pickupImageLoaded, setPickupImageLoaded] = useState(false);
+  const [dropoffImageLoaded, setDropoffImageLoaded] = useState(false);
+  const setLoading = useAppStore((state) => state.setLoading);
 
   useFocusEffect(
     useCallback(() => {
@@ -49,6 +55,7 @@ function MapScreen({
 
     (async () => {
       try {
+        setLoading(true);
         const { status } = await Location.requestForegroundPermissionsAsync();
         if (status !== "granted") {
           Alert.alert(
@@ -76,13 +83,15 @@ function MapScreen({
           "Location Error",
           "Unable to retrieve your current location. Please ensure location services are enabled.",
         );
+      } finally {
+        setLoading(false);
       }
     })();
 
     return () => {
       isMounted = false;
     };
-  }, [setRegion]);
+  }, [setLoading, setRegion]);
 
   // Update the useEffect
   useEffect(() => {
@@ -119,45 +128,7 @@ function MapScreen({
           onTouchEnd={() => setIsDragging(false)}
           onTouchCancel={() => setIsDragging(false)}
         >
-          {pickUp && (
-            <Marker
-              coordinate={{
-                latitude: pickUp.coords.lat,
-                longitude: pickUp.coords.lng,
-              }}
-              title="Pick Up"
-              anchor={{ x: 0.5, y: 0.5 }}
-              centerOffset={{ x: 0, y: 0 }}
-              tracksViewChanges={false}
-              zIndex={1000}
-            >
-              <Image
-                source={STATIC_IMAGES.pickup}
-                style={{ width: 50, height: 50 }}
-                contentFit="contain"
-              />
-            </Marker>
-          )}
-
-          {dropOff && (
-            <Marker
-              coordinate={{
-                latitude: dropOff.coords.lat,
-                longitude: dropOff.coords.lng,
-              }}
-              title="Drop Off"
-              anchor={{ x: 0.5, y: 0.5 }}
-              centerOffset={{ x: 0, y: 0 }}
-              tracksViewChanges={false}
-              zIndex={1000}
-            >
-              <Image
-                source={STATIC_IMAGES.dropoff}
-                style={{ width: 50, height: 50 }}
-                contentFit="contain"
-              />
-            </Marker>
-          )}
+          {/* POLYLINE FIRST - renders at bottom */}
           {pickUp && dropOff && (
             <MapViewDirections
               origin={{
@@ -185,12 +156,77 @@ function MapScreen({
               }}
             />
           )}
+
+          {/* MARKERS LAST - renders on top */}
+          {pickUp && (
+            <Marker
+              key={`pickup-${pickUp.coords.lat}-${pickUp.coords.lng}`}
+              coordinate={{
+                latitude: pickUp.coords.lat,
+                longitude: pickUp.coords.lng,
+              }}
+              title="Pick Up"
+              anchor={{ x: 0.5, y: 0.5 }}
+              tracksViewChanges={!pickupImageLoaded}
+              zIndex={1000}
+              opacity={1} // ← Explicitly set opacity
+            >
+              <View style={{ opacity: 1 }}>
+                <Image
+                  source={STATIC_IMAGES.pickup}
+                  style={{
+                    width: 50,
+                    height: 50,
+                    opacity: 1, // ← Force full opacity
+                  }}
+                  resizeMode="contain"
+                  onLoad={() => setPickupImageLoaded(true)}
+                  onError={(e) => {
+                    console.error("Pickup image error:", e.nativeEvent.error);
+                    setPickupImageLoaded(true);
+                  }}
+                />
+              </View>
+            </Marker>
+          )}
+
+          {dropOff && (
+            <Marker
+              key={`dropoff-${dropOff.coords.lat}-${dropOff.coords.lng}`}
+              coordinate={{
+                latitude: dropOff.coords.lat,
+                longitude: dropOff.coords.lng,
+              }}
+              title="Drop Off"
+              anchor={{ x: 0.5, y: 0.5 }}
+              tracksViewChanges={!dropoffImageLoaded}
+              zIndex={1001} // ← Higher than pickup
+              opacity={1} // ← Explicitly set opacity
+            >
+              <View style={{ opacity: 1 }}>
+                <Image
+                  source={STATIC_IMAGES.dropoff}
+                  style={{
+                    width: 50,
+                    height: 50,
+                    opacity: 1, // ← Force full opacity
+                  }}
+                  resizeMode="contain"
+                  onLoad={() => setDropoffImageLoaded(true)}
+                  onError={(e) => {
+                    console.error("Dropoff image error:", e.nativeEvent.error);
+                    setDropoffImageLoaded(true);
+                  }}
+                />
+              </View>
+            </Marker>
+          )}
         </MapView>
       )}
 
-      {routeData.distance > 0 && routeData.duration > 0 && (
-        <DistanceBubble routeData={routeData} />
-      )}
+      {routeData.distance > 0 &&
+        routeData.duration > 0 &&
+        bookingType !== "pooling" && <DistanceBubble routeData={routeData} />}
     </View>
   );
 }

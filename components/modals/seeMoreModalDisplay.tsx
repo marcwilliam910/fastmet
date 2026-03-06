@@ -16,7 +16,15 @@ import {
 } from "react-native";
 import ImageView from "react-native-image-viewing";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { AttachedImages, ItemType, LocationUI, Note, PaymentInfo, SeeMoreHeader, SelectedServices } from "../BookingSeeMoreInfo";
+import {
+  AttachedImages,
+  ItemType,
+  LocationUI,
+  Note,
+  PaymentInfo,
+  SeeMoreHeader,
+  SelectedServices,
+} from "../BookingSeeMoreInfo";
 import StarDisplay from "../StarDisplay";
 
 function isActiveBooking(
@@ -43,22 +51,28 @@ export default function SeeMoreModalDisplay({
   const [selectedImageUrl, setSelectedImageUrl] = useState("");
 
   // Memoize calculations to prevent recalculation on every render
-  const { totalServicesPrice, hasAddedServices, hasFreeServices } = useMemo(() => {
-    if (!data) return { totalServicesPrice: 0, hasAddedServices: false, hasFreeServices: false };
+  const { totalServicesPrice, hasAddedServices, hasFreeServices } =
+    useMemo(() => {
+      if (!data)
+        return {
+          totalServicesPrice: 0,
+          hasAddedServices: false,
+          hasFreeServices: false,
+        };
 
-    const addedServices = data.addedServices ?? [];
-    const freeServices = data.selectedVehicle?.freeServices ?? [];
+      const addedServices = data.addedServices ?? [];
+      const freeServices = data.selectedVehicle?.freeServices ?? [];
 
-    return {
-      // service.price is already total (unit price × quantity) from bookSlice
-      totalServicesPrice: addedServices.reduce(
-        (total, service) => total + service.price,
-        0,
-      ),
-      hasAddedServices: addedServices.length > 0,
-      hasFreeServices: freeServices.length > 0,
-    };
-  }, [data]);
+      return {
+        // service.price is already total (unit price × quantity) from bookSlice
+        totalServicesPrice: addedServices.reduce(
+          (total, service) => total + service.price,
+          0,
+        ),
+        hasAddedServices: addedServices.length > 0,
+        hasFreeServices: freeServices.length > 0,
+      };
+    }, [data]);
 
   if (!data) return null;
 
@@ -200,10 +214,7 @@ export default function SeeMoreModalDisplay({
               Trip Details
             </Text>
 
-            <LocationUI
-              pickUp={data.pickUp}
-              dropOff={data.dropOff}
-            />
+            <LocationUI pickUp={data.pickUp} dropOff={data.dropOff} />
 
             {/* Distance */}
             <View className="flex-row items-center justify-between p-3 mt-4 bg-white rounded-lg">
@@ -218,7 +229,9 @@ export default function SeeMoreModalDisplay({
               <Text className="text-sm font-semibold text-gray-600">
                 {data.bookingType.type === "schedule"
                   ? "Scheduled on"
-                  : data.bookingType.type.toUpperCase()}
+                  : data.bookingType.type === "pooling"
+                    ? "Booking Type"
+                    : data.bookingType.type.toUpperCase()}
               </Text>
               {data.bookingType.type === "schedule" ? (
                 <Text className="text-sm font-bold text-gray-600">
@@ -239,7 +252,10 @@ export default function SeeMoreModalDisplay({
           </View>
 
           {/* Payment Info */}
-          <PaymentInfo paymentMethod={data.paymentMethod} routeData={data.routeData} />
+          <PaymentInfo
+            paymentMethod={data.paymentMethod}
+            routeData={data.routeData}
+          />
 
           {/* Selected Services */}
           {(hasFreeServices || hasAddedServices) && (
@@ -253,18 +269,18 @@ export default function SeeMoreModalDisplay({
           )}
 
           {/* Item Type */}
-          {data.itemType && (
-            <ItemType itemType={data.itemType} />
-          )}
+          {data.itemType && <ItemType itemType={data.itemType} />}
 
           {/* Note */}
-          {data.note && (
-            <Note note={data.note} />
-          )}
+          {data.note && <Note note={data.note} />}
 
           {/* Images */}
           {data.photos && data.photos.length > 0 && (
-            <AttachedImages photos={data.photos} setImageViewerVisible={setImageViewerVisible} setSelectedImageUrl={setSelectedImageUrl} />
+            <AttachedImages
+              photos={data.photos}
+              setImageViewerVisible={setImageViewerVisible}
+              setSelectedImageUrl={setSelectedImageUrl}
+            />
           )}
 
           {type === "Active Booking" && (

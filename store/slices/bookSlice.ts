@@ -1,9 +1,9 @@
 import type { LocationDetails, RouteData } from "@/types/book";
 import { BookingTypeConfig } from "@/types/bookingType";
 import { SelectedVehicle, Service } from "@/types/vehicle";
-import { fetchDrivingDistance } from "@/utils/helpers/calculatePrice";
 import { StateCreator } from "zustand";
 import { BookingTypeSlice } from "./bookingTypeSlice";
+import { LoadingSlice } from "./loadingStore";
 
 export type Type = "asap" | "pooling" | "schedule";
 
@@ -57,7 +57,7 @@ export interface BookSlice {
   setDropOffAdditionalDetails: (details: string) => void;
   setBookingType: (payload: { type: Type; value: string }) => void;
   setSelectedVehicle: (vehicle: SelectedVehicle) => void;
-
+  setRouteData: (data: RouteData) => void;
   setNote: (note: string) => void;
   setItemType: (itemType: string | null) => void;
   setPaymentMethod: (method: "cash" | "gcash") => void;
@@ -65,13 +65,13 @@ export interface BookSlice {
   setPhoto: (photo: string) => void;
   removePhoto: (photo: string) => void;
 
-  calculatePrice: () => Promise<number>;
+  // calculatePrice: () => Promise<number>;
 
   clearStates: () => void;
 }
 
 export const createBookSlice: StateCreator<
-  BookSlice & BookingTypeSlice, // gives get() visibility into bookingTypes
+  BookSlice & BookingTypeSlice & LoadingSlice, // gives get() visibility into bookingTypes
   [],
   [],
   BookSlice
@@ -153,6 +153,7 @@ export const createBookSlice: StateCreator<
   },
 
   setSelectedVehicle: (vehicle) => set({ selectedVehicle: vehicle }),
+  setRouteData: (data) => set({ routeData: data }),
   setNote: (note) => set({ note }),
   setItemType: (itemType) => set({ itemType }),
   setPhoto: (photo) => set((state) => ({ photos: [...state.photos, photo] })),
@@ -160,73 +161,82 @@ export const createBookSlice: StateCreator<
     set((state) => ({ photos: state.photos.filter((p) => p !== photo) })),
   setPaymentMethod: (method) => set({ paymentMethod: method }),
 
-  calculatePrice: async () => {
-    const { selectedVehicle, addedServices, pickUp, dropOff, bookingType } =
-      get();
+  // calculatePrice: async () => {
+  //   const {
+  //     selectedVehicle,
+  //     addedServices,
+  //     pickUp,
+  //     dropOff,
+  //     bookingType,
+  //     setLoading,
+  //   } = get();
 
-    if (!pickUp || !dropOff || !selectedVehicle || !selectedVehicle.variant) {
-      set({
-        routeData: {
-          distance: 0,
-          duration: 0,
-          basePrice: 0,
-          distanceFee: 0,
-          serviceFee: 0,
-          totalPrice: 0,
-        },
-      });
-      return 0;
-    }
+  //   if (!pickUp || !dropOff || !selectedVehicle || !selectedVehicle.variant) {
+  //     set({
+  //       routeData: {
+  //         distance: 0,
+  //         duration: 0,
+  //         basePrice: 0,
+  //         distanceFee: 0,
+  //         serviceFee: 0,
+  //         totalPrice: 0,
+  //       },
+  //     });
+  //     return 0;
+  //   }
 
-    try {
-      const { distanceKm, durationMin } = await fetchDrivingDistance(
-        pickUp,
-        dropOff,
-        selectedVehicle.key,
-      );
+  //   try {
+  //     setLoading(true);
+  //     const { distanceKm, durationMin } = await fetchDrivingDistance(
+  //       pickUp,
+  //       dropOff,
+  //       selectedVehicle.key,
+  //     );
 
-      const variant = selectedVehicle.variant;
-      const basePrice = variant.baseFare;
+  //     const variant = selectedVehicle.variant;
+  //     const basePrice = variant.baseFare;
 
-      const tier = variant.pricingTiers.find(
-        (t) =>
-          distanceKm >= t.minKm &&
-          (t.maxKm === undefined || distanceKm <= t.maxKm),
-      );
+  //     const tier = variant.pricingTiers.find(
+  //       (t) =>
+  //         distanceKm >= t.minKm &&
+  //         (t.maxKm === undefined || distanceKm <= t.maxKm),
+  //     );
 
-      let distanceFee = tier ? distanceKm * tier.pricePerKm : 0;
-      distanceFee *= bookingType.priceModifier; // driven by DB — no more hardcoded string checks
+  //     let distanceFee = tier ? distanceKm * tier.pricePerKm : 0;
+  //     distanceFee *= bookingType.priceModifier; // driven by DB — no more hardcoded string checks
 
-      const serviceFee = addedServices.reduce((sum, s) => sum + s.price, 0);
-      const totalPrice = basePrice + distanceFee + serviceFee;
+  //     const serviceFee = addedServices.reduce((sum, s) => sum + s.price, 0);
+  //     const totalPrice = basePrice + distanceFee + serviceFee;
 
-      set({
-        routeData: {
-          distance: distanceKm,
-          duration: durationMin,
-          basePrice: Math.round(Math.round(basePrice * 100) / 100),
-          distanceFee: Math.round(Math.round(distanceFee * 100) / 100),
-          serviceFee: Math.round(Math.round(serviceFee * 100) / 100),
-          totalPrice: Math.round(Math.round(totalPrice * 100) / 100),
-        },
-      });
+  //     set({
+  //       routeData: {
+  //         distance: distanceKm,
+  //         duration: durationMin,
+  //         basePrice: Math.round(Math.round(basePrice * 100) / 100),
+  //         distanceFee: Math.round(Math.round(distanceFee * 100) / 100),
+  //         serviceFee: Math.round(Math.round(serviceFee * 100) / 100),
+  //         totalPrice: Math.round(Math.round(totalPrice * 100) / 100),
+  //       },
+  //     });
 
-      return totalPrice;
-    } catch (error) {
-      console.error("Error calculating price:", error);
-      set({
-        routeData: {
-          distance: 0,
-          duration: 0,
-          basePrice: 0,
-          distanceFee: 0,
-          serviceFee: 0,
-          totalPrice: 0,
-        },
-      });
-      return 0;
-    }
-  },
+  //     return totalPrice;
+  //   } catch (error) {
+  //     console.error("Error calculating price:", error);
+  //     set({
+  //       routeData: {
+  //         distance: 0,
+  //         duration: 0,
+  //         basePrice: 0,
+  //         distanceFee: 0,
+  //         serviceFee: 0,
+  //         totalPrice: 0,
+  //       },
+  //     });
+  //     return 0;
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // },
 
   clearStates: () =>
     set((state) => ({

@@ -40,7 +40,7 @@ export default function LiveTrackingMapScreen({
   const [driverLocation, setDriverLocation] = useState<{
     lat: number;
     lng: number;
-    heading: number;
+    // heading: number;
   } | null>(null);
   const [isLoadingDriverLocation, setIsLoadingDriverLocation] =
     useState<boolean>(false);
@@ -61,7 +61,7 @@ export default function LiveTrackingMapScreen({
       setIsLoadingDriverLocation(true);
 
       const handleDriverLocationResponse = (data: {
-        driverLoc: { lat: number; lng: number; heading: number } | null;
+        driverLoc: { lat: number; lng: number } | null;
       }) => {
         if (isSubscribed) {
           if (data.driverLoc) {

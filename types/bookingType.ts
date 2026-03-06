@@ -18,6 +18,7 @@ export interface BookingTypeConfig {
   icon: string;
   subtext?: string;
   description: string;
+  note: string;
   priceModifier: number;
   subOptions: SubOption[];
   isActive: boolean;

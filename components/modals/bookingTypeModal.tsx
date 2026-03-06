@@ -45,6 +45,7 @@ export default function BookingTypeModal({
   const [infoOption, setInfoOption] = useState<{
     name: string;
     description: string;
+    note: string;
   } | null>(null);
 
   const bookingType = useAppStore((state) => state.bookingType);
@@ -192,6 +193,7 @@ export default function BookingTypeModal({
                               setInfoOption({
                                 name: config.name,
                                 description: config.description,
+                                note: config.note,
                               });
                               setInfoVisible(true);
                             }}
@@ -254,6 +256,7 @@ export default function BookingTypeModal({
                                           setInfoOption({
                                             name: subOption.name,
                                             description: subOption.description,
+                                            note: "",
                                           });
                                           setInfoVisible(true);
                                         }}
@@ -500,7 +503,7 @@ const BookingInfoModal = ({
 }: {
   visible: boolean;
   onClose: () => void;
-  option: { name: string; description: string } | null;
+  option: { name: string; description: string; note: string } | null;
 }) => {
   if (!option) return null;
 
@@ -511,12 +514,23 @@ const BookingInfoModal = ({
           <Text className="text-xl font-semibold text-gray-900">
             {option.name}
           </Text>
+
           <Text className="mt-3 leading-6 text-gray-600">
             {option.description}
           </Text>
+
+          {option.note && (
+            <View className="mt-4 rounded-xl border border-blue-200 bg-blue-50 p-3">
+              <Text className="text-sm font-semibold text-blue-700">Note</Text>
+              <Text className="mt-1 text-sm leading-5 text-blue-700">
+                {option.note}
+              </Text>
+            </View>
+          )}
+
           <Pressable
             onPress={onClose}
-            className="mt-5 self-end rounded-lg bg-[#FFA840] px-5 py-3"
+            className="mt-6 self-end rounded-lg bg-[#FFA840] px-5 py-3 active:opacity-90"
             hitSlop={20}
           >
             <Text className="font-bold text-white">Got it</Text>

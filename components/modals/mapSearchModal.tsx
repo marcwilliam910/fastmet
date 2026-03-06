@@ -22,6 +22,7 @@ import {
   Modal,
   Platform,
   Pressable,
+  ScrollView,
   Text,
   TextInput,
   ToastAndroid,
@@ -620,7 +621,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
           style={{
             flex: 1,
             paddingTop: insets.top + 5, // respect status bar / notch
-            paddingBottom: insets.bottom,
+            // paddingBottom: insets.bottom,
             backgroundColor: "white",
           }}
         >
@@ -702,210 +703,225 @@ const SearchModal: React.FC<SearchModalProps> = ({
             />
           </View>
 
-          {/* Current Location Button */}
-          <View className="px-4 mt-5 mb-2">
-            <Pressable
-              onPress={handleCurrentLocation}
-              disabled={loading}
-              className="flex-row items-center px-4 py-3 bg-white border border-gray-200 rounded-xl active:bg-gray-50"
-            >
-              <View className="items-center justify-center mr-3 bg-blue-500 rounded-full w-11 h-11">
-                <Ionicons name="navigate" size={20} color="#FFFFFF" />
-              </View>
-              {loading ? (
-                <>
-                  <Text className="flex-1  text-base font-semibold text-gray-900">
-                    Getting current location...
-                  </Text>
-                  <ActivityIndicator size="small" color="#FFA840" />
-                </>
-              ) : (
-                <>
-                  <Text className="flex-1 text-base font-semibold text-gray-900">
-                    Use current location
-                  </Text>
-                  <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
-                </>
-              )}
-            </Pressable>
-          </View>
-
-          {/* Home Address Button */}
-          {homeAddress && (
-            <View className="px-4 mb-2">
+          <ScrollView
+            className="flex-1"
+            // showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={{ paddingBottom: 100 }}
+          >
+            {/* Current Location Button */}
+            <View className="px-4 mt-5 mb-2">
               <Pressable
-                onPress={() => {
-                  const homeLocation: LocationDetails = {
-                    name: homeAddress.name,
-                    address: homeAddress.fullAddress,
-                    coords: {
-                      lat: homeAddress.coords.lat,
-                      lng: homeAddress.coords.lng,
-                    },
-                  };
-
-                  // Validate: same location check
-                  if (type === "pickup" && dropOff) {
-                    if (
-                      isSameLocation(
-                        homeLocation.coords.lat,
-                        homeLocation.coords.lng,
-                        dropOff.coords.lat,
-                        dropOff.coords.lng,
-                      )
-                    ) {
-                      const message =
-                        "Pick-up and drop-off locations cannot be the same.";
-                      if (Platform.OS === "android") {
-                        ToastAndroid.showWithGravity(
-                          message,
-                          ToastAndroid.LONG,
-                          ToastAndroid.TOP,
-                        );
-                      } else {
-                        Alert.alert("Invalid Location", message);
-                      }
-                      shake();
-                      return;
-                    }
-                  } else if (type === "dropoff" && pickUp) {
-                    if (
-                      isSameLocation(
-                        homeLocation.coords.lat,
-                        homeLocation.coords.lng,
-                        pickUp.coords.lat,
-                        pickUp.coords.lng,
-                      )
-                    ) {
-                      const message =
-                        "Pick-up and drop-off locations cannot be the same.";
-                      if (Platform.OS === "android") {
-                        ToastAndroid.showWithGravity(
-                          message,
-                          ToastAndroid.LONG,
-                          ToastAndroid.TOP,
-                        );
-                      } else {
-                        Alert.alert("Invalid Location", message);
-                      }
-                      shake();
-                      return;
-                    }
-                  }
-
-                  // Validate: Metro Manila for pickup
-                  if (type === "pickup") {
-                    const allowed = isWithinMetroManila(
-                      homeLocation.coords.lat,
-                      homeLocation.coords.lng,
-                    );
-                    if (!allowed) {
-                      const message =
-                        "Pick-up is only available within Metro Manila.";
-                      if (Platform.OS === "android") {
-                        ToastAndroid.showWithGravity(
-                          message,
-                          ToastAndroid.LONG,
-                          ToastAndroid.TOP,
-                        );
-                      } else {
-                        Alert.alert("Not Available", message);
-                      }
-                      shake();
-                      return;
-                    }
-                  }
-
-                  // Validate: ferry check for dropoff
-                  if (type === "dropoff") {
-                    const requiresFerry = requiresFerryFromMetroManila(
-                      homeLocation.coords.lat,
-                      homeLocation.coords.lng,
-                    );
-                    if (requiresFerry) {
-                      const message =
-                        "Drop-off location requires ferry access and is not available.";
-                      if (Platform.OS === "android") {
-                        ToastAndroid.showWithGravity(
-                          message,
-                          ToastAndroid.LONG,
-                          ToastAndroid.TOP,
-                        );
-                      } else {
-                        Alert.alert("Not Available", message);
-                      }
-                      shake();
-                      return;
-                    }
-                  }
-
-                  if (type === "pickup") {
-                    setPickUp(homeLocation);
-                    setPickUpAdditionalDetails(
-                      `${homeAddress.street ? homeAddress.street + ", " : ""}${homeAddress.barangay}`,
-                    );
-                  } else {
-                    setDropOff(homeLocation);
-                    setDropOffAdditionalDetails(
-                      `${homeAddress.street ? homeAddress.street + ", " : ""}${homeAddress.barangay}`,
-                    );
-                  }
-
-                  onClose();
-                }}
+                onPress={handleCurrentLocation}
+                disabled={loading}
                 className="flex-row items-center px-4 py-3 bg-white border border-gray-200 rounded-xl active:bg-gray-50"
               >
-                <View className="items-center justify-center mr-3 rounded-full w-11 h-11 bg-amber-500">
-                  <Ionicons name="home" size={20} color="#FFFFFF" />
+                <View className="items-center justify-center mr-3 bg-blue-500 rounded-full w-11 h-11">
+                  <Ionicons name="navigate" size={20} color="#FFFFFF" />
                 </View>
-                <View className="flex-1">
-                  <Text className="text-base font-semibold text-gray-900">
-                    Home
-                  </Text>
-                  <Text className="text-sm text-gray-500" numberOfLines={1}>
-                    {homeAddress.fullAddress}
-                  </Text>
-                </View>
-                <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+                {loading ? (
+                  <>
+                    <Text className="flex-1  text-base font-semibold text-gray-900">
+                      Getting current location...
+                    </Text>
+                    <ActivityIndicator size="small" color="#FFA840" />
+                  </>
+                ) : (
+                  <>
+                    <Text className="flex-1 text-base font-semibold text-gray-900">
+                      Use current location
+                    </Text>
+                    <Ionicons
+                      name="chevron-forward"
+                      size={20}
+                      color="#9CA3AF"
+                    />
+                  </>
+                )}
               </Pressable>
             </View>
-          )}
 
-          {/* Recent Places */}
-          {recentPlaces.length > 0 && (
-            <View className="flex-1 px-4 mt-2">
-              <View className="px-4 py-3">
-                <View className="flex-row items-center">
-                  <Ionicons
-                    name="time-outline"
-                    size={18}
-                    color="#6B7280"
-                    style={{ marginRight: 8 }}
-                  />
-                  <Text className="text-xs font-semibold tracking-wider text-gray-600 uppercase">
-                    Recent Places
-                  </Text>
-                </View>
+            {/* Home Address Button */}
+            {homeAddress && (
+              <View className="px-4 mb-2">
+                <Pressable
+                  onPress={() => {
+                    const homeLocation: LocationDetails = {
+                      name: homeAddress.name,
+                      address: homeAddress.fullAddress,
+                      coords: {
+                        lat: homeAddress.coords.lat,
+                        lng: homeAddress.coords.lng,
+                      },
+                    };
+
+                    // Validate: same location check
+                    if (type === "pickup" && dropOff) {
+                      if (
+                        isSameLocation(
+                          homeLocation.coords.lat,
+                          homeLocation.coords.lng,
+                          dropOff.coords.lat,
+                          dropOff.coords.lng,
+                        )
+                      ) {
+                        const message =
+                          "Pick-up and drop-off locations cannot be the same.";
+                        if (Platform.OS === "android") {
+                          ToastAndroid.showWithGravity(
+                            message,
+                            ToastAndroid.LONG,
+                            ToastAndroid.TOP,
+                          );
+                        } else {
+                          Alert.alert("Invalid Location", message);
+                        }
+                        shake();
+                        return;
+                      }
+                    } else if (type === "dropoff" && pickUp) {
+                      if (
+                        isSameLocation(
+                          homeLocation.coords.lat,
+                          homeLocation.coords.lng,
+                          pickUp.coords.lat,
+                          pickUp.coords.lng,
+                        )
+                      ) {
+                        const message =
+                          "Pick-up and drop-off locations cannot be the same.";
+                        if (Platform.OS === "android") {
+                          ToastAndroid.showWithGravity(
+                            message,
+                            ToastAndroid.LONG,
+                            ToastAndroid.TOP,
+                          );
+                        } else {
+                          Alert.alert("Invalid Location", message);
+                        }
+                        shake();
+                        return;
+                      }
+                    }
+
+                    // Validate: Metro Manila for pickup
+                    if (type === "pickup") {
+                      const allowed = isWithinMetroManila(
+                        homeLocation.coords.lat,
+                        homeLocation.coords.lng,
+                      );
+                      if (!allowed) {
+                        const message =
+                          "Pick-up is only available within Metro Manila.";
+                        if (Platform.OS === "android") {
+                          ToastAndroid.showWithGravity(
+                            message,
+                            ToastAndroid.LONG,
+                            ToastAndroid.TOP,
+                          );
+                        } else {
+                          Alert.alert("Not Available", message);
+                        }
+                        shake();
+                        return;
+                      }
+                    }
+
+                    // Validate: ferry check for dropoff
+                    if (type === "dropoff") {
+                      const requiresFerry = requiresFerryFromMetroManila(
+                        homeLocation.coords.lat,
+                        homeLocation.coords.lng,
+                      );
+                      if (requiresFerry) {
+                        const message =
+                          "Drop-off location requires ferry access and is not available.";
+                        if (Platform.OS === "android") {
+                          ToastAndroid.showWithGravity(
+                            message,
+                            ToastAndroid.LONG,
+                            ToastAndroid.TOP,
+                          );
+                        } else {
+                          Alert.alert("Not Available", message);
+                        }
+                        shake();
+                        return;
+                      }
+                    }
+
+                    if (type === "pickup") {
+                      setPickUp(homeLocation);
+                      setPickUpAdditionalDetails(
+                        `${homeAddress.street ? homeAddress.street + ", " : ""}${homeAddress.barangay}`,
+                      );
+                    } else {
+                      setDropOff(homeLocation);
+                      setDropOffAdditionalDetails(
+                        `${homeAddress.street ? homeAddress.street + ", " : ""}${homeAddress.barangay}`,
+                      );
+                    }
+
+                    onClose();
+                  }}
+                  className="flex-row items-center px-4 py-3 bg-white border border-gray-200 rounded-xl active:bg-gray-50"
+                >
+                  <View className="items-center justify-center mr-3 rounded-full w-11 h-11 bg-amber-500">
+                    <Ionicons name="home" size={20} color="#FFFFFF" />
+                  </View>
+                  <View className="flex-1">
+                    <Text className="text-base font-semibold text-gray-900">
+                      Home
+                    </Text>
+                    <Text className="text-sm text-gray-500" numberOfLines={1}>
+                      {homeAddress.fullAddress}
+                    </Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+                </Pressable>
               </View>
-              <FlatList
-                data={recentPlaces}
-                renderItem={renderRecentPlace}
-                keyExtractor={(item, index) => `${item!.name}-${index}`}
-                showsVerticalScrollIndicator={false}
-              />
-            </View>
-          )}
+            )}
 
-          <Pressable
-            className={`items-center justify-center p-3.5 mx-6 bg-lightPrimary absolute left-0 right-0 active:bg-darkPrimary rounded-lg ${canConfirm ? "active:bg-darkPrimary" : "opacity-80"}`}
-            onPress={handleConfirm}
-            disabled={!canConfirm}
+            {/* Recent Places */}
+            {recentPlaces.length > 0 && (
+              <View className="flex-1 px-4 mt-2">
+                <View className="px-4 py-3">
+                  <View className="flex-row items-center">
+                    <Ionicons
+                      name="time-outline"
+                      size={18}
+                      color="#6B7280"
+                      style={{ marginRight: 8 }}
+                    />
+                    <Text className="text-xs font-semibold tracking-wider text-gray-600 uppercase">
+                      Recent Places
+                    </Text>
+                  </View>
+                </View>
+                <FlatList
+                  data={recentPlaces}
+                  renderItem={renderRecentPlace}
+                  keyExtractor={(item, index) => `${item!.name}-${index}`}
+                  scrollEnabled={false}
+                />
+              </View>
+            )}
+          </ScrollView>
+          <View
+            className="absolute bg-white left-0 right-0 py-2"
             style={{
-              bottom: inset.bottom + 15,
+              bottom: inset.bottom,
             }}
           >
-            <Text className="text-lg font-bold text-white">Confirm</Text>
-          </Pressable>
+            <Pressable
+              className={`items-center justify-center p-3.5 mx-6 
+              rounded-lg ${canConfirm ? "bg-lightPrimary active:bg-darkPrimary" : "bg-orange-300"}`}
+              onPress={handleConfirm}
+              disabled={!canConfirm}
+            >
+              <Text className="text-lg font-bold text-white">Confirm</Text>
+            </Pressable>
+          </View>
         </View>
       </TouchableWithoutFeedback>
     </Modal>
