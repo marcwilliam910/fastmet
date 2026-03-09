@@ -11,7 +11,7 @@ const HeaderDrawer = ({ title }: { title: string }) => {
     "My Profile": "person",
     Settings: "settings",
     About: "information-circle",
-    Favorite: "heart",
+    "Customer Support": "headset",
   };
 
   const iconName = iconMap[title] || "document-outline"; // fallback icon

@@ -2,6 +2,7 @@ import { Type } from "@/store/slices/bookSlice";
 import { useAppStore } from "@/store/useAppStore";
 import { LocationDetails, RouteData } from "@/types/book";
 import { GOOGLE_MAPS_API_KEY, STATIC_IMAGES } from "@/utils/constants";
+import { formatDuration } from "@/utils/helpers/date";
 import * as Location from "expo-location";
 import { useFocusEffect } from "expo-router";
 import React, { memo, useCallback, useEffect, useRef, useState } from "react";
@@ -235,16 +236,6 @@ export default memo(MapScreen);
 
 export function DistanceBubble({ routeData }: { routeData: RouteData }) {
   const inset = useSafeAreaInsets();
-
-  // Format duration: convert to hours if >= 60 minutes
-  const formatDuration = (minutes: number) => {
-    if (minutes >= 60) {
-      const hours = Math.floor(minutes / 60);
-      const mins = Math.round(minutes % 60);
-      return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
-    }
-    return `${Math.round(minutes)} min`;
-  };
 
   return (
     <View

@@ -147,7 +147,11 @@ export default function SearchingDriver() {
         topOffset: 50,
       });
 
-      setSelectedDriver(null)
+      setSelectedDriver(null);
+
+      queryClient.invalidateQueries({
+        queryKey: ["userBookingCounts"],
+      });
 
       queryClient.invalidateQueries({
         queryKey: ["userBookings", "active"],
@@ -158,7 +162,7 @@ export default function SearchingDriver() {
         pathname: "/(root_screens)/booking/viewOnMap",
         params: {
           bookingId,
-        }, //TESTING PA
+        },
       });
     };
 
@@ -178,7 +182,15 @@ export default function SearchingDriver() {
       router.push("/(drawer)/book");
     };
 
-    const handleBookingExpired = ({ message, notification, unreadNotifications }: { message: string, notification: Notification, unreadNotifications: number }) => {
+    const handleBookingExpired = ({
+      message,
+      notification,
+      unreadNotifications,
+    }: {
+      message: string;
+      notification: Notification;
+      unreadNotifications: number;
+    }) => {
       setShouldPrevent(false);
 
       Toast.show({
@@ -218,7 +230,10 @@ export default function SearchingDriver() {
               ...old,
               pages: old.pages.map((page, idx) =>
                 idx === 0
-                  ? { ...page, notifications: [notification, ...page.notifications] }
+                  ? {
+                      ...page,
+                      notifications: [notification, ...page.notifications],
+                    }
                   : page,
               ),
             };
@@ -268,7 +283,6 @@ export default function SearchingDriver() {
   const handleRemoveDriver = (id: string) => {
     setDrivers((prev) => prev.filter((driver) => driver.id !== id));
     socket.emit("asapTimerEnd", { driverId: id, bookingId: bookingId });
-
   };
 
   const handleCancelRequest = () => {
@@ -396,17 +410,17 @@ const DriverListCard = ({
   handleRemoveDriver,
   bookingId,
   selectedDriver,
-  setSelectedDriver
+  setSelectedDriver,
 }: {
   drivers: RequestedDriver[];
   handleRemoveDriver: (id: string) => void;
   bookingId: string;
-  selectedDriver: RequestedDriver | null,
-  setSelectedDriver: React.Dispatch<React.SetStateAction<RequestedDriver | null>>
+  selectedDriver: RequestedDriver | null;
+  setSelectedDriver: React.Dispatch<
+    React.SetStateAction<RequestedDriver | null>
+  >;
 }) => {
   console.log("DriverListCard");
-
-
 
   const socket = useSocket();
 
@@ -423,10 +437,13 @@ const DriverListCard = ({
     });
   }, [bookingId, selectedDriver, socket]);
 
-  const handleDriverSelect = useCallback((driver: RequestedDriver) => {
-    setSelectedDriver(driver);
-    setAreAllPaused(true); // Pause all driver timers
-  }, [setSelectedDriver]);
+  const handleDriverSelect = useCallback(
+    (driver: RequestedDriver) => {
+      setSelectedDriver(driver);
+      setAreAllPaused(true); // Pause all driver timers
+    },
+    [setSelectedDriver],
+  );
 
   const handleCloseModal = useCallback(() => {
     setSelectedDriver(null);
@@ -494,7 +511,6 @@ const DriverRow = memo(
     onSelect: (driver: RequestedDriver) => void;
     isPaused: boolean;
   }) => {
-
     console.log("DriverRow");
     const translateX = useRef(new Animated.Value(-400)).current;
     const opacity = useRef(new Animated.Value(0)).current;

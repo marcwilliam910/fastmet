@@ -200,6 +200,9 @@ export default function PaymentMethod() {
             swipeable: true,
             topOffset: 50,
           });
+          queryClient.invalidateQueries({
+            queryKey: ["userBookingCounts"],
+          });
           router.replace("/(drawer)/(tabs)/request");
 
           // Prepend to pending cache so the Request tab shows it immediately

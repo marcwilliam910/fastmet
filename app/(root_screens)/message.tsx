@@ -4,7 +4,11 @@ import { useSocket } from "@/sockets/context/SocketProvider";
 import { useAppStore } from "@/store/useAppStore";
 import { ConversationResponse, MessagesLoadedData } from "@/types/chat";
 import { STATIC_IMAGES } from "@/utils/constants";
-import { convertImageToBase64, openGallery, takePhoto } from "@/utils/helpers/imagePicker";
+import {
+  convertImageToBase64,
+  openGallery,
+  takePhoto,
+} from "@/utils/helpers/imagePicker";
 import { Ionicons } from "@expo/vector-icons";
 import { InfiniteData } from "@tanstack/react-query";
 import { Image } from "expo-image";
@@ -31,6 +35,7 @@ const Message = () => {
     data: conversation,
     isPending,
     isError,
+    error,
   } = useConversationById(conversationId);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
 
@@ -48,7 +53,6 @@ const Message = () => {
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const navigation = useNavigation();
 
-
   // Format message for GiftedChat
   const formatMessage = useCallback(
     (msg: any): IMessage => {
@@ -61,20 +65,20 @@ const Message = () => {
         createdAt: new Date(msg.createdAt),
         user: isMyMessage
           ? {
-            _id: useAppStore.getState().id || "unknown",
-            name: useAppStore.getState().name || "Me",
-            avatar: useAppStore.getState().profilePictureUrl || "",
-          }
+              _id: useAppStore.getState().id || "unknown",
+              name: useAppStore.getState().name || "Me",
+              avatar: useAppStore.getState().profilePictureUrl || "",
+            }
           : {
-            _id: conversation?.driver._id || "unknown",
-            name:
-              `${conversation?.driver.firstName} ${conversation?.driver.lastName}` ||
-              "Driver",
-            avatar: conversation?.driver.profilePictureUrl || "",
-          },
+              _id: conversation?.driver._id || "unknown",
+              name:
+                `${conversation?.driver.firstName} ${conversation?.driver.lastName}` ||
+                "Driver",
+              avatar: conversation?.driver.profilePictureUrl || "",
+            },
       };
     },
-    [conversation]
+    [conversation],
   );
 
   const handleLoadEarlier = () => {
@@ -108,7 +112,11 @@ const Message = () => {
       console.log("Room joined:", data.conversationId);
 
       // Request message history
-      socket.emit("get_messages", { conversationId: data.conversationId, limit: 20, skip: 0 });
+      socket.emit("get_messages", {
+        conversationId: data.conversationId,
+        limit: 20,
+        skip: 0,
+      });
     };
 
     // Handle message history loaded
@@ -181,7 +189,7 @@ const Message = () => {
         });
       });
     },
-    [conversation, conversationId, socket]
+    [conversation, conversationId, socket],
   );
 
   useEffect(() => {
@@ -208,7 +216,7 @@ const Message = () => {
   }, [messages]);
 
   useEffect(() => {
-    const unsubscribe = navigation.addListener('beforeRemove', (e) => {
+    const unsubscribe = navigation.addListener("beforeRemove", (e) => {
       socket.emit("leave_room", { conversationId });
 
       // Reset unread count in conversations cache for this conversation
@@ -235,9 +243,14 @@ const Message = () => {
                   unreadCount: { ...c.unreadCount, client: 0 },
                 };
                 if (latestMsg) {
-                  updated.lastMessage = latestMsg.text || (latestMsg.image ? "Sent an image" : c.lastMessage);
-                  updated.lastMessageAt = new Date(latestMsg.createdAt).toISOString();
-                  updated.lastMessageBy = latestMsg.user._id === driverId ? "client" : "driver";
+                  updated.lastMessage =
+                    latestMsg.text ||
+                    (latestMsg.image ? "Sent an image" : c.lastMessage);
+                  updated.lastMessageAt = new Date(
+                    latestMsg.createdAt,
+                  ).toISOString();
+                  updated.lastMessageBy =
+                    latestMsg.user._id === driverId ? "client" : "driver";
                 }
                 return updated;
               }),
@@ -252,9 +265,10 @@ const Message = () => {
 
   useEffect(() => {
     if (isError) {
+      console.log(error);
       router.back();
     }
-  }, [isError]);
+  }, [error, isError]);
 
   // Pick image from gallery
   const handlePickImage = async () => {
@@ -362,7 +376,6 @@ const Message = () => {
               <ActivityIndicator size="small" color="#FFA840" />
             ) : (
               <>
-
                 {/* Send */}
                 <Pressable
                   disabled={!text.trim()}
@@ -449,7 +462,6 @@ const Message = () => {
             <Pressable
               hitSlop={20}
               onPress={() => {
-
                 router.back();
               }}
               className="p-2"
@@ -463,7 +475,7 @@ const Message = () => {
 
             <Image
               source={
-                conversation?.driver.profilePictureUrl
+                conversation?.driver?.profilePictureUrl
                   ? { uri: conversation.driver.profilePictureUrl }
                   : STATIC_IMAGES.userPlaceholder
               }

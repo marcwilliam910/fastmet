@@ -118,3 +118,13 @@ export const formatLastMessageTime = (date: Date | string | number): string => {
   const year = messageDate.getFullYear().toString().slice(-2);
   return `${month}/${day}/${year}`;
 };
+
+// Format duration: convert to hours if >= 60 minutes
+export const formatDuration = (minutes: number) => {
+  if (minutes >= 60) {
+    const hours = Math.floor(minutes / 60);
+    const mins = Math.round(minutes % 60);
+    return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+  }
+  return `${Math.round(minutes)} min`;
+};
