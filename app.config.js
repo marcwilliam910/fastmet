@@ -61,13 +61,14 @@ export default {
     },
     plugins: [
       "expo-router",
+      // "react-native-webview",
       [
         "expo-splash-screen",
         {
           image: "./assets/fastmet/splash.png",
           resizeMode: "contain",
           backgroundColor: "#ffffff",
-          // imageWidth: 250,
+          imageWidth: 350,
         },
       ],
       "expo-font",

@@ -46,6 +46,7 @@ export const useAppStore = create<AppStore>()(
         profilePictureUrl: string;
         gender: string | null;
         address: UserAddress;
+        preRegistered: boolean;
       }>(),
       // Only persist auth data (prevents persisting temporary data)
       partialize: (state) => ({
@@ -57,6 +58,7 @@ export const useAppStore = create<AppStore>()(
         profilePictureUrl: state.profilePictureUrl,
         gender: state.gender,
         address: state.address,
+        preRegistered: state.preRegistered,
       }),
     },
   ),

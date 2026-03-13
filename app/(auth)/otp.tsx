@@ -169,6 +169,7 @@ export default function PhoneOTPScreen() {
         );
 
         if (data.success) {
+          console.log(JSON.stringify(data, null, 2));
           useAppStore.getState().setAuthData({
             token: data.token,
             id: data.client.id,
