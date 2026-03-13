@@ -7,7 +7,6 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { StatusBar, StyleSheet, View } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import MapViewDirections from "react-native-maps-directions";
-import { DistanceBubble } from "./MapScreen";
 
 type Region = {
   latitude: number;
@@ -113,62 +112,83 @@ export default function LiveTrackingMapScreen({
         >
           {pickUp && (
             <Marker
+              key={`pickup-${pickUp.coords.lat}-${pickUp.coords.lng}`}
               coordinate={{
                 latitude: pickUp.coords.lat,
                 longitude: pickUp.coords.lng,
               }}
               title="Pick Up"
               anchor={{ x: 0.5, y: 0.5 }}
-              centerOffset={{ x: 0, y: 0 }}
-              tracksViewChanges={false}
+              // tracksViewChanges={false}
               zIndex={1000}
             >
-              <Image
-                source={STATIC_IMAGES.pickup}
-                style={{ width: 50, height: 50 }}
-                contentFit="contain"
-              />
+              <View style={{ opacity: 1 }}>
+                <Image
+                  source={STATIC_IMAGES.pickup}
+                  style={{
+                    width: 50,
+                    height: 50,
+                  }}
+                  contentFit="contain"
+                  // onLoad={() => setPickupImageLoaded(true)}
+                  // onError={(e) => {
+                  //   // console.error("Pickup image error:", e.nativeEvent.error);
+                  //   setPickupImageLoaded(true);
+                  // }}
+                />
+              </View>
             </Marker>
           )}
           {/* DRIVER LOCATION */}
           {driverLocation && !isLoadingDriverLocation && (
             <Marker
+              key={`driver-${driverLocation.lat}-${driverLocation.lng}`}
               coordinate={{
                 latitude: driverLocation.lat,
                 longitude: driverLocation.lng,
               }}
               title={driver.name ? `Driver - ${driver.name}` : "Your Driver"}
-              // rotation={driverLocation.heading}
-              centerOffset={{ x: 0, y: 0 }}
               anchor={{ x: 0.5, y: 0.5 }}
+              // tracksViewChanges={false}
               zIndex={1000}
             >
-              <Image
-                source={STATIC_IMAGES.driver}
-                style={{ width: 40, height: 40 }}
-                contentFit="contain"
-              />
+              <View style={{ opacity: 1 }}>
+                <Image
+                  source={STATIC_IMAGES.driver}
+                  style={{ width: 40, height: 40 }}
+                  contentFit="contain"
+                />
+              </View>
             </Marker>
           )}
 
-          {/* route line */}
           {dropOff && (
             <Marker
+              key={`dropoff-${dropOff.coords.lat}-${dropOff.coords.lng}`}
               coordinate={{
                 latitude: dropOff.coords.lat,
                 longitude: dropOff.coords.lng,
               }}
               title="Drop Off"
               anchor={{ x: 0.5, y: 0.5 }}
-              centerOffset={{ x: 0, y: 0 }}
-              tracksViewChanges={false}
-              zIndex={1000}
+              // tracksViewChanges={false}
+              zIndex={1001} // ← Higher than pickup
             >
-              <Image
-                source={STATIC_IMAGES.dropoff}
-                style={{ width: 50, height: 50 }}
-                contentFit="contain"
-              />
+              <View style={{ opacity: 1 }}>
+                <Image
+                  source={STATIC_IMAGES.dropoff}
+                  style={{
+                    width: 50,
+                    height: 50,
+                  }}
+                  contentFit="contain"
+                  //  onLoad={() => setDropoffImageLoaded(true)}
+                  //  onError={(e) => {
+                  //    // console.error("Dropoff image error:", e.nativeEvent.error);
+                  //    setDropoffImageLoaded(true);
+                  //  }}
+                />
+              </View>
             </Marker>
           )}
 
@@ -199,9 +219,9 @@ export default function LiveTrackingMapScreen({
         </MapView>
       )}
 
-      {routeData.distance > 0 && routeData.duration > 0 && (
+      {/* {routeData.distance > 0 && routeData.duration > 0 && (
         <DistanceBubble routeData={routeData} />
-      )}
+      )} */}
     </View>
   );
 }

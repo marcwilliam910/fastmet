@@ -112,13 +112,13 @@ export default function SearchingDriver() {
 
   //SOCKETS LISTENER
   useEffect(() => {
-    const handleCancelOffer = ({ driverId }: { driverId: string }) => {
-      setDrivers((prev) => prev.filter((driver) => driver.id !== driverId));
-    };
-
     const handleBookingCancelled = ({ bookingId }: { bookingId: string }) => {
-      useAppStore.getState().clearStates();
+      // Navigate FIRST — before any state changes that could trigger reactive effects
+      router.replace("/(drawer)/(tabs)/request?tab=cancelled");
+
+      // THEN clean up state
       setShouldPrevent(false);
+      useAppStore.getState().clearStates();
 
       Toast.show({
         type: "success",
@@ -128,11 +128,6 @@ export default function SearchingDriver() {
         visibilityTime: 5_000,
         swipeable: true,
         topOffset: 50,
-      });
-
-      // Navigate after state update
-      setImmediate(() => {
-        router.replace("/(drawer)/(tabs)/request?tab=cancelled");
       });
     };
 
@@ -251,14 +246,12 @@ export default function SearchingDriver() {
       });
     };
 
-    socket.on("offerCancelledAsap", handleCancelOffer);
     socket.on("bookingCancelled", handleBookingCancelled);
     socket.on("driverAccepted", handleDriverAccepted);
     socket.on("error", errorHandler);
     socket.on("bookingExpired", handleBookingExpired);
 
     return () => {
-      socket.off("offerCancelledAsap", handleCancelOffer);
       socket.off("bookingCancelled", handleBookingCancelled);
       socket.off("driverAccepted", handleDriverAccepted);
       socket.off("error", errorHandler);
@@ -279,6 +272,22 @@ export default function SearchingDriver() {
       socket.off("acceptanceRequestedASAP", handleAcceptanceRequest);
     };
   }, [socket, drivers]);
+
+  //SOCKETS LISTENER
+  useEffect(() => {
+    const handleCancelOffer = ({ driverId }: { driverId: string }) => {
+      setDrivers((prev) => prev.filter((driver) => driver.id !== driverId));
+      if (selectedDriver?.id === driverId) {
+        setSelectedDriver(null);
+      }
+    };
+
+    socket.on("offerCancelledAsap", handleCancelOffer);
+
+    return () => {
+      socket.off("offerCancelledAsap", handleCancelOffer);
+    };
+  }, [selectedDriver?.id, socket]);
 
   const handleRemoveDriver = (id: string) => {
     setDrivers((prev) => prev.filter((driver) => driver.id !== id));

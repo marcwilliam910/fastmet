@@ -1,7 +1,8 @@
 import CustomKeyAvoidingView from "@/components/CustomKeyAvoid";
-import api from "@/lib/axios";
 import { useAppStore } from "@/store/useAppStore";
+import { UserAddress } from "@/types/user";
 import { Ionicons } from "@expo/vector-icons";
+import axios from "axios";
 import { router } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import React, { useEffect, useRef, useState } from "react";
@@ -11,6 +12,21 @@ import Toast from "react-native-toast-message";
 
 export const RESEND_TIMEOUT_SECONDS = 60;
 export const RESEND_KEY = "resend_available_at";
+
+type LoginResponse = {
+  success: boolean;
+  token: string;
+  client: {
+    id: string;
+    isProfileComplete: boolean;
+    fullName: string;
+    profilePictureUrl: string;
+    address: UserAddress | null;
+    gender: string;
+    preRegistered: boolean;
+  };
+  status: "new" | "existing" | "pre-registered";
+};
 
 export default function PhoneOTPScreen() {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
@@ -73,9 +89,12 @@ export default function PhoneOTPScreen() {
     if (!canResend || loading) return;
 
     try {
-      await api.post("/auth/send-otp", {
-        phoneNumber: useAppStore.getState().phoneNumber,
-      });
+      await axios.post(
+        `${process.env.EXPO_PUBLIC_BASE_URL}/api/auth/send-otp`,
+        {
+          phoneNumber: useAppStore.getState().phoneNumber,
+        },
+      );
 
       const availableAt = Date.now() + RESEND_TIMEOUT_SECONDS * 1000;
       await SecureStore.setItemAsync(RESEND_KEY, String(availableAt));
@@ -128,37 +147,58 @@ export default function PhoneOTPScreen() {
     setLoading(true);
     try {
       const otpCode: string = otp.join("");
-      const res = await api.post("/auth/verify-otp", {
+      const { data: otpData } = await axios.post<{
+        success: boolean;
+        verifyToken: string;
+      }>(`${process.env.EXPO_PUBLIC_BASE_URL}/api/auth/verify-otp`, {
         phoneNumber,
         otpCode,
       });
 
-      if (res.data.success) {
-        useAppStore.getState().setAuthData({
-          token: res.data.token,
-          id: res.data.client.id,
-          isProfileComplete: res.data.client.isProfileComplete,
-          name: res.data.client.fullName,
-          profilePictureUrl: res.data.client.profilePictureUrl,
-          address: res.data.client.address,
-          gender: res.data.client.gender,
-        });
+      if (otpData.success) {
+        await SecureStore.deleteItemAsync(RESEND_KEY);
 
-        if (
-          res.data.status === "existing" &&
-          res.data.client.isProfileComplete
-        ) {
-          Toast.show({
-            type: "success",
-            text1: "Verified!",
-            text2: "Welcome to Fastmet",
-            position: "top",
-            visibilityTime: 5_000,
-            swipeable: true,
-            topOffset: 50,
+        const { data } = await axios.post<LoginResponse>(
+          `${process.env.EXPO_PUBLIC_BASE_URL}/api/client/auth/login`,
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${otpData.verifyToken}`,
+            },
+          },
+        );
+
+        if (data.success) {
+          useAppStore.getState().setAuthData({
+            token: data.token,
+            id: data.client.id,
+            isProfileComplete: data.client.isProfileComplete,
+            name: data.client.fullName,
+            profilePictureUrl: data.client.profilePictureUrl,
+            address: data.client.address,
+            gender: data.client.gender,
+            preRegistered: data.client.preRegistered,
           });
-          router.replace("/(drawer)/book");
-        } else router.replace("/(auth)/profile-register");
+
+          if (data.client.isProfileComplete) {
+            const status = data.status;
+            const message =
+              status === "existing"
+                ? "Welcome to FastMet"
+                : "Thank you for pre-registering with Fastmet";
+
+            Toast.show({
+              type: "success",
+              text1: "Verified!",
+              text2: message,
+              position: "top",
+              visibilityTime: 5_000,
+              swipeable: true,
+              topOffset: 50,
+            });
+            router.replace("/(drawer)/book");
+          } else router.replace("/(auth)/profile-register");
+        }
       }
     } catch (error: any) {
       // Handle rate limit errors for verification

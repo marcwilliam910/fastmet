@@ -267,7 +267,9 @@ const EditProfile = () => {
   };
 
   // Calculate bottom padding based on keyboard visibility
-  const bottomPadding = keyboardVisible ? 20 : inset.bottom + 120;
+  const bottomPadding = keyboardVisible ? inset.bottom + 80 : 200;
+
+  console.log(bottomPadding);
 
   return (
     <SafeAreaView

@@ -10,8 +10,14 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-type BookingStatus = "Delivered" | "Cancelled" | "In Transit" | "Pending";
+type BookingStatus =
+  | "Completed"
+  | "Cancelled"
+  | "Active"
+  | "Pending"
+  | "Scheduled";
 
 interface ReportTemplate {
   id: string;
@@ -36,24 +42,27 @@ export interface BookingReportTabProps {
 
 const formatStatus = (status: string): BookingStatus => {
   const map: Record<string, BookingStatus> = {
-    completed: "Delivered",
+    completed: "Completed",
     cancelled: "Cancelled",
-    in_transit: "In Transit",
+    active: "Active",
     pending: "Pending",
+    scheduled: "Scheduled",
   };
   return map[status] ?? "Pending";
 };
 
-const formatPrice = (amount: number): string => `₱${amount.toFixed(2)}`;
+const formatPrice = (amount: number): string =>
+  `₱${amount.toLocaleString("en-US")}`;
 
 const STATUS_CONFIG: Record<
   BookingStatus,
   { bg: string; text: string; dot: string }
 > = {
-  Delivered: { bg: "#DCFCE7", text: "#166534", dot: "#22C55E" },
+  Completed: { bg: "#DCFCE7", text: "#166534", dot: "#22C55E" },
   Cancelled: { bg: "#FEE2E2", text: "#991B1B", dot: "#EF4444" },
-  "In Transit": { bg: "#FFF7ED", text: "#9A3412", dot: "#FFA840" },
-  Pending: { bg: "#F1F5F9", text: "#475569", dot: "#94A3B8" },
+  Active: { bg: "#DBEAFE", text: "#1E40AF", dot: "#3B82F6" },
+  Pending: { bg: "#FEF3C7", text: "#92400E", dot: "#F59E0B" },
+  Scheduled: { bg: "#F3E8FF", text: "#6B21A8", dot: "#A855F7" },
 };
 
 const StatusBadge: React.FC<{ status: BookingStatus }> = ({ status }) => {
@@ -119,6 +128,7 @@ export default function BookingReportTab({
   const canSubmit =
     selectedBooking !== null &&
     (selectedTemplates.length > 0 || reportMessage.trim().length > 0);
+  const inset = useSafeAreaInsets();
 
   return (
     <View className="gap-4">
@@ -209,7 +219,7 @@ export default function BookingReportTab({
           />
           <DetailRow
             label="Payment"
-            value={selectedBooking.paymentMethod}
+            value={selectedBooking.paymentMethod === "cash" ? "Cash" : "Gcash"}
             icon="wallet-outline"
           />
 
@@ -334,10 +344,10 @@ export default function BookingReportTab({
           onPress={onCloseDropdown}
         >
           <View
-            className="bg-white rounded-t-3xl pt-3 pb-8"
-            style={{ maxHeight: "60%" }}
+            className="bg-white rounded-t-3xl pt-3"
+            style={{ maxHeight: "60%", paddingBottom: inset.bottom + 10 }}
           >
-            <View className="w-9 h-1 rounded-full bg-gray-200 self-center mb-4" />
+            <View className="w-8 h-1 rounded-full bg-lightPrimary self-center mb-4" />
             <Text className="text-sm font-bold text-secondary px-5 mb-3">
               Select Booking
             </Text>
@@ -353,7 +363,7 @@ export default function BookingReportTab({
                       onSelectBooking(item);
                       onCloseDropdown();
                     }}
-                    className={`flex-row items-center px-5 py-3.5 border-b border-gray-50 gap-3 active:bg-gray-50 ${
+                    className={`flex-row items-center px-5 py-3.5 border-b border-gray-50 gap-3 active:bg-gray-100 ${
                       isSelected ? "bg-orange-50" : "bg-white"
                     }`}
                   >

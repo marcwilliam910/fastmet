@@ -37,23 +37,30 @@ const Book = () => {
     if (!route || !selectedVehicle?.variant) return null;
     const { distanceKm, durationMin } = route;
     const variant = selectedVehicle.variant;
-    const tier = variant.pricingTiers.find(
-      (t) =>
-        distanceKm >= t.minKm &&
-        (t.maxKm === undefined || distanceKm <= t.maxKm),
+    const sortedTiers = [...variant.pricingTiers].sort(
+      (a, b) => a.minKm - b.minKm,
     );
-    const distanceFee =
-      (tier ? distanceKm * tier.pricePerKm : 0) * bookingType.priceModifier;
+    const distanceFee = (() => {
+      let fee = 0;
+      let remaining = distanceKm;
+      for (const tier of sortedTiers) {
+        if (remaining <= 0) break;
+        const tierMax = tier.maxKm ?? Infinity;
+        const kmInTier = Math.min(remaining, tierMax - tier.minKm);
+        fee += kmInTier * tier.pricePerKm;
+        remaining -= kmInTier;
+      }
+      return fee * bookingType.priceModifier;
+    })();
     const serviceFee = addedServices.reduce((sum, s) => sum + s.price, 0);
     const basePrice = variant.baseFare;
     return {
-      distance: distanceKm,
-      duration: durationMin,
-      basePrice: Math.round(basePrice * 100) / 100,
-      distanceFee: Math.round(distanceFee * 100) / 100,
-      serviceFee: Math.round(serviceFee * 100) / 100,
-      totalPrice:
-        Math.round((basePrice + distanceFee + serviceFee) * 100) / 100,
+      distance: Math.round(distanceKm),
+      duration: Math.round(durationMin),
+      basePrice: Math.round(basePrice),
+      distanceFee: Math.round(distanceFee),
+      serviceFee: Math.round(serviceFee),
+      totalPrice: Math.round(basePrice + distanceFee + serviceFee),
     };
   }, [route, selectedVehicle, bookingType, addedServices]);
 

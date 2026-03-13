@@ -8,13 +8,13 @@ export interface AuthSlice {
   name: string;
   token: string | null;
   gender: string | null;
-  address: UserAddress;
-  // email: string;
+  address: UserAddress | null;
   profilePictureUrl: string;
+  preRegistered: boolean;
 
   // Actions
   setAuthData: (
-    data: Partial<Omit<AuthSlice, "setAuthData" | "clearAuthData" | "logout">>
+    data: Partial<Omit<AuthSlice, "setAuthData" | "clearAuthData" | "logout">>,
   ) => void;
   logout: () => void;
 }
@@ -25,10 +25,10 @@ export const createAuthSlice: StateCreator<AuthSlice> = (set) => ({
   isProfileComplete: false,
   name: "",
   token: null,
-  // email: "",
   gender: null,
   address: null,
   profilePictureUrl: "",
+  preRegistered: false,
 
   setAuthData: (data) =>
     set((state) => ({
@@ -44,8 +44,8 @@ export const createAuthSlice: StateCreator<AuthSlice> = (set) => ({
       token: null,
       address: null,
       gender: null,
-      // email: "",
       isProfileComplete: false,
       profilePictureUrl: "",
+      preRegistered: false,
     }),
 });

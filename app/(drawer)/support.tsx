@@ -1,10 +1,17 @@
 import ContactTab from "@/components/support/contact";
 import FAQTab, { Faq } from "@/components/support/faq";
 import BookingReportTab from "@/components/support/report";
+import { useRecentBookings } from "@/queries/bookingQueries";
 import { Booking } from "@/types/book";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
-import { Text, TouchableOpacity, View } from "react-native";
+import {
+  ActivityIndicator,
+  Button,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -36,208 +43,6 @@ const REPORT_TEMPLATES: ReportTemplate[] = [
   { id: "rude", label: "Driver Misconduct", icon: "person-remove-outline" },
   { id: "overcharge", label: "Overcharged", icon: "cash-outline" },
   { id: "other", label: "Other", icon: "alert-circle-outline" },
-];
-
-const BOOKINGS: Booking[] = [
-  {
-    _id: "66f1a2b3c4d5e6f7a8b9c001",
-    bookingRef: "FM-20260305-001",
-    customerId: "cust_001",
-    pickUp: {
-      name: "Makati CBD",
-      address: "Ayala Ave, Makati City, Metro Manila",
-      coords: { lat: 14.5547, lng: 121.0244 },
-    },
-    dropOff: {
-      name: "Quezon City Hall",
-      address: "Elliptical Rd, Quezon City, Metro Manila",
-      coords: { lat: 14.6507, lng: 121.0494 },
-    },
-    bookingType: { type: "asap", value: "" },
-    selectedVehicle: { name: "Motorcycle", freeServices: [] },
-    routeData: {
-      distance: 12400,
-      duration: 1800,
-      basePrice: 80,
-      distanceFee: 160,
-      serviceFee: 40,
-      totalPrice: 280,
-    },
-    paymentMethod: "GCash",
-    addedServices: [],
-    note: "",
-    itemType: "Documents",
-    photos: [],
-    createdAt: "2026-03-05T08:30:00.000Z",
-    status: "pending",
-    driverRating: 5,
-    cancelledAt: null,
-    requestedDrivers: [],
-    driver: {
-      id: "66f1a2b3c4d5e6f7a8b9c001",
-      name: "John Doe",
-      rating: 4.5,
-      profilePictureUrl: "https://randomuser.me/api/portraits/men/1.jpg",
-    },
-  },
-  {
-    _id: "66f1a2b3c4d5e6f7a8b9c002",
-    bookingRef: "FM-20260302-009",
-    customerId: "cust_001",
-    pickUp: {
-      name: "BGC",
-      address: "9th Ave, Bonifacio Global City, Taguig",
-      coords: { lat: 14.5502, lng: 121.051 },
-    },
-    dropOff: {
-      name: "Pasay City",
-      address: "Taft Ave, Pasay City, Metro Manila",
-      coords: { lat: 14.5378, lng: 120.998 },
-    },
-    bookingType: { type: "schedule", value: "2026-03-02T15:00:00.000Z" },
-    selectedVehicle: { name: "Sedan", freeServices: [] },
-    routeData: {
-      distance: 8100,
-      duration: 1200,
-      basePrice: 120,
-      distanceFee: 0,
-      serviceFee: 0,
-      totalPrice: 0,
-    },
-    paymentMethod: "Cash",
-    addedServices: [],
-    note: "",
-    itemType: null,
-    photos: [],
-    createdAt: "2026-03-02T14:10:00.000Z",
-    status: "cancelled",
-    driverRating: null,
-    cancelledAt: "2026-03-02T14:25:00.000Z",
-    requestedDrivers: [],
-  },
-  {
-    _id: "66f1a2b3c4d5e6f7a8b9c003",
-    bookingRef: "FM-20260228-015",
-    customerId: "cust_001",
-    pickUp: {
-      name: "Mandaluyong City",
-      address: "Shaw Blvd, Mandaluyong City, Metro Manila",
-      coords: { lat: 14.5794, lng: 121.0359 },
-    },
-    dropOff: {
-      name: "Marikina City",
-      address: "Marcos Highway, Marikina City, Metro Manila",
-      coords: { lat: 14.6507, lng: 121.1029 },
-    },
-    bookingType: { type: "asap", value: "" },
-    selectedVehicle: { name: "Motorcycle", freeServices: [] },
-    routeData: {
-      distance: 7600,
-      duration: 1080,
-      basePrice: 80,
-      distanceFee: 80,
-      serviceFee: 35,
-      totalPrice: 195,
-    },
-    paymentMethod: "GCash",
-    addedServices: [],
-    note: "Handle with care",
-    itemType: "Parcel",
-    photos: [],
-    createdAt: "2026-02-28T10:00:00.000Z",
-    status: "completed",
-    driverRating: 4,
-    cancelledAt: null,
-    requestedDrivers: [],
-    driver: {
-      id: "66f1a2b3c4d5e6f7a8b9c001",
-      name: "John Doe",
-      rating: 4.5,
-      profilePictureUrl: "https://randomuser.me/api/portraits/men/1.jpg",
-    },
-  },
-  {
-    _id: "66f1a2b3c4d5e6f7a8b9c004",
-    bookingRef: "FM-20260225-022",
-    customerId: "cust_001",
-    pickUp: {
-      name: "Las Piñas City",
-      address: "Alabang-Zapote Rd, Las Piñas City, Metro Manila",
-      coords: { lat: 14.45, lng: 120.9822 },
-    },
-    dropOff: {
-      name: "Muntinlupa City",
-      address: "National Rd, Muntinlupa City, Metro Manila",
-      coords: { lat: 14.4081, lng: 121.0415 },
-    },
-    bookingType: { type: "asap", value: "" },
-    selectedVehicle: { name: "L300 Van", freeServices: [] },
-    routeData: {
-      distance: 9300,
-      duration: 1500,
-      basePrice: 200,
-      distanceFee: 100,
-      serviceFee: 40,
-      totalPrice: 340,
-    },
-    paymentMethod: "Cash",
-    addedServices: [],
-    note: "",
-    itemType: "Furniture",
-    photos: [],
-    createdAt: "2026-02-25T09:15:00.000Z",
-    status: "completed",
-    driverRating: 5,
-    cancelledAt: null,
-    requestedDrivers: [],
-    driver: {
-      id: "66f1a2b3c4d5e6f7a8b9c002",
-      name: "Joel Castillo",
-      rating: 4.5,
-      profilePictureUrl: "https://randomuser.me/api/portraits/men/2.jpg",
-    },
-  },
-  {
-    _id: "66f1a2b3c4d5e6f7a8b9c005",
-    bookingRef: "FM-20260220-008",
-    customerId: "cust_001",
-    pickUp: {
-      name: "Caloocan City",
-      address: "A. Mabini St, Caloocan City, Metro Manila",
-      coords: { lat: 14.6499, lng: 120.978 },
-    },
-    dropOff: {
-      name: "Malabon City",
-      address: "Gov. Pascual Ave, Malabon City, Metro Manila",
-      coords: { lat: 14.6625, lng: 120.9572 },
-    },
-    bookingType: { type: "asap", value: "" },
-    selectedVehicle: { name: "Motorcycle", freeServices: [] },
-    routeData: {
-      distance: 5200,
-      duration: 720,
-      basePrice: 80,
-      distanceFee: 50,
-      serviceFee: 30,
-      totalPrice: 160,
-    },
-    paymentMethod: "GCash",
-    addedServices: [],
-    note: "",
-    itemType: "Documents",
-    photos: [],
-    createdAt: "2026-02-20T16:45:00.000Z",
-    status: "in_transit",
-    driverRating: null,
-    cancelledAt: null,
-    requestedDrivers: [],
-    driver: {
-      id: "66f1a2b3c4d5e6f7a8b9c003",
-      name: "Bryan Lim",
-      rating: 4.5,
-      profilePictureUrl: "https://randomuser.me/api/portraits/men/3.jpg",
-    },
-  },
 ];
 
 const FAQS: Faq[] = [
@@ -292,6 +97,8 @@ export default function CustomerSupport() {
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
 
+  const { data: bookings, isPending, error, refetch } = useRecentBookings(10);
+
   const toggleTemplate = (id: string): void => {
     setSelectedTemplates((prev) =>
       prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id],
@@ -312,6 +119,24 @@ export default function CustomerSupport() {
   const handleOpenLiveChat = (): void => {
     // TODO: navigate to live chat screen
   };
+
+  if (error) {
+    return (
+      <View className="flex-1 items-center justify-center gap-2">
+        <Text className="text-gray-500">Error loading support</Text>
+        <Text className="text-gray-500">{error.message}</Text>
+        <Button title="Retry" onPress={() => refetch()} />
+      </View>
+    );
+  }
+
+  if (isPending) {
+    return (
+      <View className="flex-1 items-center justify-center">
+        <ActivityIndicator size="large" color="#9CA3AF" />
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView className="flex-1 bg-gray-50" edges={["bottom"]}>
@@ -350,7 +175,7 @@ export default function CustomerSupport() {
       >
         {activeTab === "bookings" && (
           <BookingReportTab
-            bookings={BOOKINGS}
+            bookings={bookings}
             selectedBooking={selectedBooking}
             onSelectBooking={setSelectedBooking}
             dropdownOpen={dropdownOpen}

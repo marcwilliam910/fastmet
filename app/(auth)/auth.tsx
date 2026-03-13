@@ -1,8 +1,8 @@
 import CustomKeyAvoidingView from "@/components/CustomKeyAvoid";
 import LogoWithText from "@/components/LogoWithText";
-import api from "@/lib/axios";
 import { useAppStore } from "@/store/useAppStore";
 import { Ionicons } from "@expo/vector-icons";
+import axios from "axios";
 import { Link, router } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import React, { useState } from "react";
@@ -24,12 +24,15 @@ const Auth = () => {
   const [isValid, setIsValid] = useState(false);
 
   const handleSignIn = async () => {
-    const formattedPhoneNumber = `+63${phoneNumber}`;
+    const formattedPhoneNumber = `63${phoneNumber}`;
     try {
       setLoading(true);
-      const res = await api.post("/auth/send-otp", {
-        phoneNumber: formattedPhoneNumber,
-      });
+      const res = await axios.post(
+        `${process.env.EXPO_PUBLIC_BASE_URL}/api/auth/send-otp`,
+        {
+          phoneNumber: formattedPhoneNumber,
+        },
+      );
 
       if (res.data.success) {
         useAppStore.getState().setAuthData({
@@ -54,12 +57,13 @@ const Auth = () => {
             (minutes
               ? `Please try again in ${minutes} minute${minutes > 1 ? "s" : ""}.`
               : "Please try again later."),
-          [{ text: "OK" }]
+          [{ text: "OK" }],
         );
       } else {
         Alert.alert(
           "Error",
-          error.response?.data?.error || "Failed to send OTP. Please try again."
+          error.response?.data?.error ||
+            "Failed to send OTP. Please try again.",
         );
       }
     } finally {

@@ -3,13 +3,15 @@ import { useAppStore } from "@/store/useAppStore";
 import { LocationDetails, RouteData } from "@/types/book";
 import { GOOGLE_MAPS_API_KEY, STATIC_IMAGES } from "@/utils/constants";
 import { formatDuration } from "@/utils/helpers/date";
+import { Image } from "expo-image";
 import * as Location from "expo-location";
 import { useFocusEffect } from "expo-router";
 import React, { memo, useCallback, useEffect, useRef, useState } from "react";
-import { Alert, Image, StatusBar, StyleSheet, Text, View } from "react-native";
+import { Alert, StatusBar, StyleSheet, Text, View } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import MapViewDirections from "react-native-maps-directions";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+
 type Region = {
   latitude: number;
   longitude: number;
@@ -170,7 +172,6 @@ function MapScreen({
               anchor={{ x: 0.5, y: 0.5 }}
               tracksViewChanges={!pickupImageLoaded}
               zIndex={1000}
-              opacity={1} // ← Explicitly set opacity
             >
               <View style={{ opacity: 1 }}>
                 <Image
@@ -178,12 +179,11 @@ function MapScreen({
                   style={{
                     width: 50,
                     height: 50,
-                    opacity: 1, // ← Force full opacity
                   }}
-                  resizeMode="contain"
+                  contentFit="contain"
                   onLoad={() => setPickupImageLoaded(true)}
                   onError={(e) => {
-                    console.error("Pickup image error:", e.nativeEvent.error);
+                    // console.error("Pickup image error:", e.nativeEvent.error);
                     setPickupImageLoaded(true);
                   }}
                 />
@@ -202,7 +202,6 @@ function MapScreen({
               anchor={{ x: 0.5, y: 0.5 }}
               tracksViewChanges={!dropoffImageLoaded}
               zIndex={1001} // ← Higher than pickup
-              opacity={1} // ← Explicitly set opacity
             >
               <View style={{ opacity: 1 }}>
                 <Image
@@ -210,12 +209,11 @@ function MapScreen({
                   style={{
                     width: 50,
                     height: 50,
-                    opacity: 1, // ← Force full opacity
                   }}
-                  resizeMode="contain"
+                  contentFit="contain"
                   onLoad={() => setDropoffImageLoaded(true)}
                   onError={(e) => {
-                    console.error("Dropoff image error:", e.nativeEvent.error);
+                    // console.error("Dropoff image error:", e.nativeEvent.error);
                     setDropoffImageLoaded(true);
                   }}
                 />

@@ -30,3 +30,8 @@ export const rateDriver = async (bookingId: string, rating: number) => {
   const res = await api.patch(`/booking/rate-driver/${bookingId}`, { rating });
   return res.data;
 };
+
+export const getRecentBookings = async (limit = 5) => {
+  const res = await api.get(`/booking/recent/${limit}`);
+  return res.data;
+};

@@ -1,4 +1,9 @@
-import { getBookingById, getBookingsCounts, getUserBookings } from "@/api/book";
+import {
+  getBookingById,
+  getBookingsCounts,
+  getRecentBookings,
+  getUserBookings,
+} from "@/api/book";
 import { LocationDetails } from "@/types/book";
 import { fetchDrivingDistance } from "@/utils/helpers/calculatePrice";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
@@ -46,5 +51,12 @@ export const useDrivingDistance = (
     enabled: !!pickUp && !!dropOff && !!vehicleType,
     staleTime: Infinity,
     gcTime: 1000 * 60 * 60, // cache kept in memory for 10 min after unmount
+  });
+};
+
+export const useRecentBookings = (limit: number) => {
+  return useQuery({
+    queryKey: ["recentBookings", limit],
+    queryFn: () => getRecentBookings(limit),
   });
 };
