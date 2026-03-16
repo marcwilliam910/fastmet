@@ -145,8 +145,8 @@ export const ServiceCard = ({
     quantity: number,
   ) => void;
 }) => {
-  const [tollModalVisible, setTollModalVisible] = useState(false); // 👈 add this
-  const isTollService = service.key === "toll"; // 👈 adjust key to match yours
+  const [tollModalVisible, setTollModalVisible] = useState(false);
+  const isTollService = service.key === "toll_fee";
   const handleIncrement = () => {
     if (service.maxQuantity && quantity >= service.maxQuantity) return;
     updateServiceQuantity(service.key, service.price, quantity + 1);
@@ -194,33 +194,44 @@ export const ServiceCard = ({
                 </View>
               </Popover>
             </View>
-            <View className="flex-row items-center gap-2">
+            <View className="flex-row items-center gap-2 flex-wrap">
               {service.price > 0 ? (
-                <Text className="text-sm font-semibold text-darkPrimary">
-                  ₱{service.price}
-                </Text>
+                <>
+                  <Text className="text-sm font-semibold text-darkPrimary">
+                    ₱{service.price}
+                  </Text>
+                  <Text className="text-xs text-gray-500">
+                    • {service.unit}
+                  </Text>
+                </>
               ) : (
-                <Text className="text-xs font-medium text-blue-600">
-                  Actual Cost
-                </Text>
-              )}
-              <Text className="text-xs text-gray-500">· {service.unit}</Text>
-            </View>
+                <>
+                  <Text className="text-xs font-medium text-blue-600">
+                    Actual Cost
+                  </Text>
 
-            {/* 👇 Add this block right after the price row */}
-            {isTollService && (
-              <Pressable
-                onPress={(e) => {
-                  e.stopPropagation();
-                  setTollModalVisible(true);
-                }}
-                hitSlop={8}
-              >
-                <Text className="text-xs text-blue-500 underline mt-0.5">
-                  View toll rates →
-                </Text>
-              </Pressable>
-            )}
+                  {isTollService && (
+                    <Pressable
+                      onPress={(e) => {
+                        e.stopPropagation();
+                        setTollModalVisible(true);
+                      }}
+                      hitSlop={8}
+                      className="flex-row items-center gap-1 px-2.5 py-0.5 rounded-full bg-blue-50 border border-blue-200 active:bg-blue-100"
+                    >
+                      <Ionicons
+                        name="receipt-outline"
+                        size={12}
+                        color="#1D4ED8"
+                      />
+                      <Text className="text-xs font-medium text-blue-700">
+                        Toll rates
+                      </Text>
+                    </Pressable>
+                  )}
+                </>
+              )}
+            </View>
           </View>
         </View>
 

@@ -61,7 +61,6 @@ export default {
     },
     plugins: [
       "expo-router",
-      // "react-native-webview",
       [
         "expo-splash-screen",
         {

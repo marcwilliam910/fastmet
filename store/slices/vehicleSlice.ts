@@ -18,7 +18,7 @@ export const createVehicleSlice: StateCreator<VehicleSlice> = (set) => ({
     set({ vehicleLoading: true, vehicleError: null });
     try {
       const res = await fetch(
-        `${process.env.EXPO_PUBLIC_BASE_URL}/api/vehicles`,
+        `${process.env.EXPO_PUBLIC_BASE_URL}/api/vehicles?includeInactive=false`,
         {
           method: "GET",
           headers: {
