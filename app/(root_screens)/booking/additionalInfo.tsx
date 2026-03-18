@@ -4,7 +4,7 @@ import { openGallery, takePhoto } from "@/utils/helpers/imagePicker";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import React from "react";
+import React, { useState } from "react";
 import {
   Alert,
   KeyboardAvoidingView,
@@ -21,80 +21,62 @@ import {
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
 
+// Size rank used to derive compatible vehicle lists dynamically
+const VEHICLE_SIZE_RANK: Record<string, number> = {
+  motorcycle: 0,
+  sedan: 1,
+  mpv_suv: 2,
+  light_van: 3,
+  small_pickup: 4,
+  l300: 5,
+  closed_van: 6,
+  wing_van: 7,
+};
+
+const ITEM_OPTIONS = [
+  { label: "Documents / Envelope", value: "Documents / Envelope" },
+  { label: "Small Package / Bag", value: "Small Package / Bag" },
+  { label: "Medium Box / Carton", value: "Medium Box / Carton" },
+  {
+    label: "Large Box / Furniture / Appliance",
+    value: "Large Box / Furniture / Appliance",
+  },
+  { label: "Other / Oversized", value: "Other / Oversized" },
+];
+
 export default function AdditionalInfo() {
   const insets = useSafeAreaInsets();
+  const [photoError, setPhotoError] = useState(false);
 
-  const note = useAppStore((state) => state.note);
-  const setNote = useAppStore((state) => state.setNote);
-  const itemType = useAppStore((state) => state.itemType);
-  const setItemType = useAppStore((state) => state.setItemType);
+  const note = useAppStore((s) => s.note);
+  const setNote = useAppStore((s) => s.setNote);
+  const itemType = useAppStore((s) => s.itemType);
+  const setItemType = useAppStore((s) => s.setItemType);
+  const photos = useAppStore((s) => s.photos);
+  const setPhoto = useAppStore((s) => s.setPhoto);
+  const removePhoto = useAppStore((s) => s.removePhoto);
+  const vehicles = useAppStore((s) => s.vehicles);
+  const bookingType = useAppStore((s) => s.bookingType);
 
-  const photos = useAppStore((state) => state.photos);
-  const setPhoto = useAppStore((state) => state.setPhoto);
-  const removePhoto = useAppStore((state) => state.removePhoto);
+  const vehicleKeys = vehicles.map((v) => v.key);
+  const isPooling = bookingType?.type === "pooling";
 
-  const itemOptions = [
-    { label: "Documents / Envelope", value: "Documents / Envelope" },
-    { label: "Small Package / Bag", value: "Small Package / Bag" },
-    { label: "Medium Box / Carton", value: "Medium Box / Carton" },
-    {
-      label: "Large Box / Furniture / Appliance",
-      value: "Large Box / Furniture / Appliance",
-    },
-    { label: "Other / Oversized", value: "Other / Oversized" },
-  ];
+  // Returns vehicleKeys whose size rank is >= minRank, eliminating hardcoded arrays
+  const vehiclesFrom = (minRank: number) =>
+    vehicleKeys.filter((k) => (VEHICLE_SIZE_RANK[k] ?? 99) >= minRank);
 
   const itemVehicleMap: Record<string, string[]> = {
-    "Documents / Envelope": [
-      "motorcycle",
-      "sedan",
-      "mpv_suv",
-      "light_van",
-      "small_pickup",
-      "l300",
-      "closed_van",
-      "wing_van",
-    ],
-
-    "Small Package / Bag": [
-      "motorcycle",
-      "sedan",
-      "mpv_suv",
-      "light_van",
-      "small_pickup",
-      "l300",
-      "closed_van",
-      "wing_van",
-    ],
-
-    "Medium Box / Carton": [
-      "sedan",
-      "mpv_suv",
-      "light_van",
-      "small_pickup",
-      "l300",
-      "closed_van",
-      "wing_van",
-    ],
-
-    "Large Box / Furniture / Appliance": [
-      "mpv_suv",
-      "light_van",
-      "small_pickup",
-      "l300",
-      "closed_van",
-      "wing_van",
-    ],
-
-    "Other / Oversized": ["l300", "closed_van", "wing_van"],
+    "Documents / Envelope": vehicleKeys, // all
+    "Small Package / Bag": vehicleKeys, // all (motorcycle included)
+    "Medium Box / Carton": vehiclesFrom(1), // no motorcycle
+    "Large Box / Furniture / Appliance": vehiclesFrom(2), // no motorcycle/sedan
+    "Other / Oversized": vehiclesFrom(5), // l300 and above
   };
 
   const isItemCompatible = (item: string | null) => {
     if (!item) return true;
-
     const selectedVehicle = useAppStore.getState().selectedVehicle?.key;
     if (!selectedVehicle) return false;
-
     return itemVehicleMap[item]?.includes(selectedVehicle) ?? false;
   };
 
@@ -108,7 +90,10 @@ export default function AdditionalInfo() {
           text: "Take Photo",
           onPress: async () => {
             const uri = await takePhoto();
-            if (uri) setPhoto(uri);
+            if (uri) {
+              setPhoto(uri);
+              setPhotoError(false);
+            }
           },
         },
         {
@@ -117,12 +102,21 @@ export default function AdditionalInfo() {
             const result = await openGallery();
             if (result && !result.canceled && result.assets?.length) {
               setPhoto(result.assets[0].uri);
+              setPhotoError(false);
             }
           },
         },
       ],
-      { cancelable: true }
+      { cancelable: true },
     );
+  };
+
+  const handleNext = () => {
+    if (isPooling && !photos.some(Boolean)) {
+      setPhotoError(true);
+      return;
+    }
+    router.push("/(root_screens)/booking/paymentMethod");
   };
 
   return (
@@ -175,40 +169,34 @@ export default function AdditionalInfo() {
               />
             </View>
 
-            {/* Item Type (Optional) */}
+            {/* Item Type */}
             <View className="gap-2">
               <Text className="font-semibold">
                 What are you sending?{" "}
                 <Text className="text-xs text-gray-400">(Optional)</Text>
               </Text>
-
               <Dropdown
                 style={{
                   height: 50,
-                  borderColor: "#D1D5DB", // gray-300
+                  borderColor: "#D1D5DB",
                   borderWidth: 1,
                   borderRadius: 8,
                   paddingHorizontal: 12,
                   backgroundColor: "white",
                 }}
-                placeholderStyle={{ color: "#9CA3AF" }} // gray-400
-                selectedTextStyle={{ color: "#111827" }} // gray-900
+                placeholderStyle={{ color: "#9CA3AF" }}
+                selectedTextStyle={{ color: "#111827" }}
                 itemTextStyle={{ color: "#111827" }}
-                data={itemOptions}
+                data={ITEM_OPTIONS}
                 labelField="label"
                 valueField="value"
                 placeholder="Select item type"
                 value={itemType}
-                onChange={(item) => {
-                  setItemType(item.value);
-                }}
+                onChange={(item) => setItemType(item.value)}
               />
-
-              {/* Compatibility Warning */}
               {itemType && !isItemCompatible(itemType) && (
                 <Text className="text-red-500 text-xs font-semibold mt-1 ml-2">
-                  {/* display also what vehicle is compatible */}
-                  Warning: Your selected item may not fit in the chosen vehicle.
+                  Warning: Your selected item may not fit in the chosen vehicle.{" "}
                   <Text className="capitalize">
                     (Compatible:{" "}
                     {itemVehicleMap[itemType].join(", ").replaceAll("_", " ")})
@@ -221,14 +209,22 @@ export default function AdditionalInfo() {
             <View className="gap-2">
               <Text className="font-semibold">
                 Upload Photo{" "}
-                <Text className="text-xs text-gray-400">(Optional)</Text>
+                {isPooling ? (
+                  <Text className="text-xs text-red-500">*</Text>
+                ) : (
+                  <Text className="text-xs text-gray-400">(Optional)</Text>
+                )}
               </Text>
               <View className="flex-row items-center justify-between gap-2">
                 {[0, 1, 2].map((i) => (
                   <Pressable
                     key={i}
                     onPress={handleAddPhoto}
-                    className="items-center justify-center flex-1 gap-1 border relative border-gray-300 h-28 rounded-xl active:bg-gray-100"
+                    className={`items-center justify-center flex-1 gap-1 border relative h-28 rounded-xl active:bg-gray-100 ${
+                      photoError && i === 0 && !photos[0]
+                        ? "border-red-400 bg-red-50"
+                        : "border-gray-300"
+                    }`}
                   >
                     {photos[i] ? (
                       <>
@@ -253,19 +249,26 @@ export default function AdditionalInfo() {
                         </Pressable>
                       </>
                     ) : (
-                      <Ionicons name="camera-outline" size={22} color="gray" />
+                      <Ionicons
+                        name="camera-outline"
+                        size={22}
+                        color={photoError && i === 0 ? "#F87171" : "gray"}
+                      />
                     )}
                   </Pressable>
                 ))}
               </View>
+              {photoError && (
+                <Text className="text-red-500 text-xs font-semibold ml-1">
+                  At least one photo is required for pooling bookings.
+                </Text>
+              )}
             </View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
 
-      <SheetButton
-        next={() => router.push("/(root_screens)/booking/paymentMethod")}
-      />
+      <SheetButton next={handleNext} />
     </SafeAreaView>
   );
 }
