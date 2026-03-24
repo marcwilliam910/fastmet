@@ -1,4 +1,5 @@
 import CustomKeyAvoidingView from "@/components/CustomKeyAvoid";
+import { Countdown } from "@/components/Timers";
 import { useAppStore } from "@/store/useAppStore";
 import { UserAddress } from "@/types/user";
 import { Ionicons } from "@expo/vector-icons";
@@ -12,6 +13,7 @@ import Toast from "react-native-toast-message";
 
 export const RESEND_TIMEOUT_SECONDS = 60;
 export const RESEND_KEY = "resend_available_at";
+const OTP_VALIDITY_SECONDS = 600;
 
 type LoginResponse = {
   success: boolean;
@@ -36,10 +38,14 @@ export default function PhoneOTPScreen() {
 
   const inputRefs = useRef<(TextInput | null)[]>([]);
 
-  const [resendTimer, setResendTimer] = useState(0);
+  const [initialResendSeconds, setInitialResendSeconds] = useState(
+    RESEND_TIMEOUT_SECONDS,
+  );
   const [canResend, setCanResend] = useState(false);
+  const [otpExpired, setOtpExpired] = useState(false);
+  const [otpTimerKey, setOtpTimerKey] = useState(0);
+  const [resendTimerKey, setResendTimerKey] = useState(0);
 
-  // Initialize timer on mount
   useEffect(() => {
     const initCountdown = async () => {
       const stored = await SecureStore.getItemAsync(RESEND_KEY);
@@ -52,7 +58,7 @@ export default function PhoneOTPScreen() {
       const remaining = Math.ceil((availableAt - Date.now()) / 1000);
 
       if (remaining > 0) {
-        setResendTimer(remaining);
+        setInitialResendSeconds(remaining);
         setCanResend(false);
       } else {
         await SecureStore.deleteItemAsync(RESEND_KEY);
@@ -64,26 +70,10 @@ export default function PhoneOTPScreen() {
     setTimeout(() => inputRefs.current[0]?.focus(), 50);
   }, []);
 
-  // Separate effect for countdown logic
-  useEffect(() => {
-    if (resendTimer <= 0) {
-      setCanResend(true);
-      return;
-    }
-
-    const interval = setInterval(() => {
-      setResendTimer((prev) => {
-        if (prev <= 1) {
-          SecureStore.deleteItemAsync(RESEND_KEY);
-          setCanResend(true);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [resendTimer]);
+  const clearOTPInputs = () => {
+    setOtp(["", "", "", "", "", ""]);
+    setTimeout(() => inputRefs.current[0]?.focus(), 50);
+  };
 
   const handleResendOtp = async () => {
     if (!canResend || loading) return;
@@ -99,8 +89,12 @@ export default function PhoneOTPScreen() {
       const availableAt = Date.now() + RESEND_TIMEOUT_SECONDS * 1000;
       await SecureStore.setItemAsync(RESEND_KEY, String(availableAt));
 
-      setResendTimer(RESEND_TIMEOUT_SECONDS);
+      setInitialResendSeconds(RESEND_TIMEOUT_SECONDS);
       setCanResend(false);
+      setOtpExpired(false);
+      setOtpTimerKey((k) => k + 1);
+      setResendTimerKey((k) => k + 1);
+      clearOTPInputs();
 
       Toast.show({
         type: "success",
@@ -125,6 +119,27 @@ export default function PhoneOTPScreen() {
   const handleOtpChange = (value: string, index: number) => {
     if (value && !/^\d+$/.test(value)) return;
 
+    // Handle paste — distribute digits across boxes
+    if (value.length > 1) {
+      const digits = value
+        .replace(/\D/g, "")
+        .slice(0, 6 - index)
+        .split("");
+      const newOtp = [...otp];
+      digits.forEach((d, i) => {
+        newOtp[index + i] = d;
+      });
+      setOtp(newOtp);
+      setError("");
+      const nextIndex = Math.min(index + digits.length, 5);
+      inputRefs.current[nextIndex]?.focus();
+      if (newOtp.every((d) => d)) {
+        // FIX: pass newOtp.join("") — avoids stale otp state
+        setTimeout(() => handleVerifyOTP(newOtp.join("")), 200);
+      }
+      return;
+    }
+
     const newOtp = [...otp];
     newOtp[index] = value;
     setOtp(newOtp);
@@ -132,6 +147,11 @@ export default function PhoneOTPScreen() {
 
     if (value && index < 5) {
       inputRefs.current[index + 1]?.focus();
+    }
+
+    if (index === 5 && value && newOtp.every((d) => d)) {
+      // FIX: pass newOtp.join("") — avoids stale otp state
+      setTimeout(() => handleVerifyOTP(newOtp.join("")), 300);
     }
   };
 
@@ -141,12 +161,15 @@ export default function PhoneOTPScreen() {
     }
   };
 
-  const handleVerifyOTP = async () => {
+  // FIX: accepts optional code param to avoid stale closure when auto-triggered
+  const handleVerifyOTP = async (code?: string) => {
+    if (otpExpired) return;
+
     const { phoneNumber } = useAppStore.getState();
+    const otpCode = code ?? otp.join("");
 
     setLoading(true);
     try {
-      const otpCode: string = otp.join("");
       const { data: otpData } = await axios.post<{
         success: boolean;
         verifyToken: string;
@@ -202,7 +225,6 @@ export default function PhoneOTPScreen() {
         }
       }
     } catch (error: any) {
-      // Handle rate limit errors for verification
       if (error.response?.status === 429) {
         const retryAfter = error.response?.data?.retryAfter;
         const minutes = retryAfter ? Math.ceil(retryAfter / 60) : null;
@@ -215,6 +237,7 @@ export default function PhoneOTPScreen() {
         );
       } else {
         setError(error.response?.data?.error || "Something went wrong");
+        clearOTPInputs();
       }
     } finally {
       setLoading(false);
@@ -231,12 +254,36 @@ export default function PhoneOTPScreen() {
           </Text>
 
           {/* Subtitle */}
-          <Text className="text-base text-gray-500 mb-10 text-center leading-6">
+          <Text className="text-base text-gray-500 mb-2 text-center leading-6">
             Enter the 6-digit verification code sent to{" "}
             <Text className="font-semibold text-[#111] underline">
               {useAppStore.getState().phoneNumber}
             </Text>
           </Text>
+
+          {/* OTP expiry countdown */}
+          <View className="flex-row items-center gap-1 mb-8">
+            <Ionicons
+              name="time-outline"
+              size={14}
+              color={otpExpired ? "#DC2626" : "#6B7280"}
+            />
+            {otpExpired ? (
+              <Text className="text-sm font-medium text-red-600">
+                Code expired — please request a new one
+              </Text>
+            ) : (
+              <View className="flex-row items-center gap-1">
+                <Text className="text-sm text-gray-500">Code expires in</Text>
+                <Countdown
+                  key={otpTimerKey}
+                  seconds={OTP_VALIDITY_SECONDS}
+                  onExpire={() => setOtpExpired(true)}
+                  className="text-sm font-medium text-gray-500"
+                />
+              </View>
+            )}
+          </View>
 
           {/* OTP Inputs */}
           <View className="flex-row justify-between w-full mb-4">
@@ -249,14 +296,15 @@ export default function PhoneOTPScreen() {
                 className={`w-14 h-16 rounded-2xl text-center text-2xl font-bold
                 ${digit ? "bg-orange-100 border border-darkPrimary" : "bg-white border border-gray-300"}
                 ${error ? "border-red-500" : ""}
+                ${otpExpired ? "opacity-40" : ""}
               `}
                 value={digit}
                 onChangeText={(value) => handleOtpChange(value, index)}
                 onKeyPress={(e) => handleKeyPress(e, index)}
                 keyboardType="number-pad"
-                maxLength={1}
+                maxLength={6}
                 selectTextOnFocus
-                editable={!loading}
+                editable={!loading && !otpExpired}
                 autoFocus={index === 0}
               />
             ))}
@@ -292,16 +340,23 @@ export default function PhoneOTPScreen() {
                 </Text>
               </Pressable>
             ) : (
-              <Text className="text-base font-semibold text-gray-400">
-                Resend in {Math.floor(resendTimer / 60)}:
-                {(resendTimer % 60).toString().padStart(2, "0")}
-              </Text>
+              <View className="flex-row items-center gap-1">
+                <Text className="text-base font-semibold text-gray-400">
+                  Resend in{" "}
+                </Text>
+                <Countdown
+                  key={resendTimerKey}
+                  seconds={initialResendSeconds}
+                  onExpire={() => setCanResend(true)}
+                  className="text-base font-semibold text-gray-400"
+                />
+              </View>
             )}
           </View>
 
           {/* Verify Button */}
           <Pressable
-            onPress={handleVerifyOTP}
+            onPress={() => handleVerifyOTP()}
             className={`rounded-xl py-4 items-center w-full mb-4 
             ${
               loading || otp.join("").length !== 6
@@ -309,9 +364,11 @@ export default function PhoneOTPScreen() {
                 : "bg-lightPrimary"
             }
           `}
-            disabled={loading || otp.join("").length !== 6}
+            disabled={loading || otp.join("").length !== 6 || otpExpired}
           >
-            <Text className="text-white text-base font-semibold">Verify</Text>
+            <Text className="text-white text-base font-semibold">
+              {otpExpired ? "Code Expired" : "Verify"}
+            </Text>
           </Pressable>
 
           {/* Change Number */}

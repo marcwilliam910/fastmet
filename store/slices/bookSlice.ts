@@ -87,6 +87,8 @@ export const createBookSlice: StateCreator<
     distanceFee: 0,
     serviceFee: 0,
     totalPrice: 0,
+    surgeMultiplier: 1.0,
+    gasAdjFactor: 1.0,
   },
   paymentMethod: "cash",
   note: "",

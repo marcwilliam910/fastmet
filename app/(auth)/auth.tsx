@@ -28,7 +28,7 @@ const Auth = () => {
     try {
       setLoading(true);
       const res = await axios.post(
-        `${process.env.EXPO_PUBLIC_BASE_URL}/api/auth/send-otp`,
+        `${process.env.EXPO_PUBLIC_BASE_URL}/api/auth/send-otp-client`,
         {
           phoneNumber: formattedPhoneNumber,
         },

@@ -31,9 +31,11 @@ import SheetButton from "./SheetButton";
 const BookSheet = ({
   isDragging,
   onOpenSearch,
+  isSurgeLoading,
 }: {
   isDragging: boolean;
   onOpenSearch: (type: "pickup" | "dropoff") => void;
+  isSurgeLoading: boolean;
 }) => {
   const sheetRef = useRef<BottomSheet>(null);
   const previousSnapIndex = useRef<number>(1); // Store the previous index (default to 1, second snap point)
@@ -348,6 +350,7 @@ const BookSheet = ({
 
       <SheetButton
         next={() => router.push("/(root_screens)/booking/services")}
+        isSurgeLoading={isSurgeLoading}
       />
 
       {infoModalVisible && (

@@ -2,6 +2,7 @@ import BookSheet from "@/components/maps/BookSheet";
 import MapScreen from "@/components/maps/MapScreen";
 import SearchModal from "@/components/modals/mapSearchModal";
 import { useDrivingDistance } from "@/queries/bookingQueries";
+import { useSurgeFactors } from "@/queries/pricingQueries";
 import { useAppStore } from "@/store/useAppStore";
 import { Ionicons } from "@expo/vector-icons";
 import { DrawerActions } from "@react-navigation/native";
@@ -15,31 +16,47 @@ const Book = () => {
   const pickUp = useAppStore((state) => state.pickUp);
   const dropOff = useAppStore((state) => state.dropOff);
   const routeData = useAppStore((state) => state.routeData);
-  const [region, setRegion] = useState<Region | null>(null);
-  const navigation = useNavigation();
-  const [isDragging, setIsDragging] = useState(false);
+  const setRouteData = useAppStore((state) => state.setRouteData);
+  const selectedVehicle = useAppStore((state) => state.selectedVehicle);
+  const bookingType = useAppStore((state) => state.bookingType);
+  const addedServices = useAppStore((state) => state.addedServices);
 
+  const [region, setRegion] = useState<Region | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
   const [searchModalVisible, setSearchModalVisible] = useState(false);
   const [searchType, setSearchType] = useState<"pickup" | "dropoff" | null>(
     null,
   );
-  const setRouteData = useAppStore((state) => state.setRouteData); // add
-  const selectedVehicle = useAppStore((state) => state.selectedVehicle); // add
-  const bookingType = useAppStore((state) => state.bookingType); // add
-  const addedServices = useAppStore((state) => state.addedServices); // add
+
+  const navigation = useNavigation();
+
   const { data: route, isFetching } = useDrivingDistance(
     pickUp,
     dropOff,
     selectedVehicle?.key,
   );
 
+  // ── Surge + gas factors ───────────────────────────────────────────────────
+  // Only fetches when pickUp is set — cached 60s, covers all variants at once
+  const { data: surgeFactors, isLoading: isSurgeLoading } =
+    useSurgeFactors(pickUp);
+  // ── Pricing ───────────────────────────────────────────────────────────────
   const pricing = useMemo(() => {
     if (!route || !selectedVehicle?.variant) return null;
+
     const { distanceKm, durationMin } = route;
     const variant = selectedVehicle.variant;
+    const variantKey = `${selectedVehicle.key}_${variant.maxLoadKg}`;
+
+    const factors = surgeFactors?.[variantKey];
+    const surgeMultiplier = factors?.surgeMultiplier ?? 1.0;
+    const gasAdjFactor = factors?.gasAdjFactor ?? 1.0;
+
+    const basePrice = Math.round(variant.baseFare * gasAdjFactor);
     const sortedTiers = [...variant.pricingTiers].sort(
       (a, b) => a.minKm - b.minKm,
     );
+
     const distanceFee = (() => {
       let fee = 0;
       let remaining = distanceKm;
@@ -50,19 +67,41 @@ const Book = () => {
         fee += kmInTier * tier.pricePerKm;
         remaining -= kmInTier;
       }
-      return fee * bookingType.priceModifier;
+      return Math.round(fee * bookingType.priceModifier);
     })();
+
     const serviceFee = addedServices.reduce((sum, s) => sum + s.price, 0);
-    const basePrice = variant.baseFare;
+    const subtotal = basePrice + distanceFee + serviceFee;
+    const totalPrice = Math.round(subtotal * surgeMultiplier);
+
+    // ── Pricing breakdown log ─────────────────────────────────────────────
+    console.log("──────────────────────────────────────");
+    console.log(`🚗 Vehicle:       ${variantKey}`);
+    console.log(`📍 Distance:      ${distanceKm.toFixed(2)} km`);
+    console.log(
+      `⛽ Gas adj:       ×${gasAdjFactor} (base: ₱${variant.baseFare} → ₱${basePrice})`,
+    );
+    console.log(
+      `📦 Booking type:  ×${bookingType.priceModifier} (${bookingType.type} - ${bookingType.value})`,
+    );
+    console.log(`💰 Distance fee:  ₱${distanceFee}`);
+    console.log(`🔧 Service fee:   ₱${serviceFee}`);
+    console.log(`📊 Subtotal:      ₱${subtotal}`);
+    console.log(`⚡ Surge:         ×${surgeMultiplier}`);
+    console.log(`✅ Total:         ₱${totalPrice}`);
+    console.log("──────────────────────────────────────");
+
     return {
       distance: Math.round(distanceKm),
       duration: Math.round(durationMin),
-      basePrice: Math.round(basePrice),
-      distanceFee: Math.round(distanceFee),
-      serviceFee: Math.round(serviceFee),
-      totalPrice: Math.round(basePrice + distanceFee + serviceFee),
+      basePrice,
+      distanceFee,
+      serviceFee,
+      totalPrice,
+      surgeMultiplier,
+      gasAdjFactor,
     };
-  }, [route, selectedVehicle, bookingType, addedServices]);
+  }, [route, selectedVehicle, bookingType, addedServices, surgeFactors]);
 
   useEffect(() => {
     if (pricing) setRouteData(pricing);
@@ -71,8 +110,6 @@ const Book = () => {
   useEffect(() => {
     useAppStore.getState().setLoading(isFetching);
   }, [isFetching]);
-
-  console.log("render", Date.now());
 
   useEffect(() => {
     useAppStore.getState().fetchBookingTypes();
@@ -115,6 +152,7 @@ const Book = () => {
 
       <BookSheet
         isDragging={isDragging}
+        isSurgeLoading={isSurgeLoading} // ← add
         onOpenSearch={(type) => {
           setSearchType(type);
           setSearchModalVisible(true);

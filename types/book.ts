@@ -16,6 +16,8 @@ export type RouteData = {
   distanceFee: number;
   serviceFee: number;
   totalPrice: number;
+  surgeMultiplier?: number; // optional — only present when pricing is active
+  gasAdjFactor?: number;
 };
 
 export type Booking = {
