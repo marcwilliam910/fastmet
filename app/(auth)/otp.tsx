@@ -161,7 +161,6 @@ export default function PhoneOTPScreen() {
     }
   };
 
-  // FIX: accepts optional code param to avoid stale closure when auto-triggered
   const handleVerifyOTP = async (code?: string) => {
     if (otpExpired) return;
 

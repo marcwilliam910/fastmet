@@ -14,7 +14,7 @@ const SheetButton = ({
 }: {
   next: () => void;
   isLast?: boolean;
-  isSurgeLoading: boolean;
+  isSurgeLoading?: boolean;
 }) => {
   const insets = useSafeAreaInsets();
   const [showModal, setShowModal] = useState(false);
