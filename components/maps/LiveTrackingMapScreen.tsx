@@ -74,17 +74,13 @@ export default function LiveTrackingMapScreen({
       // Listen for driver location response
       socket.on("driverLocationResponse", handleDriverLocationResponse);
 
-      // Request driver location
-      socket.emit("getDriverLocation", { driverId: driver.id, bookingId });
-      console.log("📡 Requesting driver location for booking:", bookingId);
-
       // Cleanup when leaving the screen
       return () => {
         isSubscribed = false;
         socket.off("driverLocationResponse", handleDriverLocationResponse);
         console.log("🔌 Unsubscribed from driver location");
       };
-    }, [bookingId, driver.id, socket]),
+    }, [bookingId, socket]),
   );
 
   useEffect(() => {
