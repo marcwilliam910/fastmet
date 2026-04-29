@@ -1,5 +1,5 @@
-import { BookingTypeConfig } from "@/types/bookingType";
-import { StateCreator } from "zustand";
+import {BookingTypeConfig} from "@/types/bookingType";
+import {StateCreator} from "zustand";
 
 export interface BookingTypeSlice {
   bookingTypes: BookingTypeConfig[];
@@ -17,7 +17,7 @@ export const createBookingTypeSlice: StateCreator<BookingTypeSlice> = (
   bookingTypesError: null,
 
   fetchBookingTypes: async () => {
-    set({ bookingTypesLoading: true, bookingTypesError: null });
+    set({bookingTypesLoading: true, bookingTypesError: null});
     try {
       const res = await fetch(
         `${process.env.EXPO_PUBLIC_BASE_URL}/api/booking-types`,
@@ -35,14 +35,14 @@ export const createBookingTypeSlice: StateCreator<BookingTypeSlice> = (
 
       const bookingTypes = await res.json();
 
-      set({ bookingTypes: bookingTypes.data });
+      set({bookingTypes});
     } catch (err: any) {
       console.error("Failed to fetch booking types:", err);
       set({
         bookingTypesError: err.message || "Failed to fetch booking types",
       });
     } finally {
-      set({ bookingTypesLoading: false });
+      set({bookingTypesLoading: false});
     }
   },
 });
