@@ -1,10 +1,10 @@
-import { RequestedDriver } from "@/types/book";
-import { STATIC_IMAGES } from "@/utils/constants";
-import { Ionicons } from "@expo/vector-icons";
-import { Image } from "expo-image";
-import React, { memo } from "react";
-import { Modal, Platform, Pressable, ScrollView, Text, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import {RequestedDriver} from "@/types/book";
+import {STATIC_IMAGES} from "@/utils/constants";
+import {Ionicons} from "@expo/vector-icons";
+import {Image} from "expo-image";
+import React, {memo} from "react";
+import {Modal, Platform, Pressable, ScrollView, Text, View} from "react-native";
+import {useSafeAreaInsets} from "react-native-safe-area-context";
 import StarDisplay from "../StarDisplay";
 
 function DriverDetailsModal({
@@ -12,13 +12,16 @@ function DriverDetailsModal({
   driver,
   handleCloseModal,
   acceptDriver,
+  rejectDriver,
 }: {
   isModalOpen: boolean;
   driver: RequestedDriver;
   handleCloseModal: () => void;
   acceptDriver: () => void;
+  rejectDriver?: () => void;
 }) {
   const inset = useSafeAreaInsets();
+
   return (
     <Modal
       visible={isModalOpen}
@@ -26,12 +29,20 @@ function DriverDetailsModal({
       transparent={true}
       onRequestClose={handleCloseModal}
     >
-      <View className="flex-1 justify-end bg-black/50">
+      <View className="justify-end flex-1 bg-black/50">
         <View className="max-h-[85%] rounded-t-3xl bg-white">
           {/* Header */}
-          <View className="items-center justify-center border-b border-gray-200 py-4">
-            <Pressable onPress={handleCloseModal} className="absolute left-5" hitSlop={20}>
-              <Ionicons name="chevron-back" size={Platform.OS === "ios"? 32 : 28} color="#6B7280" />
+          <View className="items-center justify-center py-4 border-b border-gray-200">
+            <Pressable
+              onPress={handleCloseModal}
+              className="absolute left-5"
+              hitSlop={20}
+            >
+              <Ionicons
+                name="chevron-back"
+                size={Platform.OS === "ios" ? 32 : 28}
+                color="#6B7280"
+              />
             </Pressable>
             <Text className="text-xl font-bold text-gray-900">
               Driver Details
@@ -41,30 +52,30 @@ function DriverDetailsModal({
           <ScrollView
             className="px-6 py-6"
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingBottom: inset.bottom + 30 }}
+            contentContainerStyle={{paddingBottom: inset.bottom + 30}}
           >
             {/* Profile Section */}
             <View className="items-center pb-6">
               <Image
                 source={
                   driver.profilePicture
-                    ? { uri: driver.profilePicture }
+                    ? {uri: driver.profilePicture}
                     : STATIC_IMAGES.userPlaceholder
                 }
                 contentFit="cover"
-                style={{ width: 120, height: 120, borderRadius: 60 }}
+                style={{width: 120, height: 120, borderRadius: 60}}
               />
               <Text className="mt-4 text-2xl font-bold text-gray-900">
                 {driver.name}
               </Text>
-              <View className="mt-2 flex-row items-center gap-2">
+              <View className="flex-row items-center gap-2 mt-2">
                 <StarDisplay rating={driver.rating} />
               </View>
-              <Text className="font-semibold text-sm text-gray-500">
+              <Text className="text-sm font-semibold text-gray-500">
                 {driver.rating} stars
               </Text>
-              <Text className="text-lg mt-2 font-semibold text-gray-700">
-                Total Completed Bookings : {driver.totalBookings}
+              <Text className="mt-2 text-lg font-semibold text-gray-700">
+                Total Completed Bookings: {driver.totalBookings}
               </Text>
             </View>
 
@@ -72,8 +83,8 @@ function DriverDetailsModal({
             <View className="gap-4">
               {/* Distance */}
               {driver.distance && (
-                <View className="rounded-xl bg-orange-50 p-4">
-                  <Text className="mb-1 text-xs font-semibold uppercase tracking-wide text-orange-600">
+                <View className="p-4 rounded-xl bg-orange-50">
+                  <Text className="mb-1 text-xs font-semibold tracking-wide text-orange-600 uppercase">
                     Distance from pick up
                   </Text>
                   <Text className="text-2xl font-bold text-orange-600">
@@ -85,32 +96,28 @@ function DriverDetailsModal({
                 </View>
               )}
 
-              {/* Vehicle Images Section */}
-              <View className="rounded-xl bg-gray-50 p-4">
-                <Text className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-700">
+              {/* Vehicle Image */}
+              <View className="p-4 rounded-xl bg-gray-50">
+                <Text className="mb-3 text-sm font-semibold tracking-wide text-gray-700 uppercase">
                   Vehicle Image
                 </Text>
-
                 <View
-                  className="w-full overflow-hidden rounded-lg bg-white"
-                  style={{ aspectRatio: 4 / 3 }}
+                  className="w-full overflow-hidden bg-white rounded-lg"
+                  style={{aspectRatio: 4 / 3}}
                 >
                   {driver.vehicleImage ? (
-                    <View className="relative h-full w-full">
-                      <Image
-                        source={{ uri: driver.vehicleImage }}
-                        style={{ width: "100%", height: "100%" }}
-                        contentFit="cover"
-                      />
-                    </View>
+                    <Image
+                      source={{uri: driver.vehicleImage}}
+                      style={{width: "100%", height: "100%"}}
+                      contentFit="cover"
+                    />
                   ) : (
-                    <View className="h-full w-full items-center justify-center bg-gray-200">
+                    <View className="items-center justify-center w-full h-full bg-gray-200">
                       <Ionicons
                         name="image-outline"
                         size={40}
                         color="#9CA3AF"
                       />
-
                       <Text className="mt-1 text-gray-400">Not available</Text>
                     </View>
                   )}
@@ -119,20 +126,23 @@ function DriverDetailsModal({
             </View>
 
             {/* Action Buttons */}
-            <View className="mt-6 gap-3">
+            <View className="gap-3 mt-6">
               <Pressable
-                className="items-center rounded-xl bg-lightPrimary py-4 active:bg-darkPrimary"
+                className="items-center py-4 rounded-xl bg-lightPrimary active:bg-darkPrimary"
                 onPress={acceptDriver}
               >
                 <Text className="text-base font-bold text-white">
                   Accept Driver
                 </Text>
               </Pressable>
+
               <Pressable
-                onPress={handleCloseModal}
-                className="items-center rounded-xl bg-gray-200 py-4 active:bg-gray-300"
+                onPress={rejectDriver}
+                className="items-center py-4 border border-red-300 rounded-xl bg-red-50 active:bg-red-100"
               >
-                <Text className="text-base font-bold text-gray-700">Close</Text>
+                <Text className="text-base font-bold text-red-600">
+                  Decline Offer
+                </Text>
               </Pressable>
             </View>
           </ScrollView>
