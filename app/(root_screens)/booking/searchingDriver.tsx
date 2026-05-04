@@ -1,18 +1,18 @@
 import DriverDetailsModal from "@/components/modals/driverDetailsModal";
-import {queryClient} from "@/lib/queryClient";
-import {useSocket} from "@/sockets/context/SocketProvider";
-import {useAppStore} from "@/store/useAppStore";
-import {RequestedDriver} from "@/types/book";
-import type {Notification, NotificationsResponse} from "@/types/notification";
-import {STATIC_IMAGES} from "@/utils/constants";
-import {Ionicons} from "@expo/vector-icons";
-import {usePreventRemove} from "@react-navigation/native";
-import type {InfiniteData} from "@tanstack/react-query";
-import {Image, ImageBackground} from "expo-image";
-import {LinearGradient} from "expo-linear-gradient";
-import {router, useLocalSearchParams} from "expo-router";
-import {cssInterop} from "nativewind";
-import React, {memo, useCallback, useEffect, useRef, useState} from "react";
+import { queryClient } from "@/lib/queryClient";
+import { useSocket } from "@/sockets/context/SocketProvider";
+import { useAppStore } from "@/store/useAppStore";
+import { RequestedDriver } from "@/types/book";
+import type { Notification, NotificationsResponse } from "@/types/notification";
+import { STATIC_IMAGES } from "@/utils/constants";
+import { Ionicons } from "@expo/vector-icons";
+import { usePreventRemove } from "@react-navigation/native";
+import type { InfiniteData } from "@tanstack/react-query";
+import { Image, ImageBackground } from "expo-image";
+import { LinearGradient } from "expo-linear-gradient";
+import { router, useLocalSearchParams } from "expo-router";
+import { cssInterop } from "nativewind";
+import React, { memo, useCallback, useEffect, useRef, useState } from "react";
 import {
   Alert,
   Animated,
@@ -25,10 +25,10 @@ import {
   Text,
   View,
 } from "react-native";
-import {useSafeAreaInsets} from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 
-const AnimatedView = cssInterop(Animated.View, {className: "style"});
+const AnimatedView = cssInterop(Animated.View, { className: "style" });
 
 const formatRadius = (km: number) => {
   if (km < 1) {
@@ -39,9 +39,10 @@ const formatRadius = (km: number) => {
 
 export default function SearchingDriver() {
   //get params
-  const {bookingId, type} = useLocalSearchParams<{
+  const { bookingId, type, city } = useLocalSearchParams<{
     bookingId: string;
     type: "asap" | "pooling";
+    city?: string;
   }>();
 
   const isPooling = type === "pooling";
@@ -118,7 +119,7 @@ export default function SearchingDriver() {
 
   //SOCKETS LISTENER
   useEffect(() => {
-    const handleBookingCancelled = ({bookingId}: {bookingId: string}) => {
+    const handleBookingCancelled = ({ bookingId }: { bookingId: string }) => {
       router.replace("/(drawer)/(tabs)/request?tab=cancelled");
       setShouldPrevent(false);
       useAppStore.getState().clearStates();
@@ -134,7 +135,7 @@ export default function SearchingDriver() {
     };
 
     // ASAP only (client accepts)
-    const handleDriverAccepted = ({bookingId}: {bookingId: string}) => {
+    const handleDriverAccepted = ({ bookingId }: { bookingId: string }) => {
       if (isPooling) return;
       Toast.show({
         type: "driverAccepted",
@@ -146,14 +147,14 @@ export default function SearchingDriver() {
         topOffset: 50,
       });
       setSelectedDriver(null);
-      queryClient.invalidateQueries({queryKey: ["userBookingCounts"]});
+      queryClient.invalidateQueries({ queryKey: ["userBookingCounts"] });
       queryClient.invalidateQueries({
         queryKey: ["userBookings", "active"],
         exact: false,
       });
       router.push({
         pathname: "/(root_screens)/booking/viewOnMap",
-        params: {bookingId},
+        params: { bookingId },
       });
     };
 
@@ -191,7 +192,7 @@ export default function SearchingDriver() {
         topOffset: 50,
       });
 
-      queryClient.invalidateQueries({queryKey: ["userBookingCounts"]});
+      queryClient.invalidateQueries({ queryKey: ["userBookingCounts"] });
       queryClient.invalidateQueries({
         queryKey: ["userBookings", "active"],
         exact: false,
@@ -199,11 +200,11 @@ export default function SearchingDriver() {
 
       router.push({
         pathname: "/(root_screens)/booking/viewOnMap",
-        params: {bookingId},
+        params: { bookingId },
       });
     };
 
-    const errorHandler = ({message}: {message: string}) => {
+    const errorHandler = ({ message }: { message: string }) => {
       Toast.show({
         type: "error",
         text1: "Error",
@@ -242,7 +243,7 @@ export default function SearchingDriver() {
       // If notifications have been fetched before, prepend this notif in the cache
       const notificationsQueries = queryClient.getQueriesData<
         InfiniteData<NotificationsResponse>
-      >({queryKey: ["notifications"]});
+      >({ queryKey: ["notifications"] });
 
       const hasNotificationsCache = notificationsQueries.some(
         ([, data]) => !!data?.pages?.length,
@@ -250,7 +251,7 @@ export default function SearchingDriver() {
 
       if (hasNotificationsCache) {
         queryClient.setQueriesData<InfiniteData<NotificationsResponse>>(
-          {queryKey: ["notifications"]},
+          { queryKey: ["notifications"] },
           (old) => {
             if (!old?.pages?.length) return old;
 
@@ -307,7 +308,7 @@ export default function SearchingDriver() {
     };
 
     const event = isPooling
-      ? "poolingOfferReceived"
+      ? "acceptanceRequestedPooling"
       : "acceptanceRequestedASAP";
     socket.on(event, handleAcceptanceRequest);
     return () => {
@@ -317,9 +318,11 @@ export default function SearchingDriver() {
 
   //SOCKETS LISTENER
   useEffect(() => {
-    const handleCancelOffer = ({driverId}: {driverId: string}) => {
+    const handleCancelOffer = ({ driverId }: { driverId: string }) => {
       setDrivers((prev) => prev.filter((driver) => driver.id !== driverId));
       if (selectedDriver?.id === driverId) setSelectedDriver(null);
+
+      setWaitingForTripStart(false); //test
     };
 
     const event = isPooling ? "offerCancelledPooling" : "offerCancelledAsap";
@@ -331,7 +334,7 @@ export default function SearchingDriver() {
 
   const handleRemoveDriver = (id: string) => {
     setDrivers((prev) => prev.filter((driver) => driver.id !== id));
-    socket.emit("asapTimerEnd", {driverId: id, bookingId});
+    socket.emit("asapTimerEnd", { driverId: id, bookingId });
   };
 
   const handleCancelRequest = () => {
@@ -349,7 +352,7 @@ export default function SearchingDriver() {
           style: "destructive",
           onPress: () => {
             console.log("Confirming cancellation");
-            socket.emit("cancelBookingRequest", {bookingId});
+            socket.emit("cancelBookingRequest", { bookingId });
           },
         },
       ],
@@ -363,12 +366,16 @@ export default function SearchingDriver() {
   return (
     <ImageBackground
       source={STATIC_IMAGES.map_bg}
-      style={{flex: 1}}
+      style={{ flex: 1 }}
       contentFit="cover"
     >
       <View className="flex-1 px-6 pt-10 bg-black/70">
         {/* Top Section: Status */}
-        <SearchRadiusIndicator />
+        {isPooling ? (
+          <CitySearchIndicator city={city} />
+        ) : (
+          <SearchRadiusIndicator />
+        )}
 
         {/* Center Section: The Radar */}
         <View className="items-center justify-center flex-1">
@@ -376,7 +383,7 @@ export default function SearchingDriver() {
           <AnimatedView
             className="absolute rounded-full size-64 bg-orange-500/50"
             style={{
-              transform: [{scale: pulseScale}],
+              transform: [{ scale: pulseScale }],
               opacity: pulseOpacity,
             }}
           />
@@ -388,7 +395,7 @@ export default function SearchingDriver() {
               <View
                 key={i}
                 className="absolute rounded-full border-lightPrimary/20"
-                style={{width: i * 80, height: i * 80, borderWidth: 4 - i}}
+                style={{ width: i * 80, height: i * 80, borderWidth: 4 - i }}
               />
             ))}
 
@@ -396,14 +403,14 @@ export default function SearchingDriver() {
             <AnimatedView
               style={{
                 ...StyleSheet.absoluteFillObject,
-                transform: [{rotate: sweepRotate}],
+                transform: [{ rotate: sweepRotate }],
               }}
             >
               {/* This View creates the "Pie Slice" sweep */}
               <LinearGradient
                 colors={["rgba(251, 146, 60, 0.5)", "transparent"]}
-                start={{x: 1, y: 0}}
-                end={{x: 0, y: 1}}
+                start={{ x: 1, y: 0 }}
+                end={{ x: 0, y: 1 }}
                 style={{
                   position: "absolute",
                   top: 0,
@@ -421,7 +428,7 @@ export default function SearchingDriver() {
             <View className="items-center justify-center border-2 border-orange-500 rounded-full shadow-2xl size-28 bg-slate-900 shadow-orange-500/50">
               <Image
                 source={STATIC_IMAGES.fastmetLogo}
-                style={{width: 50, height: 50}}
+                style={{ width: 50, height: 50 }}
                 contentFit="fill"
               />
             </View>
@@ -429,7 +436,7 @@ export default function SearchingDriver() {
         </View>
 
         {/* Bottom Section: Driver Card and Cancel Button */}
-        <View style={{marginBottom: inset.bottom + 10}}>
+        <View style={{ marginBottom: inset.bottom + 10 }}>
           {drivers.length > 0 && !waitingForTripStart && (
             <DriverListCard
               drivers={drivers}
@@ -440,7 +447,7 @@ export default function SearchingDriver() {
               setSelectedDriver={setSelectedDriver}
               isPooling={isPooling}
               onPoolingAccepted={() => {
-                setDrivers([]);
+                // setDrivers([]);
                 setWaitingForTripStart(true);
               }}
             />
@@ -535,7 +542,14 @@ const DriverListCard = ({
     setDrivers((prev) =>
       prev.filter((driver) => driver.id !== selectedDriver.id),
     );
-  }, [selectedDriver, isPooling, socket, bookingId, setSelectedDriver]);
+  }, [
+    selectedDriver,
+    isPooling,
+    socket,
+    bookingId,
+    setSelectedDriver,
+    setDrivers,
+  ]);
 
   const handleDriverSelect = useCallback(
     (driver: RequestedDriver) => {
@@ -552,8 +566,8 @@ const DriverListCard = ({
 
   return (
     <>
-      <View style={{width: "100%", paddingHorizontal: 8}}>
-        <View style={{marginBottom: 12, paddingHorizontal: 4}}>
+      <View style={{ width: "100%", paddingHorizontal: 8 }}>
+        <View style={{ marginBottom: 12, paddingHorizontal: 4 }}>
           <Text
             style={{
               color: "rgba(255, 255, 255, 0.9)",
@@ -567,10 +581,10 @@ const DriverListCard = ({
           </Text>
         </View>
 
-        <View style={{maxHeight: 280}}>
+        <View style={{ maxHeight: 280 }}>
           <ScrollView
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={{gap: 4, paddingBottom: 4}}
+            contentContainerStyle={{ gap: 4, paddingBottom: 4 }}
             nestedScrollEnabled={true}
           >
             {drivers.map((driver) => (
@@ -631,7 +645,7 @@ const DriverRow = memo(
           easing: Easing.linear,
         });
 
-        animationRef.current.start(({finished}) => {
+        animationRef.current.start(({ finished }) => {
           if (finished && !isPaused) {
             // Trigger swipe-right removal animation
             Animated.parallel([
@@ -716,7 +730,7 @@ const DriverRow = memo(
       <Animated.View
         style={{
           opacity,
-          transform: [{translateX}],
+          transform: [{ translateX }],
         }}
       >
         <Pressable onPress={handlePress}>
@@ -737,11 +751,11 @@ const DriverRow = memo(
               <Image
                 source={
                   driver.profilePicture
-                    ? {uri: driver.profilePicture}
+                    ? { uri: driver.profilePicture }
                     : STATIC_IMAGES.userPlaceholder
                 }
                 contentFit="cover"
-                style={{width: 40, height: 40, borderRadius: 999}}
+                style={{ width: 40, height: 40, borderRadius: 999 }}
               />
 
               <View>
@@ -827,6 +841,28 @@ const SearchRadiusIndicator = () => {
       <Text className="mt-2 text-xs text-gray-400">
         Attempt {searchAttempt}
       </Text>
+    </View>
+  );
+};
+
+const CitySearchIndicator = ({ city }: { city?: string }) => {
+  return (
+    <View className="items-center mt-10">
+      <Text className="text-2xl font-bold tracking-tight text-white">
+        Searching...
+      </Text>
+      <Text className="mt-2 text-sm text-gray-400">
+        Looking for available drivers in your area
+      </Text>
+
+      <View className="px-4 py-2 mt-4 border rounded-full bg-orange-500/20 border-orange-500/30">
+        <View className="flex-row items-center gap-2">
+          <Ionicons name="location-outline" size={16} color="#FB923D" />
+          <Text className="text-sm font-semibold text-orange-400">
+            Searching in {city ?? "your pick up location"}
+          </Text>
+        </View>
+      </View>
     </View>
   );
 };
