@@ -135,7 +135,7 @@ const Auth = () => {
                 I agree to FastMet{" "}
                 <Link href="/(public_screens)/terms&conditions">
                   <Text className="font-semibold text-lightPrimary">
-                    Terms and Conditions
+                    Terms & Conditions
                   </Text>{" "}
                 </Link>
                 and{" "}

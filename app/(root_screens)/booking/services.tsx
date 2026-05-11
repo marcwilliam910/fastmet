@@ -20,6 +20,7 @@ const Services = () => {
     (state) => state.updateServiceQuantity,
   );
   const selectedVehicle = useAppStore((state) => state.selectedVehicle);
+  const bookingType = useAppStore((state) => state.bookingType.type);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
@@ -99,6 +100,10 @@ const Services = () => {
         <Text className="mb-3 text-lg font-bold">Additional Services</Text>
         <View className="gap-3 mb-6">
           {selectedVehicle?.paidServices.map((service) => {
+            // Hide extra helper service if booking type is pooling
+            if (service.key === "extra_helper" && bookingType === "pooling")
+              return;
+
             const addedService = addedServices.find(
               (s) => s.key === service.key,
             );
