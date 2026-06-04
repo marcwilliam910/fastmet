@@ -1,10 +1,10 @@
-import { BookingType } from "@/store/slices/bookSlice";
-import { ILoadVariant, SearchConfig, Service } from "./vehicle";
+import {BookingType} from "@/store/slices/bookSlice";
+import {ILoadVariant, SearchConfig, Service} from "./vehicle";
 
 export type LocationDetails = {
   name: string;
   address: string;
-  coords: { lat: number; lng: number };
+  coords: {lat: number; lng: number};
   placeId?: string;
   additionalDetails?: string;
 } | null;
@@ -48,7 +48,7 @@ export type Booking = {
   driver?: Driver;
 };
 
-export type ActiveBooking = Booking & { driver: Driver };
+export type ActiveBooking = Booking & {driver: Driver};
 export type CompletedBooking = ActiveBooking & {
   completedAt: string;
   bookingImages: {
@@ -99,4 +99,5 @@ export type RequestedDriver = {
   distance?: number;
   profilePicture: string;
   bookingId?: string;
+  isQueued?: boolean;
 };
