@@ -152,20 +152,21 @@ const Book = () => {
 
       <BookSheet
         isDragging={isDragging}
-        isSurgeLoading={isSurgeLoading} // ← add
+        isSurgeLoading={isSurgeLoading}
         onOpenSearch={(type) => {
           setSearchType(type);
           setSearchModalVisible(true);
         }}
       />
 
-      {searchType && (
-        <SearchModal
-          visible={searchModalVisible}
-          type={searchType}
-          onClose={() => setSearchModalVisible(false)}
-        />
-      )}
+      <SearchModal
+        visible={searchModalVisible}
+        type={searchType ?? "pickup"}
+        onClose={() => {
+          setSearchModalVisible(false);
+          setSearchType(null);
+        }}
+      />
     </SafeAreaView>
   );
 };

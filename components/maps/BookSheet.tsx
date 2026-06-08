@@ -41,7 +41,6 @@ const BookSheet = ({
   const previousSnapIndex = useRef<number>(1); // Store the previous index (default to 1, second snap point)
 
   const insets = useSafeAreaInsets();
-  const { height: screenHeight } = Dimensions.get("window");
   const [infoModalVisible, setInfoModalVisible] = useState(false);
   const [selectTimeModalVisible, setSelectTimeModalVisible] = useState(false);
 
@@ -82,8 +81,8 @@ const BookSheet = ({
   // to adjust the height of the sheet
   const snapPoints = useMemo(() => {
     // Exact height in pixels rather than screen percentages
-    const baseFirst = Platform.OS === "ios" ? 160 : 170;
-    const baseSecond = Platform.OS === "ios" ? 400 : 435;
+    const baseFirst = 170;
+    const baseSecond = 435;
 
     const first = baseFirst + insets.bottom;
     const second = baseSecond + insets.bottom + (hasMultipleVariants ? 50 : 0);

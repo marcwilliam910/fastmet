@@ -64,5 +64,4 @@ const ConversationCard = ({ item }: { item: ConversationResponse }) => {
   );
 };
 
-
 export default ConversationCard;

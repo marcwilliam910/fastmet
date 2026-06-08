@@ -9,8 +9,7 @@ const HeaderProfile = ({ title }: { title: string }) => {
       <Pressable
         className={`absolute ${Platform.OS === "ios" ? "-top-2 -left-2" : "-top-1 left-0"}`}
         onPress={() => router.back()}
-        hitSlop={30}
-
+        hitSlop={{ top: 30, left: 30, bottom: 30, right: 30 }}
       >
         <Ionicons
           name="chevron-back"
