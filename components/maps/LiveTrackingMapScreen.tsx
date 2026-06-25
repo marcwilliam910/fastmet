@@ -1,11 +1,11 @@
-import { useSocket } from "@/sockets/context/SocketProvider";
-import { Driver, LocationDetails, RouteData } from "@/types/book";
-import { GOOGLE_MAPS_API_KEY, STATIC_IMAGES } from "@/utils/constants";
-import { Image } from "expo-image";
-import { useFocusEffect } from "expo-router";
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import { StatusBar, StyleSheet, View } from "react-native";
-import MapView, { Marker } from "react-native-maps";
+import {useSocket} from "@/sockets/context/SocketProvider";
+import {Driver, LocationDetails, RouteData} from "@/types/book";
+import {GOOGLE_MAPS_API_KEY, STATIC_IMAGES} from "@/utils/constants";
+import {Image} from "expo-image";
+import {useFocusEffect} from "expo-router";
+import React, {useCallback, useEffect, useRef, useState} from "react";
+import {StatusBar, StyleSheet, View} from "react-native";
+import MapView, {Marker, PROVIDER_GOOGLE} from "react-native-maps";
 import MapViewDirections from "react-native-maps-directions";
 
 type Region = {
@@ -60,7 +60,7 @@ export default function LiveTrackingMapScreen({
       setIsLoadingDriverLocation(true);
 
       const handleDriverLocationResponse = (data: {
-        driverLoc: { lat: number; lng: number } | null;
+        driverLoc: {lat: number; lng: number} | null;
       }) => {
         if (isSubscribed) {
           if (data.driverLoc) {
@@ -100,6 +100,7 @@ export default function LiveTrackingMapScreen({
     <View className="flex-1">
       {region && (
         <MapView
+          provider={PROVIDER_GOOGLE}
           ref={mapRef}
           style={StyleSheet.absoluteFillObject}
           showsCompass
@@ -114,11 +115,11 @@ export default function LiveTrackingMapScreen({
                 longitude: pickUp.coords.lng,
               }}
               title="Pick Up"
-              anchor={{ x: 0.5, y: 0.5 }}
+              anchor={{x: 0.5, y: 0.5}}
               // tracksViewChanges={false}
               zIndex={1000}
             >
-              <View style={{ opacity: 1 }}>
+              <View style={{opacity: 1}}>
                 <Image
                   source={STATIC_IMAGES.pickup}
                   style={{
@@ -144,14 +145,14 @@ export default function LiveTrackingMapScreen({
                 longitude: driverLocation.lng,
               }}
               title={driver.name ? `Driver - ${driver.name}` : "Your Driver"}
-              anchor={{ x: 0.5, y: 0.5 }}
+              anchor={{x: 0.5, y: 0.5}}
               // tracksViewChanges={false}
               zIndex={1000}
             >
-              <View style={{ opacity: 1 }}>
+              <View style={{opacity: 1}}>
                 <Image
                   source={STATIC_IMAGES.driver}
-                  style={{ width: 40, height: 40 }}
+                  style={{width: 40, height: 40}}
                   contentFit="contain"
                 />
               </View>
@@ -166,11 +167,11 @@ export default function LiveTrackingMapScreen({
                 longitude: dropOff.coords.lng,
               }}
               title="Drop Off"
-              anchor={{ x: 0.5, y: 0.5 }}
+              anchor={{x: 0.5, y: 0.5}}
               // tracksViewChanges={false}
               zIndex={1001} // ← Higher than pickup
             >
-              <View style={{ opacity: 1 }}>
+              <View style={{opacity: 1}}>
                 <Image
                   source={STATIC_IMAGES.dropoff}
                   style={{
@@ -205,7 +206,7 @@ export default function LiveTrackingMapScreen({
                 optimizeWaypoints
                 onReady={(result) => {
                   mapRef.current?.fitToCoordinates(result.coordinates, {
-                    edgePadding: { top: 80, right: 80, bottom: 80, left: 80 },
+                    edgePadding: {top: 80, right: 80, bottom: 80, left: 80},
                     animated: true,
                   });
                 }}

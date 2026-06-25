@@ -1,14 +1,15 @@
 import CustomKeyAvoidingView from "@/components/CustomKeyAvoid";
-import { Countdown } from "@/components/Timers";
-import { useAppStore } from "@/store/useAppStore";
-import { UserAddress } from "@/types/user";
-import { Ionicons } from "@expo/vector-icons";
+import {Countdown} from "@/components/Timers";
+import {useAppStore} from "@/store/useAppStore";
+import {UserAddress} from "@/types/user";
+import {formatPHNumber} from "@/utils/helpers/format";
+import {Ionicons} from "@expo/vector-icons";
 import axios from "axios";
-import { router } from "expo-router";
+import {router} from "expo-router";
 import * as SecureStore from "expo-secure-store";
-import React, { useEffect, useRef, useState } from "react";
-import { Pressable, Text, TextInput, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import React, {useEffect, useRef, useState} from "react";
+import {Pressable, Text, TextInput, View} from "react-native";
+import {SafeAreaView} from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 
 export const RESEND_TIMEOUT_SECONDS = 60;
@@ -164,12 +165,12 @@ export default function PhoneOTPScreen() {
   const handleVerifyOTP = async (code?: string) => {
     if (otpExpired) return;
 
-    const { phoneNumber } = useAppStore.getState();
+    const {phoneNumber} = useAppStore.getState();
     const otpCode = code ?? otp.join("");
 
     setLoading(true);
     try {
-      const { data: otpData } = await axios.post<{
+      const {data: otpData} = await axios.post<{
         success: boolean;
         verifyToken: string;
       }>(`${process.env.EXPO_PUBLIC_BASE_URL}/api/auth/verify-otp`, {
@@ -180,7 +181,7 @@ export default function PhoneOTPScreen() {
       if (otpData.success) {
         await SecureStore.deleteItemAsync(RESEND_KEY);
 
-        const { data } = await axios.post<LoginResponse>(
+        const {data} = await axios.post<LoginResponse>(
           `${process.env.EXPO_PUBLIC_BASE_URL}/api/client/auth/login`,
           {},
           {
@@ -246,17 +247,17 @@ export default function PhoneOTPScreen() {
   return (
     <SafeAreaView className="flex-1 bg-white">
       <CustomKeyAvoidingView>
-        <View className="flex-1 items-center justify-center px-6">
+        <View className="items-center justify-center flex-1 px-6">
           {/* Title */}
           <Text className="text-3xl font-extrabold text-[#111] mb-3">
             Verify Your Number
           </Text>
 
           {/* Subtitle */}
-          <Text className="text-base text-gray-500 mb-2 text-center leading-6">
+          <Text className="mb-2 text-base leading-6 text-center text-gray-500">
             Enter the 6-digit verification code sent to{" "}
             <Text className="font-semibold text-[#111] underline">
-              {useAppStore.getState().phoneNumber}
+              {formatPHNumber(useAppStore.getState().phoneNumber)}
             </Text>
           </Text>
 
@@ -312,23 +313,23 @@ export default function PhoneOTPScreen() {
           {/* Error */}
           {error && (
             <View
-              className="flex-row items-center justify-center gap-2 w-full mb-5 px-4 py-3 bg-red-50 border border-red-200 rounded-xl"
+              className="flex-row items-center justify-center w-full gap-2 px-4 py-3 mb-5 border border-red-200 bg-red-50 rounded-xl"
               style={{
                 shadowColor: "#000",
                 shadowOpacity: 0.05,
                 shadowRadius: 4,
-                shadowOffset: { width: 0, height: 2 },
+                shadowOffset: {width: 0, height: 2},
                 elevation: 2,
               }}
             >
               <Ionicons name="alert-circle" size={20} color="#DC2626" />
-              <Text className="text-red-700 text-sm leading-5">{error}</Text>
+              <Text className="text-sm leading-5 text-red-700">{error}</Text>
             </View>
           )}
 
           {/* Resend */}
           <View className="items-center mb-10">
-            <Text className="text-sm text-gray-600 mb-1">
+            <Text className="mb-1 text-sm text-gray-600">
               Didn&apos;t receive the code?
             </Text>
 
@@ -365,7 +366,7 @@ export default function PhoneOTPScreen() {
           `}
             disabled={loading || otp.join("").length !== 6 || otpExpired}
           >
-            <Text className="text-white text-base font-semibold">
+            <Text className="text-base font-semibold text-white">
               {otpExpired ? "Code Expired" : "Verify"}
             </Text>
           </Pressable>

@@ -23,7 +23,8 @@
     "@react-navigation/native": "^7.1.8",
     "@sentry/react-native": "~7.2.0",
     "@tanstack/react-query": "^5.90.2",
-    "axios": "1.14.0",
+    "axios": "^1.18.1",
+    "babel-preset-expo": "~54.0.10",
     "expo": "~54.0.34",
     "expo-constants": "~18.0.9",
     "expo-dev-client": "~6.0.21",
@@ -85,5 +86,8 @@
     "eslint-config-expo": "~10.0.0",
     "typescript": "~5.9.2"
   },
-  "private": true
+  "private": true,
+  "overrides": {
+    "@react-native/virtualized-lists": "0.81.5"
+  }
 }
