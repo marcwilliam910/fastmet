@@ -1,3 +1,7 @@
+import {
+  ACCOUNT_DEACTIVATED_ROUTE,
+  DEVICE_BANNED_ROUTE,
+} from "@/constants/routes";
 import { getSocket } from "@/sockets/socket";
 import { useAppStore } from "@/store/useAppStore";
 import axios, { InternalAxiosRequestConfig } from "axios";
@@ -28,12 +32,33 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      // Disconnect existing socket if any
-      const socket = getSocket(""); // will return existing socket instance
+    const data = error.response?.data;
+
+    if (error.response?.status === 403 && data?.deviceBanned) {
+      const socket = getSocket("");
       if (socket?.connected) socket.disconnect();
 
-      // Log out
+      useAppStore.getState().logout();
+      router.replace(DEVICE_BANNED_ROUTE);
+      return new Promise(() => {});
+    }
+
+    if (
+      error.response?.status === 403 &&
+      (data?.accountDeactivated || data?.accountBlocked)
+    ) {
+      const socket = getSocket("");
+      if (socket?.connected) socket.disconnect();
+
+      useAppStore.getState().logout();
+      router.replace(ACCOUNT_DEACTIVATED_ROUTE);
+      return new Promise(() => {});
+    }
+
+    if (error.response?.status === 401) {
+      const socket = getSocket("");
+      if (socket?.connected) socket.disconnect();
+
       useAppStore.getState().logout();
 
       Toast.show({
@@ -46,13 +71,6 @@ api.interceptors.response.use(
       });
 
       router.replace("/(auth)/auth");
-
-      // return Promise.resolve({
-      //   data: null,
-      //   status: 401,
-      //   handled: true,
-      // });
-
       return new Promise(() => {});
     }
 

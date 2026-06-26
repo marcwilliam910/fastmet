@@ -2,6 +2,8 @@ import CustomKeyAvoidingView from "@/components/CustomKeyAvoid";
 import {Countdown} from "@/components/Timers";
 import {useAppStore} from "@/store/useAppStore";
 import {UserAddress} from "@/types/user";
+import {routeAuthGuardError} from "@/utils/helpers/authGuardErrors";
+import {getDeviceId} from "@/utils/helpers/deviceId";
 import {formatPHNumber} from "@/utils/helpers/format";
 import {Ionicons} from "@expo/vector-icons";
 import axios from "axios";
@@ -80,10 +82,13 @@ export default function PhoneOTPScreen() {
     if (!canResend || loading) return;
 
     try {
+      const deviceId = await getDeviceId().catch(() => null);
+
       await axios.post(
-        `${process.env.EXPO_PUBLIC_BASE_URL}/api/auth/send-otp`,
+        `${process.env.EXPO_PUBLIC_BASE_URL}/api/auth/send-otp-client`,
         {
           phoneNumber: useAppStore.getState().phoneNumber,
+          ...(deviceId && { deviceId }),
         },
       );
 
@@ -106,6 +111,8 @@ export default function PhoneOTPScreen() {
         topOffset: 50,
       });
     } catch (error: any) {
+      if (routeAuthGuardError(error)) return;
+
       Toast.show({
         type: "error",
         text1: "Failed to resend",
@@ -181,9 +188,11 @@ export default function PhoneOTPScreen() {
       if (otpData.success) {
         await SecureStore.deleteItemAsync(RESEND_KEY);
 
+        const deviceId = await getDeviceId().catch(() => null);
+
         const {data} = await axios.post<LoginResponse>(
           `${process.env.EXPO_PUBLIC_BASE_URL}/api/client/auth/login`,
-          {},
+          { deviceId },
           {
             headers: {
               Authorization: `Bearer ${otpData.verifyToken}`,
@@ -225,6 +234,8 @@ export default function PhoneOTPScreen() {
         }
       }
     } catch (error: any) {
+      if (routeAuthGuardError(error)) return;
+
       if (error.response?.status === 429) {
         const retryAfter = error.response?.data?.retryAfter;
         const minutes = retryAfter ? Math.ceil(retryAfter / 60) : null;

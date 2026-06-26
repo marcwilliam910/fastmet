@@ -377,6 +377,7 @@ const autocompleteStyles = {
     marginHorizontal: 0,
   },
   input: {
+    borderColor: "transparent",
     borderRadius: 8,
     borderWidth: 0,
     backgroundColor: "#F3F4F6",

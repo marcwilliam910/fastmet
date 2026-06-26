@@ -14,6 +14,9 @@ export const STATIC_IMAGES = {
   map_bg: require("@/assets/images/map_bg.png"),
 };
 
+export const SUPPORT_EMAIL =
+  process.env.EXPO_PUBLIC_SUPPORT_EMAIL ?? "No Email";
+
 export const GOOGLE_MAPS_API_KEY =
   Platform.OS === "ios"
     ? process.env.EXPO_PUBLIC_IOS_MAP_KEY

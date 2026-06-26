@@ -1,6 +1,8 @@
 import CustomKeyAvoidingView from "@/components/CustomKeyAvoid";
 import LogoWithText from "@/components/LogoWithText";
 import { useAppStore } from "@/store/useAppStore";
+import { routeAuthGuardError } from "@/utils/helpers/authGuardErrors";
+import { getDeviceId } from "@/utils/helpers/deviceId";
 import { Ionicons } from "@expo/vector-icons";
 import axios from "axios";
 import { Link, router } from "expo-router";
@@ -25,12 +27,15 @@ const Auth = () => {
 
   const handleSignIn = async () => {
     const formattedPhoneNumber = `63${phoneNumber}`;
+    const deviceId = await getDeviceId().catch(() => null);
+
     try {
       setLoading(true);
       const res = await axios.post(
         `${process.env.EXPO_PUBLIC_BASE_URL}/api/auth/send-otp-client`,
         {
           phoneNumber: formattedPhoneNumber,
+          ...(deviceId && { deviceId }),
         },
       );
 
@@ -45,6 +50,8 @@ const Auth = () => {
       }
     } catch (error: any) {
       console.log(error);
+
+      if (routeAuthGuardError(error)) return;
 
       // Handle rate limit errors specifically
       if (error.response?.status === 429) {
