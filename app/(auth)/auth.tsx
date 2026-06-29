@@ -1,7 +1,7 @@
 import CustomKeyAvoidingView from "@/components/CustomKeyAvoid";
 import LogoWithText from "@/components/LogoWithText";
 import { useAppStore } from "@/store/useAppStore";
-import { routeAuthGuardError } from "@/utils/helpers/authGuardErrors";
+import { handleSendOtpError } from "@/utils/helpers/authGuardErrors";
 import { getDeviceId } from "@/utils/helpers/deviceId";
 import { Ionicons } from "@expo/vector-icons";
 import axios from "axios";
@@ -9,7 +9,6 @@ import { Link, router } from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import React, { useState } from "react";
 import {
-  Alert,
   Platform,
   Pressable,
   Text,
@@ -27,7 +26,7 @@ const Auth = () => {
 
   const handleSignIn = async () => {
     const formattedPhoneNumber = `63${phoneNumber}`;
-    const deviceId = await getDeviceId().catch(() => null);
+    const deviceId = await getDeviceId();
 
     try {
       setLoading(true);
@@ -35,7 +34,7 @@ const Auth = () => {
         `${process.env.EXPO_PUBLIC_BASE_URL}/api/auth/send-otp-client`,
         {
           phoneNumber: formattedPhoneNumber,
-          ...(deviceId && { deviceId }),
+          deviceId,
         },
       );
 
@@ -49,30 +48,7 @@ const Auth = () => {
         router.replace("/(auth)/otp");
       }
     } catch (error: any) {
-      console.log(error);
-
-      if (routeAuthGuardError(error)) return;
-
-      // Handle rate limit errors specifically
-      if (error.response?.status === 429) {
-        const retryAfter = error.response?.data?.retryAfter;
-        const minutes = retryAfter ? Math.ceil(retryAfter / 60) : null;
-
-        Alert.alert(
-          "Too Many Attempts",
-          error.response?.data?.error ||
-            (minutes
-              ? `Please try again in ${minutes} minute${minutes > 1 ? "s" : ""}.`
-              : "Please try again later."),
-          [{ text: "OK" }],
-        );
-      } else {
-        Alert.alert(
-          "Error",
-          error.response?.data?.error ||
-            "Failed to send OTP. Please try again.",
-        );
-      }
+      handleSendOtpError(error, { onRetry: handleSignIn });
     } finally {
       setLoading(false);
     }

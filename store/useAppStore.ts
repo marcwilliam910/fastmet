@@ -40,6 +40,7 @@ export const useAppStore = create<AppStore>()(
       storage: createSecureStorage<{
         phoneNumber: string;
         token: string | null;
+        refreshToken: string | null;
         id: string | null;
         isProfileComplete: boolean;
         name: string;
@@ -52,6 +53,7 @@ export const useAppStore = create<AppStore>()(
       partialize: (state) => ({
         phoneNumber: state.phoneNumber,
         token: state.token,
+        refreshToken: state.refreshToken,
         id: state.id,
         isProfileComplete: state.isProfileComplete,
         name: state.name,
