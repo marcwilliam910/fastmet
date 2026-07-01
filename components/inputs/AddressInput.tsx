@@ -1,8 +1,8 @@
-import { UserAddress } from "@/types/user";
-import { GOOGLE_MAPS_API_KEY } from "@/utils/constants";
-import { Ionicons } from "@expo/vector-icons";
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Pressable, Text, TextInput, View } from "react-native";
+import {UserAddress} from "@/types/user";
+import {GOOGLE_MAPS_API_KEY} from "@/utils/constants";
+import {Ionicons} from "@expo/vector-icons";
+import React, {useCallback, useEffect, useRef, useState} from "react";
+import {Pressable, Text, TextInput, View} from "react-native";
 import GooglePlacesTextInput, {
   GooglePlacesTextInputRef,
   Place,
@@ -103,7 +103,7 @@ export default function AddressInput({
     (
       updatedFields: AddressFields,
       name: string,
-      latLng: { lat: number; lng: number } | null,
+      latLng: {lat: number; lng: number} | null,
     ) => {
       const parts = [
         updatedFields.street,
@@ -141,7 +141,7 @@ export default function AddressInput({
       const lng = details.location?.longitude;
       if (lat == null || lng == null) return;
 
-      const newCoords = { lat, lng };
+      const newCoords = {lat, lng};
       const name = details.displayName?.text || "";
       const parsed = parseAddressComponents(details.addressComponents);
 
@@ -165,7 +165,7 @@ export default function AddressInput({
 
   const handleFieldChange = useCallback(
     (field: keyof AddressFields, text: string) => {
-      const updated = { ...fields, [field]: text };
+      const updated = {...fields, [field]: text};
       setFields(updated);
       buildAddress(updated, placeName, coords);
     },
@@ -211,7 +211,7 @@ export default function AddressInput({
       {/* Existing address display */}
       {hasSelected && !isSearching && (
         <View className="flex-row items-center p-4 bg-gray-100 rounded-xl">
-          <View className="items-center justify-center mr-3 rounded-full w-10 h-10 bg-amber-500">
+          <View className="justify-center items-center mr-3 w-10 h-10 bg-amber-500 rounded-full">
             <Ionicons name="home" size={18} color="#FFFFFF" />
           </View>
           <View className="flex-1">
@@ -245,9 +245,9 @@ export default function AddressInput({
               name="search-outline"
               size={20}
               color="#9CA3AF"
-              className="absolute z-50 bg-gray-100 top-4 left-3"
+              className="absolute left-3 top-4 z-50 bg-gray-100"
             />
-            <View className="flex-1 ml-3">
+            <View className="flex-1">
               <GooglePlacesTextInput
                 ref={autocompleteRef}
                 apiKey={GOOGLE_MAPS_API_KEY}
@@ -364,7 +364,7 @@ export default function AddressInput({
       )}
 
       {error && (
-        <Text className="text-xs text-center font-semibold text-red-500">
+        <Text className="text-xs font-semibold text-center text-red-500">
           {error}
         </Text>
       )}
@@ -376,12 +376,17 @@ const autocompleteStyles = {
   container: {
     marginHorizontal: 0,
   },
+  inputContainer: {
+    borderWidth: 0,
+    borderColor: "transparent",
+    backgroundColor: "transparent",
+  },
   input: {
     borderColor: "transparent",
     borderRadius: 8,
     borderWidth: 0,
     backgroundColor: "#F3F4F6",
-    paddingLeft: 36,
+    paddingLeft: 20,
     paddingRight: 12,
     paddingVertical: 8,
     fontSize: 14,

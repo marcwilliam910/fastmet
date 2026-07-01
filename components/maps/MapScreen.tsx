@@ -1,16 +1,16 @@
-import { Type } from "@/store/slices/bookSlice";
-import { useAppStore } from "@/store/useAppStore";
-import { LocationDetails, RouteData } from "@/types/book";
-import { GOOGLE_MAPS_API_KEY, STATIC_IMAGES } from "@/utils/constants";
-import { formatDuration } from "@/utils/helpers/date";
-import { Image } from "expo-image";
+import {Type} from "@/store/slices/bookSlice";
+import {useAppStore} from "@/store/useAppStore";
+import {LocationDetails, RouteData} from "@/types/book";
+import {GOOGLE_MAPS_API_KEY, STATIC_IMAGES} from "@/utils/constants";
+import {formatDuration} from "@/utils/helpers/date";
+import {Image} from "expo-image";
 import * as Location from "expo-location";
-import { useFocusEffect } from "expo-router";
-import React, { memo, useCallback, useEffect, useRef, useState } from "react";
-import { Alert, StatusBar, StyleSheet, Text, View } from "react-native";
-import MapView, { Marker } from "react-native-maps";
+import {useFocusEffect} from "expo-router";
+import React, {memo, useCallback, useEffect, useRef, useState} from "react";
+import {Alert, StatusBar, StyleSheet, Text, View} from "react-native";
+import MapView, {Marker} from "react-native-maps";
 import MapViewDirections from "react-native-maps-directions";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import {useSafeAreaInsets} from "react-native-safe-area-context";
 
 type Region = {
   latitude: number;
@@ -23,8 +23,8 @@ type Props = {
   pickUp: LocationDetails;
   dropOff: LocationDetails;
   routeData: RouteData;
-  region: Region | null;
-  setRegion: React.Dispatch<React.SetStateAction<Region | null>>;
+  region: Region;
+  setRegion: React.Dispatch<React.SetStateAction<Region>>;
   setIsDragging: React.Dispatch<React.SetStateAction<boolean>>;
   bookingType: Type;
 };
@@ -58,8 +58,8 @@ function MapScreen({
 
     (async () => {
       try {
+        const {status} = await Location.requestForegroundPermissionsAsync();
         setLoading(true);
-        const { status } = await Location.requestForegroundPermissionsAsync();
         if (status !== "granted") {
           Alert.alert(
             "Permission Required",
@@ -79,7 +79,9 @@ function MapScreen({
         };
 
         setRegion(userRegion);
-        mapRef.current?.animateToRegion(userRegion, 1000);
+        setTimeout(() => {
+          mapRef.current?.animateToRegion(userRegion, 1000);
+        }, 300);
       } catch (err) {
         console.error("Failed to get user location:", err);
         Alert.alert(
@@ -118,110 +120,108 @@ function MapScreen({
 
   return (
     <View className="flex-1">
-      {region && (
-        <MapView
-          ref={mapRef}
-          style={StyleSheet.absoluteFillObject}
-          showsUserLocation
-          followsUserLocation={!pickUp && !dropOff}
-          showsCompass
-          mapType="standard"
-          initialRegion={region}
-          onTouchStart={() => setIsDragging(true)}
-          onTouchEnd={() => setIsDragging(false)}
-          onTouchCancel={() => setIsDragging(false)}
-        >
-          {/* POLYLINE FIRST - renders at bottom */}
-          {pickUp && dropOff && (
-            <MapViewDirections
-              origin={{
-                latitude: pickUp.coords.lat,
-                longitude: pickUp.coords.lng,
-              }}
-              destination={{
-                latitude: dropOff.coords.lat,
-                longitude: dropOff.coords.lng,
-              }}
-              apikey={GOOGLE_MAPS_API_KEY ?? ""}
-              strokeWidth={5}
-              strokeColor="#007AFF"
-              optimizeWaypoints
-              mode="DRIVING"
-              onReady={(result) => {
-                if (!isAnimating && mapRef.current) {
-                  setIsAnimating(true);
-                  mapRef.current.fitToCoordinates(result.coordinates, {
-                    edgePadding: { top: 80, right: 80, bottom: 400, left: 80 },
-                    animated: true,
-                  });
-                  setTimeout(() => setIsAnimating(false), 1500);
-                }
-              }}
-            />
-          )}
+      <MapView
+        ref={mapRef}
+        style={StyleSheet.absoluteFillObject}
+        showsUserLocation
+        followsUserLocation={!pickUp && !dropOff}
+        showsCompass
+        mapType="standard"
+        initialRegion={region}
+        onTouchStart={() => setIsDragging(true)}
+        onTouchEnd={() => setIsDragging(false)}
+        onTouchCancel={() => setIsDragging(false)}
+      >
+        {/* POLYLINE FIRST - renders at bottom */}
+        {pickUp && dropOff && (
+          <MapViewDirections
+            origin={{
+              latitude: pickUp.coords.lat,
+              longitude: pickUp.coords.lng,
+            }}
+            destination={{
+              latitude: dropOff.coords.lat,
+              longitude: dropOff.coords.lng,
+            }}
+            apikey={GOOGLE_MAPS_API_KEY ?? ""}
+            strokeWidth={5}
+            strokeColor="#007AFF"
+            optimizeWaypoints
+            mode="DRIVING"
+            onReady={(result) => {
+              if (!isAnimating && mapRef.current) {
+                setIsAnimating(true);
+                mapRef.current.fitToCoordinates(result.coordinates, {
+                  edgePadding: {top: 80, right: 80, bottom: 400, left: 80},
+                  animated: true,
+                });
+                setTimeout(() => setIsAnimating(false), 1500);
+              }
+            }}
+          />
+        )}
 
-          {/* MARKERS LAST - renders on top */}
-          {pickUp && (
-            <Marker
-              key={`pickup-${pickUp.coords.lat}-${pickUp.coords.lng}`}
-              coordinate={{
-                latitude: pickUp.coords.lat,
-                longitude: pickUp.coords.lng,
-              }}
-              title="Pick Up"
-              anchor={{ x: 0.5, y: 0.5 }}
-              tracksViewChanges={!pickupImageLoaded}
-              zIndex={1000}
-            >
-              <View style={{ opacity: 1 }}>
-                <Image
-                  source={STATIC_IMAGES.pickup}
-                  style={{
-                    width: 50,
-                    height: 50,
-                  }}
-                  contentFit="contain"
-                  onLoad={() => setPickupImageLoaded(true)}
-                  onError={(e) => {
-                    // console.error("Pickup image error:", e.nativeEvent.error);
-                    setPickupImageLoaded(true);
-                  }}
-                />
-              </View>
-            </Marker>
-          )}
+        {/* MARKERS LAST - renders on top */}
+        {pickUp && (
+          <Marker
+            key={`pickup-${pickUp.coords.lat}-${pickUp.coords.lng}`}
+            coordinate={{
+              latitude: pickUp.coords.lat,
+              longitude: pickUp.coords.lng,
+            }}
+            title="Pick Up"
+            anchor={{x: 0.5, y: 0.5}}
+            tracksViewChanges={!pickupImageLoaded}
+            zIndex={1000}
+          >
+            <View style={{opacity: 1}}>
+              <Image
+                source={STATIC_IMAGES.pickup}
+                style={{
+                  width: 50,
+                  height: 50,
+                }}
+                contentFit="contain"
+                onLoad={() => setPickupImageLoaded(true)}
+                onError={(e) => {
+                  // console.error("Pickup image error:", e.nativeEvent.error);
+                  setPickupImageLoaded(true);
+                }}
+              />
+            </View>
+          </Marker>
+        )}
 
-          {dropOff && (
-            <Marker
-              key={`dropoff-${dropOff.coords.lat}-${dropOff.coords.lng}`}
-              coordinate={{
-                latitude: dropOff.coords.lat,
-                longitude: dropOff.coords.lng,
-              }}
-              title="Drop Off"
-              anchor={{ x: 0.5, y: 0.5 }}
-              tracksViewChanges={!dropoffImageLoaded}
-              zIndex={1001} // ← Higher than pickup
-            >
-              <View style={{ opacity: 1 }}>
-                <Image
-                  source={STATIC_IMAGES.dropoff}
-                  style={{
-                    width: 50,
-                    height: 50,
-                  }}
-                  contentFit="contain"
-                  onLoad={() => setDropoffImageLoaded(true)}
-                  onError={(e) => {
-                    // console.error("Dropoff image error:", e.nativeEvent.error);
-                    setDropoffImageLoaded(true);
-                  }}
-                />
-              </View>
-            </Marker>
-          )}
-        </MapView>
-      )}
+        {dropOff && (
+          <Marker
+            key={`dropoff-${dropOff.coords.lat}-${dropOff.coords.lng}`}
+            coordinate={{
+              latitude: dropOff.coords.lat,
+              longitude: dropOff.coords.lng,
+            }}
+            title="Drop Off"
+            anchor={{x: 0.5, y: 0.5}}
+            tracksViewChanges={!dropoffImageLoaded}
+            zIndex={1001} // ← Higher than pickup
+          >
+            <View style={{opacity: 1}}>
+              <Image
+                source={STATIC_IMAGES.dropoff}
+                style={{
+                  width: 50,
+                  height: 50,
+                }}
+                contentFit="contain"
+                onLoad={() => setDropoffImageLoaded(true)}
+                onError={(e) => {
+                  // console.error("Dropoff image error:", e.nativeEvent.error);
+                  setDropoffImageLoaded(true);
+                }}
+              />
+            </View>
+          </Marker>
+        )}
+      </MapView>
 
       {routeData.distance > 0 &&
         routeData.duration > 0 &&
@@ -232,13 +232,13 @@ function MapScreen({
 
 export default memo(MapScreen);
 
-export function DistanceBubble({ routeData }: { routeData: RouteData }) {
+export function DistanceBubble({routeData}: {routeData: RouteData}) {
   const inset = useSafeAreaInsets();
 
   return (
     <View
-      className="absolute z-50 self-center px-4 py-2 bg-black/60 rounded-2xl"
-      style={{ top: inset.top + 10 }}
+      className="absolute z-50 self-center px-4 py-2 rounded-2xl bg-black/60"
+      style={{top: inset.top + 10}}
     >
       <Text className="text-sm font-semibold text-white">
         {routeData.distance.toFixed(1)} km •{" "}

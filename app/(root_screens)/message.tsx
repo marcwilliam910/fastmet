@@ -1,19 +1,19 @@
-import { queryClient } from "@/lib/queryClient";
-import { useConversationById } from "@/queries/conversation";
-import { useSocket } from "@/sockets/context/SocketProvider";
-import { useAppStore } from "@/store/useAppStore";
-import { ConversationResponse, MessagesLoadedData } from "@/types/chat";
-import { STATIC_IMAGES } from "@/utils/constants";
+import {queryClient} from "@/lib/queryClient";
+import {useConversationById} from "@/queries/conversation";
+import {useSocket} from "@/sockets/context/SocketProvider";
+import {useAppStore} from "@/store/useAppStore";
+import {ConversationResponse, MessagesLoadedData} from "@/types/chat";
+import {STATIC_IMAGES} from "@/utils/constants";
 import {
   convertImageToBase64,
   openGallery,
   takePhoto,
 } from "@/utils/helpers/imagePicker";
-import { Ionicons } from "@expo/vector-icons";
-import { InfiniteData } from "@tanstack/react-query";
-import { Image } from "expo-image";
-import { router, useLocalSearchParams, useNavigation } from "expo-router";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import {Ionicons} from "@expo/vector-icons";
+import {InfiniteData} from "@tanstack/react-query";
+import {Image} from "expo-image";
+import {router, useLocalSearchParams, useNavigation} from "expo-router";
+import React, {useCallback, useEffect, useRef, useState} from "react";
 import {
   ActivityIndicator,
   Keyboard,
@@ -24,9 +24,9 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { Bubble, GiftedChat, IMessage } from "react-native-gifted-chat";
+import {Bubble, GiftedChat, IMessage} from "react-native-gifted-chat";
 import ImageView from "react-native-image-viewing";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {SafeAreaView} from "react-native-safe-area-context";
 
 const Message = () => {
   const params = useLocalSearchParams();
@@ -102,7 +102,7 @@ const Message = () => {
     console.log("Opening chat, joining room...");
 
     // Join conversation room
-    socket.emit("join_room", { clientId: useAppStore.getState().id, driverId });
+    socket.emit("join_room", {clientId: useAppStore.getState().id, driverId});
 
     // Handle room joined
     const handleRoomJoined = (data: {
@@ -217,7 +217,7 @@ const Message = () => {
 
   useEffect(() => {
     const unsubscribe = navigation.addListener("beforeRemove", (e) => {
-      socket.emit("leave_room", { conversationId });
+      socket.emit("leave_room", {conversationId});
 
       // Reset unread count in conversations cache for this conversation
       type ConversationsPage = {
@@ -229,7 +229,7 @@ const Message = () => {
       const driverId = useAppStore.getState().id;
 
       queryClient.setQueriesData<InfiniteData<ConversationsPage>>(
-        { queryKey: ["conversations"] },
+        {queryKey: ["conversations"]},
         (old) => {
           if (!old?.pages?.length) return old;
           return {
@@ -240,7 +240,7 @@ const Message = () => {
                 if (c._id !== conversationId) return c;
                 const updated = {
                   ...c,
-                  unreadCount: { ...c.unreadCount, client: 0 },
+                  unreadCount: {...c.unreadCount, client: 0},
                 };
                 if (latestMsg) {
                   updated.lastMessage =
@@ -387,7 +387,7 @@ const Message = () => {
                         _id: Date.now(),
                         text,
                         createdAt: new Date(),
-                        user: { _id: useAppStore.getState().id! },
+                        user: {_id: useAppStore.getState().id!},
                       },
                     ]);
                     setText("");
@@ -423,7 +423,7 @@ const Message = () => {
         }}
       >
         <Image
-          source={{ uri: props.currentMessage.image }}
+          source={{uri: props.currentMessage.image}}
           contentFit="contain"
           style={{
             width: 200,
@@ -447,7 +447,7 @@ const Message = () => {
   return (
     <SafeAreaView className="flex-1 bg-secondary">
       <KeyboardAvoidingView
-        style={{ flex: 1 }}
+        style={{flex: 1}}
         behavior={
           Platform.OS === "ios"
             ? "padding"
@@ -476,10 +476,10 @@ const Message = () => {
             <Image
               source={
                 conversation?.driver?.profilePictureUrl
-                  ? { uri: conversation.driver.profilePictureUrl }
+                  ? {uri: conversation.driver.profilePictureUrl}
                   : STATIC_IMAGES.userPlaceholder
               }
-              style={{ width: 40, height: 40, borderRadius: 999 }}
+              style={{width: 40, height: 40, borderRadius: 999}}
               contentFit="cover"
             />
 
@@ -487,7 +487,18 @@ const Message = () => {
               <Text className="text-base font-bold text-white">
                 {conversation?.driver.firstName} {conversation?.driver.lastName}
               </Text>
-              <Text className="text-xs ml-0.5 text-gray-300">Driver</Text>
+              <View className="flex-row items-center gap-1">
+                <Text className="text-xs ml-0.5 text-gray-300">Driver</Text>
+                {conversation?.driver.gender === "prefer_not" ? null : (
+                  <Ionicons
+                    name={
+                      conversation?.driver.gender === "male" ? "male" : "female"
+                    }
+                    size={16}
+                    color="#FFA840"
+                  />
+                )}
+              </View>
             </View>
           </View>
 
@@ -528,7 +539,7 @@ const Message = () => {
       </KeyboardAvoidingView>
 
       <ImageView
-        images={[{ uri: selectedImageUrl }]}
+        images={[{uri: selectedImageUrl}]}
         imageIndex={0}
         visible={imageViewerVisible}
         onRequestClose={() => setImageViewerVisible(false)}
@@ -571,10 +582,7 @@ export const renderChatEmpty = () => {
     <View
       className="pb-20 items-center px-6"
       style={{
-        transform: [
-          { scaleY: -1 },
-          { scaleX: Platform.OS === "android" ? -1 : 1 },
-        ],
+        transform: [{scaleY: -1}, {scaleX: Platform.OS === "android" ? -1 : 1}],
       }}
     >
       <Ionicons name="chatbubbles-outline" size={100} color="#9CA3AF" />

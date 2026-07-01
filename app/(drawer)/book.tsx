@@ -1,16 +1,23 @@
 import BookSheet from "@/components/maps/BookSheet";
 import MapScreen from "@/components/maps/MapScreen";
 import SearchModal from "@/components/modals/mapSearchModal";
-import { useDrivingDistance } from "@/queries/bookingQueries";
-import { useSurgeFactors } from "@/queries/pricingQueries";
-import { useAppStore } from "@/store/useAppStore";
-import { Ionicons } from "@expo/vector-icons";
-import { DrawerActions } from "@react-navigation/native";
-import { useNavigation } from "expo-router";
-import React, { useEffect, useMemo, useState } from "react";
-import { Pressable, View } from "react-native";
-import { Region } from "react-native-maps";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {useDrivingDistance} from "@/queries/bookingQueries";
+import {useSurgeFactors} from "@/queries/pricingQueries";
+import {useAppStore} from "@/store/useAppStore";
+import {Ionicons} from "@expo/vector-icons";
+import {DrawerActions} from "@react-navigation/native";
+import {useNavigation} from "expo-router";
+import React, {useEffect, useMemo, useState} from "react";
+import {Pressable, View} from "react-native";
+import {Region} from "react-native-maps";
+import {SafeAreaView} from "react-native-safe-area-context";
+
+const DEFAULT_REGION = {
+  latitude: 14.5995, // 👈 change to your city center
+  longitude: 120.9842,
+  latitudeDelta: 0.05,
+  longitudeDelta: 0.05,
+};
 
 const Book = () => {
   const pickUp = useAppStore((state) => state.pickUp);
@@ -21,7 +28,7 @@ const Book = () => {
   const bookingType = useAppStore((state) => state.bookingType);
   const addedServices = useAppStore((state) => state.addedServices);
 
-  const [region, setRegion] = useState<Region | null>(null);
+  const [region, setRegion] = useState<Region>(DEFAULT_REGION);
   const [isDragging, setIsDragging] = useState(false);
   const [searchModalVisible, setSearchModalVisible] = useState(false);
   const [searchType, setSearchType] = useState<"pickup" | "dropoff" | null>(
@@ -30,7 +37,7 @@ const Book = () => {
 
   const navigation = useNavigation();
 
-  const { data: route, isFetching } = useDrivingDistance(
+  const {data: route, isFetching} = useDrivingDistance(
     pickUp,
     dropOff,
     selectedVehicle?.key,
@@ -38,13 +45,13 @@ const Book = () => {
 
   // ── Surge + gas factors ───────────────────────────────────────────────────
   // Only fetches when pickUp is set — cached 60s, covers all variants at once
-  const { data: surgeFactors, isLoading: isSurgeLoading } =
+  const {data: surgeFactors, isLoading: isSurgeLoading} =
     useSurgeFactors(pickUp);
   // ── Pricing ───────────────────────────────────────────────────────────────
   const pricing = useMemo(() => {
     if (!route || !selectedVehicle?.variant) return null;
 
-    const { distanceKm, durationMin } = route;
+    const {distanceKm, durationMin} = route;
     const variant = selectedVehicle.variant;
     const variantKey = `${selectedVehicle.key}_${variant.maxLoadKg}`;
 
@@ -118,7 +125,7 @@ const Book = () => {
 
   return (
     <SafeAreaView
-      style={{ flex: 1, backgroundColor: "white" }}
+      style={{flex: 1, backgroundColor: "white"}}
       edges={["right", "bottom", "left"]}
     >
       <View className="relative flex-1">
@@ -136,10 +143,10 @@ const Book = () => {
         {!isDragging && (
           <Pressable
             onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
-            className="absolute p-2 bg-white rounded-full shadow-lg top-8 left-6 active:scale-105 active:opacity-80"
+            className="absolute left-6 top-8 p-2 bg-white rounded-full shadow-lg active:scale-105 active:opacity-80"
             style={{
               shadowColor: "#000",
-              shadowOffset: { width: 2, height: 2 },
+              shadowOffset: {width: 2, height: 2},
               shadowOpacity: 0.25,
               shadowRadius: 3.84,
               elevation: 5,

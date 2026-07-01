@@ -1,5 +1,5 @@
-import { UserAddress } from "@/types/user";
-import { StateCreator } from "zustand";
+import {UserAddress} from "@/types/user";
+import {StateCreator} from "zustand";
 
 export interface AuthSlice {
   phoneNumber: string;
@@ -8,7 +8,7 @@ export interface AuthSlice {
   name: string;
   token: string | null;
   refreshToken: string | null;
-  gender: string | null;
+  gender: "male" | "female" | "prefer_not" | null;
   address: UserAddress | null;
   profilePictureUrl: string;
   preRegistered: boolean;

@@ -2,7 +2,10 @@ import CustomKeyAvoidingView from "@/components/CustomKeyAvoid";
 import {Countdown} from "@/components/Timers";
 import {useAppStore} from "@/store/useAppStore";
 import {UserAddress} from "@/types/user";
-import {routeAuthGuardError, handleSendOtpError} from "@/utils/helpers/authGuardErrors";
+import {
+  handleSendOtpError,
+  routeAuthGuardError,
+} from "@/utils/helpers/authGuardErrors";
 import {getDeviceId} from "@/utils/helpers/deviceId";
 import {formatPHNumber} from "@/utils/helpers/format";
 import {Ionicons} from "@expo/vector-icons";
@@ -16,7 +19,7 @@ import Toast from "react-native-toast-message";
 
 export const RESEND_TIMEOUT_SECONDS = 60;
 export const RESEND_KEY = "resend_available_at";
-const OTP_VALIDITY_SECONDS = 600;
+const OTP_VALIDITY_SECONDS = 300;
 
 type LoginResponse = {
   success: boolean;
@@ -28,7 +31,7 @@ type LoginResponse = {
     fullName: string;
     profilePictureUrl: string;
     address: UserAddress | null;
-    gender: string;
+    gender: "male" | "female" | "prefer_not";
     preRegistered: boolean;
   };
   status: "new" | "existing" | "pre-registered";
@@ -112,7 +115,7 @@ export default function PhoneOTPScreen() {
         topOffset: 50,
       });
     } catch (error: any) {
-      if (handleSendOtpError(error, { onRetry: handleResendOtp })) return;
+      if (handleSendOtpError(error, {onRetry: handleResendOtp})) return;
     }
   };
 
@@ -184,7 +187,7 @@ export default function PhoneOTPScreen() {
 
         const {data} = await axios.post<LoginResponse>(
           `${process.env.EXPO_PUBLIC_BASE_URL}/api/client/auth/login`,
-          { deviceId },
+          {deviceId},
           {
             headers: {
               Authorization: `Bearer ${otpData.verifyToken}`,
@@ -250,7 +253,7 @@ export default function PhoneOTPScreen() {
   return (
     <SafeAreaView className="flex-1 bg-white">
       <CustomKeyAvoidingView>
-        <View className="items-center justify-center flex-1 px-6">
+        <View className="flex-1 justify-center items-center px-6">
           {/* Title */}
           <Text className="text-3xl font-extrabold text-[#111] mb-3">
             Verify Your Number
@@ -265,7 +268,7 @@ export default function PhoneOTPScreen() {
           </Text>
 
           {/* OTP expiry countdown */}
-          <View className="flex-row items-center gap-1 mb-8">
+          <View className="flex-row gap-1 items-center mb-8">
             <Ionicons
               name="time-outline"
               size={14}
@@ -276,7 +279,7 @@ export default function PhoneOTPScreen() {
                 Code expired — please request a new one
               </Text>
             ) : (
-              <View className="flex-row items-center gap-1">
+              <View className="flex-row gap-1 items-center">
                 <Text className="text-sm text-gray-500">Code expires in</Text>
                 <Countdown
                   key={otpTimerKey}
@@ -289,7 +292,7 @@ export default function PhoneOTPScreen() {
           </View>
 
           {/* OTP Inputs */}
-          <View className="flex-row justify-between w-full mb-4">
+          <View className="flex-row justify-between mb-4 w-full">
             {otp.map((digit, index) => (
               <TextInput
                 key={index}
@@ -299,8 +302,7 @@ export default function PhoneOTPScreen() {
                 className={`w-14 h-16 rounded-2xl text-center text-2xl font-bold
                 ${digit ? "bg-orange-100 border border-darkPrimary" : "bg-white border border-gray-300"}
                 ${error ? "border-red-500" : ""}
-                ${otpExpired ? "opacity-40" : ""}
-              `}
+                ${otpExpired ? "opacity-40" : ""}`}
                 value={digit}
                 onChangeText={(value) => handleOtpChange(value, index)}
                 onKeyPress={(e) => handleKeyPress(e, index)}
@@ -316,7 +318,7 @@ export default function PhoneOTPScreen() {
           {/* Error */}
           {error && (
             <View
-              className="flex-row items-center justify-center w-full gap-2 px-4 py-3 mb-5 border border-red-200 bg-red-50 rounded-xl"
+              className="flex-row gap-2 justify-center items-center px-4 py-3 mb-5 w-full bg-red-50 rounded-xl border border-red-200"
               style={{
                 shadowColor: "#000",
                 shadowOpacity: 0.05,
@@ -343,7 +345,7 @@ export default function PhoneOTPScreen() {
                 </Text>
               </Pressable>
             ) : (
-              <View className="flex-row items-center gap-1">
+              <View className="flex-row gap-1 items-center">
                 <Text className="text-base font-semibold text-gray-400">
                   Resend in{" "}
                 </Text>

@@ -1,20 +1,20 @@
-import { UserAddress } from "@/types/user";
-import { create } from "zustand";
-import { persist } from "zustand/middleware";
-import { createSecureStorage } from "./secureStorage";
-import { AuthSlice, createAuthSlice } from "./slices/authSlice";
+import {UserAddress} from "@/types/user";
+import {create} from "zustand";
+import {persist} from "zustand/middleware";
+import {createSecureStorage} from "./secureStorage";
+import {AuthSlice, createAuthSlice} from "./slices/authSlice";
 import {
   BookingTypeSlice,
   createBookingTypeSlice,
 } from "./slices/bookingTypeSlice";
-import { BookSlice, createBookSlice } from "./slices/bookSlice";
-import { ChatSlice, createChatSlice } from "./slices/chatSlice";
-import { createLoadingSlice, LoadingSlice } from "./slices/loadingStore";
+import {BookSlice, createBookSlice} from "./slices/bookSlice";
+import {ChatSlice, createChatSlice} from "./slices/chatSlice";
+import {createLoadingSlice, LoadingSlice} from "./slices/loadingStore";
 import {
   createNotificationSlice,
   NotificationSlice,
 } from "./slices/notificationSlice";
-import { createVehicleSlice, VehicleSlice } from "./slices/vehicleSlice";
+import {createVehicleSlice, VehicleSlice} from "./slices/vehicleSlice";
 
 export type AppStore = BookSlice &
   LoadingSlice &
@@ -45,7 +45,7 @@ export const useAppStore = create<AppStore>()(
         isProfileComplete: boolean;
         name: string;
         profilePictureUrl: string;
-        gender: string | null;
+        gender: "male" | "female" | "prefer_not" | null;
         address: UserAddress;
         preRegistered: boolean;
       }>(),

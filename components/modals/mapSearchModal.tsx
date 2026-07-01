@@ -1,18 +1,18 @@
-import { useShake } from "@/hooks/useShakeAnimation";
-import { useAppStore } from "@/store/useAppStore";
-import { LocationDetails } from "@/types/book";
+import {useShake} from "@/hooks/useShakeAnimation";
+import {useAppStore} from "@/store/useAppStore";
+import {LocationDetails} from "@/types/book";
 import {
   GOOGLE_MAPS_API_KEY,
   METRO_MANILA_POLYGON,
   requiresFerryFromMetroManila,
 } from "@/utils/constants";
-import { formatLocation, isSameLocation } from "@/utils/helpers/location";
-import { getArray, pushToArray } from "@/utils/helpers/recentPlaceStorage";
-import { Ionicons } from "@expo/vector-icons";
+import {formatLocation, isSameLocation} from "@/utils/helpers/location";
+import {getArray, pushToArray} from "@/utils/helpers/recentPlaceStorage";
+import {Ionicons} from "@expo/vector-icons";
 import * as Location from "expo-location";
-import { router } from "expo-router";
-import { isPointInPolygon } from "geolib";
-import React, { useEffect, useState } from "react";
+import {router} from "expo-router";
+import {isPointInPolygon} from "geolib";
+import React, {useEffect, useState} from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -33,7 +33,7 @@ import GooglePlacesTextInput, {
   Place,
 } from "react-native-google-places-textinput";
 import Animated from "react-native-reanimated";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import {useSafeAreaInsets} from "react-native-safe-area-context";
 
 type SearchType = "pickup" | "dropoff";
 
@@ -45,7 +45,7 @@ type SearchModalProps = {
 
 function isWithinMetroManila(lat: number, lng: number) {
   return isPointInPolygon(
-    { latitude: lat, longitude: lng },
+    {latitude: lat, longitude: lng},
     METRO_MANILA_POLYGON.map(([lat, lng]) => ({
       latitude: lat,
       longitude: lng,
@@ -55,11 +55,7 @@ function isWithinMetroManila(lat: number, lng: number) {
 
 const RECENT_PLACE_KEY = "recent_places";
 
-const SearchModal: React.FC<SearchModalProps> = ({
-  visible,
-  onClose,
-  type,
-}) => {
+const SearchModal: React.FC<SearchModalProps> = ({visible, onClose, type}) => {
   const [recentPlaces, setRecentPlaces] = useState<LocationDetails[]>([]);
   const inset = useSafeAreaInsets();
   const [selectedPlace, setSelectedPlace] = useState<Partial<Place> | null>(
@@ -79,7 +75,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
   const dropOff = useAppStore((state) => state.dropOff);
   const pickUp = useAppStore((state) => state.pickUp);
   const homeAddress = useAppStore((state) => state.address);
-  const { shake, animatedStyle } = useShake();
+  const {shake, animatedStyle} = useShake();
   const [additionalDetails, setAdditionalDetails] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -306,7 +302,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
 
   const handleRecentPlacePress = async (place: LocationDetails) => {
     if (!place) return;
-    const { lat, lng } = place.coords;
+    const {lat, lng} = place.coords;
 
     // Check if location matches the other location (pickup/dropoff)
     if (type === "pickup" && dropOff) {
@@ -405,7 +401,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
           "Location Services Disabled",
           "Please enable location services in your device settings to use this feature.",
           [
-            { text: "Cancel", style: "cancel" },
+            {text: "Cancel", style: "cancel"},
             {
               text: "Open Settings",
               onPress: () => {
@@ -421,7 +417,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
         return;
       }
 
-      const { status } = await Location.requestForegroundPermissionsAsync();
+      const {status} = await Location.requestForegroundPermissionsAsync();
 
       if (status !== "granted") {
         const message = "Permission to access location was denied";
@@ -442,7 +438,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
         accuracy: Location.Accuracy.Balanced,
       });
 
-      const { latitude, longitude } = location.coords;
+      const {latitude, longitude} = location.coords;
 
       // Check if location matches the other location (pickup/dropoff)
       if (type === "pickup" && dropOff) {
@@ -586,12 +582,12 @@ const SearchModal: React.FC<SearchModalProps> = ({
     }
   };
 
-  const renderRecentPlace = ({ item }: { item: LocationDetails }) => (
+  const renderRecentPlace = ({item}: {item: LocationDetails}) => (
     <Pressable
       onPress={() => handleRecentPlacePress(item)}
-      className="flex-row items-center px-4 py-3 border-b border-gray-100 active:bg-gray-100 rounded-xl"
+      className="flex-row items-center px-4 py-3 rounded-xl border-b border-gray-100 active:bg-gray-100"
     >
-      <View className="items-center justify-center w-10 h-10 mr-3 bg-gray-100 rounded-full">
+      <View className="justify-center items-center mr-3 w-10 h-10 bg-gray-100 rounded-full">
         <Ionicons name="location-outline" size={20} color="#6B7280" />
       </View>
       <View className="flex-1">
@@ -627,8 +623,8 @@ const SearchModal: React.FC<SearchModalProps> = ({
         >
           {/* Header */}
           <View
-            className="flex-row items-center justify-center px-4"
-            style={{ paddingBottom: Platform.OS === "ios" ? 25 : 16 }}
+            className="flex-row justify-center items-center px-4"
+            style={{paddingBottom: Platform.OS === "ios" ? 25 : 16}}
           >
             <Pressable
               onPress={() => {
@@ -636,7 +632,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
 
                 onClose();
               }}
-              className="absolute left-4 -top-1"
+              className="absolute -top-1 left-4"
               hitSlop={20}
             >
               <Ionicons
@@ -650,13 +646,13 @@ const SearchModal: React.FC<SearchModalProps> = ({
             </Text>
           </View>
           {/* Search Input */}
-          <View className="pb-4 mx-4 bg-white border-b border-gray-200">
+          <View className="mx-4 bg-white border-b border-gray-200">
             <View className="flex-row items-center px-3 py-2">
               <Ionicons
                 name="search-outline"
                 size={24}
                 color="#4B5563"
-                className="absolute z-50 bg-white top-5 left-3"
+                className="absolute left-3 top-5 z-50 bg-white"
               />
               <Animated.View
                 className="flex-1 ml-6" // all static styling here
@@ -698,8 +694,8 @@ const SearchModal: React.FC<SearchModalProps> = ({
               numberOfLines={4}
               placeholder="e.g. In front of Jollibee or near gate 3"
               placeholderTextColor="#9CA3AF"
-              style={{ height: 120, textAlignVertical: "top" }}
-              className="p-4 text-base text-gray-800 bg-white border border-gray-200 rounded-xl"
+              style={{height: 120, textAlignVertical: "top"}}
+              className="p-4 text-base text-gray-800 bg-white rounded-xl border border-gray-200"
             />
           </View>
 
@@ -707,21 +703,21 @@ const SearchModal: React.FC<SearchModalProps> = ({
             className="flex-1"
             // showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
-            contentContainerStyle={{ paddingBottom: 100 }}
+            contentContainerStyle={{paddingBottom: 100}}
           >
             {/* Current Location Button */}
             <View className="px-4 mt-5 mb-2">
               <Pressable
                 onPress={handleCurrentLocation}
                 disabled={loading}
-                className="flex-row items-center px-4 py-3 bg-white border border-gray-200 rounded-xl active:bg-gray-50"
+                className="flex-row items-center px-4 py-3 bg-white rounded-xl border border-gray-200 active:bg-gray-50"
               >
-                <View className="items-center justify-center mr-3 bg-blue-500 rounded-full w-11 h-11">
+                <View className="justify-center items-center mr-3 w-11 h-11 bg-blue-500 rounded-full">
                   <Ionicons name="navigate" size={20} color="#FFFFFF" />
                 </View>
                 {loading ? (
                   <>
-                    <Text className="flex-1  text-base font-semibold text-gray-900">
+                    <Text className="flex-1 text-base font-semibold text-gray-900">
                       Getting current location...
                     </Text>
                     <ActivityIndicator size="small" color="#FFA840" />
@@ -864,9 +860,9 @@ const SearchModal: React.FC<SearchModalProps> = ({
 
                     onClose();
                   }}
-                  className="flex-row items-center px-4 py-3 bg-white border border-gray-200 rounded-xl active:bg-gray-50"
+                  className="flex-row items-center px-4 py-3 bg-white rounded-xl border border-gray-200 active:bg-gray-50"
                 >
-                  <View className="items-center justify-center mr-3 rounded-full w-11 h-11 bg-amber-500">
+                  <View className="justify-center items-center mr-3 w-11 h-11 bg-amber-500 rounded-full">
                     <Ionicons name="home" size={20} color="#FFFFFF" />
                   </View>
                   <View className="flex-1">
@@ -891,7 +887,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
                       name="time-outline"
                       size={18}
                       color="#6B7280"
-                      style={{ marginRight: 8 }}
+                      style={{marginRight: 8}}
                     />
                     <Text className="text-xs font-semibold tracking-wider text-gray-600 uppercase">
                       Recent Places
@@ -908,7 +904,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
             )}
           </ScrollView>
           <View
-            className="absolute bg-white left-0 right-0 py-2"
+            className="absolute right-0 left-0 py-2 bg-white"
             style={{
               bottom: inset.bottom,
             }}
@@ -933,6 +929,11 @@ export default SearchModal;
 const customStyles = {
   container: {
     marginHorizontal: 0,
+  },
+  inputContainer: {
+    borderWidth: 0,
+    borderColor: "transparent",
+    backgroundColor: "transparent",
   },
   input: {
     minHeight: 45, // Use minHeight instead of height

@@ -1,17 +1,17 @@
-import { useAuth } from "@/hooks/useAuth";
-import { useAppStore } from "@/store/useAppStore";
-import { DefaultEventsMap } from "@socket.io/component-emitter";
-import { router } from "expo-router";
-import React, { createContext, useContext, useEffect, useMemo } from "react";
+import {useAuth} from "@/hooks/useAuth";
+import {ensureFreshToken, performLogout} from "@/lib/axios";
+import {useAppStore} from "@/store/useAppStore";
+import {DefaultEventsMap} from "@socket.io/component-emitter";
+import React, {createContext, useContext, useEffect, useMemo} from "react";
 import Toast from "react-native-toast-message";
-import { Socket } from "socket.io-client";
+import {Socket} from "socket.io-client";
 import {
   acceptanceRequestedSchedule,
   cancelScheduleDriverOffer,
   driverUnavailable,
 } from "../handlers/booking";
-import { receiveMessage } from "../handlers/chat";
-import { getSocket } from "../socket";
+import {receiveMessage} from "../handlers/chat";
+import {getSocket} from "../socket";
 
 interface SocketContextValue {
   socket: Socket<DefaultEventsMap, DefaultEventsMap> | null;
@@ -26,7 +26,7 @@ export default function SocketProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const { token } = useAuth();
+  const {token} = useAuth();
   const socket = useMemo(() => (token ? getSocket(token) : null), [token]);
 
   useEffect(() => {
@@ -34,12 +34,24 @@ export default function SocketProvider({
 
     socket.connect();
 
-    // Handle authentication errors
-    socket.on("connect_error", (err) => {
+    let refreshAttempted = false;
+
+    socket.on("connect_error", async (err) => {
       console.error("🔌 Socket connection error:", err.message);
 
-      if (err.message === "Authentication failed") {
-        useAppStore.getState().logout();
+      if (err.message !== "Authentication failed") return;
+      if (refreshAttempted) return;
+      refreshAttempted = true;
+
+      if (!useAppStore.getState().refreshToken) {
+        await performLogout();
+        return;
+      }
+
+      try {
+        await ensureFreshToken();
+        // store updated inside ensureFreshToken → re-render → new socket with fresh token
+      } catch {
         Toast.show({
           type: "error",
           text1: "Session Expired",
@@ -48,7 +60,7 @@ export default function SocketProvider({
           visibilityTime: 4000,
           swipeable: true,
         });
-        router.replace("/(auth)/auth");
+        await performLogout();
       }
     });
 
@@ -69,9 +81,7 @@ export default function SocketProvider({
   }, [socket, token]);
 
   return (
-    <SocketContext.Provider value={{ socket }}>
-      {children}
-    </SocketContext.Provider>
+    <SocketContext.Provider value={{socket}}>{children}</SocketContext.Provider>
   );
 }
 
