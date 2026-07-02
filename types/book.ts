@@ -68,6 +68,7 @@ export type Driver = {
   name: string;
   rating: number;
   profilePictureUrl: string;
+  phoneNumber: string;
 };
 
 export type RequestBooking = {

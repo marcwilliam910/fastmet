@@ -1,12 +1,14 @@
-import { useAppStore } from "@/store/useAppStore";
-import { ActiveBooking, Booking } from "@/types/book";
-import { createConversationId } from "@/utils/helpers/booking";
-import { formatDate } from "@/utils/helpers/date";
-import { Ionicons } from "@expo/vector-icons";
-import { Image } from "expo-image";
-import { router } from "expo-router";
-import React, { useMemo, useState } from "react";
+import {useAppStore} from "@/store/useAppStore";
+import {ActiveBooking, Booking} from "@/types/book";
+import {createConversationId} from "@/utils/helpers/booking";
+import {formatDate} from "@/utils/helpers/date";
+import {Ionicons} from "@expo/vector-icons";
+import {Image} from "expo-image";
+import {router} from "expo-router";
+import React, {useMemo, useState} from "react";
 import {
+  Alert,
+  Linking,
   Modal,
   Platform,
   Pressable,
@@ -15,7 +17,7 @@ import {
   View,
 } from "react-native";
 import ImageView from "react-native-image-viewing";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import {useSafeAreaInsets} from "react-native-safe-area-context";
 import {
   AttachedImages,
   ItemType,
@@ -51,7 +53,7 @@ export default function SeeMoreModalDisplay({
   const [selectedImageUrl, setSelectedImageUrl] = useState("");
 
   // Memoize calculations to prevent recalculation on every render
-  const { totalServicesPrice, hasAddedServices, hasFreeServices } =
+  const {totalServicesPrice, hasAddedServices, hasFreeServices} =
     useMemo(() => {
       if (!data)
         return {
@@ -98,13 +100,13 @@ export default function SeeMoreModalDisplay({
         <ScrollView
           className="flex-1 px-4"
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ gap: 20, paddingBottom: 30 }}
+          contentContainerStyle={{gap: 20, paddingBottom: 30}}
         >
           {/* Vehicle & Time Card */}
           <View
             className={`p-5 rounded-2xl ${type === "Cancelled Booking" ? "bg-red-500" : "bg-lightPrimary"}`}
           >
-            <View className="flex-row items-center justify-between">
+            <View className="flex-row justify-between items-center">
               <View>
                 <Text className="mb-1 text-sm text-white opacity-90">
                   Vehicle Type
@@ -136,8 +138,8 @@ export default function SeeMoreModalDisplay({
                 <Text className="mb-1 text-sm font-semibold text-gray-500">
                   Driver
                 </Text>
-                <View className="flex-row items-center justify-between">
-                  <View className="flex-row items-center justify-center gap-2">
+                <View className="flex-row justify-between items-center">
+                  <View className="flex-row gap-2 justify-center items-center">
                     {data.driver.profilePictureUrl ? (
                       <Pressable
                         className="w-[48px] h-[48px] rounded-full overflow-hidden"
@@ -147,8 +149,8 @@ export default function SeeMoreModalDisplay({
                         }}
                       >
                         <Image
-                          source={{ uri: data.driver.profilePictureUrl }}
-                          style={{ width: "100%", height: "100%" }}
+                          source={{uri: data.driver.profilePictureUrl}}
+                          style={{width: "100%", height: "100%"}}
                           contentFit="cover"
                         />
                       </Pressable>
@@ -163,7 +165,7 @@ export default function SeeMoreModalDisplay({
                       <Text className="text-lg font-semibold text-gray-800">
                         {data.driver.name}
                       </Text>
-                      <View className="flex-row items-center gap-2 ">
+                      <View className="flex-row gap-2 items-center">
                         <StarDisplay rating={data.driver.rating} />
                         <Text className="text-sm font-semibold text-gray-600">
                           ({data.driver.rating})
@@ -195,7 +197,19 @@ export default function SeeMoreModalDisplay({
                       />
                       <Text className="text-sm text-gray-600">Chat</Text>
                     </Pressable>
-                    <Pressable className="items-center active:scale-110">
+                    <Pressable
+                      className="items-center active:scale-110"
+                      onPress={() => {
+                        const phoneNumber = data.driver.phoneNumber;
+                        if (!phoneNumber) return;
+                        Linking.openURL(`tel:${phoneNumber}`).catch(() => {
+                          Alert.alert(
+                            "Unable to place call",
+                            "Please try again.",
+                          );
+                        });
+                      }}
+                    >
                       <Ionicons
                         name="call"
                         size={Platform.OS === "ios" ? 28 : 24}
@@ -217,7 +231,7 @@ export default function SeeMoreModalDisplay({
             <LocationUI pickUp={data.pickUp} dropOff={data.dropOff} />
 
             {/* Distance */}
-            <View className="flex-row items-center justify-between p-3 mt-4 bg-white rounded-lg">
+            <View className="flex-row justify-between items-center p-3 mt-4 bg-white rounded-lg">
               <Text className="text-sm text-gray-600">Distance</Text>
               <Text className="text-lg font-bold text-lightPrimary">
                 {data.routeData.distance.toFixed(2)} km
@@ -225,7 +239,7 @@ export default function SeeMoreModalDisplay({
             </View>
 
             {/* Booking Type */}
-            <View className="flex-row items-center justify-between p-3  bg-white rounded-lg">
+            <View className="flex-row justify-between items-center p-3 bg-white rounded-lg">
               <Text className="text-sm font-semibold text-gray-600">
                 {data.bookingType.type === "schedule"
                   ? "Scheduled on"
@@ -244,7 +258,7 @@ export default function SeeMoreModalDisplay({
               )}
             </View>
 
-            <View className="mt-5 self-end">
+            <View className="self-end mt-5">
               <Text className="text-xs font-bold text-gray-600">
                 Reference: {data.bookingRef}
               </Text>
@@ -285,13 +299,13 @@ export default function SeeMoreModalDisplay({
 
           {type === "Active Booking" && (
             <Pressable
-              className="items-center flex-row gap-2 justify-center py-3 mx-4 rounded-lg bg-lightPrimary active:bg-darkPrimary"
+              className="flex-row gap-2 justify-center items-center py-3 mx-4 rounded-lg bg-lightPrimary active:bg-darkPrimary"
               onPress={() => {
                 console.log(data._id);
                 onClose();
                 router.push({
                   pathname: "/(root_screens)/booking/viewOnMap",
-                  params: { bookingId: data._id, shouldGoBack: "true" },
+                  params: {bookingId: data._id, shouldGoBack: "true"},
                 });
               }}
             >
@@ -302,7 +316,7 @@ export default function SeeMoreModalDisplay({
 
           {type === "Request Booking" && data.requestedDrivers.length > 0 && (
             <Pressable
-              className="items-center flex-row gap-2 justify-center py-3 mx-4 rounded-lg bg-lightPrimary active:bg-darkPrimary"
+              className="flex-row gap-2 justify-center items-center py-3 mx-4 rounded-lg bg-lightPrimary active:bg-darkPrimary"
               onPress={() => onOpenDriverOffers?.()}
             >
               <Ionicons name="car-outline" size={22} color="#FFFFFF" />
@@ -314,7 +328,7 @@ export default function SeeMoreModalDisplay({
         </ScrollView>
       </View>
       <ImageView
-        images={[{ uri: selectedImageUrl }]}
+        images={[{uri: selectedImageUrl}]}
         imageIndex={0}
         visible={imageViewerVisible}
         onRequestClose={() => setImageViewerVisible(false)}

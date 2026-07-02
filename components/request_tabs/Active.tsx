@@ -1,15 +1,17 @@
 import useSeeMoreDetails from "@/hooks/useSeeMoreDetails";
-import { useUserBookings } from "@/queries/bookingQueries";
-import { useAppStore } from "@/store/useAppStore";
-import { ActiveBooking, Driver, LocationDetails } from "@/types/book";
-import { createConversationId } from "@/utils/helpers/booking";
-import { formatLocation } from "@/utils/helpers/location";
-import { Ionicons } from "@expo/vector-icons";
-import { Image } from "expo-image";
-import { router } from "expo-router";
+import {useUserBookings} from "@/queries/bookingQueries";
+import {useAppStore} from "@/store/useAppStore";
+import {ActiveBooking, Driver, LocationDetails} from "@/types/book";
+import {createConversationId} from "@/utils/helpers/booking";
+import {formatLocation} from "@/utils/helpers/location";
+import {Ionicons} from "@expo/vector-icons";
+import {Image} from "expo-image";
+import {router} from "expo-router";
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
+  Linking,
   Platform,
   Pressable,
   Text,
@@ -19,7 +21,7 @@ import SeeMoreModalDisplay from "../modals/seeMoreModalDisplay";
 import StarDisplay from "../StarDisplay";
 
 export default function ActiveRoute() {
-  const { modalVisible, setModalVisible, selectedRequest, handleSeeMorePress } =
+  const {modalVisible, setModalVisible, selectedRequest, handleSeeMorePress} =
     useSeeMoreDetails<ActiveBooking>();
 
   const {
@@ -34,13 +36,13 @@ export default function ActiveRoute() {
 
   if (isPending)
     return (
-      <View className="flex-1 items-center justify-center">
+      <View className="flex-1 justify-center items-center">
         <ActivityIndicator size="large" color="#FFA840" />
       </View>
     );
   if (error)
     return (
-      <View className="flex-1 items-center justify-center">
+      <View className="flex-1 justify-center items-center">
         <Text className="text-lg font-semibold text-gray-500">
           {error.message}
         </Text>
@@ -53,7 +55,7 @@ export default function ActiveRoute() {
     <>
       <FlatList
         data={activeBookings}
-        renderItem={({ item }) => (
+        renderItem={({item}) => (
           <ActiveCard
             id={item._id}
             vehicle={item.selectedVehicle.name}
@@ -95,13 +97,13 @@ export default function ActiveRoute() {
           return null;
         }}
         ListEmptyComponent={() => (
-          <View className=" items-center justify-center px-8 py-12">
+          <View className="justify-center items-center px-8 py-12">
             <View className="items-center">
               <Ionicons name="alert-circle-outline" size={80} color="#9CA3AF" />
-              <Text className="text-2xl font-bold text-gray-800 mt-6 text-center">
+              <Text className="mt-6 text-2xl font-bold text-center text-gray-800">
                 No Active Bookings
               </Text>
-              <Text className="text-base text-gray-500 text-center mt-2">
+              <Text className="mt-2 text-base text-center text-gray-500">
                 You currently don&apos;t have any active requests.
               </Text>
             </View>
@@ -148,7 +150,7 @@ const ActiveCard = ({
     <View
       style={{
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
+        shadowOffset: {width: 0, height: 4},
         shadowOpacity: 0.3,
         shadowRadius: 8,
         elevation: 8, // for Android
@@ -160,15 +162,15 @@ const ActiveCard = ({
         className="overflow-hidden bg-white rounded-2xl active:opacity-90"
       >
         {/* Header */}
-        <View className="flex-row items-center justify-between px-5 py-3 bg-lightPrimary">
+        <View className="flex-row justify-between items-center px-5 py-3 bg-lightPrimary">
           <Text className="text-lg font-semibold text-white">{vehicle}</Text>
           <Pressable
-            className="flex-row items-center gap-2 active:scale-105"
+            className="flex-row gap-2 items-center active:scale-105"
             hitSlop={15}
             onPress={() =>
               router.push({
                 pathname: "/(root_screens)/booking/viewOnMap",
-                params: { bookingId: id, shouldGoBack: "true" },
+                params: {bookingId: id, shouldGoBack: "true"},
               })
             }
           >
@@ -182,13 +184,13 @@ const ActiveCard = ({
           <Text className="mb-1 text-sm font-semibold text-gray-500">
             Driver
           </Text>
-          <View className="flex-row items-center justify-between">
-            <View className="flex-row items-center justify-center gap-2">
+          <View className="flex-row justify-between items-center">
+            <View className="flex-row gap-2 justify-center items-center">
               {driver.profilePictureUrl ? (
                 <View className="w-[44px] h-[44px] rounded-full overflow-hidden">
                   <Image
-                    source={{ uri: driver.profilePictureUrl }}
-                    style={{ width: "100%", height: "100%" }}
+                    source={{uri: driver.profilePictureUrl}}
+                    style={{width: "100%", height: "100%"}}
                     contentFit="cover"
                   />
                 </View>
@@ -196,10 +198,10 @@ const ActiveCard = ({
                 <Ionicons name="person-circle" size={50} color="#F7931E" />
               )}
               <View>
-                <Text className="font-semibold text-lg text-gray-800">
+                <Text className="text-lg font-semibold text-gray-800">
                   {driver.name}
                 </Text>
-                <View className="flex-row items-center gap-2 ">
+                <View className="flex-row gap-2 items-center">
                   <StarDisplay rating={driver.rating} />
                   <Text className="text-sm font-semibold text-gray-600">
                     ({driver.rating})
@@ -231,7 +233,17 @@ const ActiveCard = ({
                 />
                 <Text className="text-sm text-gray-600">Chat</Text>
               </Pressable>
-              <Pressable className="items-center active:scale-110" hitSlop={20}>
+              <Pressable
+                className="items-center active:scale-110"
+                hitSlop={20}
+                onPress={() => {
+                  const phoneNumber = driver.phoneNumber;
+                  if (!phoneNumber) return;
+                  Linking.openURL(`tel:${phoneNumber}`).catch(() => {
+                    Alert.alert("Unable to place call", "Please try again.");
+                  });
+                }}
+              >
                 <Ionicons
                   name="call"
                   size={Platform.OS === "ios" ? 28 : 24}
@@ -246,7 +258,7 @@ const ActiveCard = ({
         {/* Body */}
         <View className="px-3 py-5">
           {/* Pickup & Drop */}
-          <View className="relative flex-row items-center justify-between ml-5 mr-2 border-l border-dashed pl-7">
+          <View className="relative flex-row justify-between items-center pl-7 mr-2 ml-5 border-l border-dashed">
             <View className="gap-4">
               <Text
                 className={`font-medium ${Platform.OS === "ios" ? "max-w-60" : "max-w-52"}`}
@@ -275,7 +287,7 @@ const ActiveCard = ({
             />
           </View>
           {/* Payment */}
-          <View className="flex-row items-center justify-between p-4 mt-6 bg-gray-100 rounded-lg">
+          <View className="flex-row justify-between items-center p-4 mt-6 bg-gray-100 rounded-lg">
             <Text className="text-base text-gray-600">
               {isCash ? "Cash Payment" : "Online Payment"}
             </Text>
@@ -289,7 +301,7 @@ const ActiveCard = ({
           </View>
 
           <Pressable
-            className="items-center justify-center mt-6 active:scale-105"
+            className="justify-center items-center mt-6 active:scale-105"
             onPress={onPressSeeMore}
           >
             <Text className="text-sm font-medium">+ See more</Text>

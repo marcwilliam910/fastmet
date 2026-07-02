@@ -1,44 +1,43 @@
 import LiveTrackingMapScreen from "@/components/maps/LiveTrackingMapScreen";
 import StarDisplay from "@/components/StarDisplay";
-import { useBooking } from "@/queries/bookingQueries";
-import { useAppStore } from "@/store/useAppStore";
-import { createConversationId } from "@/utils/helpers/booking";
-import { Ionicons } from "@expo/vector-icons";
-import { Image } from "expo-image";
-import { router, useLocalSearchParams } from "expo-router";
-import React, { useState } from "react";
+import {useBooking} from "@/queries/bookingQueries";
+import {useAppStore} from "@/store/useAppStore";
+import {createConversationId} from "@/utils/helpers/booking";
+import {Ionicons} from "@expo/vector-icons";
+import {Image} from "expo-image";
+import {router, useLocalSearchParams} from "expo-router";
+import React, {useState} from "react";
 import {
   ActivityIndicator,
+  Alert,
+  Linking,
   Platform,
   Pressable,
   Text,
   View,
 } from "react-native";
-import { Region } from "react-native-maps";
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from "react-native-safe-area-context";
+import {Region} from "react-native-maps";
+import {SafeAreaView, useSafeAreaInsets} from "react-native-safe-area-context";
 
 export default function ViewOnMap() {
   const [region, setRegion] = useState<Region | null>(null);
-  const { bookingId, shouldGoBack } = useLocalSearchParams<{
+  const {bookingId, shouldGoBack} = useLocalSearchParams<{
     bookingId: string;
     shouldGoBack: string;
   }>();
   const insets = useSafeAreaInsets();
 
-  const { data: booking, isPending, error } = useBooking(bookingId);
+  const {data: booking, isPending, error} = useBooking(bookingId);
 
   if (isPending)
     return (
-      <View className="flex-1 items-center justify-center">
+      <View className="flex-1 justify-center items-center">
         <ActivityIndicator size="large" color="#FFA840" />
       </View>
     );
   if (error)
     return (
-      <View className="flex-1 items-center justify-center">
+      <View className="flex-1 justify-center items-center">
         <Text className="text-lg font-semibold text-gray-500">
           {error.message}
         </Text>
@@ -54,7 +53,7 @@ export default function ViewOnMap() {
 
   return (
     <SafeAreaView
-      style={{ flex: 1, backgroundColor: "white" }}
+      style={{flex: 1, backgroundColor: "white"}}
       edges={["right", "bottom", "left"]}
     >
       <View className="relative flex-1">
@@ -69,13 +68,12 @@ export default function ViewOnMap() {
         />
       </View>
 
-      <View className="absolute bottom-0 left-0 right-0">
+      <View className="absolute right-0 bottom-0 left-0">
         <View
-          className="px-5 py-6 justify-center gap-3 w-full
-        bg-white rounded-t-3xl"
-          style={{ paddingBottom: insets.bottom + 15 }}
+          className="gap-3 justify-center px-5 py-6 w-full bg-white rounded-t-3xl"
+          style={{paddingBottom: insets.bottom + 15}}
         >
-          <View className="flex-row items-center justify-center px-4">
+          <View className="flex-row justify-center items-center px-4">
             <Pressable
               onPress={handleBack} // TODO: infinite routing
               className="absolute left-0 -top-1"
@@ -94,13 +92,13 @@ export default function ViewOnMap() {
             <Text className="mb-1 text-sm font-semibold text-gray-500">
               Driver
             </Text>
-            <View className="flex-row items-center justify-between">
-              <View className="flex-row items-center justify-center gap-2">
+            <View className="flex-row justify-between items-center">
+              <View className="flex-row gap-2 justify-center items-center">
                 {booking.driver.profilePictureUrl ? (
                   <Pressable className="w-[44px] h-[44px] rounded-full overflow-hidden">
                     <Image
-                      source={{ uri: booking.driver.profilePictureUrl }}
-                      style={{ width: "100%", height: "100%" }}
+                      source={{uri: booking.driver.profilePictureUrl}}
+                      style={{width: "100%", height: "100%"}}
                       contentFit="cover"
                     />
                   </Pressable>
@@ -111,7 +109,7 @@ export default function ViewOnMap() {
                   <Text className="text-lg font-semibold text-gray-800">
                     {booking.driver.name}
                   </Text>
-                  <View className="flex-row items-center gap-2 ">
+                  <View className="flex-row gap-2 items-center">
                     <StarDisplay rating={booking.driver.rating} />
                     <Text className="text-sm font-semibold text-gray-600">
                       ({booking.driver.rating})
@@ -146,6 +144,13 @@ export default function ViewOnMap() {
                 <Pressable
                   className="items-center active:scale-110"
                   hitSlop={20}
+                  onPress={() => {
+                    const phoneNumber = booking.driver.phoneNumber;
+                    if (!phoneNumber) return;
+                    Linking.openURL(`tel:${phoneNumber}`).catch(() => {
+                      Alert.alert("Unable to place call", "Please try again.");
+                    });
+                  }}
                 >
                   <Ionicons name="call" size={28} color="#F7931E" />
                   <Text className="text-gray-600">Call</Text>

@@ -16,8 +16,10 @@ import {router, useLocalSearchParams, useNavigation} from "expo-router";
 import React, {useCallback, useEffect, useRef, useState} from "react";
 import {
   ActivityIndicator,
+  Alert,
   Keyboard,
   KeyboardAvoidingView,
+  Linking,
   Platform,
   Pressable,
   Text,
@@ -326,8 +328,8 @@ const Message = () => {
   const renderInputToolbar = () => {
     return (
       <View className="px-2 py-3 border-t border-gray-700 bg-secondary">
-        <View className="flex-row items-end gap-3">
-          <View className="flex-row items-center gap-3 h-11">
+        <View className="flex-row gap-3 items-end">
+          <View className="flex-row gap-3 items-center h-11">
             {/* Camera */}
             <Pressable
               onPress={handleTakePhoto}
@@ -362,7 +364,7 @@ const Message = () => {
               onChangeText={setText}
               multiline
               editable={!isUploadingImage} // Disable while uploading
-              className="text-base py-3"
+              className="py-3 text-base"
               style={{
                 maxHeight: 120,
                 textAlignVertical: "top",
@@ -370,7 +372,7 @@ const Message = () => {
             />
           </View>
 
-          <View className="flex-row items-center gap-3 h-11">
+          <View className="flex-row gap-3 items-center h-11">
             {/* Show spinner while uploading */}
             {isUploadingImage ? (
               <ActivityIndicator size="small" color="#FFA840" />
@@ -406,7 +408,7 @@ const Message = () => {
 
         {/* Optional: Show uploading text */}
         {isUploadingImage && (
-          <Text className="text-center text-sm text-gray-400 mt-2">
+          <Text className="mt-2 text-sm text-center text-gray-400">
             Uploading image...
           </Text>
         )}
@@ -438,7 +440,7 @@ const Message = () => {
 
   if (isPending) {
     return (
-      <View className="flex-1 items-center justify-center bg-secondary">
+      <View className="flex-1 justify-center items-center bg-secondary">
         <ActivityIndicator size="large" color="#FFA840" />
       </View>
     );
@@ -457,8 +459,8 @@ const Message = () => {
         }
         keyboardVerticalOffset={0}
       >
-        <View className="flex-row items-center justify-between px-4 py-3 bg-secondary">
-          <View className="flex-row items-center flex-1 gap-2">
+        <View className="flex-row justify-between items-center px-4 py-3 bg-secondary">
+          <View className="flex-row flex-1 gap-2 items-center">
             <Pressable
               hitSlop={20}
               onPress={() => {
@@ -487,7 +489,7 @@ const Message = () => {
               <Text className="text-base font-bold text-white">
                 {conversation?.driver.firstName} {conversation?.driver.lastName}
               </Text>
-              <View className="flex-row items-center gap-1">
+              <View className="flex-row gap-1 items-center">
                 <Text className="text-xs ml-0.5 text-gray-300">Driver</Text>
                 {conversation?.driver.gender === "prefer_not" ? null : (
                   <Ionicons
@@ -502,7 +504,16 @@ const Message = () => {
             </View>
           </View>
 
-          <Pressable hitSlop={20}>
+          <Pressable
+            hitSlop={20}
+            onPress={() => {
+              const phoneNumber = conversation?.driver.phoneNumber;
+              if (!phoneNumber) return;
+              Linking.openURL(`tel:${phoneNumber}`).catch(() => {
+                Alert.alert("Unable to place call", "Please try again.");
+              });
+            }}
+          >
             <Ionicons
               name="call"
               size={Platform.OS === "ios" ? 28 : 24}
@@ -580,16 +591,16 @@ const renderBubble = (props: any) => {
 export const renderChatEmpty = () => {
   return (
     <View
-      className="pb-20 items-center px-6"
+      className="items-center px-6 pb-20"
       style={{
         transform: [{scaleY: -1}, {scaleX: Platform.OS === "android" ? -1 : 1}],
       }}
     >
       <Ionicons name="chatbubbles-outline" size={100} color="#9CA3AF" />
-      <Text className="text-gray-300 text-xl font-semibold mt-4">
+      <Text className="mt-4 text-xl font-semibold text-gray-300">
         No conversation yet
       </Text>
-      <Text className="text-gray-400 text-base text-center mt-2">
+      <Text className="mt-2 text-base text-center text-gray-400">
         Start a conversation with the customer
       </Text>
     </View>
