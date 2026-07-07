@@ -5,8 +5,8 @@ import CompletedRoute from "@/components/request_tabs/Completed";
 import RequestRoute from "@/components/request_tabs/Request";
 import { useAuth } from "@/hooks/useAuth";
 import { useBookingCounts } from "@/queries/bookingQueries";
-import { useLocalSearchParams } from "expo-router";
-import { useEffect, useState } from "react";
+import { useFocusEffect, useLocalSearchParams } from "expo-router";
+import { useCallback, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -94,19 +94,20 @@ export default function Request() {
     { key: "completed", title: "Completed" },
     { key: "cancelled", title: "Cancelled" },
   ]);
-  const params = useLocalSearchParams();
+  const params = useLocalSearchParams<{ tab?: string }>();
 
   const { data: counts, isPending, error, refetch } = useBookingCounts();
 
-  // Handle tab navigation from params (auto focus)
-  useEffect(() => {
-    if (params.tab) {
-      const tabIndex = routes.findIndex((route) => route.key === params.tab);
-      if (tabIndex !== -1) {
-        setIndex(tabIndex);
+  useFocusEffect(
+    useCallback(() => {
+      if (params.tab) {
+        const tabIndex = routes.findIndex((route) => route.key === params.tab);
+        if (tabIndex !== -1) {
+          setIndex(tabIndex);
+        }
       }
-    }
-  }, [params.tab, routes]);
+    }, [params.tab, routes]),
+  );
 
   // Lazy render - only renders the active tab
   const renderScene = ({ route }: { route: TabRoute }) => {

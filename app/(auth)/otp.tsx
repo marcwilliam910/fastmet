@@ -13,7 +13,7 @@ import axios from "axios";
 import {router} from "expo-router";
 import * as SecureStore from "expo-secure-store";
 import React, {useEffect, useRef, useState} from "react";
-import {Pressable, Text, TextInput, View} from "react-native";
+import {ActivityIndicator, Alert, Pressable, Text, TextInput, View} from "react-native";
 import {SafeAreaView} from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 
@@ -40,10 +40,13 @@ type LoginResponse = {
 export default function PhoneOTPScreen() {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [error, setError] = useState("");
-  const loading = useAppStore((state) => state.isLoading);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [isResending, setIsResending] = useState(false);
+  const [isLocked, setIsLocked] = useState(false);
   const setLoading = useAppStore((state) => state.setLoading);
 
   const inputRefs = useRef<(TextInput | null)[]>([]);
+  const pendingVerifyToken = useRef<string | null>(null);
 
   const [initialResendSeconds, setInitialResendSeconds] = useState(
     RESEND_TIMEOUT_SECONDS,
@@ -82,10 +85,20 @@ export default function PhoneOTPScreen() {
     setTimeout(() => inputRefs.current[0]?.focus(), 50);
   };
 
+  const resetTimers = () => {
+    setOtpTimerKey((k) => k + 1);
+    setResendTimerKey((k) => k + 1);
+    setCanResend(false);
+    setOtpExpired(false);
+  };
+
   const handleResendOtp = async () => {
-    if (!canResend || loading) return;
+    if (!canResend || isResending) return;
 
     try {
+      setIsResending(true);
+      setLoading(true);
+
       const deviceId = await getDeviceId();
 
       await axios.post(
@@ -100,11 +113,11 @@ export default function PhoneOTPScreen() {
       await SecureStore.setItemAsync(RESEND_KEY, String(availableAt));
 
       setInitialResendSeconds(RESEND_TIMEOUT_SECONDS);
-      setCanResend(false);
-      setOtpExpired(false);
-      setOtpTimerKey((k) => k + 1);
-      setResendTimerKey((k) => k + 1);
+      setIsLocked(false);
+      pendingVerifyToken.current = null;
+      resetTimers();
       clearOTPInputs();
+      setError("");
 
       Toast.show({
         type: "success",
@@ -116,6 +129,9 @@ export default function PhoneOTPScreen() {
       });
     } catch (error: any) {
       if (handleSendOtpError(error, {onRetry: handleResendOtp})) return;
+    } finally {
+      setIsResending(false);
+      setLoading(false);
     }
   };
 
@@ -137,7 +153,6 @@ export default function PhoneOTPScreen() {
       const nextIndex = Math.min(index + digits.length, 5);
       inputRefs.current[nextIndex]?.focus();
       if (newOtp.every((d) => d)) {
-        // FIX: pass newOtp.join("") — avoids stale otp state
         setTimeout(() => handleVerifyOTP(newOtp.join("")), 200);
       }
       return;
@@ -153,7 +168,6 @@ export default function PhoneOTPScreen() {
     }
 
     if (index === 5 && value && newOtp.every((d) => d)) {
-      // FIX: pass newOtp.join("") — avoids stale otp state
       setTimeout(() => handleVerifyOTP(newOtp.join("")), 300);
     }
   };
@@ -164,91 +178,180 @@ export default function PhoneOTPScreen() {
     }
   };
 
-  const handleVerifyOTP = async (code?: string) => {
-    if (otpExpired) return;
-
-    const {phoneNumber} = useAppStore.getState();
-    const otpCode = code ?? otp.join("");
-
+  // ─── Login ──────────────────────────────────────────────────────────────────
+  const attemptLogin = async (verifyToken: string) => {
+    setIsVerifying(true);
     setLoading(true);
+    try {
+      const deviceId = await getDeviceId();
+
+      const {data} = await axios.post<LoginResponse>(
+        `${process.env.EXPO_PUBLIC_BASE_URL}/api/client/auth/login`,
+        {deviceId},
+        {headers: {Authorization: `Bearer ${verifyToken}`}},
+      );
+
+      if (data.success) {
+        pendingVerifyToken.current = null;
+        await SecureStore.deleteItemAsync(RESEND_KEY);
+
+        useAppStore.getState().setAuthData({
+          token: data.accessToken,
+          refreshToken: data.refreshToken,
+          id: data.client.id,
+          isProfileComplete: data.client.isProfileComplete,
+          name: data.client.fullName,
+          profilePictureUrl: data.client.profilePictureUrl,
+          address: data.client.address,
+          gender: data.client.gender,
+          preRegistered: data.client.preRegistered,
+        });
+
+        const message =
+          data.status === "existing"
+            ? "Welcome to FastMet"
+            : "Thank you for pre-registering with Fastmet";
+
+        if (data.client.isProfileComplete) {
+          Toast.show({
+            type: "success",
+            text1: "Verified!",
+            text2: message,
+            position: "top",
+            visibilityTime: 5_000,
+            swipeable: true,
+            topOffset: 50,
+          });
+          router.replace("/(drawer)/book");
+        } else {
+          router.replace("/(auth)/profile-register");
+        }
+      }
+    } catch (error: any) {
+      const statusCode: number | undefined = error.response?.status;
+
+      if (routeAuthGuardError(error)) {
+        pendingVerifyToken.current = null;
+        return;
+      }
+
+      if (statusCode === 401) {
+        // verifyToken JWT expired between verify and login steps
+        pendingVerifyToken.current = null;
+        Alert.alert(
+          "Session Expired",
+          "Please verify your number again.",
+        );
+      } else {
+        // Transient failure (500, network) — allow retry with cached verifyToken
+        Alert.alert(
+          "Login Failed",
+          "Couldn't connect. Tap Retry to try again.",
+          [
+            {
+              text: "Retry",
+              onPress: () => {
+                if (pendingVerifyToken.current) {
+                  attemptLogin(pendingVerifyToken.current);
+                }
+              },
+            },
+            {text: "Cancel"},
+          ],
+        );
+      }
+    } finally {
+      setIsVerifying(false);
+      setLoading(false);
+    }
+  };
+
+  // ─── Verify ─────────────────────────────────────────────────────────────────
+  const handleVerifyOTP = async (code?: string) => {
+    if (isLocked || otpExpired || isVerifying) return;
+
+    const otpCode = code ?? otp.join("");
+    if (otpCode.length !== 6) {
+      setError("Please enter the complete 6-digit code.");
+      return;
+    }
+
+    setIsVerifying(true);
+    setLoading(true);
+    setError("");
+
+    let verifyToken: string;
     try {
       const {data: otpData} = await axios.post<{
         success: boolean;
         verifyToken: string;
       }>(`${process.env.EXPO_PUBLIC_BASE_URL}/api/auth/verify-otp`, {
-        phoneNumber,
+        phoneNumber: useAppStore.getState().phoneNumber,
         otpCode,
       });
-
-      if (otpData.success) {
-        await SecureStore.deleteItemAsync(RESEND_KEY);
-
-        const deviceId = await getDeviceId();
-
-        const {data} = await axios.post<LoginResponse>(
-          `${process.env.EXPO_PUBLIC_BASE_URL}/api/client/auth/login`,
-          {deviceId},
-          {
-            headers: {
-              Authorization: `Bearer ${otpData.verifyToken}`,
-            },
-          },
-        );
-
-        if (data.success) {
-          useAppStore.getState().setAuthData({
-            token: data.accessToken,
-            refreshToken: data.refreshToken,
-            id: data.client.id,
-            isProfileComplete: data.client.isProfileComplete,
-            name: data.client.fullName,
-            profilePictureUrl: data.client.profilePictureUrl,
-            address: data.client.address,
-            gender: data.client.gender,
-            preRegistered: data.client.preRegistered,
-          });
-
-          if (data.client.isProfileComplete) {
-            const status = data.status;
-            const message =
-              status === "existing"
-                ? "Welcome to FastMet"
-                : "Thank you for pre-registering with Fastmet";
-
-            Toast.show({
-              type: "success",
-              text1: "Verified!",
-              text2: message,
-              position: "top",
-              visibilityTime: 5_000,
-              swipeable: true,
-              topOffset: 50,
-            });
-            router.replace("/(drawer)/book");
-          } else router.replace("/(auth)/profile-register");
-        }
-      }
+      verifyToken = otpData.verifyToken;
     } catch (error: any) {
-      if (routeAuthGuardError(error)) return;
+      const statusCode: number | undefined = error.response?.status;
+      const errorMessage: string | undefined = error.response?.data?.error;
 
-      if (error.response?.status === 429) {
+      if (statusCode === 400) {
+        if (errorMessage?.includes("expired")) {
+          setOtpExpired(true);
+          Alert.alert(
+            "Code Expired",
+            "Your verification code has expired. Please request a new one.",
+          );
+        } else if (
+          errorMessage?.includes("locked") ||
+          errorMessage?.includes("attempts")
+        ) {
+          setIsLocked(true);
+          clearOTPInputs();
+          Alert.alert(
+            "Too Many Failed Attempts",
+            "This code has been invalidated. Please request a new one.",
+            [
+              {text: "Cancel", style: "cancel"},
+              {
+                text: "Request New Code",
+                onPress: () => setIsLocked(false),
+              },
+            ],
+          );
+        } else {
+          setError(errorMessage ?? "Invalid verification code. Please try again.");
+          clearOTPInputs();
+        }
+      } else if (statusCode === 429) {
         const retryAfter = error.response?.data?.retryAfter;
         const minutes = retryAfter ? Math.ceil(retryAfter / 60) : null;
-
         setError(
-          error.response?.data?.error ||
+          errorMessage ??
             (minutes
               ? `Too many failed attempts. Try again in ${minutes} minute${minutes > 1 ? "s" : ""}.`
               : "Too many attempts. Please try again later."),
         );
       } else {
-        setError(error.response?.data?.error || "Something went wrong");
+        setError("Verification failed. Please try again.");
         clearOTPInputs();
       }
-    } finally {
+
+      setIsVerifying(false);
       setLoading(false);
+      return;
     }
+
+    // OTP verified — cache the token, then attempt login
+    pendingVerifyToken.current = verifyToken;
+    setIsVerifying(false);
+    setLoading(false);
+
+    await attemptLogin(verifyToken);
   };
+
+  const isLoading = isVerifying || isResending;
+  const otpFilled = otp.join("").length === 6;
+  const canVerify = otpFilled && !isLoading && !isLocked && !otpExpired;
 
   return (
     <SafeAreaView className="flex-1 bg-white">
@@ -299,24 +402,25 @@ export default function PhoneOTPScreen() {
                 ref={(ref: TextInput | null) => {
                   inputRefs.current[index] = ref;
                 }}
-                className={`w-14 h-16 rounded-2xl text-center text-2xl font-bold
-                ${digit ? "bg-orange-100 border border-darkPrimary" : "bg-white border border-gray-300"}
-                ${error ? "border-red-500" : ""}
-                ${otpExpired ? "opacity-40" : ""}`}
+                className={`w-14 h-16 rounded-2xl text-center text-2xl font-bold border-2
+                  ${digit ? "bg-orange-100 border-darkPrimary" : "bg-white border-gray-300"}
+                  ${error ? "border-red-500" : ""}
+                  ${isLocked || otpExpired ? "opacity-40" : ""}
+                `}
                 value={digit}
                 onChangeText={(value) => handleOtpChange(value, index)}
                 onKeyPress={(e) => handleKeyPress(e, index)}
                 keyboardType="number-pad"
                 maxLength={6}
                 selectTextOnFocus
-                editable={!loading && !otpExpired}
+                editable={!isLoading && !isLocked && !otpExpired}
                 autoFocus={index === 0}
               />
             ))}
           </View>
 
-          {/* Error */}
-          {error && (
+          {/* Error Banner */}
+          {error ? (
             <View
               className="flex-row gap-2 justify-center items-center px-4 py-3 mb-5 w-full bg-red-50 rounded-xl border border-red-200"
               style={{
@@ -328,9 +432,19 @@ export default function PhoneOTPScreen() {
               }}
             >
               <Ionicons name="alert-circle" size={20} color="#DC2626" />
-              <Text className="text-sm leading-5 text-red-700">{error}</Text>
+              <Text className="flex-1 text-sm leading-5 text-red-700">{error}</Text>
             </View>
-          )}
+          ) : null}
+
+          {/* Locked Banner */}
+          {isLocked ? (
+            <View className="flex-row items-center px-4 py-3 mb-5 w-full bg-yellow-50 rounded-xl border border-yellow-300">
+              <Ionicons name="lock-closed" size={18} color="#D97706" />
+              <Text className="flex-1 ml-2 text-sm leading-5 text-yellow-800">
+                Code locked. Please request a new one below.
+              </Text>
+            </View>
+          ) : null}
 
           {/* Resend */}
           <View className="items-center mb-10">
@@ -339,10 +453,14 @@ export default function PhoneOTPScreen() {
             </Text>
 
             {canResend ? (
-              <Pressable disabled={loading} onPress={handleResendOtp}>
-                <Text className="text-base font-semibold text-darkPrimary">
-                  Resend Code
-                </Text>
+              <Pressable disabled={isResending} onPress={handleResendOtp} className="active:opacity-70">
+                {isResending ? (
+                  <ActivityIndicator color="#FF8A00" size="small" />
+                ) : (
+                  <Text className="text-base font-semibold text-darkPrimary">
+                    Resend Code
+                  </Text>
+                )}
               </Pressable>
             ) : (
               <View className="flex-row gap-1 items-center">
@@ -362,25 +480,25 @@ export default function PhoneOTPScreen() {
           {/* Verify Button */}
           <Pressable
             onPress={() => handleVerifyOTP()}
-            className={`rounded-xl py-4 items-center w-full mb-4 
-            ${
-              loading || otp.join("").length !== 6
-                ? "bg-lightPrimary/50"
-                : "bg-lightPrimary"
-            }
-          `}
-            disabled={loading || otp.join("").length !== 6 || otpExpired}
+            disabled={!canVerify}
+            className={`rounded-xl py-4 items-center w-full mb-4 active:bg-darkPrimary
+              ${canVerify ? "bg-lightPrimary" : "opacity-50 bg-lightPrimary"}
+            `}
           >
-            <Text className="text-base font-semibold text-white">
-              {otpExpired ? "Code Expired" : "Verify"}
-            </Text>
+            {isVerifying ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text className="text-base font-semibold text-white">
+                {isLocked ? "Locked" : otpExpired ? "Code Expired" : "Verify"}
+              </Text>
+            )}
           </Pressable>
 
           {/* Change Number */}
           <Pressable
             onPress={() => router.push("/(auth)/auth")}
-            disabled={loading}
-            className="items-center"
+            disabled={isLoading}
+            className="items-center active:opacity-70"
           >
             <Text className="text-sm font-medium text-gray-600">
               Wrong number? Change it

@@ -561,25 +561,25 @@ function SeeMoreModal({
                 </Text>
 
                 <View className="flex-row gap-2">
-                  {data.bookingImages.dropoff.receiptImageUrl && (
+                  {data.bookingImages.dropoff.signatureImageUrl && (
                     <Pressable
                       onPress={() =>
                         openImageViewer(
-                          data.bookingImages.dropoff.receiptImageUrl,
+                          data.bookingImages.dropoff.signatureImageUrl,
                         )
                       }
                       className="flex-1"
                     >
                       <Image
                         source={{
-                          uri: data.bookingImages.dropoff.receiptImageUrl,
+                          uri: data.bookingImages.dropoff.signatureImageUrl,
                         }}
                         style={{ height: 90, width: "100%" }}
                         contentFit="cover"
                       />
                       <View className="p-2">
                         <Text className="text-xs text-center text-gray-600">
-                          Receipt
+                          Receipt/Signature
                         </Text>
                       </View>
                     </Pressable>
@@ -691,9 +691,8 @@ function SeeMoreModal({
             <Pressable
               onPress={handleRateDriver}
               disabled={userRating === 0 || isPending}
-              className={`py-3 rounded-xl ${
-                userRating > 0 ? "bg-lightPrimary" : "bg-gray-300"
-              }`}
+              className={`py-3 rounded-xl ${userRating > 0 ? "bg-lightPrimary" : "bg-gray-300"
+                }`}
             >
               <Text className="text-base font-semibold text-center text-white">
                 {isPending
