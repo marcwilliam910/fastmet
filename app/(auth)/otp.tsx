@@ -27,6 +27,7 @@ type LoginResponse = {
   refreshToken: string;
   client: {
     id: string;
+    phoneNumber: string;
     isProfileComplete: boolean;
     fullName: string;
     profilePictureUrl: string;
@@ -199,6 +200,7 @@ export default function PhoneOTPScreen() {
           token: data.accessToken,
           refreshToken: data.refreshToken,
           id: data.client.id,
+          phoneNumber: data.client.phoneNumber,
           isProfileComplete: data.client.isProfileComplete,
           name: data.client.fullName,
           profilePictureUrl: data.client.profilePictureUrl,

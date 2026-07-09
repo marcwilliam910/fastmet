@@ -6,7 +6,7 @@ export const useAuth = () => {
   const phoneNumber = useAppStore((state) => state.phoneNumber);
 
   return {
-    isLoggedIn: !!id && !!token && !!phoneNumber,
+    isLoggedIn: !!token,
     id,
     token,
   };
