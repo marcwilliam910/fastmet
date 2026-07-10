@@ -1,4 +1,3 @@
-// hooks/useAuthGuard.ts
 import { Alert, Platform, ToastAndroid } from "react-native";
 import { useAuth } from "./useAuth";
 

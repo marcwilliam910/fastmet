@@ -1,9 +1,9 @@
-import { User } from "@/types/user";
+import { NewUser } from "@/types/user";
 import { StateCreator } from "zustand";
 
 export interface ProfileSlice {
-  profile: User | null;
-  setProfile: (profile: User | null) => void;
+  profile: NewUser | null;
+  setProfile: (profile: NewUser | null) => void;
   clearProfile: () => void;
 }
 

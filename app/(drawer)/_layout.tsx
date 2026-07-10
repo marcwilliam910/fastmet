@@ -10,7 +10,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { DrawerContentScrollView, DrawerItem } from "@react-navigation/drawer";
 import { router } from "expo-router";
 import { Drawer } from "expo-router/drawer";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -99,6 +99,12 @@ export default function DrawerLayout() {
   // Fetch and sync unread notification count
   useUnreadNotificationCount();
   useUnreadChatCount();
+
+  useEffect(() => {
+    useAppStore.getState().fetchBookingTypes();
+    useAppStore.getState().fetchVehicles();
+  }, []);
+
 
   // useEffect(() => {
   //   if (notification) {

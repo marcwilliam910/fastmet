@@ -13,6 +13,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import LoadingModal from "@/components/modals/loading";
 import { toastConfig } from "@/config/toastConfig";
+import { useAuth } from "@/hooks/useAuth";
 import SocketProvider from "@/sockets/context/SocketProvider";
 import Toast from "react-native-toast-message";
 import "../global.css";
@@ -32,28 +33,24 @@ Sentry.init({
   // spotlight: __DEV__,
 });
 
-SplashScreen.preventAutoHideAsync();
+void SplashScreen.preventAutoHideAsync();
 
 export default Sentry.wrap(function RootLayout() {
+  const { hasHydrated } = useAuth();
+
   const [fontsLoaded] = useFonts({
     Montserrat_400Regular,
     Montserrat_700Bold,
   });
 
+  const isReady = fontsLoaded && hasHydrated;
+
   useEffect(() => {
-    if (fontsLoaded) {
-      // NOT WORKING
-      // bypass TS check
-      // (Text as any).defaultProps = (Text as any).defaultProps || {};
-      // (Text as any).defaultProps.style = {
-      //   fontFamily: "Montserrat_400Regular",
-      // };
+    if (!isReady) return;
+    void SplashScreen.hideAsync();
+  }, [isReady]);
 
-      SplashScreen.hideAsync();
-    }
-  }, [fontsLoaded]);
-
-  if (!fontsLoaded) {
+  if (!isReady) {
     return null;
   }
 

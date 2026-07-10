@@ -1,19 +1,19 @@
 import CustomKeyAvoidingView from "@/components/CustomKeyAvoid";
 import AddressInput from "@/components/inputs/AddressInput";
-import {useAuthGuard} from "@/hooks/useAuthGuard";
+import { useAuthGuard } from "@/hooks/useAuthGuard";
 import api from "@/lib/axios";
-import {ProfileSchema} from "@/schemas/authSchema";
-import {useAppStore} from "@/store/useAppStore";
-import {NewUser, UserAddress} from "@/types/user";
-import {openGallery} from "@/utils/helpers/imagePicker";
-import {validateForm} from "@/utils/helpers/validateForm";
-import {Ionicons} from "@expo/vector-icons";
-import {Image} from "expo-image";
-import {router} from "expo-router";
-import React, {useCallback, useState} from "react";
-import {Alert, Pressable, Text, TextInput, View} from "react-native";
-import {Dropdown} from "react-native-element-dropdown";
-import {SafeAreaView, useSafeAreaInsets} from "react-native-safe-area-context";
+import { ProfileSchema } from "@/schemas/authSchema";
+import { useAppStore } from "@/store/useAppStore";
+import { NewUser, UserAddress } from "@/types/user";
+import { openGallery } from "@/utils/helpers/imagePicker";
+import { validateForm } from "@/utils/helpers/validateForm";
+import { Ionicons } from "@expo/vector-icons";
+import { Image } from "expo-image";
+import { router } from "expo-router";
+import React, { useCallback, useEffect, useState } from "react";
+import { Alert, Pressable, Text, TextInput, View } from "react-native";
+import { Dropdown } from "react-native-element-dropdown";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function ProfileRegistration() {
   const [form, setForm] = useState<NewUser>({
@@ -23,7 +23,7 @@ export default function ProfileRegistration() {
     profilePictureUrl: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const {isAuthenticated} = useAuthGuard();
+  const { isAuthenticated } = useAuthGuard();
   const [selectedAsset, setSelectedAsset] = useState<any>(null);
   const inset = useSafeAreaInsets();
   const setLoading = useAppStore((state) => state.setLoading);
@@ -34,15 +34,19 @@ export default function ProfileRegistration() {
     if (result && !result.canceled && result.assets[0]) {
       const asset = result.assets[0];
       setSelectedAsset(asset);
-      setForm({...form, profilePictureUrl: asset.uri});
+      setForm({ ...form, profilePictureUrl: asset.uri });
     }
   };
   const onFormChange = (name: string, value: string) => {
-    setForm({...form, [name]: value});
+    setForm({ ...form, [name]: value });
   };
 
+  useEffect(() => {
+    console.log(useAppStore.getState())
+  }, [])
+
   const onAddressChange = useCallback((address: UserAddress) => {
-    setForm((prev) => ({...prev, address}));
+    setForm((prev) => ({ ...prev, address }));
   }, []);
 
   const onSubmit = async () => {
@@ -121,7 +125,7 @@ export default function ProfileRegistration() {
   };
 
   return (
-    <SafeAreaView style={{flex: 1, backgroundColor: "#fff"}}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
       <CustomKeyAvoidingView>
         <View className="flex-1 p-6 pb-36 gap-6">
           {/* Profile Picture */}
@@ -133,14 +137,14 @@ export default function ProfileRegistration() {
               {form.profilePictureUrl ? (
                 <View className="items-center justify-center bg-gray-100 rounded-full size-36">
                   <Image
-                    source={{uri: form.profilePictureUrl}}
-                    style={{width: 120, height: 120, borderRadius: 999}}
+                    source={{ uri: form.profilePictureUrl }}
+                    style={{ width: 120, height: 120, borderRadius: 999 }}
                     contentFit="cover"
                   />
                   <Pressable
                     className="absolute right-0 p-1 bg-white rounded-full top-2"
                     onPress={() =>
-                      setForm((prev) => ({...prev, profilePictureUrl: ""}))
+                      setForm((prev) => ({ ...prev, profilePictureUrl: "" }))
                     }
                   >
                     <Ionicons name="close-outline" size={20} color="red" />
@@ -165,9 +169,8 @@ export default function ProfileRegistration() {
               onChangeText={(text) => onFormChange("fullName", text)}
               placeholder="Enter Name"
               placeholderTextColor="#9CA3AF"
-              className={`p-4 text-base bg-gray-100 rounded-lg ${
-                errors.fullName ? "border border-red-500" : ""
-              }`}
+              className={`p-4 text-base bg-gray-100 rounded-lg ${errors.fullName ? "border border-red-500" : ""
+                }`}
             />
             {errors.fullName && (
               <Text className="text-xs ml-2 text-red-500">
@@ -199,12 +202,12 @@ export default function ProfileRegistration() {
                 paddingVertical: 14,
                 borderRadius: 10,
               }}
-              placeholderStyle={{color: "#9CA3AF"}}
-              selectedTextStyle={{color: "#111827"}}
+              placeholderStyle={{ color: "#9CA3AF" }}
+              selectedTextStyle={{ color: "#111827" }}
               data={[
-                {label: "Male", value: "male"},
-                {label: "Female", value: "female"},
-                {label: "Prefer not to say", value: "prefer_not"},
+                { label: "Male", value: "male" },
+                { label: "Female", value: "female" },
+                { label: "Prefer not to say", value: "prefer_not" },
               ]}
               labelField="label"
               valueField="value"
@@ -218,7 +221,7 @@ export default function ProfileRegistration() {
       {/* Buttons */}
       <View
         className="absolute bg-white left-0 right-0 mx-6"
-        style={{bottom: inset.bottom + 10}}
+        style={{ bottom: inset.bottom + 10 }}
       >
         <Pressable
           className="items-center py-4 my-2 rounded-lg bg-lightPrimary active:bg-darkPrimary"

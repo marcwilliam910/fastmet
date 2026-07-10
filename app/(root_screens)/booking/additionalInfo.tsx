@@ -56,10 +56,8 @@ export default function AdditionalInfo() {
   const setPhoto = useAppStore((s) => s.setPhoto);
   const removePhoto = useAppStore((s) => s.removePhoto);
   const vehicles = useAppStore((s) => s.vehicles);
-  const bookingType = useAppStore((s) => s.bookingType);
 
   const vehicleKeys = vehicles.map((v) => v.key);
-  const isPooling = bookingType?.type === "pooling";
 
   // Returns vehicleKeys whose size rank is >= minRank, eliminating hardcoded arrays
   const vehiclesFrom = (minRank: number) =>
@@ -112,7 +110,7 @@ export default function AdditionalInfo() {
   };
 
   const handleNext = () => {
-    if (isPooling && !photos.some(Boolean)) {
+    if (!photos.some(Boolean)) {
       setPhotoError(true);
       return;
     }
@@ -208,12 +206,7 @@ export default function AdditionalInfo() {
             {/* Upload Photos */}
             <View className="gap-2">
               <Text className="font-semibold">
-                Upload Photo{" "}
-                {isPooling ? (
-                  <Text className="text-xs text-red-500">*</Text>
-                ) : (
-                  <Text className="text-xs text-gray-400">(Optional)</Text>
-                )}
+                Upload Photo <Text className="text-xs text-red-500">*</Text>
               </Text>
               <View className="flex-row items-center justify-between gap-2">
                 {[0, 1, 2].map((i) => (
@@ -260,7 +253,7 @@ export default function AdditionalInfo() {
               </View>
               {photoError && (
                 <Text className="text-red-500 text-xs font-semibold ml-1">
-                  At least one photo is required for pooling bookings.
+                  At least one photo is required.
                 </Text>
               )}
             </View>
