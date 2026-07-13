@@ -61,13 +61,13 @@ export default function ViewOnMap() {
           pickUp={booking.pickUp}
           dropOff={booking.dropOff}
           routeData={booking.routeData}
+          gasCategory={booking.selectedVehicle.gasCategory}
           region={region}
           setRegion={setRegion}
           bookingId={bookingId}
-          driver={booking.driver}
+          driver={booking.driver!}
         />
       </View>
-
       <View className="absolute right-0 bottom-0 left-0">
         <View
           className="gap-3 justify-center px-5 py-6 w-full bg-white rounded-t-3xl"

@@ -1,4 +1,3 @@
-import { STATIC_IMAGES } from "@/utils/constants";
 import { formatLocation } from "@/utils/helpers/location";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
@@ -92,21 +91,35 @@ export const DriverOfferContent = ({ data }: { data: Record<string, any> }) => {
             className={index > 0 ? "mt-4 pt-4 border-t border-blue-200" : ""}
           >
             <View className="flex-row items-center">
-              <Image
-                source={
-                  driver.driverProfilePicture
-                    ? { uri: driver.driverProfilePicture }
-                    : STATIC_IMAGES.userPlaceholder
-                }
-                style={{
-                  width: 52,
-                  height: 52,
-                  borderRadius: 26,
-                  borderWidth: 2,
-                  borderColor: "#DBEAFE",
-                  marginRight: 12,
-                }}
-              />
+              {driver.driverProfilePicture ? (
+                <Image
+                  source={{ uri: driver.driverProfilePicture }}
+                  style={{
+                    width: 52,
+                    height: 52,
+                    borderRadius: 26,
+                    borderWidth: 2,
+                    borderColor: "#DBEAFE",
+                    marginRight: 12,
+                  }}
+                />
+              ) : (
+                <View
+                  style={{
+                    width: 52,
+                    height: 52,
+                    borderRadius: 26,
+                    borderWidth: 2,
+                    borderColor: "#DBEAFE",
+                    marginRight: 12,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    overflow: "hidden",
+                  }}
+                >
+                  <Ionicons name="person-circle" size={52} color="#F7931E" />
+                </View>
+              )}
               <View className="flex-1">
                 <Text className="text-base font-bold text-gray-900">
                   {driver.driverName}
@@ -461,21 +474,35 @@ export const ScheduledAutoAssignedContent = ({
           Your Assigned Driver
         </Text>
         <View className="flex-row items-center">
-          <Image
-            source={
-              driverProfilePicture
-                ? { uri: driverProfilePicture }
-                : STATIC_IMAGES.userPlaceholder
-            }
-            style={{
-              width: 56,
-              height: 56,
-              borderRadius: 28,
-              borderWidth: 3,
-              borderColor: "#D1FAE5",
-              marginRight: 16,
-            }}
-          />
+          {driverProfilePicture ? (
+            <Image
+              source={{ uri: driverProfilePicture }}
+              style={{
+                width: 56,
+                height: 56,
+                borderRadius: 28,
+                borderWidth: 3,
+                borderColor: "#D1FAE5",
+                marginRight: 16,
+              }}
+            />
+          ) : (
+            <View
+              style={{
+                width: 56,
+                height: 56,
+                borderRadius: 28,
+                borderWidth: 3,
+                borderColor: "#D1FAE5",
+                marginRight: 16,
+                alignItems: "center",
+                justifyContent: "center",
+                overflow: "hidden",
+              }}
+            >
+              <Ionicons name="person-circle" size={56} color="#F7931E" />
+            </View>
+          )}
           <View className="flex-1">
             <Text className="text-lg font-bold text-gray-900">
               {driverName || "Driver"}

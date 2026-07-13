@@ -3,7 +3,6 @@ import {useConversationById} from "@/queries/conversation";
 import {useSocket} from "@/sockets/context/SocketProvider";
 import {useAppStore} from "@/store/useAppStore";
 import {ConversationResponse, MessagesLoadedData} from "@/types/chat";
-import {STATIC_IMAGES} from "@/utils/constants";
 import {
   convertImageToBase64,
   openGallery,
@@ -475,15 +474,15 @@ const Message = () => {
               />
             </Pressable>
 
-            <Image
-              source={
-                conversation?.driver?.profilePictureUrl
-                  ? {uri: conversation.driver.profilePictureUrl}
-                  : STATIC_IMAGES.userPlaceholder
-              }
-              style={{width: 40, height: 40, borderRadius: 999}}
-              contentFit="cover"
-            />
+            {conversation?.driver?.profilePictureUrl ? (
+              <Image
+                source={{uri: conversation.driver.profilePictureUrl}}
+                style={{width: 40, height: 40, borderRadius: 999}}
+                contentFit="cover"
+              />
+            ) : (
+              <Ionicons name="person-circle" size={40} color="#F7931E" />
+            )}
 
             <View className="flex-1">
               <Text className="text-base font-bold text-white">

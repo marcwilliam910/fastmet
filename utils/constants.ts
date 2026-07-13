@@ -7,7 +7,6 @@ export const STATIC_IMAGES = {
   driver: require("@/assets/images/driverIcon.png"),
   gcash: require("@/assets/images/gcash_logo.png"),
   cashPayment: require("@/assets/images/cash_payment.png"),
-  userPlaceholder: require("@/assets/images/user.png"),
   fastmetLogo: require("@/assets/fastmet/logo.png"),
   announcement: require("@/assets/images/announcement.png"),
   phone: require("@/assets/images/phone.png"),

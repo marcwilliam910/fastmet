@@ -9,7 +9,6 @@ import {
   LocationDetails,
   RequestedDriver,
 } from "@/types/book";
-import { STATIC_IMAGES } from "@/utils/constants";
 import { formatDate } from "@/utils/helpers/date";
 import { formatLocation } from "@/utils/helpers/location";
 import { Ionicons } from "@expo/vector-icons";
@@ -156,11 +155,19 @@ export default function RequestRoute() {
         topOffset: 50,
       });
     };
-    const errorHandler = ({ message }: { message: string }) => {
+    const errorHandler = ({
+      text1,
+      text2,
+      message,
+    }: {
+      text1?: string;
+      text2?: string;
+      message?: string;
+    }) => {
       Toast.show({
         type: "error",
-        text1: "Error",
-        text2: message,
+        text1: text1 || "Error",
+        text2: text2 || message,
         position: "top",
         visibilityTime: 5_000,
         swipeable: true,
@@ -478,20 +485,33 @@ const RequestCard = ({
             {/* Assigned Driver */}
             {driver && (
               <View className="mt-6 flex-row items-center bg-green-50 p-3 rounded-xl">
-                <Image
-                  source={
-                    driver.profilePictureUrl
-                      ? { uri: driver.profilePictureUrl }
-                      : STATIC_IMAGES.userPlaceholder
-                  }
-                  style={{
-                    width: 48,
-                    height: 48,
-                    borderRadius: 24,
-                    borderWidth: 2,
-                    borderColor: "white",
-                  }}
-                />
+                {driver.profilePictureUrl ? (
+                  <Image
+                    source={{ uri: driver.profilePictureUrl }}
+                    style={{
+                      width: 48,
+                      height: 48,
+                      borderRadius: 24,
+                      borderWidth: 2,
+                      borderColor: "white",
+                    }}
+                  />
+                ) : (
+                  <View
+                    style={{
+                      width: 48,
+                      height: 48,
+                      borderRadius: 24,
+                      borderWidth: 2,
+                      borderColor: "white",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      overflow: "hidden",
+                    }}
+                  >
+                    <Ionicons name="person-circle" size={48} color="#F7931E" />
+                  </View>
+                )}
                 <View className="ml-3 flex-1">
                   <Text className="text-base font-semibold text-green-900">
                     {driver.name}
@@ -523,24 +543,44 @@ const RequestCard = ({
                     className="flex-row items-center"
                     style={{ marginRight: 12 }}
                   >
-                    {displayedAvatars.map((driver, index) => (
-                      <Image
-                        key={driver.id}
-                        source={
-                          driver.profilePicture
-                            ? { uri: driver.profilePicture }
-                            : STATIC_IMAGES.userPlaceholder
-                        }
-                        style={{
-                          width: 40,
-                          height: 40,
-                          borderRadius: 20,
-                          borderWidth: 2,
-                          borderColor: "white",
-                          marginLeft: index === 0 ? 0 : -12, // Overlap effect
-                        }}
-                      />
-                    ))}
+                    {displayedAvatars.map((driver, index) =>
+                      driver.profilePicture ? (
+                        <Image
+                          key={driver.id}
+                          source={{ uri: driver.profilePicture }}
+                          style={{
+                            width: 40,
+                            height: 40,
+                            borderRadius: 20,
+                            borderWidth: 2,
+                            borderColor: "white",
+                            marginLeft: index === 0 ? 0 : -12,
+                          }}
+                        />
+                      ) : (
+                        <View
+                          key={driver.id}
+                          style={{
+                            width: 40,
+                            height: 40,
+                            borderRadius: 20,
+                            borderWidth: 2,
+                            borderColor: "white",
+                            marginLeft: index === 0 ? 0 : -12,
+                            alignItems: "center",
+                            justifyContent: "center",
+                            overflow: "hidden",
+                            backgroundColor: "white",
+                          }}
+                        >
+                          <Ionicons
+                            name="person-circle"
+                            size={40}
+                            color="#F7931E"
+                          />
+                        </View>
+                      )
+                    )}
                     {remainingCount > 0 && (
                       <View
                         style={{
@@ -683,14 +723,14 @@ const DriversListModal = ({
                 className="flex-row items-center justify-between bg-gray-50 rounded-xl p-3 mb-3 active:bg-gray-100"
               >
                 <View className="flex-row items-center gap-3 flex-1">
-                  <Image
-                    source={
-                      driver.profilePicture
-                        ? { uri: driver.profilePicture }
-                        : STATIC_IMAGES.userPlaceholder
-                    }
-                    style={{ width: 50, height: 50, borderRadius: 25 }}
-                  />
+                  {driver.profilePicture ? (
+                    <Image
+                      source={{ uri: driver.profilePicture }}
+                      style={{ width: 50, height: 50, borderRadius: 25 }}
+                    />
+                  ) : (
+                    <Ionicons name="person-circle" size={50} color="#F7931E" />
+                  )}
 
                   <View className="flex-1">
                     <Text className="text-base font-semibold text-gray-900">

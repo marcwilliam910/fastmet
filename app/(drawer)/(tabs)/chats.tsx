@@ -2,8 +2,8 @@ import ConversationCard from "@/components/chat/ConversationCard";
 import NotLoggedIn from "@/components/notLoggedIn";
 import { useAuth } from "@/hooks/useAuth";
 import { useConversations } from "@/queries/conversation";
+import { pushOnce } from "@/utils/helpers/navigation";
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
 import React from "react";
 import {
   ActivityIndicator,
@@ -52,7 +52,7 @@ const Chats = () => {
   const conversations = data?.pages.flatMap((page) => page.conversations) ?? [];
 
   const handleSearchPress = () => {
-    router.push("/searchChat");
+    pushOnce("/searchChat");
   };
 
   return (

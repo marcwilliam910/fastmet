@@ -1,5 +1,4 @@
 import {RequestedDriver} from "@/types/book";
-import {STATIC_IMAGES} from "@/utils/constants";
 import {Ionicons} from "@expo/vector-icons";
 import {Image} from "expo-image";
 import React, {memo} from "react";
@@ -56,15 +55,15 @@ function DriverDetailsModal({
           >
             {/* Profile Section */}
             <View className="items-center pb-6">
-              <Image
-                source={
-                  driver.profilePicture
-                    ? {uri: driver.profilePicture}
-                    : STATIC_IMAGES.userPlaceholder
-                }
-                contentFit="cover"
-                style={{width: 120, height: 120, borderRadius: 60}}
-              />
+              {driver.profilePicture ? (
+                <Image
+                  source={{uri: driver.profilePicture}}
+                  contentFit="cover"
+                  style={{width: 120, height: 120, borderRadius: 60}}
+                />
+              ) : (
+                <Ionicons name="person-circle" size={120} color="#F7931E" />
+              )}
               <Text className="mt-4 text-2xl font-bold text-gray-900">
                 {driver.name}
               </Text>

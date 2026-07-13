@@ -4,9 +4,9 @@ import {useAppStore} from "@/store/useAppStore";
 import {ActiveBooking, Driver, LocationDetails} from "@/types/book";
 import {createConversationId} from "@/utils/helpers/booking";
 import {formatLocation} from "@/utils/helpers/location";
+import {pushOnce} from "@/utils/helpers/navigation";
 import {Ionicons} from "@expo/vector-icons";
 import {Image} from "expo-image";
-import {router} from "expo-router";
 import {
   ActivityIndicator,
   Alert,
@@ -168,7 +168,7 @@ const ActiveCard = ({
             className="flex-row gap-2 items-center active:scale-105"
             hitSlop={15}
             onPress={() =>
-              router.push({
+              pushOnce({
                 pathname: "/(root_screens)/booking/viewOnMap",
                 params: {bookingId: id, shouldGoBack: "true"},
               })
@@ -215,7 +215,7 @@ const ActiveCard = ({
                 className="items-center active:scale-110"
                 hitSlop={20}
                 onPress={() =>
-                  router.push({
+                  pushOnce({
                     pathname: "/message",
                     params: {
                       conversationId: createConversationId(

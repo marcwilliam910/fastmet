@@ -341,24 +341,25 @@ const SearchModal: React.FC<SearchModalProps> = ({visible, onClose, type}) => {
 
     // Validate pickup location
     if (type === "pickup") {
-      const allowed = isWithinMetroManila(lat, lng);
+      // TEMP: Metro Manila pickup restriction disabled
+      // const allowed = isWithinMetroManila(lat, lng);
 
-      if (!allowed) {
-        const message = "Pick-up is only available within Metro Manila.";
+      // if (!allowed) {
+      //   const message = "Pick-up is only available within Metro Manila.";
 
-        if (Platform.OS === "android") {
-          ToastAndroid.showWithGravity(
-            message,
-            ToastAndroid.LONG,
-            ToastAndroid.TOP,
-          );
-        } else {
-          Alert.alert("Not Available", message);
-        }
+      //   if (Platform.OS === "android") {
+      //     ToastAndroid.showWithGravity(
+      //       message,
+      //       ToastAndroid.LONG,
+      //       ToastAndroid.TOP,
+      //     );
+      //   } else {
+      //     Alert.alert("Not Available", message);
+      //   }
 
-        shake();
-        return;
-      }
+      //   shake();
+      //   return;
+      // }
 
       setPickUp(place);
       setPickUpAdditionalDetails(additionalDetails);
@@ -490,27 +491,29 @@ const SearchModal: React.FC<SearchModalProps> = ({visible, onClose, type}) => {
       }
 
       // Validate location before proceeding
-      if (type === "pickup") {
-        const allowed = isWithinMetroManila(latitude, longitude);
+      // TEMP: Metro Manila pickup restriction disabled
+      // if (type === "pickup") {
+      //   const allowed = isWithinMetroManila(latitude, longitude);
 
-        if (!allowed) {
-          const message =
-            "Your current location is outside Metro Manila. Pick-up is only available within Metro Manila.";
+      //   if (!allowed) {
+      //     const message =
+      //       "Your current location is outside Metro Manila. Pick-up is only available within Metro Manila.";
 
-          if (Platform.OS === "android") {
-            ToastAndroid.showWithGravity(
-              message,
-              ToastAndroid.LONG,
-              ToastAndroid.TOP,
-            );
-          } else {
-            Alert.alert("Not Available", message);
-          }
+      //     if (Platform.OS === "android") {
+      //       ToastAndroid.showWithGravity(
+      //         message,
+      //         ToastAndroid.LONG,
+      //         ToastAndroid.TOP,
+      //       );
+      //     } else {
+      //       Alert.alert("Not Available", message);
+      //     }
 
-          shake();
-          return;
-        }
-      } else {
+      //     shake();
+      //     return;
+      //   }
+      // } else
+      if (type === "dropoff") {
         // Validate drop-off location
         const requiresFerry = requiresFerryFromMetroManila(latitude, longitude);
 
@@ -800,28 +803,29 @@ const SearchModal: React.FC<SearchModalProps> = ({visible, onClose, type}) => {
                       }
                     }
 
+                    // TEMP: Metro Manila pickup restriction disabled
                     // Validate: Metro Manila for pickup
-                    if (type === "pickup") {
-                      const allowed = isWithinMetroManila(
-                        homeLocation.coords.lat,
-                        homeLocation.coords.lng,
-                      );
-                      if (!allowed) {
-                        const message =
-                          "Pick-up is only available within Metro Manila.";
-                        if (Platform.OS === "android") {
-                          ToastAndroid.showWithGravity(
-                            message,
-                            ToastAndroid.LONG,
-                            ToastAndroid.TOP,
-                          );
-                        } else {
-                          Alert.alert("Not Available", message);
-                        }
-                        shake();
-                        return;
-                      }
-                    }
+                    // if (type === "pickup") {
+                    //   const allowed = isWithinMetroManila(
+                    //     homeLocation.coords.lat,
+                    //     homeLocation.coords.lng,
+                    //   );
+                    //   if (!allowed) {
+                    //     const message =
+                    //       "Pick-up is only available within Metro Manila.";
+                    //     if (Platform.OS === "android") {
+                    //       ToastAndroid.showWithGravity(
+                    //         message,
+                    //         ToastAndroid.LONG,
+                    //         ToastAndroid.TOP,
+                    //       );
+                    //     } else {
+                    //       Alert.alert("Not Available", message);
+                    //     }
+                    //     shake();
+                    //     return;
+                    //   }
+                    // }
 
                     // Validate: ferry check for dropoff
                     if (type === "dropoff") {

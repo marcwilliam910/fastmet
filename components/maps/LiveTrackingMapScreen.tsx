@@ -1,12 +1,13 @@
 import {useSocket} from "@/sockets/context/SocketProvider";
 import {Driver, LocationDetails, RouteData} from "@/types/book";
-import {GOOGLE_MAPS_API_KEY, STATIC_IMAGES} from "@/utils/constants";
-import {Image} from "expo-image";
+import {GOOGLE_MAPS_API_KEY} from "@/utils/constants";
 import {useFocusEffect} from "expo-router";
 import React, {useCallback, useEffect, useRef, useState} from "react";
 import {StatusBar, StyleSheet, View} from "react-native";
 import MapView, {Marker, PROVIDER_GOOGLE} from "react-native-maps";
 import MapViewDirections from "react-native-maps-directions";
+import {MapMarkerPin} from "../MapMarkerPin";
+import {GasCategory, VehicleMarkerIcon} from "../VehicleMarkerIcon";
 
 type Region = {
   latitude: number;
@@ -19,6 +20,7 @@ type Props = {
   pickUp: LocationDetails;
   dropOff: LocationDetails;
   routeData: RouteData;
+  gasCategory: GasCategory;
   region: Region | null;
   setRegion: React.Dispatch<React.SetStateAction<Region | null>>;
   bookingId: string;
@@ -29,6 +31,7 @@ export default function LiveTrackingMapScreen({
   pickUp,
   dropOff,
   routeData,
+  gasCategory,
   region,
   setRegion,
   bookingId,
@@ -116,23 +119,11 @@ export default function LiveTrackingMapScreen({
               }}
               title="Pick Up"
               anchor={{x: 0.5, y: 0.5}}
-              // tracksViewChanges={false}
+              tracksViewChanges={false}
               zIndex={1000}
             >
               <View style={{opacity: 1}}>
-                <Image
-                  source={STATIC_IMAGES.pickup}
-                  style={{
-                    width: 50,
-                    height: 50,
-                  }}
-                  contentFit="contain"
-                  // onLoad={() => setPickupImageLoaded(true)}
-                  // onError={(e) => {
-                  //   // console.error("Pickup image error:", e.nativeEvent.error);
-                  //   setPickupImageLoaded(true);
-                  // }}
-                />
+                <MapMarkerPin color="#0074FF" size={50} />
               </View>
             </Marker>
           )}
@@ -146,15 +137,11 @@ export default function LiveTrackingMapScreen({
               }}
               title={driver.name ? `Driver - ${driver.name}` : "Your Driver"}
               anchor={{x: 0.5, y: 0.5}}
-              // tracksViewChanges={false}
+              tracksViewChanges={false}
               zIndex={1000}
             >
               <View style={{opacity: 1}}>
-                <Image
-                  source={STATIC_IMAGES.driver}
-                  style={{width: 40, height: 40}}
-                  contentFit="contain"
-                />
+                <VehicleMarkerIcon gasCategory={gasCategory} size={40} />
               </View>
             </Marker>
           )}
@@ -168,23 +155,11 @@ export default function LiveTrackingMapScreen({
               }}
               title="Drop Off"
               anchor={{x: 0.5, y: 0.5}}
-              // tracksViewChanges={false}
+              tracksViewChanges={false}
               zIndex={1001} // ← Higher than pickup
             >
               <View style={{opacity: 1}}>
-                <Image
-                  source={STATIC_IMAGES.dropoff}
-                  style={{
-                    width: 50,
-                    height: 50,
-                  }}
-                  contentFit="contain"
-                  //  onLoad={() => setDropoffImageLoaded(true)}
-                  //  onError={(e) => {
-                  //    // console.error("Dropoff image error:", e.nativeEvent.error);
-                  //    setDropoffImageLoaded(true);
-                  //  }}
-                />
+                <MapMarkerPin color="#ED1C24" size={50} />
               </View>
             </Marker>
           )}

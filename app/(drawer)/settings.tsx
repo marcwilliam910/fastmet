@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import api from "@/lib/axios";
 import { Ionicons } from "@expo/vector-icons";
 import * as Notifications from "expo-notifications";
-import { router } from "expo-router";
+import { pushOnce } from "@/utils/helpers/navigation";
 import React, { useEffect, useMemo, useState } from "react";
 import { Alert, Linking, Pressable, Switch, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -168,28 +168,28 @@ const Settings = () => {
     () => [
       {
         label: "Privacy Policy",
-        onPress: () => router.push("/(public_screens)/privacyPolicy"),
+        onPress: () => pushOnce("/(public_screens)/privacyPolicy"),
       },
       {
         label: "Terms & Conditions",
-        onPress: () => router.push("/(public_screens)/terms&conditions"),
+        onPress: () => pushOnce("/(public_screens)/terms&conditions"),
       },
       {
         label: "Help and Support",
-        onPress: () => router.push("/(root_screens)/help&support"),
+        onPress: () => pushOnce("/(root_screens)/help&support"),
       },
       {
         label: "File a Report",
-        onPress: () => router.push("/(root_screens)/fileReport"),
+        onPress: () => pushOnce("/(root_screens)/fileReport"),
       },
       {
         label: "About Us",
-        onPress: () => router.push("/(root_screens)/about"),
+        onPress: () => pushOnce("/(root_screens)/about"),
       },
       {
         label: isLoggedIn ? "Sign Out" : "Register / Login",
         onPress: () =>
-          isLoggedIn ? setShowLogoutModal(true) : router.push("/(auth)/auth"),
+          isLoggedIn ? setShowLogoutModal(true) : pushOnce("/(auth)/auth"),
       },
     ],
     [isLoggedIn]

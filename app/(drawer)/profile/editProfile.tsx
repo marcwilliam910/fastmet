@@ -5,7 +5,6 @@ import api from "@/lib/axios";
 import { ProfileSchema } from "@/schemas/authSchema";
 import { useAppStore } from "@/store/useAppStore";
 import { NewUser, UserAddress } from "@/types/user";
-import { STATIC_IMAGES } from "@/utils/constants";
 import { openGallery } from "@/utils/helpers/imagePicker";
 import { validateForm } from "@/utils/helpers/validateForm";
 import { Ionicons } from "@expo/vector-icons";
@@ -284,15 +283,15 @@ const EditProfile = () => {
             className="border border-[#FFA840] rounded-full p-2 self-center active:bg-gray-100"
             onPress={pickProfilePic}
           >
-            <Image
-              source={
-                form.profilePictureUrl
-                  ? { uri: form.profilePictureUrl }
-                  : STATIC_IMAGES.userPlaceholder
-              }
-              style={{ width: 128, height: 128, borderRadius: 999 }}
-              contentFit="cover"
-            />
+            {form.profilePictureUrl ? (
+              <Image
+                source={{ uri: form.profilePictureUrl }}
+                style={{ width: 128, height: 128, borderRadius: 999 }}
+                contentFit="cover"
+              />
+            ) : (
+              <Ionicons name="person-circle" size={128} color="#F7931E" />
+            )}
 
             {form.profilePictureUrl && (
               <Pressable

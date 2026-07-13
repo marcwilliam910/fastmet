@@ -1,11 +1,10 @@
 import NotLoggedIn from "@/components/notLoggedIn";
 import {useAuth} from "@/hooks/useAuth";
 import {useAppStore} from "@/store/useAppStore";
-import {STATIC_IMAGES} from "@/utils/constants";
 import {formatPHNumber} from "@/utils/helpers/format";
 import {Ionicons} from "@expo/vector-icons";
 import {Image} from "expo-image";
-import {router} from "expo-router";
+import {pushOnce} from "@/utils/helpers/navigation";
 import React from "react";
 import {Pressable, ScrollView, Text, View} from "react-native";
 
@@ -18,12 +17,12 @@ export default function MyProfile() {
     {
       icon: "person",
       label: "Edit Profile",
-      onPress: () => router.push("/(drawer)/profile/editProfile"),
+      onPress: () => pushOnce("/(drawer)/profile/editProfile"),
     },
     {
       icon: "settings",
       label: "Settings",
-      onPress: () => router.push("/(drawer)/settings"),
+      onPress: () => pushOnce("/(drawer)/settings"),
     },
   ];
 
@@ -34,15 +33,15 @@ export default function MyProfile() {
       <View className="items-center gap-4 pt-12 pb-8">
         {/* Profile Image with Border */}
         <View className="p-2 border rounded-full border-lightPrimary">
-          <Image
-            source={
-              profilePictureUrl
-                ? {uri: profilePictureUrl}
-                : STATIC_IMAGES.userPlaceholder
-            }
-            style={{width: 120, height: 120, borderRadius: 999}}
-            contentFit="cover"
-          />
+          {profilePictureUrl ? (
+            <Image
+              source={{uri: profilePictureUrl}}
+              style={{width: 120, height: 120, borderRadius: 999}}
+              contentFit="cover"
+            />
+          ) : (
+            <Ionicons name="person-circle" size={120} color="#F7931E" />
+          )}
         </View>
 
         {/* User Info */}

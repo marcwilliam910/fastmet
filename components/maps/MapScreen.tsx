@@ -1,9 +1,8 @@
 import {Type} from "@/store/slices/bookSlice";
 import {useAppStore} from "@/store/useAppStore";
 import {LocationDetails, RouteData} from "@/types/book";
-import {GOOGLE_MAPS_API_KEY, STATIC_IMAGES} from "@/utils/constants";
+import {GOOGLE_MAPS_API_KEY} from "@/utils/constants";
 import {formatDuration} from "@/utils/helpers/date";
-import {Image} from "expo-image";
 import * as Location from "expo-location";
 import {useFocusEffect} from "expo-router";
 import React, {memo, useCallback, useEffect, useRef, useState} from "react";
@@ -11,6 +10,7 @@ import {Alert, StatusBar, StyleSheet, Text, View} from "react-native";
 import MapView, {Marker} from "react-native-maps";
 import MapViewDirections from "react-native-maps-directions";
 import {useSafeAreaInsets} from "react-native-safe-area-context";
+import {MapMarkerPin} from "../MapMarkerPin";
 
 type Region = {
   latitude: number;
@@ -40,8 +40,6 @@ function MapScreen({
 }: Props) {
   const mapRef = useRef<MapView>(null);
   const [isAnimating, setIsAnimating] = useState(false);
-  const [pickupImageLoaded, setPickupImageLoaded] = useState(false);
-  const [dropoffImageLoaded, setDropoffImageLoaded] = useState(false);
   const setLoading = useAppStore((state) => state.setLoading);
 
   useFocusEffect(
@@ -171,23 +169,11 @@ function MapScreen({
             }}
             title="Pick Up"
             anchor={{x: 0.5, y: 0.5}}
-            tracksViewChanges={!pickupImageLoaded}
+            tracksViewChanges={false}
             zIndex={1000}
           >
             <View style={{opacity: 1}}>
-              <Image
-                source={STATIC_IMAGES.pickup}
-                style={{
-                  width: 50,
-                  height: 50,
-                }}
-                contentFit="contain"
-                onLoad={() => setPickupImageLoaded(true)}
-                onError={(e) => {
-                  // console.error("Pickup image error:", e.nativeEvent.error);
-                  setPickupImageLoaded(true);
-                }}
-              />
+              <MapMarkerPin color="#0074FF" size={50} />
             </View>
           </Marker>
         )}
@@ -201,23 +187,11 @@ function MapScreen({
             }}
             title="Drop Off"
             anchor={{x: 0.5, y: 0.5}}
-            tracksViewChanges={!dropoffImageLoaded}
+            tracksViewChanges={false}
             zIndex={1001} // ← Higher than pickup
           >
             <View style={{opacity: 1}}>
-              <Image
-                source={STATIC_IMAGES.dropoff}
-                style={{
-                  width: 50,
-                  height: 50,
-                }}
-                contentFit="contain"
-                onLoad={() => setDropoffImageLoaded(true)}
-                onError={(e) => {
-                  // console.error("Dropoff image error:", e.nativeEvent.error);
-                  setDropoffImageLoaded(true);
-                }}
-              />
+              <MapMarkerPin color="#ED1C24" size={50} />
             </View>
           </Marker>
         )}

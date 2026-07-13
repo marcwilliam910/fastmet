@@ -225,11 +225,19 @@ export default function SearchingDriver() {
       });
     };
 
-    const errorHandler = ({message}: {message: string}) => {
+    const errorHandler = ({
+      text1,
+      text2,
+      message,
+    }: {
+      text1?: string;
+      text2?: string;
+      message?: string;
+    }) => {
       Toast.show({
         type: "error",
-        text1: "Error",
-        text2: message,
+        text1: text1 || "Error",
+        text2: text2 || message,
         position: "top",
         visibilityTime: 5_000,
         swipeable: true,
@@ -794,15 +802,15 @@ const DriverRow = memo(
 
             {/* Left: Driver Info */}
             <View className="flex-row items-center gap-3">
-              <Image
-                source={
-                  driver.profilePicture
-                    ? {uri: driver.profilePicture}
-                    : STATIC_IMAGES.userPlaceholder
-                }
-                contentFit="cover"
-                style={{width: 40, height: 40, borderRadius: 999}}
-              />
+              {driver.profilePicture ? (
+                <Image
+                  source={{uri: driver.profilePicture}}
+                  contentFit="cover"
+                  style={{width: 40, height: 40, borderRadius: 999}}
+                />
+              ) : (
+                <Ionicons name="person-circle" size={40} color="#F7931E" />
+              )}
 
               <View>
                 <Text className="text-sm font-semibold text-gray-900">

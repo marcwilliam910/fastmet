@@ -5,8 +5,8 @@ import {
 import { Notification } from "@/types/notification";
 import { formatLastMessageTime } from "@/utils/helpers/date";
 import { getNotificationConfig } from "@/utils/notification";
+import { pushOnce } from "@/utils/helpers/navigation";
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
 import React, { useMemo } from "react";
 import {
   ActivityIndicator,
@@ -138,7 +138,7 @@ const NotificationCard = ({ item }: { item: Notification }) => {
     <Pressable
       className={`flex-row items-center gap-4 px-4 py-3 active:bg-ctaSecondary ${!item.isRead ? "bg-orange-50" : ""}`}
       onPress={() =>
-        router.push({
+        pushOnce({
           pathname: "/(root_screens)/notifViewer",
           params: { notificationId: item._id },
         })

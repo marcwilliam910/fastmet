@@ -1,5 +1,4 @@
 // config/toastConfig.tsx
-import { STATIC_IMAGES } from "@/utils/constants";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { router } from "expo-router";
@@ -63,7 +62,6 @@ export const toastConfig = {
         <Image
           source={{ uri: props.profilePictureUrl }}
           contentFit="cover"
-          placeholder={STATIC_IMAGES.userPlaceholder}
           style={{ width: 48, height: 48, borderRadius: 24 }}
         />
       ) : (
