@@ -1,10 +1,5 @@
-import { router } from "expo-router";
-import { useEffect } from "react";
+import {Redirect} from "expo-router";
 
 export default function DrawerIndexRedirect() {
-    useEffect(() => {
-        router.replace("/(drawer)/book");
-    }, []);
-
-    return null;
+  return <Redirect href="/(drawer)/book" />;
 }

@@ -6,11 +6,12 @@ import {
 } from "@expo-google-fonts/montserrat";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { SplashScreen, Stack } from "expo-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { StatusBar } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
+import AnimatedSplash from "@/components/AnimatedSplash";
 import LoadingModal from "@/components/modals/loading";
 import { toastConfig } from "@/config/toastConfig";
 import { useAuth } from "@/hooks/useAuth";
@@ -44,6 +45,7 @@ export default Sentry.wrap(function RootLayout() {
   });
 
   const isReady = fontsLoaded && hasHydrated;
+  const [splashAnimationFinished, setSplashAnimationFinished] = useState(false);
 
   useEffect(() => {
     if (!isReady) return;
@@ -81,6 +83,9 @@ export default Sentry.wrap(function RootLayout() {
 
         {/* </FontWrapper> */}
         <StatusBar backgroundColor="#0F2535" barStyle="light-content" />
+        {!splashAnimationFinished && (
+          <AnimatedSplash onFinish={() => setSplashAnimationFinished(true)} />
+        )}
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

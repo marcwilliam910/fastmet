@@ -1,6 +1,7 @@
 import ContactTab from "@/components/support/contact";
 import FAQTab, { Faq } from "@/components/support/faq";
 import BookingReportTab from "@/components/support/report";
+import { useDrawerFallbackBack } from "@/hooks/useDrawerFallbackBack";
 import { useRecentBookings } from "@/queries/bookingQueries";
 import { Booking } from "@/types/book";
 import { Ionicons } from "@expo/vector-icons";
@@ -85,6 +86,7 @@ const FAQS: Faq[] = [
 ];
 
 export default function CustomerSupport() {
+  useDrawerFallbackBack();
   const [activeTab, setActiveTab] = useState<TabKey>("bookings");
 
   // Booking Report state

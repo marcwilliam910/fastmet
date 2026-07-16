@@ -5,9 +5,17 @@ import {GOOGLE_MAPS_API_KEY} from "@/utils/constants";
 import {formatDuration} from "@/utils/helpers/date";
 import * as Location from "expo-location";
 import {useFocusEffect} from "expo-router";
-import React, {memo, useCallback, useEffect, useRef, useState} from "react";
+import React, {
+  forwardRef,
+  memo,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from "react";
 import {Alert, StatusBar, StyleSheet, Text, View} from "react-native";
-import MapView, {Marker} from "react-native-maps";
+import MapView, {LatLng, Marker, PROVIDER_GOOGLE} from "react-native-maps";
 import MapViewDirections from "react-native-maps-directions";
 import {useSafeAreaInsets} from "react-native-safe-area-context";
 import {MapMarkerPin} from "../MapMarkerPin";
@@ -27,20 +35,77 @@ type Props = {
   setRegion: React.Dispatch<React.SetStateAction<Region>>;
   setIsDragging: React.Dispatch<React.SetStateAction<boolean>>;
   bookingType: Type;
+  onRouteFitChange?: (fitted: boolean) => void;
 };
 
-function MapScreen({
-  pickUp,
-  dropOff,
-  routeData,
-  region,
-  setRegion,
-  setIsDragging,
-  bookingType,
-}: Props) {
+export type MapScreenHandle = {
+  fitToRoute: () => void;
+};
+
+const MAP_EDGE_PADDING = {top: 80, right: 80, bottom: 400, left: 80};
+
+const MapScreen = forwardRef<MapScreenHandle, Props>(function MapScreen(
+  {
+    pickUp,
+    dropOff,
+    routeData,
+    region,
+    setRegion,
+    setIsDragging,
+    bookingType,
+    onRouteFitChange,
+  },
+  ref,
+) {
   const mapRef = useRef<MapView>(null);
+  const routeCoordinatesRef = useRef<LatLng[]>([]);
+  const isProgrammaticMoveRef = useRef(false);
+  const lastFitAtRef = useRef(0);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [tracksViewChanges, setTracksViewChanges] = useState(true);
   const setLoading = useAppStore((state) => state.setLoading);
+
+  const MARKER_SIZE = 40;
+
+  const markRouteUnfitted = useCallback(() => {
+    onRouteFitChange?.(false);
+  }, [onRouteFitChange]);
+
+  const performFitToCoordinates = useCallback(
+    (coords: LatLng[]) => {
+      if (!mapRef.current || coords.length === 0) return;
+
+      isProgrammaticMoveRef.current = true;
+      lastFitAtRef.current = Date.now();
+      setIsAnimating(true);
+      mapRef.current.fitToCoordinates(coords, {
+        edgePadding: MAP_EDGE_PADDING,
+        animated: true,
+      });
+      setTimeout(() => {
+        setIsAnimating(false);
+        isProgrammaticMoveRef.current = false;
+        onRouteFitChange?.(true);
+      }, 1500);
+    },
+    [onRouteFitChange],
+  );
+
+  const fitToRoute = useCallback(() => {
+    if (!pickUp?.coords || !dropOff?.coords) return;
+
+    const coords =
+      routeCoordinatesRef.current.length > 0
+        ? routeCoordinatesRef.current
+        : [
+            {latitude: pickUp.coords.lat, longitude: pickUp.coords.lng},
+            {latitude: dropOff.coords.lat, longitude: dropOff.coords.lng},
+          ];
+
+    performFitToCoordinates(coords);
+  }, [pickUp, dropOff, performFitToCoordinates]);
+
+  useImperativeHandle(ref, () => ({fitToRoute}), [fitToRoute]);
 
   useFocusEffect(
     useCallback(() => {
@@ -96,6 +161,28 @@ function MapScreen({
     };
   }, [setLoading, setRegion]);
 
+  // Snapshot SVG markers after they paint, then freeze for performance
+  useEffect(() => {
+    setTracksViewChanges(true);
+    const timeout = setTimeout(() => setTracksViewChanges(false), 500);
+    return () => clearTimeout(timeout);
+  }, [
+    pickUp?.coords?.lat,
+    pickUp?.coords?.lng,
+    dropOff?.coords?.lat,
+    dropOff?.coords?.lng,
+  ]);
+
+  useEffect(() => {
+    onRouteFitChange?.(false);
+  }, [
+    pickUp?.coords?.lat,
+    pickUp?.coords?.lng,
+    dropOff?.coords?.lat,
+    dropOff?.coords?.lng,
+    onRouteFitChange,
+  ]);
+
   // Update the useEffect
   useEffect(() => {
     if (pickUp?.coords && mapRef.current && !isAnimating) {
@@ -120,6 +207,7 @@ function MapScreen({
     <View className="flex-1">
       <MapView
         ref={mapRef}
+        provider={PROVIDER_GOOGLE}
         style={StyleSheet.absoluteFillObject}
         showsUserLocation
         followsUserLocation={!pickUp && !dropOff}
@@ -129,6 +217,20 @@ function MapScreen({
         onTouchStart={() => setIsDragging(true)}
         onTouchEnd={() => setIsDragging(false)}
         onTouchCancel={() => setIsDragging(false)}
+        onPanDrag={() => {
+          if (pickUp && dropOff) markRouteUnfitted();
+        }}
+        onRegionChangeComplete={() => {
+          const recentlyFitted = Date.now() - lastFitAtRef.current < 2000;
+          if (
+            !isProgrammaticMoveRef.current &&
+            !recentlyFitted &&
+            pickUp &&
+            dropOff
+          ) {
+            markRouteUnfitted();
+          }
+        }}
       >
         {/* POLYLINE FIRST - renders at bottom */}
         {pickUp && dropOff && (
@@ -147,13 +249,9 @@ function MapScreen({
             optimizeWaypoints
             mode="DRIVING"
             onReady={(result) => {
+              routeCoordinatesRef.current = result.coordinates;
               if (!isAnimating && mapRef.current) {
-                setIsAnimating(true);
-                mapRef.current.fitToCoordinates(result.coordinates, {
-                  edgePadding: {top: 80, right: 80, bottom: 400, left: 80},
-                  animated: true,
-                });
-                setTimeout(() => setIsAnimating(false), 1500);
+                performFitToCoordinates(result.coordinates);
               }
             }}
           />
@@ -168,12 +266,12 @@ function MapScreen({
               longitude: pickUp.coords.lng,
             }}
             title="Pick Up"
-            anchor={{x: 0.5, y: 0.5}}
-            tracksViewChanges={false}
+            anchor={{x: 0.5, y: 1}}
+            tracksViewChanges={tracksViewChanges}
             zIndex={1000}
           >
-            <View style={{opacity: 1}}>
-              <MapMarkerPin color="#0074FF" size={50} />
+            <View style={{width: MARKER_SIZE, height: MARKER_SIZE, opacity: 1}}>
+              <MapMarkerPin color="#0074FF" size={MARKER_SIZE} />
             </View>
           </Marker>
         )}
@@ -186,12 +284,12 @@ function MapScreen({
               longitude: dropOff.coords.lng,
             }}
             title="Drop Off"
-            anchor={{x: 0.5, y: 0.5}}
-            tracksViewChanges={false}
-            zIndex={1001} // ← Higher than pickup
+            anchor={{x: 0.5, y: 1}}
+            tracksViewChanges={tracksViewChanges}
+            zIndex={1001}
           >
-            <View style={{opacity: 1}}>
-              <MapMarkerPin color="#ED1C24" size={50} />
+            <View style={{width: MARKER_SIZE, height: MARKER_SIZE, opacity: 1}}>
+              <MapMarkerPin color="#ED1C24" size={MARKER_SIZE} />
             </View>
           </Marker>
         )}
@@ -202,7 +300,7 @@ function MapScreen({
         bookingType !== "pooling" && <DistanceBubble routeData={routeData} />}
     </View>
   );
-}
+});
 
 export default memo(MapScreen);
 

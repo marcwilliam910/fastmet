@@ -2,9 +2,9 @@ import NotLoggedIn from "@/components/notLoggedIn";
 import {useAuth} from "@/hooks/useAuth";
 import {useAppStore} from "@/store/useAppStore";
 import {formatPHNumber} from "@/utils/helpers/format";
+import {pushOnce} from "@/utils/helpers/navigation";
 import {Ionicons} from "@expo/vector-icons";
 import {Image} from "expo-image";
-import {pushOnce} from "@/utils/helpers/navigation";
 import React from "react";
 import {Pressable, ScrollView, Text, View} from "react-native";
 
@@ -12,6 +12,7 @@ export default function MyProfile() {
   const {isLoggedIn} = useAuth();
   const name = useAppStore((state) => state.name);
   const profilePictureUrl = useAppStore((state) => state.profilePictureUrl);
+  const gender = useAppStore((state) => state.gender);
   const address = useAppStore((state) => state.address);
   const options = [
     {
@@ -30,9 +31,9 @@ export default function MyProfile() {
 
   return (
     <ScrollView className="flex-1 bg-white">
-      <View className="items-center gap-4 pt-12 pb-8">
+      <View className="gap-4 items-center pt-12 pb-8">
         {/* Profile Image with Border */}
-        <View className="p-2 border rounded-full border-lightPrimary">
+        <View className="p-2 rounded-full border border-lightPrimary">
           {profilePictureUrl ? (
             <Image
               source={{uri: profilePictureUrl}}
@@ -45,13 +46,20 @@ export default function MyProfile() {
         </View>
 
         {/* User Info */}
-        <View className="items-center gap-1">
-          <Text className="text-xl font-bold text-gray-800">{name}</Text>
+        <View className="gap-1 items-center">
+          <View className="flex-row gap-1 justify-center items-center">
+            <Text className="text-xl font-bold text-gray-800">{name}</Text>
+            {!gender || gender === "prefer_not" ? null : gender === "male" ? (
+              <Ionicons name="male" size={20} color="#FFA840" />
+            ) : (
+              <Ionicons name="female" size={20} color="#FFA840" />
+            )}
+          </View>
           <Text className="text-base text-gray-400">
             {formatPHNumber(useAppStore((state) => state.phoneNumber))}
           </Text>
           {address && (
-            <View className="flex-row items-center gap-1">
+            <View className="flex-row gap-1 items-center">
               <Ionicons name="location-outline" size={20} color="#FFA840" />
               <Text
                 className="text-base text-gray-400 max-w-[70%]"
@@ -72,7 +80,7 @@ export default function MyProfile() {
             onPress={item.onPress}
             className="flex-row items-center px-5 py-3 bg-gray-100 rounded-2xl active:opacity-70"
           >
-            <View className="items-center justify-center w-10 h-10">
+            <View className="justify-center items-center w-10 h-10">
               <Ionicons name={item.icon as any} size={22} color="#FFA840" />
             </View>
 

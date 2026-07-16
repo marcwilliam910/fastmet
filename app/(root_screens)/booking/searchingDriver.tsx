@@ -588,7 +588,6 @@ const DriverListCard = ({
       return;
     }
 
-    if (!isPooling) return;
     socket.emit("rejectOffer", {
       driverId: selectedDriver.id,
       bookingId,
@@ -598,7 +597,6 @@ const DriverListCard = ({
     setDrivers((prev) => prev.filter((d) => d.id !== selectedDriver.id));
   }, [
     selectedDriver,
-    isPooling,
     socket,
     bookingId,
     setSelectedDriver,

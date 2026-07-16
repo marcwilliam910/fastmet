@@ -1,18 +1,20 @@
 import LogoutModal from "@/components/modals/logoutModal";
 import NotLoggedIn from "@/components/notLoggedIn";
-import { useAuth } from "@/hooks/useAuth";
+import {useAuth} from "@/hooks/useAuth";
+import {useDrawerFallbackBack} from "@/hooks/useDrawerFallbackBack";
 import api from "@/lib/axios";
-import { Ionicons } from "@expo/vector-icons";
+import {pushOnce} from "@/utils/helpers/navigation";
+import {Ionicons} from "@expo/vector-icons";
 import * as Notifications from "expo-notifications";
-import { pushOnce } from "@/utils/helpers/navigation";
-import React, { useEffect, useMemo, useState } from "react";
-import { Alert, Linking, Pressable, Switch, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import React, {useEffect, useMemo, useState} from "react";
+import {Alert, Linking, Pressable, Switch, Text, View} from "react-native";
+import {SafeAreaView} from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 
 const Settings = () => {
+  useDrawerFallbackBack();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const { isLoggedIn } = useAuth();
+  const {isLoggedIn} = useAuth();
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [isLoadingNotifications, setIsLoadingNotifications] = useState(true);
   const [osPermissionStatus, setOsPermissionStatus] = useState<
@@ -31,7 +33,7 @@ const Settings = () => {
   const fetchNotificationSettings = async () => {
     try {
       // Check OS permission
-      const { status } = await Notifications.getPermissionsAsync();
+      const {status} = await Notifications.getPermissionsAsync();
       setOsPermissionStatus(status);
 
       // Check backend setting
@@ -52,7 +54,7 @@ const Settings = () => {
     try {
       if (value) {
         // User wants to ENABLE notifications
-        const { status } = await Notifications.getPermissionsAsync();
+        const {status} = await Notifications.getPermissionsAsync();
 
         if (status === "denied") {
           // OS permission was denied - send to device settings
@@ -60,12 +62,12 @@ const Settings = () => {
             "Notifications Blocked",
             "To receive trip alerts, please enable notifications in your device settings.",
             [
-              { text: "Cancel", style: "cancel" },
+              {text: "Cancel", style: "cancel"},
               {
                 text: "Open Settings",
                 onPress: () => Linking.openSettings(),
               },
-            ]
+            ],
           );
           return;
         }
@@ -83,7 +85,7 @@ const Settings = () => {
               {
                 text: "Allow",
                 onPress: async () => {
-                  const { status: newStatus } =
+                  const {status: newStatus} =
                     await Notifications.requestPermissionsAsync();
 
                   if (newStatus === "granted") {
@@ -121,7 +123,7 @@ const Settings = () => {
                   }
                 },
               },
-            ]
+            ],
           );
           return;
         }
@@ -174,25 +176,18 @@ const Settings = () => {
         label: "Terms & Conditions",
         onPress: () => pushOnce("/(public_screens)/terms&conditions"),
       },
-      {
-        label: "Help and Support",
-        onPress: () => pushOnce("/(root_screens)/help&support"),
-      },
-      {
-        label: "File a Report",
-        onPress: () => pushOnce("/(root_screens)/fileReport"),
-      },
+
       {
         label: "About Us",
         onPress: () => pushOnce("/(root_screens)/about"),
       },
       {
-        label: isLoggedIn ? "Sign Out" : "Register / Login",
+        label: isLoggedIn ? "Logout" : "Register / Login",
         onPress: () =>
           isLoggedIn ? setShowLogoutModal(true) : pushOnce("/(auth)/auth"),
       },
     ],
-    [isLoggedIn]
+    [isLoggedIn],
   );
 
   if (!isLoggedIn) {
@@ -220,7 +215,7 @@ const Settings = () => {
               Notifications
             </Text>
             {osPermissionStatus === "denied" && (
-              <Text className="text-xs text-orange-600 mt-1">
+              <Text className="mt-1 text-xs text-orange-600">
                 Enable in device settings
               </Text>
             )}
@@ -230,7 +225,7 @@ const Settings = () => {
             value={notificationsEnabled}
             onValueChange={handleNotificationToggle}
             disabled={isLoadingNotifications}
-            trackColor={{ false: "#D1D5DB", true: "#FFA840" }}
+            trackColor={{false: "#D1D5DB", true: "#FFA840"}}
             thumbColor={notificationsEnabled ? "#fff" : "#f4f3f4"}
             ios_backgroundColor="#D1D5DB"
           />

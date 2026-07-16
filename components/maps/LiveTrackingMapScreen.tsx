@@ -4,7 +4,7 @@ import {GOOGLE_MAPS_API_KEY} from "@/utils/constants";
 import {useFocusEffect} from "expo-router";
 import React, {useCallback, useEffect, useRef, useState} from "react";
 import {StatusBar, StyleSheet, View} from "react-native";
-import MapView, {Marker, PROVIDER_GOOGLE} from "react-native-maps";
+import MapView, {LatLng, Marker, PROVIDER_GOOGLE} from "react-native-maps";
 import MapViewDirections from "react-native-maps-directions";
 import {MapMarkerPin} from "../MapMarkerPin";
 import {GasCategory, VehicleMarkerIcon} from "../VehicleMarkerIcon";
@@ -27,6 +27,8 @@ type Props = {
   driver: Driver;
 };
 
+const MAP_EDGE_PADDING = {top: 80, right: 80, bottom: 80, left: 80};
+
 export default function LiveTrackingMapScreen({
   pickUp,
   dropOff,
@@ -38,14 +40,27 @@ export default function LiveTrackingMapScreen({
   driver,
 }: Props) {
   const mapRef = useRef<MapView>(null);
+  const routeCoordinatesRef = useRef<LatLng[]>([]);
   const socket = useSocket();
   const [driverLocation, setDriverLocation] = useState<{
     lat: number;
     lng: number;
     // heading: number;
   } | null>(null);
+  const [tracksViewChanges, setTracksViewChanges] = useState(true);
   const [isLoadingDriverLocation, setIsLoadingDriverLocation] =
     useState<boolean>(false);
+
+  const MARKER_SIZE = 40;
+
+  const fitToRoute = useCallback((coords: LatLng[]) => {
+    if (!mapRef.current || coords.length === 0) return;
+
+    mapRef.current.fitToCoordinates(coords, {
+      edgePadding: MAP_EDGE_PADDING,
+      animated: true,
+    });
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
@@ -99,6 +114,19 @@ export default function LiveTrackingMapScreen({
     }
   }, [pickUp, setRegion]);
 
+  useEffect(() => {
+    setTracksViewChanges(true);
+    const timeout = setTimeout(() => setTracksViewChanges(false), 500);
+    return () => clearTimeout(timeout);
+  }, [
+    pickUp?.coords?.lat,
+    pickUp?.coords?.lng,
+    dropOff?.coords?.lat,
+    dropOff?.coords?.lng,
+    driverLocation?.lat,
+    driverLocation?.lng,
+  ]);
+
   return (
     <View className="flex-1">
       {region && (
@@ -118,12 +146,12 @@ export default function LiveTrackingMapScreen({
                 longitude: pickUp.coords.lng,
               }}
               title="Pick Up"
-              anchor={{x: 0.5, y: 0.5}}
-              tracksViewChanges={false}
+              anchor={{x: 0.5, y: 1}}
+              tracksViewChanges={tracksViewChanges}
               zIndex={1000}
             >
-              <View style={{opacity: 1}}>
-                <MapMarkerPin color="#0074FF" size={50} />
+              <View style={{width: MARKER_SIZE, height: MARKER_SIZE, opacity: 1}}>
+                <MapMarkerPin color="#0074FF" size={MARKER_SIZE} />
               </View>
             </Marker>
           )}
@@ -137,10 +165,10 @@ export default function LiveTrackingMapScreen({
               }}
               title={driver.name ? `Driver - ${driver.name}` : "Your Driver"}
               anchor={{x: 0.5, y: 0.5}}
-              tracksViewChanges={false}
+              tracksViewChanges={tracksViewChanges}
               zIndex={1000}
             >
-              <View style={{opacity: 1}}>
+              <View style={{width: 40, height: 40, opacity: 1}}>
                 <VehicleMarkerIcon gasCategory={gasCategory} size={40} />
               </View>
             </Marker>
@@ -154,12 +182,12 @@ export default function LiveTrackingMapScreen({
                 longitude: dropOff.coords.lng,
               }}
               title="Drop Off"
-              anchor={{x: 0.5, y: 0.5}}
-              tracksViewChanges={false}
+              anchor={{x: 0.5, y: 1}}
+              tracksViewChanges={tracksViewChanges}
               zIndex={1001} // ← Higher than pickup
             >
-              <View style={{opacity: 1}}>
-                <MapMarkerPin color="#ED1C24" size={50} />
+              <View style={{width: MARKER_SIZE, height: MARKER_SIZE, opacity: 1}}>
+                <MapMarkerPin color="#ED1C24" size={MARKER_SIZE} />
               </View>
             </Marker>
           )}
@@ -180,10 +208,8 @@ export default function LiveTrackingMapScreen({
                 strokeColor="#007AFF"
                 optimizeWaypoints
                 onReady={(result) => {
-                  mapRef.current?.fitToCoordinates(result.coordinates, {
-                    edgePadding: {top: 80, right: 80, bottom: 80, left: 80},
-                    animated: true,
-                  });
+                  routeCoordinatesRef.current = result.coordinates;
+                  fitToRoute(result.coordinates);
                 }}
               />
             </>

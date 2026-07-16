@@ -123,6 +123,46 @@ export default function RequestRoute() {
     });
   }, [selectedDriver?.bookingId, selectedDriver?.id, setLoading, socket]);
 
+  const rejectDriver = useCallback(() => {
+    if (!selectedDriver?.id || !selectedDriver?.bookingId) return;
+
+    const driverId = selectedDriver.id;
+    const bookingId = selectedDriver.bookingId;
+
+    socket.emit("rejectOffer", {
+      driverId,
+      bookingId,
+    });
+
+    // Optimistically remove declined driver from pending booking card
+    queryClient.setQueriesData(
+      { queryKey: ["userBookings", "pending"] },
+      (oldData: any) => {
+        if (!oldData?.pages) return oldData;
+
+        return {
+          ...oldData,
+          pages: oldData.pages.map((page: any) => ({
+            ...page,
+            bookings: page.bookings.map((booking: Booking) => {
+              if (booking._id === bookingId) {
+                return {
+                  ...booking,
+                  requestedDrivers: (booking.requestedDrivers || []).filter(
+                    (driver) => driver.id !== driverId,
+                  ),
+                };
+              }
+              return booking;
+            }),
+          })),
+        };
+      },
+    );
+
+    setSelectedDriver(null);
+  }, [selectedDriver?.bookingId, selectedDriver?.id, socket]);
+
   const closeDriversModal = useCallback(() => {
     setDriversModalBookingId(null);
     setSelectedDriver(null);
@@ -383,6 +423,7 @@ export default function RequestRoute() {
           driver={selectedDriver}
           handleCloseModal={() => setSelectedDriver(null)}
           acceptDriver={acceptDriver}
+          rejectDriver={rejectDriver}
         />
       )}
     </>

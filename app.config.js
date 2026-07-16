@@ -67,7 +67,6 @@ export default {
           image: "./assets/fastmet/splash.png",
           resizeMode: "contain",
           backgroundColor: "#ffffff",
-          imageWidth: 350,
         },
       ],
       "expo-font",
@@ -80,18 +79,24 @@ export default {
           color: "#fff",
         },
       ],
-      [
-        "@sentry/react-native/expo",
-        {
-          url: "https://sentry.io/",
-          project: "fastmet-client",
-          organization: "guildsman-technology",
-        },
-      ],
+      // [
+      //   "@sentry/react-native/expo",
+      //   {
+      //     url: "https://sentry.io/",
+      //     project: "fastmet-client",
+      //     organization: "guildsman-technology",
+      //   },
+      // ],
     ],
     experiments: {
       typedRoutes: true,
       reactCompiler: true,
+    },
+    updates: {
+      url: "https://u.expo.dev/177af201-fa0a-44b7-a20b-c22a01e455a7",
+    },
+    runtimeVersion: {
+      policy: "appVersion",
     },
     extra: {
       router: {},
