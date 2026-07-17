@@ -2,6 +2,7 @@ import {
   ACCOUNT_DEACTIVATED_ROUTE,
   DEVICE_BANNED_ROUTE,
 } from "@/constants/routes";
+import {clearPushRegistrationCache} from "@/hooks/pushToken";
 import {getSocket} from "@/sockets/socket";
 import {useAppStore} from "@/store/useAppStore";
 import axios, {InternalAxiosRequestConfig} from "axios";
@@ -64,6 +65,7 @@ export const performLogout = async () => {
   const socket = getSocket("");
   if (socket?.connected) socket.disconnect();
 
+  await clearPushRegistrationCache();
   store.logout();
   router.replace("/(auth)/auth");
 };

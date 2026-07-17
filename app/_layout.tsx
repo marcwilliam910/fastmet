@@ -56,6 +56,12 @@ export default Sentry.wrap(function RootLayout() {
     return null;
   }
 
+  if (!splashAnimationFinished) {
+    return (
+      <AnimatedSplash onFinish={() => setSplashAnimationFinished(true)} />
+    );
+  }
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
@@ -83,9 +89,6 @@ export default Sentry.wrap(function RootLayout() {
 
         {/* </FontWrapper> */}
         <StatusBar backgroundColor="#0F2535" barStyle="light-content" />
-        {!splashAnimationFinished && (
-          <AnimatedSplash onFinish={() => setSplashAnimationFinished(true)} />
-        )}
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

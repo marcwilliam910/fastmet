@@ -1,4 +1,5 @@
 import LogoutModal from "@/components/modals/logoutModal";
+import {getExpoPushToken, savePushTokenToBackend} from "@/hooks/pushToken";
 import NotLoggedIn from "@/components/notLoggedIn";
 import {useAuth} from "@/hooks/useAuth";
 import {useDrawerFallbackBack} from "@/hooks/useDrawerFallbackBack";
@@ -6,7 +7,8 @@ import api from "@/lib/axios";
 import {pushOnce} from "@/utils/helpers/navigation";
 import {Ionicons} from "@expo/vector-icons";
 import * as Notifications from "expo-notifications";
-import React, {useEffect, useMemo, useState} from "react";
+import {useFocusEffect} from "expo-router";
+import React, {useCallback, useEffect, useMemo, useState} from "react";
 import {Alert, Linking, Pressable, Switch, Text, View} from "react-native";
 import {SafeAreaView} from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
@@ -40,14 +42,31 @@ const Settings = () => {
       const response = await api.get("/notifications/settings");
       if (response.data.success) {
         const backendEnabled = response.data.data.enabled;
-        // Only enabled if both OS and backend allow
-        setNotificationsEnabled(backendEnabled && status === "granted");
+        const hasToken = response.data.data.hasToken;
+        // Only enabled if OS allows, backend allows, and a token is registered
+        setNotificationsEnabled(
+          backendEnabled && hasToken && status === "granted",
+        );
       }
     } catch (error) {
       console.error("Error fetching notification settings:", error);
     } finally {
       setIsLoadingNotifications(false);
     }
+  };
+
+  const enableNotificationsWithToken = async () => {
+    const token = await getExpoPushToken();
+    if (!token) {
+      throw new Error("Failed to get push token");
+    }
+
+    const saved = await savePushTokenToBackend(token);
+    if (!saved) {
+      throw new Error("Failed to save push token");
+    }
+
+    return api.post("/notifications/enable");
   };
 
   const handleNotificationToggle = async (value: boolean) => {
@@ -69,6 +88,7 @@ const Settings = () => {
               },
             ],
           );
+          setNotificationsEnabled(false);
           return;
         }
 
@@ -89,29 +109,31 @@ const Settings = () => {
                     await Notifications.requestPermissionsAsync();
 
                   if (newStatus === "granted") {
-                    // Get push token and save
-                    const token = (
-                      await Notifications.getExpoPushTokenAsync({
-                        projectId: process.env.EXPO_PUBLIC_EAS_PROJECT_ID, // Add your project ID
-                      })
-                    ).data;
+                    try {
+                      setIsLoadingNotifications(true);
+                      await enableNotificationsWithToken();
 
-                    // Save token to backend
-                    await api.post("/notifications/token", {
-                      expoPushToken: token,
-                    });
+                      setOsPermissionStatus("granted");
+                      setNotificationsEnabled(true);
 
-                    // Enable on backend
-                    await api.post("/notifications/enable");
-
-                    setOsPermissionStatus("granted");
-                    setNotificationsEnabled(true);
-
-                    Toast.show({
-                      type: "success",
-                      text1: "✅ Notifications Enabled",
-                      text2: "You will receive alerts for scheduled trips",
-                    });
+                      Toast.show({
+                        type: "success",
+                        text1: "✅ Notifications Enabled",
+                        text2: "You will receive alerts for scheduled trips",
+                      });
+                    } catch (error: any) {
+                      console.error("Error toggling notifications:", error);
+                      Toast.show({
+                        type: "error",
+                        text1: "Error",
+                        text2:
+                          error.response?.data?.error ||
+                          error.message ||
+                          "Failed to update settings",
+                      });
+                    } finally {
+                      setIsLoadingNotifications(false);
+                    }
                   } else {
                     // User denied permission
                     setOsPermissionStatus("denied");
@@ -128,9 +150,9 @@ const Settings = () => {
           return;
         }
 
-        // Permission already granted - just enable on backend
+        // Permission already granted - save token, then enable on backend
         setIsLoadingNotifications(true);
-        const response = await api.post("/notifications/enable");
+        const response = await enableNotificationsWithToken();
 
         if (response.data.success) {
           setNotificationsEnabled(true);
@@ -159,7 +181,10 @@ const Settings = () => {
       Toast.show({
         type: "error",
         text1: "Error",
-        text2: error.response?.data?.error || "Failed to update settings",
+        text2:
+          error.response?.data?.error ||
+          error.message ||
+          "Failed to update settings",
       });
     } finally {
       setIsLoadingNotifications(false);
@@ -188,6 +213,14 @@ const Settings = () => {
       },
     ],
     [isLoggedIn],
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      if (isLoggedIn) {
+        fetchNotificationSettings();
+      }
+    }, [isLoggedIn]),
   );
 
   if (!isLoggedIn) {

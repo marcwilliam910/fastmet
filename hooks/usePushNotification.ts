@@ -1,13 +1,10 @@
-import api from "@/lib/axios";
-import Constants from "expo-constants";
-import * as Device from "expo-device";
+import {
+  registerForPushNotificationsAsync,
+  savePushTokenToBackend,
+} from "@/hooks/pushToken";
 import * as Notifications from "expo-notifications";
-import { getItemAsync, setItemAsync } from "expo-secure-store";
 import { useEffect, useRef, useState } from "react";
-import { Alert, Platform } from "react-native";
 import { useAuth } from "./useAuth";
-
-const NOTIFICATION_PERMISSION_KEY = "notification_permission_asked";
 
 // Configure notification handler
 Notifications.setNotificationHandler({
@@ -33,7 +30,6 @@ export function usePushNotifications() {
   useEffect(() => {
     if (!isLoggedIn) return;
 
-    // Register for push notifications
     registerForPushNotificationsAsync().then((token) => {
       setExpoPushToken(token);
       if (token) {
@@ -72,130 +68,4 @@ export function usePushNotifications() {
     expoPushToken,
     notification,
   };
-}
-
-async function registerForPushNotificationsAsync() {
-  try {
-    let token: string | undefined;
-
-    const hasAsked = await getItemAsync(NOTIFICATION_PERMISSION_KEY);
-
-    if (Platform.OS === "android") {
-      await Notifications.setNotificationChannelAsync("default", {
-        name: "default",
-        importance: Notifications.AndroidImportance.MAX,
-        vibrationPattern: [0, 250, 250, 250],
-        lightColor: "#FFA840",
-      });
-    }
-
-    if (!Device.isDevice) {
-      console.log("⚠️ Must use physical device for Push Notifications");
-      return undefined;
-    }
-
-    const projectId =
-      Constants.expoConfig?.extra?.eas?.projectId ??
-      Constants.easConfig?.projectId;
-
-    if (!projectId) {
-      console.error("❌ EAS projectId missing");
-      return undefined;
-    }
-
-    const { status: existingStatus } =
-      await Notifications.getPermissionsAsync();
-
-    let finalStatus = existingStatus;
-
-    if (existingStatus !== "granted") {
-      if (!hasAsked) {
-        return await new Promise<string | undefined>((resolve) => {
-          Alert.alert(
-            "🔔 Stay Updated",
-            "Enable notifications to receive alerts about scheduled trips and booking updates.",
-            [
-              {
-                text: "Not Now",
-                style: "cancel",
-                onPress: async () => {
-                  await setItemAsync(NOTIFICATION_PERMISSION_KEY, "declined");
-                  resolve(undefined);
-                },
-              },
-              {
-                text: "Enable",
-                onPress: async () => {
-                  const { status } =
-                    await Notifications.requestPermissionsAsync();
-
-                  finalStatus = status;
-                  await setItemAsync(NOTIFICATION_PERMISSION_KEY, "asked");
-
-                  if (finalStatus !== "granted") {
-                    resolve(undefined);
-                    return;
-                  }
-
-                  try {
-                    const token = (
-                      await Notifications.getExpoPushTokenAsync({ projectId })
-                    ).data;
-                    console.log("📱 Push token obtained:", token);
-                    resolve(token);
-                  } catch (error) {
-                    console.error("❌ Token fetch failed:", error);
-                    resolve(undefined);
-                  }
-                },
-              },
-            ]
-          );
-        });
-      }
-
-      console.log("⚠️ Permission previously declined");
-      return undefined;
-    }
-
-    if (finalStatus !== "granted") {
-      console.log("⚠️ Permission not granted for push notifications");
-      return undefined;
-    }
-
-    token = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
-
-    console.log("📱 Push token obtained:", token);
-    return token;
-  } catch (error) {
-    console.error("❌ registerForPushNotificationsAsync failed:", error);
-    return undefined;
-  }
-}
-
-async function savePushTokenToBackend(token: string) {
-  try {
-    // Check if we've already saved this token
-    const savedToken = await getItemAsync("expo_push_token");
-
-    if (savedToken === token) {
-      console.log("✅ Push token already saved (no update needed)");
-      return;
-    }
-
-    const response = await api.post("/notifications/token", {
-      expoPushToken: token,
-    });
-
-    if (response.data.success) {
-      console.log("✅ Push token saved to backend");
-      // Store token locally to prevent duplicate saves
-      await setItemAsync("expo_push_token", token);
-    }
-  } catch (error: any) {
-    console.error(
-      "❌ Error saving push token:",
-      error.response?.data || error.message
-    );
-  }
 }
