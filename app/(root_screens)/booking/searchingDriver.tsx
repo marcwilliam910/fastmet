@@ -158,7 +158,7 @@ export default function SearchingDriver() {
       });
     };
 
-    // Pooling only — driver started the trip (driver confirms)
+    // Pooling only — driver started the trip (pre-trip) or mid-trip join
     const handlePoolingTripStarted = ({
       tripId,
       bookingCount,
@@ -202,6 +202,20 @@ export default function SearchingDriver() {
         pathname: "/(root_screens)/booking/viewOnMap",
         params: {bookingId},
       });
+    };
+
+    const handlePoolingOfferResult = ({
+      bookingId: resultBookingId,
+      joinedActiveTrip,
+    }: {
+      bookingId: string;
+      joinedActiveTrip: boolean;
+    }) => {
+      if (!isPooling || resultBookingId !== bookingId) return;
+      // Pre-trip: show wait banner. Mid-trip: poolingTripStarted navigates.
+      if (!joinedActiveTrip) {
+        setWaitingForTripStart(true);
+      }
     };
 
     const handleQueuedDriverAccepted = () => {
@@ -317,6 +331,7 @@ export default function SearchingDriver() {
     socket.on("bookingCancelled", handleBookingCancelled);
     socket.on("driverAccepted", handleDriverAccepted);
     socket.on("poolingTripStarted", handlePoolingTripStarted);
+    socket.on("poolingOfferResult", handlePoolingOfferResult);
     socket.on("error", errorHandler);
     socket.on("bookingExpired", handleBookingExpired);
     socket.on("queuedDriverAccepted", handleQueuedDriverAccepted);
@@ -325,6 +340,7 @@ export default function SearchingDriver() {
       socket.off("bookingCancelled", handleBookingCancelled);
       socket.off("driverAccepted", handleDriverAccepted);
       socket.off("poolingTripStarted", handlePoolingTripStarted);
+      socket.off("poolingOfferResult", handlePoolingOfferResult);
       socket.off("error", errorHandler);
       socket.off("bookingExpired", handleBookingExpired);
       socket.off("queuedDriverAccepted", handleQueuedDriverAccepted);
@@ -480,8 +496,7 @@ export default function SearchingDriver() {
               setSelectedDriver={setSelectedDriver}
               isPooling={isPooling}
               onPoolingAccepted={() => {
-                // setDrivers([]);
-                setWaitingForTripStart(true);
+                // Wait banner is set by poolingOfferResult (pre-trip only)
               }}
             />
           )}
@@ -557,7 +572,7 @@ const DriverListCard = ({
       });
       setSelectedDriver(null);
       setAreAllPaused(false);
-      onPoolingAccepted();
+      // Wait UI / navigation come from poolingOfferResult + poolingTripStarted
     } else {
       socket.emit("acceptDriver", {
         driverId: selectedDriver.id,
@@ -570,7 +585,6 @@ const DriverListCard = ({
     selectedDriver,
     socket,
     isPooling,
-    onPoolingAccepted,
     setSelectedDriver,
   ]);
 

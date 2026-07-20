@@ -1,22 +1,24 @@
 import LogoutModal from "@/components/modals/logoutModal";
-import {getExpoPushToken, savePushTokenToBackend} from "@/hooks/pushToken";
 import NotLoggedIn from "@/components/notLoggedIn";
-import {useAuth} from "@/hooks/useAuth";
-import {useDrawerFallbackBack} from "@/hooks/useDrawerFallbackBack";
+import { getExpoPushToken, savePushTokenToBackend } from "@/hooks/pushToken";
+import { useAuth } from "@/hooks/useAuth";
+import { useDrawerFallbackBack } from "@/hooks/useDrawerFallbackBack";
 import api from "@/lib/axios";
-import {pushOnce} from "@/utils/helpers/navigation";
-import {Ionicons} from "@expo/vector-icons";
+import { useAppStore } from "@/store/useAppStore";
+import { pushOnce } from "@/utils/helpers/navigation";
+import { Ionicons } from "@expo/vector-icons";
 import * as Notifications from "expo-notifications";
-import {useFocusEffect} from "expo-router";
-import React, {useCallback, useEffect, useMemo, useState} from "react";
-import {Alert, Linking, Pressable, Switch, Text, View} from "react-native";
-import {SafeAreaView} from "react-native-safe-area-context";
+import { useFocusEffect } from "expo-router";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { ActivityIndicator, Alert, Linking, Pressable, Switch, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 
 const Settings = () => {
   useDrawerFallbackBack();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const {isLoggedIn} = useAuth();
+  const { isLoggedIn } = useAuth();
+  const setIsLoading = useAppStore
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [isLoadingNotifications, setIsLoadingNotifications] = useState(true);
   const [osPermissionStatus, setOsPermissionStatus] = useState<
@@ -35,7 +37,7 @@ const Settings = () => {
   const fetchNotificationSettings = async () => {
     try {
       // Check OS permission
-      const {status} = await Notifications.getPermissionsAsync();
+      const { status } = await Notifications.getPermissionsAsync();
       setOsPermissionStatus(status);
 
       // Check backend setting
@@ -73,7 +75,7 @@ const Settings = () => {
     try {
       if (value) {
         // User wants to ENABLE notifications
-        const {status} = await Notifications.getPermissionsAsync();
+        const { status } = await Notifications.getPermissionsAsync();
 
         if (status === "denied") {
           // OS permission was denied - send to device settings
@@ -81,7 +83,7 @@ const Settings = () => {
             "Notifications Blocked",
             "To receive trip alerts, please enable notifications in your device settings.",
             [
-              {text: "Cancel", style: "cancel"},
+              { text: "Cancel", style: "cancel" },
               {
                 text: "Open Settings",
                 onPress: () => Linking.openSettings(),
@@ -105,7 +107,7 @@ const Settings = () => {
               {
                 text: "Allow",
                 onPress: async () => {
-                  const {status: newStatus} =
+                  const { status: newStatus } =
                     await Notifications.requestPermissionsAsync();
 
                   if (newStatus === "granted") {
@@ -157,9 +159,10 @@ const Settings = () => {
         if (response.data.success) {
           setNotificationsEnabled(true);
           Toast.show({
-            type: "success",
+            type: "info",
             text1: "✅ Notifications Enabled",
-            text2: "You will receive alerts for scheduled trips",
+            text2: "You will receive alerts for booking updates",
+            visibilityTime: 4000,
           });
         }
       } else {
@@ -170,9 +173,10 @@ const Settings = () => {
         if (response.data.success) {
           setNotificationsEnabled(false);
           Toast.show({
-            type: "success",
+            type: "info",
             text1: "🔕 Notifications Disabled",
-            text2: "You won't receive push notifications",
+            text2: "You won't receive booking update notifications",
+            visibilityTime: 4000,
           });
         }
       }
@@ -253,15 +257,18 @@ const Settings = () => {
               </Text>
             )}
           </View>
+          {
+            isLoadingNotifications ? <ActivityIndicator size="small" color="#FFA840" /> :
 
-          <Switch
-            value={notificationsEnabled}
-            onValueChange={handleNotificationToggle}
-            disabled={isLoadingNotifications}
-            trackColor={{false: "#D1D5DB", true: "#FFA840"}}
-            thumbColor={notificationsEnabled ? "#fff" : "#f4f3f4"}
-            ios_backgroundColor="#D1D5DB"
-          />
+              <Switch
+                value={notificationsEnabled}
+                onValueChange={handleNotificationToggle}
+                disabled={isLoadingNotifications}
+                trackColor={{ false: "#D1D5DB", true: "#FFA840" }}
+                thumbColor={notificationsEnabled ? "#fff" : "#f4f3f4"}
+                ios_backgroundColor="#D1D5DB"
+              />
+          }
         </Pressable>
         {menuItems.map((item, index) => (
           <Pressable
