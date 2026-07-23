@@ -1,20 +1,28 @@
 import CustomKeyAvoidingView from "@/components/CustomKeyAvoid";
-import { Countdown } from "@/components/Timers";
-import { useAppStore } from "@/store/useAppStore";
-import { UserAddress } from "@/types/user";
+import {Countdown} from "@/components/Timers";
+import {ApprovalStatus} from "@/store/slices/authSlice";
+import {useAppStore} from "@/store/useAppStore";
+import {UserAddress} from "@/types/user";
 import {
   handleSendOtpError,
   routeAuthGuardError,
 } from "@/utils/helpers/authGuardErrors";
-import { getDeviceId } from "@/utils/helpers/deviceId";
-import { formatPHNumber } from "@/utils/helpers/format";
-import { Ionicons } from "@expo/vector-icons";
+import {getDeviceId} from "@/utils/helpers/deviceId";
+import {formatPHNumber} from "@/utils/helpers/format";
+import {Ionicons} from "@expo/vector-icons";
 import axios from "axios";
-import { router } from "expo-router";
+import {router} from "expo-router";
 import * as SecureStore from "expo-secure-store";
-import React, { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, Alert, Pressable, Text, TextInput, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import React, {useEffect, useRef, useState} from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  Pressable,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
+import {SafeAreaView} from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 
 export const RESEND_TIMEOUT_SECONDS = 60;
@@ -28,7 +36,8 @@ type LoginResponse = {
   client: {
     id: string;
     phoneNumber: string;
-    isProfileComplete: boolean;
+    registrationStep: number;
+    approvalStatus: ApprovalStatus;
     fullName: string;
     profilePictureUrl: string;
     address: UserAddress | null;
@@ -129,7 +138,7 @@ export default function PhoneOTPScreen() {
         topOffset: 50,
       });
     } catch (error: any) {
-      if (handleSendOtpError(error, { onRetry: handleResendOtp })) return;
+      if (handleSendOtpError(error, {onRetry: handleResendOtp})) return;
     } finally {
       setIsResending(false);
       setLoading(false);
@@ -186,10 +195,10 @@ export default function PhoneOTPScreen() {
     try {
       const deviceId = await getDeviceId();
 
-      const { data } = await axios.post<LoginResponse>(
+      const {data} = await axios.post<LoginResponse>(
         `${process.env.EXPO_PUBLIC_BASE_URL}/api/client/auth/login`,
-        { deviceId },
-        { headers: { Authorization: `Bearer ${verifyToken}` } },
+        {deviceId},
+        {headers: {Authorization: `Bearer ${verifyToken}`}},
       );
 
       if (data.success) {
@@ -201,7 +210,8 @@ export default function PhoneOTPScreen() {
           refreshToken: data.refreshToken,
           id: data.client.id,
           phoneNumber: data.client.phoneNumber,
-          isProfileComplete: data.client.isProfileComplete,
+          registrationStep: data.client.registrationStep ?? 1,
+          approvalStatus: data.client.approvalStatus ?? "pending",
           name: data.client.fullName,
           profilePictureUrl: data.client.profilePictureUrl,
           address: data.client.address,
@@ -214,7 +224,10 @@ export default function PhoneOTPScreen() {
             ? "Welcome to FastMet"
             : "Thank you for pre-registering with Fastmet";
 
-        if (data.client.isProfileComplete) {
+        const step = data.client.registrationStep ?? 1;
+        const status = data.client.approvalStatus ?? "pending";
+
+        if (status === "approved") {
           Toast.show({
             type: "success",
             text1: "Verified!",
@@ -224,11 +237,10 @@ export default function PhoneOTPScreen() {
             swipeable: true,
             topOffset: 50,
           });
-          router.replace("/(drawer)/book");
-        } else {
+        } else if (step < 2) {
           Toast.show({
             type: "info",
-            text1: "Please Complete Your Profile",
+            text1: "Complete your profile to book",
             text2: "You can skip this step for now.",
             position: "top",
             visibilityTime: 5_000,
@@ -236,7 +248,41 @@ export default function PhoneOTPScreen() {
             topOffset: 50,
           });
           router.replace("/(auth)/profile-register");
+        } else if (step < 3) {
+          Toast.show({
+            type: "info",
+            text1: "ID verification required to book",
+            text2: "Submit your ID when you are ready.",
+            position: "top",
+            visibilityTime: 5_000,
+            swipeable: true,
+            topOffset: 50,
+          });
+          router.replace("/(auth)/id-verification");
+        } else if (status === "rejected") {
+          Toast.show({
+            type: "error",
+            text1: "Verification rejected",
+            text2: "Please resubmit your documents to book.",
+            position: "top",
+            visibilityTime: 5_000,
+            swipeable: true,
+            topOffset: 50,
+          });
+          router.replace("/(auth)/verification-resubmit");
+        } else {
+          Toast.show({
+            type: "info",
+            text1: "Verification in progress",
+            text2: "You can browse while we review your account.",
+            position: "top",
+            visibilityTime: 5_000,
+            swipeable: true,
+            topOffset: 50,
+          });
         }
+
+        router.replace("/(drawer)/book");
       }
     } catch (error: any) {
       const statusCode: number | undefined = error.response?.status;
@@ -249,10 +295,7 @@ export default function PhoneOTPScreen() {
       if (statusCode === 401) {
         // verifyToken JWT expired between verify and login steps
         pendingVerifyToken.current = null;
-        Alert.alert(
-          "Session Expired",
-          "Please verify your number again.",
-        );
+        Alert.alert("Session Expired", "Please verify your number again.");
       } else {
         // Transient failure (500, network) — allow retry with cached verifyToken
         Alert.alert(
@@ -267,7 +310,7 @@ export default function PhoneOTPScreen() {
                 }
               },
             },
-            { text: "Cancel" },
+            {text: "Cancel"},
           ],
         );
       }
@@ -293,7 +336,7 @@ export default function PhoneOTPScreen() {
 
     let verifyToken: string;
     try {
-      const { data: otpData } = await axios.post<{
+      const {data: otpData} = await axios.post<{
         success: boolean;
         verifyToken: string;
       }>(`${process.env.EXPO_PUBLIC_BASE_URL}/api/auth/verify-otp`, {
@@ -322,7 +365,7 @@ export default function PhoneOTPScreen() {
             "Too Many Failed Attempts",
             "This code has been invalidated. Please request a new one.",
             [
-              { text: "Cancel", style: "cancel" },
+              {text: "Cancel", style: "cancel"},
               {
                 text: "Request New Code",
                 onPress: () => setIsLocked(false),
@@ -330,7 +373,9 @@ export default function PhoneOTPScreen() {
             ],
           );
         } else {
-          setError(errorMessage ?? "Invalid verification code. Please try again.");
+          setError(
+            errorMessage ?? "Invalid verification code. Please try again.",
+          );
           clearOTPInputs();
         }
       } else if (statusCode === 429) {
@@ -338,9 +383,9 @@ export default function PhoneOTPScreen() {
         const minutes = retryAfter ? Math.ceil(retryAfter / 60) : null;
         setError(
           errorMessage ??
-          (minutes
-            ? `Too many failed attempts. Try again in ${minutes} minute${minutes > 1 ? "s" : ""}.`
-            : "Too many attempts. Please try again later."),
+            (minutes
+              ? `Too many failed attempts. Try again in ${minutes} minute${minutes > 1 ? "s" : ""}.`
+              : "Too many attempts. Please try again later."),
         );
       } else {
         setError("Verification failed. Please try again.");
@@ -438,12 +483,14 @@ export default function PhoneOTPScreen() {
                 shadowColor: "#000",
                 shadowOpacity: 0.05,
                 shadowRadius: 4,
-                shadowOffset: { width: 0, height: 2 },
+                shadowOffset: {width: 0, height: 2},
                 elevation: 2,
               }}
             >
               <Ionicons name="alert-circle" size={20} color="#DC2626" />
-              <Text className="flex-1 text-sm leading-5 text-red-700">{error}</Text>
+              <Text className="flex-1 text-sm leading-5 text-red-700">
+                {error}
+              </Text>
             </View>
           ) : null}
 
@@ -464,7 +511,11 @@ export default function PhoneOTPScreen() {
             </Text>
 
             {canResend ? (
-              <Pressable disabled={isResending} onPress={handleResendOtp} className="active:opacity-70">
+              <Pressable
+                disabled={isResending}
+                onPress={handleResendOtp}
+                className="active:opacity-70"
+              >
                 {isResending ? (
                   <ActivityIndicator color="#FF8A00" size="small" />
                 ) : (

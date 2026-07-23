@@ -61,7 +61,7 @@ export default function ViewOnMap() {
           pickUp={booking.pickUp}
           dropOff={booking.dropOff}
           routeData={booking.routeData}
-          gasCategory={booking.selectedVehicle.gasCategory}
+          gasCategory={booking.selectedVehicle.gasCategory ?? "light"}
           region={region}
           setRegion={setRegion}
           bookingId={bookingId}

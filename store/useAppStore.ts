@@ -1,20 +1,38 @@
-import { UserAddress } from "@/types/user";
-import { create } from "zustand";
-import { persist } from "zustand/middleware";
-import { createSecureStorage } from "./secureStorage";
-import { AuthSlice, createAuthSlice } from "./slices/authSlice";
+import {UserAddress} from "@/types/user";
+import {create} from "zustand";
+import {persist} from "zustand/middleware";
+import {createSecureStorage} from "./secureStorage";
+import {ApprovalStatus, AuthSlice, createAuthSlice} from "./slices/authSlice";
 import {
   BookingTypeSlice,
   createBookingTypeSlice,
 } from "./slices/bookingTypeSlice";
-import { BookSlice, createBookSlice } from "./slices/bookSlice";
-import { ChatSlice, createChatSlice } from "./slices/chatSlice";
-import { createLoadingSlice, LoadingSlice } from "./slices/loadingStore";
+import {BookSlice, createBookSlice} from "./slices/bookSlice";
+import {ChatSlice, createChatSlice} from "./slices/chatSlice";
+import {createLoadingSlice, LoadingSlice} from "./slices/loadingStore";
 import {
   createNotificationSlice,
   NotificationSlice,
 } from "./slices/notificationSlice";
-import { createVehicleSlice, VehicleSlice } from "./slices/vehicleSlice";
+import {createVehicleSlice, VehicleSlice} from "./slices/vehicleSlice";
+
+type PersistedAuth = {
+  phoneNumber: string;
+  token: string | null;
+  refreshToken: string | null;
+  id: string | null;
+  registrationStep: number;
+  approvalStatus: ApprovalStatus;
+  name: string;
+  profilePictureUrl: string;
+  gender: "male" | "female" | "prefer_not" | null;
+  address: UserAddress;
+  preRegistered: boolean;
+};
+
+type LegacyPersistedAuth = PersistedAuth & {
+  isProfileComplete?: boolean;
+};
 
 export type AppStore = BookSlice &
   LoadingSlice &
@@ -23,6 +41,8 @@ export type AppStore = BookSlice &
   VehicleSlice &
   NotificationSlice &
   BookingTypeSlice;
+
+const secureStorage = createSecureStorage<PersistedAuth>();
 
 export const useAppStore = create<AppStore>()(
   persist(
@@ -37,31 +57,42 @@ export const useAppStore = create<AppStore>()(
     }),
     {
       name: "fastmet-client-storage",
-      storage: createSecureStorage<{
-        phoneNumber: string;
-        token: string | null;
-        refreshToken: string | null;
-        id: string | null;
-        isProfileComplete: boolean;
-        name: string;
-        profilePictureUrl: string;
-        gender: "male" | "female" | "prefer_not" | null;
-        address: UserAddress;
-        preRegistered: boolean;
-      }>(),
-      // Only persist auth data (prevents persisting temporary data)
+      storage: secureStorage,
       partialize: (state) => ({
         phoneNumber: state.phoneNumber,
         token: state.token,
         refreshToken: state.refreshToken,
         id: state.id,
-        isProfileComplete: state.isProfileComplete,
+        registrationStep: state.registrationStep,
+        approvalStatus: state.approvalStatus,
         name: state.name,
         profilePictureUrl: state.profilePictureUrl,
         gender: state.gender,
         address: state.address,
         preRegistered: state.preRegistered,
       }),
+      migrate: (persisted) => {
+        const state = persisted as LegacyPersistedAuth;
+        if (!state || typeof state !== "object") return state as PersistedAuth;
+
+        if (
+          state.registrationStep === undefined &&
+          "isProfileComplete" in state
+        ) {
+          return {
+            ...state,
+            registrationStep: state.isProfileComplete ? 2 : 1,
+            approvalStatus: state.approvalStatus ?? "pending",
+          };
+        }
+
+        return {
+          ...state,
+          registrationStep: state.registrationStep ?? 1,
+          approvalStatus: state.approvalStatus ?? "pending",
+        };
+      },
+      version: 1,
     },
   ),
 );

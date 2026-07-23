@@ -6,6 +6,7 @@ import {usePushNotifications} from "@/hooks/usePushNotification";
 import {useUnreadChatCount} from "@/queries/conversation";
 import {useUnreadNotificationCount} from "@/queries/notification";
 import {useAppStore} from "@/store/useAppStore";
+import {hasProfile} from "@/utils/helpers/onboarding";
 import {Ionicons} from "@expo/vector-icons";
 import {DrawerContentScrollView, DrawerItem} from "@react-navigation/drawer";
 import {router} from "expo-router";
@@ -22,16 +23,16 @@ export const unstable_settings = {
 const CustomDrawerContent = (props: any) => {
   const inset = useSafeAreaInsets();
   const {isLoggedIn} = useAuth();
-  const isProfileComplete = useAppStore((state) => state.isProfileComplete);
+  const registrationStep = useAppStore((state) => state.registrationStep);
 
   const {state, descriptors, navigation} = props;
 
   const handlePress = (routeName: string) => {
     if (!isLoggedIn && routeName !== "book") {
-      props.setShowNotLoggedInModal(true); // open login modal
+      props.setShowNotLoggedInModal(true);
       return;
     }
-    if (!isProfileComplete && routeName === "profile") {
+    if (!hasProfile(registrationStep) && routeName === "profile") {
       router.replace("/(auth)/profile-register");
       return;
     }

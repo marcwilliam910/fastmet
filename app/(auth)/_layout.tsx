@@ -6,6 +6,8 @@ export default function AuthLayout() {
       <Stack.Screen name="auth" />
       <Stack.Screen name="otp" />
       <Stack.Screen name="profile-register" />
+      <Stack.Screen name="id-verification" />
+      <Stack.Screen name="verification-resubmit" />
     </Stack>
   );
 }

@@ -1,10 +1,13 @@
 import {UserAddress} from "@/types/user";
 import {StateCreator} from "zustand";
 
+export type ApprovalStatus = "pending" | "approved" | "rejected";
+
 export interface AuthSlice {
   phoneNumber: string;
   id: string | null;
-  isProfileComplete: boolean;
+  registrationStep: number;
+  approvalStatus: ApprovalStatus;
   name: string;
   token: string | null;
   refreshToken: string | null;
@@ -13,9 +16,8 @@ export interface AuthSlice {
   profilePictureUrl: string;
   preRegistered: boolean;
 
-  // Actions
   setAuthData: (
-    data: Partial<Omit<AuthSlice, "setAuthData" | "clearAuthData" | "logout">>,
+    data: Partial<Omit<AuthSlice, "setAuthData" | "logout">>,
   ) => void;
   logout: () => void;
 }
@@ -23,7 +25,8 @@ export interface AuthSlice {
 export const createAuthSlice: StateCreator<AuthSlice> = (set) => ({
   phoneNumber: "",
   id: null,
-  isProfileComplete: false,
+  registrationStep: 1,
+  approvalStatus: "pending",
   name: "",
   token: null,
   refreshToken: null,
@@ -47,7 +50,8 @@ export const createAuthSlice: StateCreator<AuthSlice> = (set) => ({
       refreshToken: null,
       address: null,
       gender: null,
-      isProfileComplete: false,
+      registrationStep: 1,
+      approvalStatus: "pending",
       profilePictureUrl: "",
       preRegistered: false,
     }),

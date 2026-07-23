@@ -15,10 +15,16 @@ import AnimatedSplash from "@/components/AnimatedSplash";
 import LoadingModal from "@/components/modals/loading";
 import { toastConfig } from "@/config/toastConfig";
 import { useAuth } from "@/hooks/useAuth";
+import { useSyncAuthMeta } from "@/hooks/useSyncAuthMeta";
 import SocketProvider from "@/sockets/context/SocketProvider";
 import Toast from "react-native-toast-message";
 import "../global.css";
 import * as Sentry from '@sentry/react-native';
+
+function AuthMetaSync() {
+  useSyncAuthMeta();
+  return null;
+}
 
 Sentry.init({
   dsn: 'https://aceadef3929e78209242fa356db6b552@o4510836378697728.ingest.us.sentry.io/4510836521435136',
@@ -68,6 +74,7 @@ export default Sentry.wrap(function RootLayout() {
         {/* <FontWrapper> */}
         <QueryClientProvider client={queryClient}>
           <SocketProvider>
+            <AuthMetaSync />
             <Stack screenOptions={{ headerShown: false }}>
               {/* <Stack.Protected guard={!user}>
           <Stack.Screen name="(auth)" />

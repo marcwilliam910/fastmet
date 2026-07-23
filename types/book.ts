@@ -33,7 +33,7 @@ export type Booking = {
   };
   selectedVehicle: {
     name: string;
-    gasCategory: GasCategory;
+    gasCategory?: GasCategory; // populated on read for active bookings (live tracking icon)
     freeServices: Service[];
   };
   routeData: RouteData;

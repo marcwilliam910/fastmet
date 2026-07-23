@@ -9,8 +9,8 @@ import { openGallery } from "@/utils/helpers/imagePicker";
 import { validateForm } from "@/utils/helpers/validateForm";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
-import { router } from "expo-router";
-import React, { useCallback, useEffect, useState } from "react";
+import { router, type Href } from "expo-router";
+import React, { useCallback, useState } from "react";
 import { Alert, Pressable, Text, TextInput, View } from "react-native";
 import { Dropdown } from "react-native-element-dropdown";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
@@ -41,10 +41,6 @@ export default function ProfileRegistration() {
     setForm({ ...form, [name]: value });
   };
 
-  useEffect(() => {
-    console.log(useAppStore.getState())
-  }, [])
-
   const onAddressChange = useCallback((address: UserAddress) => {
     setForm((prev) => ({ ...prev, address }));
   }, []);
@@ -67,12 +63,10 @@ export default function ProfileRegistration() {
     if (!isAuthenticated()) return;
 
     setLoading(true);
-    // Create FormData for file upload
     const formData = new FormData();
     formData.append("fullName", form.fullName.trim());
     formData.append("gender", form.gender || "");
 
-    // Send structured address data
     if (form.address) {
       formData.append("addressName", form.address.name);
       formData.append("addressFullAddress", form.address.fullAddress);
@@ -94,7 +88,7 @@ export default function ProfileRegistration() {
         name: selectedAsset.fileName || "profile.jpg",
       } as any);
     }
-    // Use regular API call since you're sending FormData
+
     try {
       const response = await api.post("/profile/register-profile", formData, {
         headers: {
@@ -104,17 +98,18 @@ export default function ProfileRegistration() {
       });
 
       if (response.data.success) {
-        console.log("Profile registered successfully");
+        const user = response.data.user;
 
         useAppStore.getState().setAuthData({
-          name: response.data.user.fullName,
-          isProfileComplete: true,
-          profilePictureUrl: response.data.user.profilePictureUrl,
-          address: response.data.user.address,
-          gender: response.data.user.gender,
+          name: user.fullName,
+          registrationStep: user.registrationStep ?? 2,
+          approvalStatus: user.approvalStatus ?? "pending",
+          profilePictureUrl: user.profilePictureUrl,
+          address: user.address,
+          gender: user.gender,
         });
 
-        router.replace("/(drawer)/book");
+        router.replace("/(auth)/id-verification" as Href);
       }
     } catch (error) {
       console.error("Error registering profile:", error);
@@ -128,7 +123,6 @@ export default function ProfileRegistration() {
     <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
       <CustomKeyAvoidingView>
         <View className="flex-1 p-6 pb-36 gap-6">
-          {/* Profile Picture */}
           <View className="items-center gap-3">
             <Pressable
               className="items-center justify-center border rounded-full size-40 border-lightPrimary active:border-2"
@@ -159,7 +153,6 @@ export default function ProfileRegistration() {
             <Text className="text-lg font-bold text-gray-700">Profile</Text>
           </View>
 
-          {/* Full Name */}
           <View className="gap-2">
             <Text className="text-sm font-medium text-gray-700">
               Full Name <Text className="text-red-500">*</Text>
@@ -169,8 +162,9 @@ export default function ProfileRegistration() {
               onChangeText={(text) => onFormChange("fullName", text)}
               placeholder="Enter Name"
               placeholderTextColor="#9CA3AF"
-              className={`p-4 text-base bg-gray-100 rounded-lg ${errors.fullName ? "border border-red-500" : ""
-                }`}
+              className={`p-4 text-base bg-gray-100 rounded-lg ${
+                errors.fullName ? "border border-red-500" : ""
+              }`}
             />
             {errors.fullName && (
               <Text className="text-xs ml-2 text-red-500">
@@ -179,7 +173,6 @@ export default function ProfileRegistration() {
             )}
           </View>
 
-          {/* Address */}
           <AddressInput
             value={form.address}
             onChange={onAddressChange}
@@ -190,7 +183,6 @@ export default function ProfileRegistration() {
             }
           />
 
-          {/* Gender Dropdown */}
           <View className="gap-2">
             <Text className="text-sm font-medium text-gray-700">Gender</Text>
 
@@ -218,7 +210,7 @@ export default function ProfileRegistration() {
           </View>
         </View>
       </CustomKeyAvoidingView>
-      {/* Buttons */}
+
       <View
         className="absolute bg-white left-0 right-0 mx-6"
         style={{ bottom: inset.bottom + 10 }}
@@ -232,7 +224,7 @@ export default function ProfileRegistration() {
         </Pressable>
 
         <Pressable
-          onPress={() => router.push("/(drawer)/book")}
+          onPress={() => router.replace("/(drawer)/book")}
           className="items-center py-4 my-2 border rounded-lg bg-white border-lightPrimary active:bg-gray-100"
         >
           <Text className="text-base font-bold text-lightPrimary">

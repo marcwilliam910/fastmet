@@ -1,21 +1,18 @@
-import { useAuth } from "@/hooks/useAuth";
-import { queryClient } from "@/lib/queryClient";
-import { useSocket } from "@/sockets/context/SocketProvider";
-import { useAppStore } from "@/store/useAppStore";
-import { Booking, RequestBooking } from "@/types/book";
-import { STATIC_IMAGES } from "@/utils/constants";
-import { generateBookingRef } from "@/utils/helpers/booking";
-import { uploadBookingImages } from "@/utils/helpers/imagePicker";
-import { Ionicons } from "@expo/vector-icons";
-import { InfiniteData } from "@tanstack/react-query";
-import { Image } from "expo-image";
-import { router } from "expo-router";
-import React, { useEffect, useRef, useState } from "react";
-import { Platform, Pressable, Text, View } from "react-native";
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from "react-native-safe-area-context";
+import {useAuth} from "@/hooks/useAuth";
+import {queryClient} from "@/lib/queryClient";
+import {useSocket} from "@/sockets/context/SocketProvider";
+import {useAppStore} from "@/store/useAppStore";
+import {Booking, RequestBooking} from "@/types/book";
+import {STATIC_IMAGES} from "@/utils/constants";
+import {generateBookingRef} from "@/utils/helpers/booking";
+import {uploadBookingImages} from "@/utils/helpers/imagePicker";
+import {Ionicons} from "@expo/vector-icons";
+import {InfiniteData} from "@tanstack/react-query";
+import {Image} from "expo-image";
+import {router} from "expo-router";
+import React, {useEffect, useRef, useState} from "react";
+import {Platform, Pressable, Text, View} from "react-native";
+import {SafeAreaView, useSafeAreaInsets} from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 
 export default function PaymentMethod() {
@@ -23,10 +20,10 @@ export default function PaymentMethod() {
   const paymentMethod = useAppStore((state) => state.paymentMethod);
   const isLoading = useAppStore((state) => state.isLoading);
 
-  const { bookingType, setPaymentMethod, routeData } = useAppStore.getState();
+  const {bookingType, setPaymentMethod, routeData} = useAppStore.getState();
   const [loading, setLoading] = useState(false);
 
-  const { id } = useAuth();
+  const {id} = useAuth();
   const socket = useSocket();
   const hasNavigatedRef = useRef(false);
   const isSubmittingRef = useRef(false);
@@ -212,15 +209,15 @@ export default function PaymentMethod() {
 
           // Prepend to pending cache so the Request tab shows it immediately
           queryClient.setQueriesData<
-            InfiniteData<{ bookings: Booking[]; nextPage: number | null }>
-          >({ queryKey: ["userBookings", "pending"] }, (oldData) => {
+            InfiniteData<{bookings: Booking[]; nextPage: number | null}>
+          >({queryKey: ["userBookings", "pending"]}, (oldData) => {
             if (!oldData) return oldData;
             const newPages = [...oldData.pages];
             newPages[0] = {
               ...newPages[0],
               bookings: [newBooking, ...newPages[0].bookings],
             };
-            return { ...oldData, pages: newPages };
+            return {...oldData, pages: newPages};
           });
         }
 
@@ -235,11 +232,20 @@ export default function PaymentMethod() {
   }, [id, setLoading, socket, bookingType.type]);
 
   useEffect(() => {
-    const handleBookingFailed = (data: { message: string }) => {
+    const handleBookingFailed = (data: {
+      message: string;
+      approvalStatus?: string;
+    }) => {
       setLoading(false);
       isSubmittingRef.current = false;
-      // Reset booking ref on failure so user can retry
       lastBookingRefRef.current = null;
+
+      if (data.approvalStatus) {
+        useAppStore.getState().setAuthData({
+          approvalStatus: data.approvalStatus as
+            "pending" | "approved" | "rejected",
+        });
+      }
 
       Toast.show({
         type: "error",
@@ -257,9 +263,9 @@ export default function PaymentMethod() {
   }, [socket, setLoading]);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
+    <SafeAreaView style={{flex: 1, backgroundColor: "white"}}>
       {/* header */}
-      <View className="relative flex-row items-center justify-center px-6 pt-2 pb-8">
+      <View className="relative flex-row justify-center items-center px-6 pt-2 pb-8">
         <Pressable
           className="absolute left-5 top-1.5"
           onPress={() => router.back()}
@@ -287,11 +293,11 @@ export default function PaymentMethod() {
               : "border-gray-300 bg-white"
           }`}
         >
-          <View className="flex-row items-center gap-3">
-            <View className="items-center justify-center w-10 h-10 rounded-full bg-blue-50">
+          <View className="flex-row gap-3 items-center">
+            <View className="justify-center items-center w-10 h-10 bg-blue-50 rounded-full">
               <Image
                 source={STATIC_IMAGES.cashPayment}
-                style={{ width: 24, height: 24 }}
+                style={{width: 24, height: 24}}
                 contentFit="contain"
               />
             </View>
@@ -318,11 +324,11 @@ export default function PaymentMethod() {
               : "border-gray-300 bg-white"
           }`}
         >
-          <View className="flex-row items-center gap-3">
-            <View className="items-center justify-center w-10 h-10 rounded-full bg-blue-50">
+          <View className="flex-row gap-3 items-center">
+            <View className="justify-center items-center w-10 h-10 bg-blue-50 rounded-full">
               <Image
                 source={STATIC_IMAGES.gcash}
-                style={{ width: 24, height: 24 }}
+                style={{width: 24, height: 24}}
                 contentFit="contain"
               />
             </View>
@@ -350,7 +356,7 @@ export default function PaymentMethod() {
       >
         {/* Fare Breakdown */}
         {routeData.basePrice > 0 && (
-          <View className="flex-row items-center justify-between">
+          <View className="flex-row justify-between items-center">
             <Text className="text-xs font-semibold text-gray-500">
               Base Fare
             </Text>
@@ -361,7 +367,7 @@ export default function PaymentMethod() {
         )}
 
         {routeData.distanceFee > 0 && (
-          <View className="flex-row items-center justify-between">
+          <View className="flex-row justify-between items-center">
             <Text className="text-xs font-semibold text-gray-500">
               Distance / Duration ({routeData.distance.toFixed(2)} km -{" "}
               {routeData.duration.toFixed(0)} min)
@@ -373,7 +379,7 @@ export default function PaymentMethod() {
         )}
 
         {routeData.serviceFee > 0 && (
-          <View className="flex-row items-center justify-between">
+          <View className="flex-row justify-between items-center">
             <Text className="text-xs font-semibold text-gray-500">
               Added Services ({useAppStore.getState().addedServices.length})
             </Text>
@@ -384,7 +390,7 @@ export default function PaymentMethod() {
         )}
 
         {/* Total */}
-        <View className="flex-row items-center justify-between mt-1">
+        <View className="flex-row justify-between items-center mt-1">
           <Text className="font-semibold">Total Amount</Text>
           <Text className="text-lg font-bold text-lightPrimary">
             Php {routeData.totalPrice.toFixed(2)}
