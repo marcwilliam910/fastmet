@@ -1,13 +1,12 @@
 import {
   ACCOUNT_DEACTIVATED_ROUTE,
   DEVICE_BANNED_ROUTE,
-  DEVICE_SUSPENDED_ROUTE,
 } from "@/constants/routes";
-import {router} from "expo-router";
-import {Alert} from "react-native";
+import { router } from "expo-router";
+import { Alert } from "react-native";
 
 export function routeAuthGuardError(error: {
-  response?: {status?: number; data?: Record<string, unknown>};
+  response?: { status?: number; data?: Record<string, unknown> };
 }): boolean {
   const status = error.response?.status;
   const data = error.response?.data;
@@ -23,7 +22,7 @@ export function routeAuthGuardError(error: {
 
     if (data?.accountSuspended) {
       router.replace({
-        pathname: DEVICE_SUSPENDED_ROUTE,
+        pathname: "/(auth)/account-suspended",
         params: {
           suspendedUntil: (data.suspendedUntil as string) ?? "",
           suspensionReason: (data.suspensionReason as string) ?? "",
@@ -38,9 +37,9 @@ export function routeAuthGuardError(error: {
 
 export function handleSendOtpError(
   error: {
-    response?: {status?: number; data?: Record<string, unknown>};
+    response?: { status?: number; data?: Record<string, unknown> };
   },
-  options?: {onRetry?: () => void},
+  options?: { onRetry?: () => void },
 ): boolean {
   if (routeAuthGuardError(error)) return true;
 
@@ -84,8 +83,8 @@ export function handleSendOtpError(
     "Connection Error",
     "Failed to send OTP. Please check your internet connection and try again.",
     options?.onRetry
-      ? [{text: "Retry", onPress: options.onRetry}, {text: "Cancel"}]
-      : [{text: "OK"}],
+      ? [{ text: "Retry", onPress: options.onRetry }, { text: "Cancel" }]
+      : [{ text: "OK" }],
   );
   return true;
 }

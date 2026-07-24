@@ -1,7 +1,7 @@
 import RestrictedScreen from "@/components/RestrictedScreen";
-import {SUPPORT_EMAIL} from "@/utils/constants";
-import {router} from "expo-router";
-import {Alert, Linking} from "react-native";
+import { SUPPORT_EMAIL } from "@/utils/constants";
+import { router } from "expo-router";
+import { Alert, Linking } from "react-native";
 
 export default function DeviceBannedScreen() {
   const handleEmail = () => {

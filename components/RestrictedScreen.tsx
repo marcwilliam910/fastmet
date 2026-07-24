@@ -1,9 +1,9 @@
-import {SUPPORT_EMAIL} from "@/utils/constants";
-import {Ionicons} from "@expo/vector-icons";
+import { SUPPORT_EMAIL } from "@/utils/constants";
+import { Ionicons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
-import {ReactNode, useState} from "react";
-import {Pressable, Text, View} from "react-native";
-import {SafeAreaView} from "react-native-safe-area-context";
+import { ReactNode, useState } from "react";
+import { Pressable, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export interface RestrictedAction {
   label: string;
@@ -17,6 +17,7 @@ interface RestrictedScreenProps {
   iconColor: string;
   iconBgClass: string;
   title: string;
+  reasonText?: string;
   description: string;
   topExtra?: ReactNode;
   infoBoxText?: string;
@@ -61,6 +62,7 @@ export default function RestrictedScreen({
   iconBgClass,
   title,
   description,
+  reasonText,
   topExtra,
   infoBoxText,
   infoBoxVariant = "error",
@@ -90,6 +92,15 @@ export default function RestrictedScreen({
             {description}
           </Text>
         </View>
+
+        {reasonText ? (
+          <View className="gap-1 p-4 mb-6 bg-red-50 rounded-xl border border-red-200">
+            <Text className="mb-1 text-xs font-semibold tracking-wide text-red-500 uppercase">
+              Reason
+            </Text>
+            <Text className="leading-relaxed text-gray-700">{reasonText}</Text>
+          </View>
+        ) : null}
 
         {topExtra}
 

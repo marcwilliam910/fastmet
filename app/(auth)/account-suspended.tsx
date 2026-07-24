@@ -1,12 +1,12 @@
-import {SUPPORT_EMAIL} from "@/utils/constants";
-import {router, useLocalSearchParams} from "expo-router";
-import {Alert, Linking, Text} from "react-native";
+import { SUPPORT_EMAIL } from "@/utils/constants";
+import { router, useLocalSearchParams } from "expo-router";
+import { Alert, Linking, Text } from "react-native";
 
 import RestrictedScreen from "@/components/RestrictedScreen";
-import {useEffect, useState} from "react";
+import { useEffect, useState } from "react";
 
-export default function DeviceSuspendedScreen() {
-  const {suspendedUntil, suspensionReason} = useLocalSearchParams<{
+export default function AccountSuspendedScreen() {
+  const { suspendedUntil, suspensionReason } = useLocalSearchParams<{
     suspendedUntil?: string;
     suspensionReason?: string;
   }>();
@@ -25,11 +25,8 @@ export default function DeviceSuspendedScreen() {
       iconColor="#D97706"
       iconBgClass="bg-yellow-100"
       title="Account Suspended"
-      description={
-        suspensionReason
-          ? `Your account has been suspended. Reason: ${suspensionReason}`
-          : "Your account has been temporarily suspended. Please contact support if you believe this is a mistake."
-      }
+      description="Your account has been temporarily suspended."
+      reasonText={suspensionReason ?? undefined}
       topExtra={until ? <CountdownText until={until} /> : null}
       infoBoxText="You cannot sign in or receive OTP on this device until the suspension is lifted."
       infoBoxVariant="warning"
@@ -64,7 +61,7 @@ function formatRemaining(ms: number): string {
   return `${minutes}m ${seconds}s remaining`;
 }
 
-export function CountdownText({until}: {until: Date}) {
+export function CountdownText({ until }: { until: Date }) {
   const [remaining, setRemaining] = useState(
     () => until.getTime() - Date.now(),
   );
