@@ -1,15 +1,15 @@
 import NotLoggedIn from "@/components/notLoggedIn";
-import {useAuth} from "@/hooks/useAuth";
-import {useAppStore} from "@/store/useAppStore";
-import {formatPHNumber} from "@/utils/helpers/format";
-import {pushOnce} from "@/utils/helpers/navigation";
-import {Ionicons} from "@expo/vector-icons";
-import {Image} from "expo-image";
+import { useAuth } from "@/hooks/useAuth";
+import { useAppStore } from "@/store/useAppStore";
+import { formatPHNumber } from "@/utils/helpers/format";
+import { pushOnce } from "@/utils/helpers/navigation";
+import { Ionicons } from "@expo/vector-icons";
+import { Image } from "expo-image";
 import React from "react";
-import {Pressable, ScrollView, Text, View} from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 
 export default function MyProfile() {
-  const {isLoggedIn} = useAuth();
+  const { isLoggedIn } = useAuth();
   const name = useAppStore((state) => state.name);
   const profilePictureUrl = useAppStore((state) => state.profilePictureUrl);
   const gender = useAppStore((state) => state.gender);
@@ -19,6 +19,11 @@ export default function MyProfile() {
       icon: "person",
       label: "Edit Profile",
       onPress: () => pushOnce("/(drawer)/profile/editProfile"),
+    },
+    {
+      icon: "document-text",
+      label: "My Documents",
+      onPress: () => pushOnce("/(drawer)/profile/myDocument"),
     },
     {
       icon: "settings",
@@ -36,8 +41,8 @@ export default function MyProfile() {
         <View className="p-2 rounded-full border border-lightPrimary">
           {profilePictureUrl ? (
             <Image
-              source={{uri: profilePictureUrl}}
-              style={{width: 120, height: 120, borderRadius: 999}}
+              source={{ uri: profilePictureUrl }}
+              style={{ width: 120, height: 120, borderRadius: 999 }}
               contentFit="cover"
             />
           ) : (
@@ -56,7 +61,7 @@ export default function MyProfile() {
             )}
           </View>
           <Text className="text-base text-gray-400">
-            {formatPHNumber(useAppStore((state) => state.phoneNumber))}
+            {formatPHNumber(useAppStore.getState().phoneNumber)}
           </Text>
           {address && (
             <View className="flex-row gap-1 items-center">

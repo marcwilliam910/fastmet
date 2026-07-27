@@ -25,6 +25,13 @@ export default function ProfileLayout() {
           headerTitle: ({ children }) => <HeaderProfile title={children} />,
         }}
       />
+      <Stack.Screen
+        name="myDocument"
+        options={{
+          title: "My Documents",
+          headerTitle: ({ children }) => <HeaderProfile title={children} />,
+        }}
+      />
     </Stack>
   );
 }
