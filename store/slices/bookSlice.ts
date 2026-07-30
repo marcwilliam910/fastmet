@@ -1,9 +1,9 @@
-import type { LocationDetails, RouteData } from "@/types/book";
-import { BookingTypeConfig } from "@/types/bookingType";
-import { SelectedVehicle, Service } from "@/types/vehicle";
-import { StateCreator } from "zustand";
-import { BookingTypeSlice } from "./bookingTypeSlice";
-import { LoadingSlice } from "./loadingStore";
+import type {LocationDetails, RouteData} from "@/types/book";
+import {BookingTypeConfig} from "@/types/bookingType";
+import {SelectedVehicle, Service} from "@/types/vehicle";
+import {StateCreator} from "zustand";
+import {BookingTypeSlice} from "./bookingTypeSlice";
+import {LoadingSlice} from "./loadingStore";
 
 export type Type = "asap" | "pooling" | "schedule";
 
@@ -53,9 +53,14 @@ export interface BookSlice {
 
   setPickUp: (details: LocationDetails) => void;
   setPickUpAdditionalDetails: (details: string) => void;
+  setPickUpContactName: (contactName: string) => void;
+  setPickUpContactPhone: (contactPhone: string) => void;
+
   setDropOff: (details: LocationDetails) => void;
   setDropOffAdditionalDetails: (details: string) => void;
-  setBookingType: (payload: { type: Type; value: string }) => void;
+  setDropOffContactName: (contactName: string) => void;
+  setDropOffContactPhone: (contactPhone: string) => void;
+  setBookingType: (payload: {type: Type; value: string}) => void;
   setSelectedVehicle: (vehicle: SelectedVehicle) => void;
   setRouteData: (data: RouteData) => void;
   setNote: (note: string) => void;
@@ -78,7 +83,7 @@ export const createBookSlice: StateCreator<
 > = (set, get) => ({
   pickUp: null,
   dropOff: null,
-  bookingType: { type: "asap", value: "REGULAR", priceModifier: 1.0 },
+  bookingType: {type: "asap", value: "REGULAR", priceModifier: 1.0},
   selectedVehicle: null,
   routeData: {
     distance: 0,
@@ -104,7 +109,7 @@ export const createBookSlice: StateCreator<
         : [...state.addedServices, service];
 
       const serviceFee = updatedServices.reduce((sum, s) => sum + s.price, 0);
-      const { basePrice, distanceFee } = state.routeData;
+      const {basePrice, distanceFee} = state.routeData;
 
       return {
         addedServices: updatedServices,
@@ -120,11 +125,11 @@ export const createBookSlice: StateCreator<
     set((state) => {
       const updatedServices = state.addedServices.map((service) =>
         service.key === serviceKey
-          ? { ...service, quantity, price: originalPrice * quantity }
+          ? {...service, quantity, price: originalPrice * quantity}
           : service,
       );
       const serviceFee = updatedServices.reduce((sum, s) => sum + s.price, 0);
-      const { basePrice, distanceFee } = state.routeData;
+      const {basePrice, distanceFee} = state.routeData;
 
       return {
         addedServices: updatedServices,
@@ -136,32 +141,60 @@ export const createBookSlice: StateCreator<
       };
     }),
 
-  setPickUp: (details) => set({ pickUp: details }),
+  setPickUp: (details) => set({pickUp: details}),
   setPickUpAdditionalDetails: (additionalDetails) =>
     set((state) => ({
       pickUp: state.pickUp
-        ? { ...state.pickUp, additionalDetails: additionalDetails.trim() }
+        ? {...state.pickUp, additionalDetails: additionalDetails.trim()}
         : null,
     })),
-  setDropOff: (details) => set({ dropOff: details }),
+
+  setPickUpContactName: (contactName) =>
+    set((state) => ({
+      pickUp: state.pickUp
+        ? {...state.pickUp, contactName: contactName.trim()}
+        : null,
+    })),
+  setPickUpContactPhone: (contactPhone) =>
+    set((state) => ({
+      pickUp: state.pickUp
+        ? {...state.pickUp, contactPhone: contactPhone.trim()}
+        : null,
+    })),
+  setDropOff: (details) => set({dropOff: details}),
   setDropOffAdditionalDetails: (additionalDetails) =>
     set((state) => ({
-      dropOff: state.dropOff ? { ...state.dropOff, additionalDetails } : null,
+      dropOff: state.dropOff
+        ? {...state.dropOff, additionalDetails: additionalDetails.trim()}
+        : null,
     })),
 
-  setBookingType: ({ type, value }) => {
+  setDropOffContactName: (contactName) =>
+    set((state) => ({
+      dropOff: state.dropOff
+        ? {...state.dropOff, contactName: contactName.trim()}
+        : null,
+    })),
+  setDropOffContactPhone: (contactPhone) =>
+    set((state) => ({
+      dropOff: state.dropOff
+        ? {...state.dropOff, contactPhone: contactPhone.trim()}
+        : null,
+    })),
+
+  setBookingType: ({type, value}) => {
     const priceModifier = resolveModifier(get().bookingTypes, type, value);
-    set({ bookingType: { type, value, priceModifier } });
+    set({bookingType: {type, value, priceModifier}});
   },
 
-  setSelectedVehicle: (vehicle) => set({ selectedVehicle: vehicle }),
-  setRouteData: (data) => set({ routeData: data }),
-  setNote: (note) => set({ note }),
-  setItemType: (itemType) => set({ itemType }),
-  setPhoto: (photo) => set((state) => ({ photos: [...state.photos, photo] })),
+  setSelectedVehicle: (vehicle) => set({selectedVehicle: vehicle}),
+  setRouteData: (data) => set({routeData: data}),
+  setNote: (note) => set({note}),
+  setItemType: (itemType) => set({itemType}),
+  setPhoto: (photo) => set((state) => ({photos: [...state.photos, photo]})),
   removePhoto: (photo) =>
-    set((state) => ({ photos: state.photos.filter((p) => p !== photo) })),
-  setPaymentMethod: (method) => set({ paymentMethod: method }),
+    set((state) => ({photos: state.photos.filter((p) => p !== photo)})),
+  setPaymentMethod: (method) => set({paymentMethod: method}),
 
   clearStates: () =>
     set((state) => ({

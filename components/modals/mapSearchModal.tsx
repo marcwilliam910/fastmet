@@ -1,18 +1,14 @@
 import {useShake} from "@/hooks/useShakeAnimation";
 import {useAppStore} from "@/store/useAppStore";
 import {LocationDetails} from "@/types/book";
-import {
-  GOOGLE_MAPS_API_KEY,
-  METRO_MANILA_POLYGON,
-  requiresFerryFromMetroManila,
-} from "@/utils/constants";
-import {formatLocation, isSameLocation} from "@/utils/helpers/location";
+import {GOOGLE_MAPS_API_KEY, METRO_MANILA_POLYGON} from "@/utils/constants";
+import {formatLocation} from "@/utils/helpers/location";
 import {getArray, pushToArray} from "@/utils/helpers/recentPlaceStorage";
 import {Ionicons} from "@expo/vector-icons";
 import * as Location from "expo-location";
 import {router} from "expo-router";
 import {isPointInPolygon} from "geolib";
-import React, {useEffect, useState} from "react";
+import React, {useEffect, useRef, useState} from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -32,6 +28,7 @@ import {
 import GooglePlacesTextInput, {
   Place,
 } from "react-native-google-places-textinput";
+import MapView, {PROVIDER_GOOGLE, Region} from "react-native-maps";
 import Animated from "react-native-reanimated";
 import {useSafeAreaInsets} from "react-native-safe-area-context";
 
@@ -43,6 +40,14 @@ type SearchModalProps = {
   type: SearchType;
 };
 
+type Step = "search" | "map";
+
+type Coords = {lat: number; lng: number};
+
+// Theme color — same hex used for the back chevron elsewhere in this file.
+// Swap for a themed constant if one exists in utils/constants.
+const THEME_COLOR = "#FFA840";
+
 function isWithinMetroManila(lat: number, lng: number) {
   return isPointInPolygon(
     {latitude: lat, longitude: lng},
@@ -53,24 +58,104 @@ function isWithinMetroManila(lat: number, lng: number) {
   );
 }
 
+// Centralized zone/overlap validation so search-select, recent, home,
+// current-location, and map-move all enforce identical rules.
+// Cheap/local — no network call — so it's fine to run on every region change.
+function validateCoords(
+  type: SearchType,
+  lat: number,
+  lng: number,
+  other: LocationDetails | null,
+): string | null {
+  return null;
+}
+
+function showValidationError(message: string) {
+  if (Platform.OS === "android") {
+    ToastAndroid.showWithGravity(message, ToastAndroid.LONG, ToastAndroid.TOP);
+  } else {
+    Alert.alert("Not Available", message);
+  }
+}
+
+// Only ever called on: (1) initial current-location fix, since GPS gives no
+// name, and (2) "Confirm pin" press when the user has actually moved the
+// map. Never on drag/region-change — that's billed per call.
+async function reverseGeocode(
+  lat: number,
+  lng: number,
+): Promise<{name: string; address: string} | null> {
+  try {
+    const response = await fetch(
+      `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${GOOGLE_MAPS_API_KEY}`,
+    );
+    const data = await response.json();
+    if (data.results && data.results.length > 0) {
+      const result = data.results[0];
+      return {
+        name: result.address_components?.[0]?.long_name || "Dropped pin",
+        address: result.formatted_address || "Unknown address",
+      };
+    }
+    return null;
+  } catch (error) {
+    console.error("Reverse geocode error:", error);
+    return null;
+  }
+}
+
+// Basic PH mobile validation, same pattern as your OTP screen.
+function cleanPhoneInput(value: string) {
+  let cleaned = value.replace(/\D/g, "");
+
+  // Remove country code (63)
+  if (cleaned.startsWith("63")) {
+    cleaned = cleaned.slice(2);
+  }
+
+  // Remove leading 0 if present
+  if (cleaned.startsWith("0")) {
+    cleaned = cleaned.slice(1);
+  }
+
+  // Ensure it starts with 9
+  if (!cleaned.startsWith("9")) {
+    cleaned = cleaned.slice(1);
+  }
+
+  // Limit to 10 digits (9XXXXXXXXX)
+  return cleaned.slice(0, 10);
+}
 const RECENT_PLACE_KEY = "recent_places";
 
 const SearchModal: React.FC<SearchModalProps> = ({visible, onClose, type}) => {
   const [recentPlaces, setRecentPlaces] = useState<LocationDetails[]>([]);
   const inset = useSafeAreaInsets();
-  const [selectedPlace, setSelectedPlace] = useState<Partial<Place> | null>(
-    null,
-  );
+  const insets = useSafeAreaInsets();
+
   const setPickUp = useAppStore((state) => state.setPickUp);
   const setPickUpAdditionalDetails = useAppStore(
     (state) => state.setPickUpAdditionalDetails,
   );
+
+  const setPickUpContactName = useAppStore(
+    (state) => state.setPickUpContactName,
+  );
+  const setPickUpContactPhone = useAppStore(
+    (state) => state.setPickUpContactPhone,
+  );
+
   const setDropOff = useAppStore((state) => state.setDropOff);
   const setDropOffAdditionalDetails = useAppStore(
     (state) => state.setDropOffAdditionalDetails,
   );
 
-  const insets = useSafeAreaInsets();
+  const setDropOffContactName = useAppStore(
+    (state) => state.setDropOffContactName,
+  );
+  const setDropOffContactPhone = useAppStore(
+    (state) => state.setDropOffContactPhone,
+  );
 
   const dropOff = useAppStore((state) => state.dropOff);
   const pickUp = useAppStore((state) => state.pickUp);
@@ -79,8 +164,45 @@ const SearchModal: React.FC<SearchModalProps> = ({visible, onClose, type}) => {
   const [additionalDetails, setAdditionalDetails] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const searchValue = formatLocation(type === "pickup" ? pickUp : dropOff);
+  // Sender (pickup) / Receiver (dropoff) contact fields — live on the search step now.
+  const [contactName, setContactName] = useState("");
+  const [contactPhone, setContactPhone] = useState("");
+
+  const contactLabel = type === "pickup" ? "Sender" : "Receiver";
+
   const haveValue = type === "pickup" ? pickUp : dropOff;
+  const otherValue = type === "pickup" ? dropOff : pickUp;
+
+  // add state
+  const [searchText, setSearchText] = useState("");
+
+  // Confirmed-on-map location, held locally until the bottom Confirm button
+  // on the search step commits it to the store.
+  const [confirmedLocation, setConfirmedLocation] =
+    useState<LocationDetails | null>(null);
+
+  // --- map / pin step state ---
+  const [step, setStep] = useState<Step>("search");
+  const [markerCoord, setMarkerCoord] = useState<Coords | null>(null);
+  const [mapName, setMapName] = useState("");
+  const [mapAddress, setMapAddress] = useState("");
+  const [pinMoved, setPinMoved] = useState(false);
+  const [resolvingAddress, setResolvingAddress] = useState(false);
+  const mapRef = useRef<MapView>(null);
+  const isInitialRegion = useRef(true);
+
+  // seed it wherever you currently seed confirmedLocation
+  useEffect(() => {
+    if (visible) {
+      setAdditionalDetails(haveValue?.additionalDetails || "");
+      setConfirmedLocation(haveValue ?? null);
+      setSearchText(haveValue ? formatLocation(haveValue) : "");
+      setStep("search");
+      setMarkerCoord(null);
+      setContactName("");
+      setContactPhone("");
+    }
+  }, [visible, haveValue?.additionalDetails]);
 
   useEffect(() => {
     async function getRecentPlaces() {
@@ -90,306 +212,70 @@ const SearchModal: React.FC<SearchModalProps> = ({visible, onClose, type}) => {
     getRecentPlaces();
   }, [visible]);
 
-  // Initialize additionalDetails when modal opens with existing value
+  // Initialize fields when modal opens with existing value.
   useEffect(() => {
     if (visible) {
       setAdditionalDetails(haveValue?.additionalDetails || "");
-      setSelectedPlace(null); // Reset selected place when reopening
+      setConfirmedLocation(haveValue ?? null);
+      setStep("search");
+      setMarkerCoord(null);
+      // TODO: seed contactName/contactPhone from store if you persist them
+      // per pickup/dropoff (e.g. haveValue?.contactName).
+      setContactName("");
+      setContactPhone("");
     }
   }, [visible, haveValue?.additionalDetails]);
 
-  // Determine if confirm button should be enabled
-  const initialAdditionalDetails = haveValue?.additionalDetails || "";
-  const additionalDetailsChanged =
-    additionalDetails !== initialAdditionalDetails;
-
-  // Primary condition: location selected OR (location exists AND details changed)
-  const canConfirm =
-    selectedPlace !== null || (haveValue !== null && additionalDetailsChanged);
-
-  const handleConfirm = async () => {
-    // If a new place was selected
-    if (selectedPlace?.details) {
-      const details = selectedPlace.details;
-
-      const locationData: LocationDetails = {
-        name: details.displayName.text || "Unknown location",
-        address: details.formattedAddress || "Unknown address",
-        placeId: selectedPlace.placeId,
-        coords: {
-          lat: details.location.latitude,
-          lng: details.location.longitude,
-        },
-      };
-
-      // Final check before confirming - ensure locations are not the same
-      if (type === "pickup" && dropOff) {
-        if (
-          isSameLocation(
-            locationData.coords.lat,
-            locationData.coords.lng,
-            dropOff.coords.lat,
-            dropOff.coords.lng,
-          )
-        ) {
-          const message = "Pick-up and drop-off locations cannot be the same.";
-
-          if (Platform.OS === "android") {
-            ToastAndroid.showWithGravity(
-              message,
-              ToastAndroid.LONG,
-              ToastAndroid.TOP,
-            );
-          } else {
-            Alert.alert("Invalid Location", message);
-          }
-          shake();
-          return;
-        }
-      } else if (type === "dropoff" && pickUp) {
-        if (
-          isSameLocation(
-            locationData.coords.lat,
-            locationData.coords.lng,
-            pickUp.coords.lat,
-            pickUp.coords.lng,
-          )
-        ) {
-          const message = "Pick-up and drop-off locations cannot be the same.";
-
-          if (Platform.OS === "android") {
-            ToastAndroid.showWithGravity(
-              message,
-              ToastAndroid.LONG,
-              ToastAndroid.TOP,
-            );
-          } else {
-            Alert.alert("Invalid Location", message);
-          }
-          shake();
-          return;
-        }
-      }
-
-      await pushToArray(RECENT_PLACE_KEY, locationData);
-
-      if (type === "pickup") {
-        setPickUp(locationData);
-        setPickUpAdditionalDetails(additionalDetails);
-      } else {
-        setDropOff(locationData);
-        setDropOffAdditionalDetails(additionalDetails);
-      }
-    }
-    // If only additionalDetails changed (location already exists)
-    else if (haveValue && additionalDetailsChanged) {
-      if (type === "pickup") {
-        setPickUpAdditionalDetails(additionalDetails);
-      } else {
-        setDropOffAdditionalDetails(additionalDetails);
-      }
-    }
-
-    onClose();
+  const handleUseMyNumber = () => {
+    const myNumber = useAppStore.getState().phoneNumber;
+    if (!myNumber) return;
+    setContactPhone(cleanPhoneInput(myNumber));
   };
 
-  // Update your handleOnPlaceSelect function
-  const handleOnPlaceSelect = async (place: Place) => {
-    setSelectedPlace(null);
+  // Entry point for every source (search select, recent, home, current
+  // location). Validates, then hands off to the map/pin step.
+  const goToMapStep = (coords: Coords, name: string, address: string) => {
+    const error = validateCoords(type, coords.lat, coords.lng, otherValue);
+    if (error) {
+      showValidationError(error);
+      shake();
+      return;
+    }
 
+    isInitialRegion.current = true;
+    setPinMoved(false);
+    setMarkerCoord(coords);
+    setMapName(name);
+    setMapAddress(address);
+    setStep("map");
+
+    requestAnimationFrame(() => {
+      mapRef.current?.animateToRegion(
+        {
+          latitude: coords.lat,
+          longitude: coords.lng,
+          latitudeDelta: 0.003,
+          longitudeDelta: 0.003,
+        },
+        300,
+      );
+    });
+  };
+
+  const handleOnPlaceSelect = async (place: Place) => {
     const loc = place.details?.location;
     if (!loc) return;
 
-    // Check if location matches the other location (pickup/dropoff)
-    if (type === "pickup" && dropOff) {
-      if (
-        isSameLocation(
-          loc.latitude,
-          loc.longitude,
-          dropOff.coords.lat,
-          dropOff.coords.lng,
-        )
-      ) {
-        const message = "Pick-up and drop-off locations cannot be the same.";
-
-        if (Platform.OS === "android") {
-          ToastAndroid.showWithGravity(
-            message,
-            ToastAndroid.LONG,
-            ToastAndroid.TOP,
-          );
-        } else {
-          Alert.alert("Invalid Location", message);
-        }
-        shake();
-        return;
-      }
-    } else if (type === "dropoff" && pickUp) {
-      if (
-        isSameLocation(
-          loc.latitude,
-          loc.longitude,
-          pickUp.coords.lat,
-          pickUp.coords.lng,
-        )
-      ) {
-        const message = "Pick-up and drop-off locations cannot be the same.";
-
-        if (Platform.OS === "android") {
-          ToastAndroid.showWithGravity(
-            message,
-            ToastAndroid.LONG,
-            ToastAndroid.TOP,
-          );
-        } else {
-          Alert.alert("Invalid Location", message);
-        }
-        shake();
-        return;
-      }
-    }
-
-    // Check if pickup is within Metro Manila
-    // if (type === "pickup") {
-    //   const allowed = isWithinMetroManila(loc.latitude, loc.longitude);
-
-    //   if (!allowed) {
-    //     const message = "Pick-up is only available within Metro Manila.";
-
-    //     if (Platform.OS === "android") {
-    //       ToastAndroid.showWithGravity(
-    //         message,
-    //         ToastAndroid.LONG,
-    //         ToastAndroid.TOP,
-    //       );
-    //     } else {
-    //       Alert.alert("Not Available", message);
-    //     }
-
-    //     shake();
-    //     return;
-    //   }
-    // }
-
-    // Check if drop-off requires ferry
-    if (type === "dropoff") {
-      const requiresFerry = requiresFerryFromMetroManila(
-        loc.latitude,
-        loc.longitude,
-      );
-
-      if (requiresFerry) {
-        const message =
-          "Drop-off location requires ferry access and is not available.";
-
-        if (Platform.OS === "android") {
-          ToastAndroid.showWithGravity(
-            message,
-            ToastAndroid.LONG,
-            ToastAndroid.TOP,
-          );
-        } else {
-          Alert.alert("Not Available", message);
-        }
-
-        shake();
-        return;
-      }
-    }
-
-    setSelectedPlace(place);
+    goToMapStep(
+      {lat: loc.latitude, lng: loc.longitude},
+      place.details?.displayName?.text || "Unknown location",
+      place.details?.formattedAddress || "Unknown address",
+    );
   };
 
   const handleRecentPlacePress = async (place: LocationDetails) => {
     if (!place) return;
-    const {lat, lng} = place.coords;
-
-    // Check if location matches the other location (pickup/dropoff)
-    if (type === "pickup" && dropOff) {
-      if (isSameLocation(lat, lng, dropOff.coords.lat, dropOff.coords.lng)) {
-        const message = "Pick-up and drop-off locations cannot be the same.";
-
-        if (Platform.OS === "android") {
-          ToastAndroid.showWithGravity(
-            message,
-            ToastAndroid.LONG,
-            ToastAndroid.TOP,
-          );
-        } else {
-          Alert.alert("Invalid Location", message);
-        }
-        shake();
-        return;
-      }
-    } else if (type === "dropoff" && pickUp) {
-      if (isSameLocation(lat, lng, pickUp.coords.lat, pickUp.coords.lng)) {
-        const message = "Pick-up and drop-off locations cannot be the same.";
-
-        if (Platform.OS === "android") {
-          ToastAndroid.showWithGravity(
-            message,
-            ToastAndroid.LONG,
-            ToastAndroid.TOP,
-          );
-        } else {
-          Alert.alert("Invalid Location", message);
-        }
-        shake();
-        return;
-      }
-    }
-
-    // Validate pickup location
-    if (type === "pickup") {
-      // TEMP: Metro Manila pickup restriction disabled
-      // const allowed = isWithinMetroManila(lat, lng);
-
-      // if (!allowed) {
-      //   const message = "Pick-up is only available within Metro Manila.";
-
-      //   if (Platform.OS === "android") {
-      //     ToastAndroid.showWithGravity(
-      //       message,
-      //       ToastAndroid.LONG,
-      //       ToastAndroid.TOP,
-      //     );
-      //   } else {
-      //     Alert.alert("Not Available", message);
-      //   }
-
-      //   shake();
-      //   return;
-      // }
-
-      setPickUp(place);
-      setPickUpAdditionalDetails(additionalDetails);
-    } else {
-      // Validate drop-off location
-      const requiresFerry = requiresFerryFromMetroManila(lat, lng);
-
-      if (requiresFerry) {
-        const message =
-          "Drop-off location requires ferry access and is not available.";
-
-        if (Platform.OS === "android") {
-          ToastAndroid.showWithGravity(
-            message,
-            ToastAndroid.LONG,
-            ToastAndroid.TOP,
-          );
-        } else {
-          Alert.alert("Not Available", message);
-        }
-
-        shake();
-        return;
-      }
-
-      setDropOff(place);
-      setDropOffAdditionalDetails(additionalDetails);
-    }
-
-    onClose();
+    goToMapStep(place.coords, place.name, place.address);
   };
 
   const handleCurrentLocation = async () => {
@@ -421,17 +307,7 @@ const SearchModal: React.FC<SearchModalProps> = ({visible, onClose, type}) => {
       const {status} = await Location.requestForegroundPermissionsAsync();
 
       if (status !== "granted") {
-        const message = "Permission to access location was denied";
-
-        if (Platform.OS === "android") {
-          ToastAndroid.showWithGravity(
-            message,
-            ToastAndroid.LONG,
-            ToastAndroid.TOP,
-          );
-        } else {
-          Alert.alert("Permission Denied", message);
-        }
+        showValidationError("Permission to access location was denied");
         return;
       }
 
@@ -440,157 +316,113 @@ const SearchModal: React.FC<SearchModalProps> = ({visible, onClose, type}) => {
       });
 
       const {latitude, longitude} = location.coords;
+      // Necessary call — GPS coords alone have no name/address.
+      const geocoded = await reverseGeocode(latitude, longitude);
 
-      // Check if location matches the other location (pickup/dropoff)
-      if (type === "pickup" && dropOff) {
-        if (
-          isSameLocation(
-            latitude,
-            longitude,
-            dropOff.coords.lat,
-            dropOff.coords.lng,
-          )
-        ) {
-          const message = "Pick-up and drop-off locations cannot be the same.";
-
-          if (Platform.OS === "android") {
-            ToastAndroid.showWithGravity(
-              message,
-              ToastAndroid.LONG,
-              ToastAndroid.TOP,
-            );
-          } else {
-            Alert.alert("Invalid Location", message);
-          }
-          shake();
-          return;
-        }
-      } else if (type === "dropoff" && pickUp) {
-        if (
-          isSameLocation(
-            latitude,
-            longitude,
-            pickUp.coords.lat,
-            pickUp.coords.lng,
-          )
-        ) {
-          const message = "Pick-up and drop-off locations cannot be the same.";
-
-          if (Platform.OS === "android") {
-            ToastAndroid.showWithGravity(
-              message,
-              ToastAndroid.LONG,
-              ToastAndroid.TOP,
-            );
-          } else {
-            Alert.alert("Invalid Location", message);
-          }
-          shake();
-          return;
-        }
-      }
-
-      // Validate location before proceeding
-      // TEMP: Metro Manila pickup restriction disabled
-      // if (type === "pickup") {
-      //   const allowed = isWithinMetroManila(latitude, longitude);
-
-      //   if (!allowed) {
-      //     const message =
-      //       "Your current location is outside Metro Manila. Pick-up is only available within Metro Manila.";
-
-      //     if (Platform.OS === "android") {
-      //       ToastAndroid.showWithGravity(
-      //         message,
-      //         ToastAndroid.LONG,
-      //         ToastAndroid.TOP,
-      //       );
-      //     } else {
-      //       Alert.alert("Not Available", message);
-      //     }
-
-      //     shake();
-      //     return;
-      //   }
-      // } else
-      if (type === "dropoff") {
-        // Validate drop-off location
-        const requiresFerry = requiresFerryFromMetroManila(latitude, longitude);
-
-        if (requiresFerry) {
-          const message =
-            "Your current location requires ferry access and is not available for drop-off.";
-
-          if (Platform.OS === "android") {
-            ToastAndroid.showWithGravity(
-              message,
-              ToastAndroid.LONG,
-              ToastAndroid.TOP,
-            );
-          } else {
-            Alert.alert("Not Available", message);
-          }
-
-          shake();
-          return;
-        }
-      }
-
-      // Reverse geocode to get address
-      const response = await fetch(
-        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${GOOGLE_MAPS_API_KEY}`,
+      goToMapStep(
+        {lat: latitude, lng: longitude},
+        geocoded?.name || "Current Location",
+        geocoded?.address || "Current Location",
       );
-
-      const data = await response.json();
-
-      if (data.results && data.results.length > 0) {
-        const result = data.results[0];
-
-        const locationData: LocationDetails = {
-          name: result.address_components[0]?.long_name || "Current Location",
-          address: result.formatted_address,
-          coords: {
-            lat: latitude,
-            lng: longitude,
-          },
-        };
-
-        if (type === "pickup") {
-          setPickUp(locationData);
-          setPickUpAdditionalDetails(additionalDetails);
-        } else {
-          setDropOff(locationData);
-          setDropOffAdditionalDetails(additionalDetails);
-        }
-
-        await pushToArray(RECENT_PLACE_KEY, locationData);
-        onClose();
-      }
     } catch (error) {
       console.error("Error getting current location:", error);
-
-      const message = "Failed to get current location";
-
-      if (Platform.OS === "android") {
-        ToastAndroid.showWithGravity(
-          message,
-          ToastAndroid.LONG,
-          ToastAndroid.TOP,
-        );
-      } else {
-        Alert.alert("Error", message);
-      }
+      showValidationError("Failed to get current location");
     } finally {
       setLoading(false);
     }
   };
 
+  const handleHomePress = () => {
+    if (!homeAddress) return;
+    goToMapStep(
+      {lat: homeAddress.coords.lat, lng: homeAddress.coords.lng},
+      homeAddress.name,
+      homeAddress.fullAddress,
+    );
+  };
+
+  // Fixed center pin: the pin never moves, the map moves under it.
+  // No network call here — just tracks the candidate coord + whether it
+  // has actually moved from the initial position.
+  const handleRegionChangeComplete = (region: Region) => {
+    const {latitude, longitude} = region;
+
+    // Skip the event MapView fires for the initial region on mount.
+    if (isInitialRegion.current) {
+      isInitialRegion.current = false;
+      return;
+    }
+
+    const error = validateCoords(type, latitude, longitude, otherValue);
+    if (error) {
+      showValidationError(error);
+      shake();
+      return;
+    }
+
+    setMarkerCoord({lat: latitude, lng: longitude});
+    setPinMoved(true);
+  };
+
+  const handleMapConfirmPin = async () => {
+    if (!markerCoord) return;
+
+    let finalName = mapName;
+    let finalAddress = mapAddress;
+
+    // Only geocode if the user actually dragged the map — otherwise the
+    // original name/address from the search result/recent/home is still valid.
+    if (pinMoved) {
+      setResolvingAddress(true);
+      const geocoded = await reverseGeocode(markerCoord.lat, markerCoord.lng);
+      setResolvingAddress(false);
+
+      finalName = geocoded?.name || "Dropped pin";
+      finalAddress =
+        geocoded?.address ||
+        `${markerCoord.lat.toFixed(6)}, ${markerCoord.lng.toFixed(6)}`;
+    }
+
+    // placeId is intentionally dropped: after moving the map the point no
+    // longer corresponds to the originally selected Place.
+    // in handleMapConfirmPin, after building the final location:
+    const newLoc = {
+      name: finalName,
+      address: finalAddress,
+      coords: markerCoord,
+    };
+    setConfirmedLocation(newLoc);
+    setSearchText(formatLocation(newLoc));
+    setStep("search");
+  };
+
+  const handleFinalConfirm = async () => {
+    if (!confirmedLocation) return;
+
+    if (type === "pickup") {
+      setPickUp(confirmedLocation);
+      setPickUpAdditionalDetails(additionalDetails);
+      setPickUpContactName(contactName);
+      setPickUpContactPhone(contactPhone);
+    } else {
+      setDropOff(confirmedLocation);
+      setDropOffAdditionalDetails(additionalDetails);
+      setDropOffContactName(contactName);
+      setDropOffContactPhone(contactPhone);
+    }
+
+    // TODO: persist contactName/contactPhone alongside the location once
+    // the store/type supports it.
+    await pushToArray(RECENT_PLACE_KEY, confirmedLocation);
+    onClose();
+  };
+
   const renderRecentPlace = ({item}: {item: LocationDetails}) => (
     <Pressable
       onPress={() => handleRecentPlacePress(item)}
-      className="flex-row items-center px-4 py-3 rounded-xl border-b border-gray-100 active:bg-gray-100"
+      className="flex-row items-center px-4 py-3 border-b border-gray-100 rounded-xl active:bg-gray-100"
     >
-      <View className="justify-center items-center mr-3 w-10 h-10 bg-gray-100 rounded-full">
+      <View className="items-center justify-center w-10 h-10 mr-3 bg-gray-100 rounded-full">
         <Ionicons name="location-outline" size={20} color="#6B7280" />
       </View>
       <View className="flex-1">
@@ -619,309 +451,368 @@ const SearchModal: React.FC<SearchModalProps> = ({visible, onClose, type}) => {
         <View
           style={{
             flex: 1,
-            paddingTop: insets.top + 5, // respect status bar / notch
-            // paddingBottom: insets.bottom,
+            paddingTop: insets.top + 5,
             backgroundColor: "white",
           }}
         >
-          {/* Header */}
-          <View
-            className="flex-row justify-center items-center px-4"
-            style={{paddingBottom: Platform.OS === "ios" ? 25 : 16}}
-          >
-            <Pressable
-              onPress={() => {
-                setSelectedPlace(null);
-
-                onClose();
-              }}
-              className="absolute -top-1 left-4"
-              hitSlop={20}
-            >
-              <Ionicons
-                name="chevron-back-outline"
-                size={Platform.OS === "ios" ? 34 : 28}
-                color="#FFA840"
-              />
-            </Pressable>
-            <Text className="text-lg font-semibold capitalize">
-              {type} location
-            </Text>
-          </View>
-          {/* Search Input */}
-          <View className="mx-4 bg-white border-b border-gray-200">
-            <View className="flex-row items-center px-3 py-2">
-              <Ionicons
-                name="search-outline"
-                size={24}
-                color="#4B5563"
-                className="absolute left-3 top-5 z-50 bg-white"
-              />
-              <Animated.View
-                className="flex-1 ml-6" // all static styling here
-                style={animatedStyle} // only animated transforms here
+          {step === "map" && markerCoord ? (
+            <View style={{flex: 1}}>
+              {/* Header */}
+              <View
+                className="flex-row items-center justify-center px-4"
+                style={{paddingBottom: Platform.OS === "ios" ? 25 : 16}}
               >
-                <GooglePlacesTextInput
-                  apiKey={GOOGLE_MAPS_API_KEY ?? ""}
-                  onPlaceSelect={handleOnPlaceSelect}
-                  defaultValue={haveValue ? searchValue : ""}
-                  style={customStyles}
-                  languageCode="en"
-                  includedRegionCodes={["ph"]}
-                  minCharsToFetch={2}
-                  fetchDetails={true}
-                  placeHolderText={`Where to ${type === "pickup" ? "pick up" : "drop off"}?`}
-                  returnKeyType="search"
-                  textContentType="location"
-                  textAlign="left"
-                  clearElement={
-                    <Ionicons name="close" size={24} className="pt-3" />
-                  }
-                  showLoadingIndicator={false}
-                />
-              </Animated.View>
-            </View>
-          </View>
-
-          {/* Additional Details Input */}
-          <View className="mx-4 mt-7">
-            <Text className="mb-2 font-semibold text-gray-700">
-              Location details{" "}
-              <Text className="text-sm text-gray-400">(optional)</Text>
-            </Text>
-
-            <TextInput
-              defaultValue={haveValue?.additionalDetails}
-              onChangeText={setAdditionalDetails}
-              multiline
-              numberOfLines={4}
-              placeholder="e.g. In front of Jollibee or near gate 3"
-              placeholderTextColor="#9CA3AF"
-              style={{height: 120, textAlignVertical: "top"}}
-              className="p-4 text-base text-gray-800 bg-white rounded-xl border border-gray-200"
-            />
-          </View>
-
-          <ScrollView
-            className="flex-1"
-            // showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-            contentContainerStyle={{paddingBottom: 100}}
-          >
-            {/* Current Location Button */}
-            <View className="px-4 mt-5 mb-2">
-              <Pressable
-                onPress={handleCurrentLocation}
-                disabled={loading}
-                className="flex-row items-center px-4 py-3 bg-white rounded-xl border border-gray-200 active:bg-gray-50"
-              >
-                <View className="justify-center items-center mr-3 w-11 h-11 bg-blue-500 rounded-full">
-                  <Ionicons name="navigate" size={20} color="#FFFFFF" />
-                </View>
-                {loading ? (
-                  <>
-                    <Text className="flex-1 text-base font-semibold text-gray-900">
-                      Getting current location...
-                    </Text>
-                    <ActivityIndicator size="small" color="#FFA840" />
-                  </>
-                ) : (
-                  <>
-                    <Text className="flex-1 text-base font-semibold text-gray-900">
-                      Use current location
-                    </Text>
-                    <Ionicons
-                      name="chevron-forward"
-                      size={20}
-                      color="#9CA3AF"
-                    />
-                  </>
-                )}
-              </Pressable>
-            </View>
-
-            {/* Home Address Button */}
-            {homeAddress && (
-              <View className="px-4 mb-2">
                 <Pressable
-                  onPress={() => {
-                    const homeLocation: LocationDetails = {
-                      name: homeAddress.name,
-                      address: homeAddress.fullAddress,
-                      coords: {
-                        lat: homeAddress.coords.lat,
-                        lng: homeAddress.coords.lng,
-                      },
-                    };
-
-                    // Validate: same location check
-                    if (type === "pickup" && dropOff) {
-                      if (
-                        isSameLocation(
-                          homeLocation.coords.lat,
-                          homeLocation.coords.lng,
-                          dropOff.coords.lat,
-                          dropOff.coords.lng,
-                        )
-                      ) {
-                        const message =
-                          "Pick-up and drop-off locations cannot be the same.";
-                        if (Platform.OS === "android") {
-                          ToastAndroid.showWithGravity(
-                            message,
-                            ToastAndroid.LONG,
-                            ToastAndroid.TOP,
-                          );
-                        } else {
-                          Alert.alert("Invalid Location", message);
-                        }
-                        shake();
-                        return;
-                      }
-                    } else if (type === "dropoff" && pickUp) {
-                      if (
-                        isSameLocation(
-                          homeLocation.coords.lat,
-                          homeLocation.coords.lng,
-                          pickUp.coords.lat,
-                          pickUp.coords.lng,
-                        )
-                      ) {
-                        const message =
-                          "Pick-up and drop-off locations cannot be the same.";
-                        if (Platform.OS === "android") {
-                          ToastAndroid.showWithGravity(
-                            message,
-                            ToastAndroid.LONG,
-                            ToastAndroid.TOP,
-                          );
-                        } else {
-                          Alert.alert("Invalid Location", message);
-                        }
-                        shake();
-                        return;
-                      }
-                    }
-
-                    // TEMP: Metro Manila pickup restriction disabled
-                    // Validate: Metro Manila for pickup
-                    // if (type === "pickup") {
-                    //   const allowed = isWithinMetroManila(
-                    //     homeLocation.coords.lat,
-                    //     homeLocation.coords.lng,
-                    //   );
-                    //   if (!allowed) {
-                    //     const message =
-                    //       "Pick-up is only available within Metro Manila.";
-                    //     if (Platform.OS === "android") {
-                    //       ToastAndroid.showWithGravity(
-                    //         message,
-                    //         ToastAndroid.LONG,
-                    //         ToastAndroid.TOP,
-                    //       );
-                    //     } else {
-                    //       Alert.alert("Not Available", message);
-                    //     }
-                    //     shake();
-                    //     return;
-                    //   }
-                    // }
-
-                    // Validate: ferry check for dropoff
-                    if (type === "dropoff") {
-                      const requiresFerry = requiresFerryFromMetroManila(
-                        homeLocation.coords.lat,
-                        homeLocation.coords.lng,
-                      );
-                      if (requiresFerry) {
-                        const message =
-                          "Drop-off location requires ferry access and is not available.";
-                        if (Platform.OS === "android") {
-                          ToastAndroid.showWithGravity(
-                            message,
-                            ToastAndroid.LONG,
-                            ToastAndroid.TOP,
-                          );
-                        } else {
-                          Alert.alert("Not Available", message);
-                        }
-                        shake();
-                        return;
-                      }
-                    }
-
-                    if (type === "pickup") {
-                      setPickUp(homeLocation);
-                      setPickUpAdditionalDetails(
-                        `${homeAddress.street ? homeAddress.street + ", " : ""}${homeAddress.barangay}`,
-                      );
-                    } else {
-                      setDropOff(homeLocation);
-                      setDropOffAdditionalDetails(
-                        `${homeAddress.street ? homeAddress.street + ", " : ""}${homeAddress.barangay}`,
-                      );
-                    }
-
-                    onClose();
-                  }}
-                  className="flex-row items-center px-4 py-3 bg-white rounded-xl border border-gray-200 active:bg-gray-50"
+                  onPress={() => setStep("search")}
+                  className="absolute -top-1 left-4"
+                  hitSlop={20}
                 >
-                  <View className="justify-center items-center mr-3 w-11 h-11 bg-amber-500 rounded-full">
-                    <Ionicons name="home" size={20} color="#FFFFFF" />
-                  </View>
-                  <View className="flex-1">
-                    <Text className="text-base font-semibold text-gray-900">
-                      Home
+                  <Ionicons
+                    name="chevron-back-outline"
+                    size={Platform.OS === "ios" ? 34 : 28}
+                    color={THEME_COLOR}
+                  />
+                </Pressable>
+                <Text className="text-lg font-semibold capitalize">
+                  Place {type} pin
+                </Text>
+              </View>
+
+              {/* Location details + mapAddress — fixed on top */}
+              <View className="px-4 pb-3 bg-white">
+                <Text className="mb-2 font-semibold text-gray-700">
+                  Location details{" "}
+                  <Text className="text-sm text-gray-400">(optional)</Text>
+                </Text>
+                <TextInput
+                  value={additionalDetails}
+                  onChangeText={setAdditionalDetails}
+                  placeholder="e.g. In front of Jollibee or near gate 3"
+                  placeholderTextColor="#9CA3AF"
+                  className="p-3 text-base text-gray-800 bg-white border border-gray-200 rounded-xl"
+                />
+                <Text className="mt-2 text-sm text-gray-500" numberOfLines={2}>
+                  {pinMoved
+                    ? "Pin moved — address will update when you confirm"
+                    : mapAddress}
+                </Text>
+              </View>
+
+              {/* Map with fixed center pin */}
+              <View style={{flex: 1}}>
+                <MapView
+                  ref={mapRef}
+                  provider={PROVIDER_GOOGLE}
+                  style={{flex: 1}}
+                  initialRegion={{
+                    latitude: markerCoord.lat,
+                    longitude: markerCoord.lng,
+                    latitudeDelta: 0.001,
+                    longitudeDelta: 0.001,
+                  }}
+                  onRegionChangeComplete={handleRegionChangeComplete}
+                />
+
+                {/* Fixed center pin overlay — map moves under it */}
+                <View
+                  pointerEvents="none"
+                  style={{
+                    position: "absolute",
+                    top: "50%",
+                    left: "50%",
+                    marginLeft: -20,
+                    marginTop: -40,
+                  }}
+                >
+                  <Ionicons name="pin" size={40} color={THEME_COLOR} />
+                </View>
+              </View>
+
+              {/* Confirm pin card — hint text + button together */}
+              <View
+                className="px-6 pt-3 bg-white"
+                style={{paddingBottom: inset.bottom || 12}}
+              >
+                <Text className="mb-2 text-xs text-center text-gray-400">
+                  Move the map to adjust the pin position
+                </Text>
+                <Pressable
+                  className="items-center justify-center p-3.5 rounded-lg bg-lightPrimary active:bg-darkPrimary"
+                  onPress={handleMapConfirmPin}
+                  disabled={resolvingAddress}
+                >
+                  {resolvingAddress ? (
+                    <ActivityIndicator size="small" color="#FFFFFF" />
+                  ) : (
+                    <Text className="text-lg font-bold text-white">
+                      Confirm pin
                     </Text>
-                    <Text className="text-sm text-gray-500" numberOfLines={1}>
-                      {homeAddress.fullAddress}
-                    </Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+                  )}
                 </Pressable>
               </View>
-            )}
+            </View>
+          ) : (
+            <>
+              {/* Header */}
+              <View
+                className="flex-row items-center justify-center px-4"
+                style={{paddingBottom: Platform.OS === "ios" ? 25 : 16}}
+              >
+                <Pressable
+                  onPress={onClose}
+                  className="absolute -top-1 left-4"
+                  hitSlop={20}
+                >
+                  <Ionicons
+                    name="chevron-back-outline"
+                    size={Platform.OS === "ios" ? 34 : 28}
+                    color={THEME_COLOR}
+                  />
+                </Pressable>
+                <Text className="text-lg font-semibold capitalize">
+                  {type} location
+                </Text>
+              </View>
 
-            {/* Recent Places */}
-            {recentPlaces.length > 0 && (
-              <View className="flex-1 px-4 mt-2">
-                <View className="px-4 py-3">
-                  <View className="flex-row items-center">
-                    <Ionicons
-                      name="time-outline"
-                      size={18}
-                      color="#6B7280"
-                      style={{marginRight: 8}}
+              {/* Search Input — remounts to show the confirmed address as its text */}
+              <View className="mx-4 bg-white border-b border-gray-200">
+                <View className="flex-row items-center px-3 py-2">
+                  <Ionicons
+                    name="search-outline"
+                    size={24}
+                    color="#4B5563"
+                    className="absolute z-50 bg-white left-3 top-5"
+                  />
+                  <Animated.View className="flex-1 ml-6" style={animatedStyle}>
+                    <GooglePlacesTextInput
+                      apiKey={GOOGLE_MAPS_API_KEY ?? ""}
+                      onPlaceSelect={handleOnPlaceSelect}
+                      value={searchText}
+                      onTextChange={setSearchText}
+                      style={customStyles}
+                      languageCode="en"
+                      includedRegionCodes={["ph"]}
+                      minCharsToFetch={2}
+                      fetchDetails={true}
+                      placeHolderText={`Where to ${type === "pickup" ? "pick up" : "drop off"}?`}
+                      returnKeyType="search"
+                      textContentType="location"
+                      textAlign="left"
+                      clearElement={
+                        <Ionicons
+                          name="close"
+                          size={24}
+                          className="pt-1 pl-2"
+                        />
+                      }
+                      showLoadingIndicator={false}
                     />
-                    <Text className="text-xs font-semibold tracking-wider text-gray-600 uppercase">
-                      Recent Places
-                    </Text>
+                  </Animated.View>
+                </View>
+              </View>
+
+              <ScrollView
+                className="flex-1"
+                keyboardShouldPersistTaps="handled"
+              >
+                {/* Sender / Receiver contact fields */}
+                {/* Contact Information */}
+                <View className="px-4 mt-4">
+                  <View className="p-4 bg-white border border-gray-200 rounded-2xl">
+                    <View className="flex-row items-center mb-4">
+                      <View className="items-center justify-center w-10 h-10 mr-3 rounded-full bg-lightPrimary/10">
+                        <Ionicons
+                          name="person-outline"
+                          size={20}
+                          color={THEME_COLOR}
+                        />
+                      </View>
+
+                      <View>
+                        <Text className="text-base font-semibold text-gray-900">
+                          {contactLabel} Information
+                        </Text>
+                        <Text className="text-xs text-gray-500">
+                          Who will be at this location?
+                        </Text>
+                      </View>
+                    </View>
+
+                    {additionalDetails && (
+                      <View className="flex-row p-3 mb-4 border rounded-xl bg-amber-50 border-amber-200">
+                        <Ionicons
+                          name="information-circle-outline"
+                          size={18}
+                          color="#D97706"
+                          style={{marginTop: 2, marginRight: 8}}
+                        />
+
+                        <View className="flex-1">
+                          <Text className="text-xs font-semibold tracking-wide uppercase text-amber-700">
+                            Note
+                          </Text>
+
+                          <Text className="mt-1 text-sm leading-5 text-amber-900">
+                            {additionalDetails}
+                          </Text>
+                        </View>
+                      </View>
+                    )}
+                    {/* Name */}
+                    <View className="mb-4">
+                      <Text className="mb-2 text-sm font-medium text-gray-700">
+                        Full Name
+                      </Text>
+
+                      <TextInput
+                        value={contactName}
+                        onChangeText={setContactName}
+                        placeholder={`${contactLabel} full name`}
+                        placeholderTextColor="#9CA3AF"
+                        className="px-4 py-3 text-base text-gray-800 border border-gray-200 bg-gray-50 rounded-xl"
+                      />
+                    </View>
+
+                    {/* Mobile */}
+                    <View>
+                      <View className="flex-row items-center justify-between mb-2">
+                        <Text className="text-sm font-medium text-gray-700">
+                          Mobile Number
+                        </Text>
+
+                        <Pressable onPress={handleUseMyNumber} hitSlop={8}>
+                          <Text className="text-sm font-medium text-lightPrimary">
+                            Use my number
+                          </Text>
+                        </Pressable>
+                      </View>
+
+                      <View className="flex-row items-center px-4 border border-gray-200 bg-gray-50 rounded-xl">
+                        <Text className="pr-3 mr-3 text-gray-700 border-r border-gray-300">
+                          +63
+                        </Text>
+
+                        <TextInput
+                          value={contactPhone}
+                          onChangeText={(value) =>
+                            setContactPhone(cleanPhoneInput(value))
+                          }
+                          keyboardType="numeric"
+                          placeholder={`${contactLabel} mobile number`}
+                          placeholderTextColor="#9CA3AF"
+                          className="flex-1 text-base text-gray-800"
+                          style={{
+                            height: Platform.OS === "ios" ? 52 : 48,
+                          }}
+                        />
+                      </View>
+                    </View>
                   </View>
                 </View>
-                <FlatList
-                  data={recentPlaces}
-                  renderItem={renderRecentPlace}
-                  keyExtractor={(item, index) => `${item!.name}-${index}`}
-                  scrollEnabled={false}
-                />
+
+                {/* Current Location Button */}
+                <View className="px-4 mt-5 mb-2">
+                  <Pressable
+                    onPress={handleCurrentLocation}
+                    disabled={loading}
+                    className="flex-row items-center px-4 py-3 bg-white border border-gray-200 rounded-xl active:bg-gray-50"
+                  >
+                    <View className="items-center justify-center mr-3 bg-blue-500 rounded-full w-11 h-11">
+                      <Ionicons name="navigate" size={20} color="#FFFFFF" />
+                    </View>
+                    {loading ? (
+                      <>
+                        <Text className="flex-1 text-base font-semibold text-gray-900">
+                          Getting current location...
+                        </Text>
+                        <ActivityIndicator size="small" color={THEME_COLOR} />
+                      </>
+                    ) : (
+                      <>
+                        <Text className="flex-1 text-base font-semibold text-gray-900">
+                          Use current location
+                        </Text>
+                        <Ionicons
+                          name="chevron-forward"
+                          size={20}
+                          color="#9CA3AF"
+                        />
+                      </>
+                    )}
+                  </Pressable>
+                </View>
+
+                {/* Home Address Button */}
+                {homeAddress && (
+                  <View className="px-4 mb-2">
+                    <Pressable
+                      onPress={handleHomePress}
+                      className="flex-row items-center px-4 py-3 bg-white border border-gray-200 rounded-xl active:bg-gray-50"
+                    >
+                      <View className="items-center justify-center mr-3 rounded-full w-11 h-11 bg-amber-500">
+                        <Ionicons name="home" size={20} color="#FFFFFF" />
+                      </View>
+                      <View className="flex-1">
+                        <Text className="text-base font-semibold text-gray-900">
+                          Home
+                        </Text>
+                        <Text
+                          className="text-sm text-gray-500"
+                          numberOfLines={1}
+                        >
+                          {homeAddress.fullAddress}
+                        </Text>
+                      </View>
+                      <Ionicons
+                        name="chevron-forward"
+                        size={20}
+                        color="#9CA3AF"
+                      />
+                    </Pressable>
+                  </View>
+                )}
+
+                {/* Recent Places */}
+                {recentPlaces.length > 0 && (
+                  <View className="flex-1 px-4 mt-2">
+                    <View className="px-4 py-3">
+                      <View className="flex-row items-center">
+                        <Ionicons
+                          name="time-outline"
+                          size={18}
+                          color="#6B7280"
+                          style={{marginRight: 8}}
+                        />
+                        <Text className="text-xs font-semibold tracking-wider text-gray-600 uppercase">
+                          Recent Places
+                        </Text>
+                      </View>
+                    </View>
+                    <FlatList
+                      data={recentPlaces}
+                      renderItem={renderRecentPlace}
+                      keyExtractor={(item, index) => `${item!.name}-${index}`}
+                      scrollEnabled={false}
+                    />
+                  </View>
+                )}
+              </ScrollView>
+
+              {/* Final confirm — commits location + contact + closes modal */}
+              <View
+                className="px-6 py-3 bg-white border-t border-gray-100"
+                style={{paddingBottom: inset.bottom || 12}}
+              >
+                <Pressable
+                  className="items-center justify-center p-3.5 rounded-lg bg-lightPrimary active:bg-darkPrimary disabled:opacity-40"
+                  onPress={handleFinalConfirm}
+                  disabled={!confirmedLocation}
+                >
+                  <Text className="text-lg font-bold text-white">Confirm</Text>
+                </Pressable>
               </View>
-            )}
-          </ScrollView>
-          <View
-            className="absolute right-0 left-0 py-2 bg-white"
-            style={{
-              bottom: inset.bottom,
-            }}
-          >
-            <Pressable
-              className={`items-center justify-center p-3.5 mx-6 
-              rounded-lg ${canConfirm ? "bg-lightPrimary active:bg-darkPrimary" : "bg-orange-300"}`}
-              onPress={handleConfirm}
-              disabled={!canConfirm}
-            >
-              <Text className="text-lg font-bold text-white">Confirm</Text>
-            </Pressable>
-          </View>
+            </>
+          )}
         </View>
       </TouchableWithoutFeedback>
     </Modal>
@@ -940,12 +831,8 @@ const customStyles = {
     backgroundColor: "transparent",
   },
   input: {
-    minHeight: 45, // Use minHeight instead of height
-    borderColor: "red",
-    borderRadius: 8,
-    borderWidth: 0,
+    minHeight: 45,
     paddingVertical: 12,
-    minWidth: 320,
   },
   suggestionsContainer: {
     backgroundColor: "#f3f4f6",

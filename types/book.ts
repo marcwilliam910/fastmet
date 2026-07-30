@@ -8,6 +8,8 @@ export type LocationDetails = {
   coords: {lat: number; lng: number};
   placeId?: string;
   additionalDetails?: string;
+  contactName?: string;
+  contactPhone?: string;
 } | null;
 
 export type RouteData = {

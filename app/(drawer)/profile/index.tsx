@@ -1,15 +1,16 @@
 import NotLoggedIn from "@/components/notLoggedIn";
-import { useAuth } from "@/hooks/useAuth";
-import { useAppStore } from "@/store/useAppStore";
-import { formatPHNumber } from "@/utils/helpers/format";
-import { pushOnce } from "@/utils/helpers/navigation";
-import { Ionicons } from "@expo/vector-icons";
-import { Image } from "expo-image";
+import {PreRegBadge} from "@/components/PreRegBadge";
+import {useAuth} from "@/hooks/useAuth";
+import {useAppStore} from "@/store/useAppStore";
+import {formatPHNumber} from "@/utils/helpers/format";
+import {pushOnce} from "@/utils/helpers/navigation";
+import {Ionicons} from "@expo/vector-icons";
+import {Image} from "expo-image";
 import React from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import {Pressable, ScrollView, Text, View} from "react-native";
 
 export default function MyProfile() {
-  const { isLoggedIn } = useAuth();
+  const {isLoggedIn} = useAuth();
   const name = useAppStore((state) => state.name);
   const profilePictureUrl = useAppStore((state) => state.profilePictureUrl);
   const gender = useAppStore((state) => state.gender);
@@ -36,23 +37,32 @@ export default function MyProfile() {
 
   return (
     <ScrollView className="flex-1 bg-white">
-      <View className="gap-4 items-center pt-12 pb-8">
+      <View className="items-center gap-4 pt-12 pb-8">
         {/* Profile Image with Border */}
-        <View className="p-2 rounded-full border border-lightPrimary">
+        <View className="relative p-2 border rounded-full border-lightPrimary">
           {profilePictureUrl ? (
             <Image
-              source={{ uri: profilePictureUrl }}
-              style={{ width: 120, height: 120, borderRadius: 999 }}
+              source={{uri: profilePictureUrl}}
+              style={{width: 120, height: 120, borderRadius: 999}}
               contentFit="cover"
             />
           ) : (
             <Ionicons name="person-circle" size={120} color="#F7931E" />
           )}
+
+          {useAppStore.getState().approvalStatus === "approved" && (
+            <View
+              className="absolute items-center justify-center bg-white rounded-full bottom-1 right-1"
+              style={{width: 28, height: 28}}
+            >
+              <Ionicons name="shield-checkmark" size={26} color="#2563EB" />
+            </View>
+          )}
         </View>
 
         {/* User Info */}
-        <View className="gap-1 items-center">
-          <View className="flex-row gap-1 justify-center items-center">
+        <View className="items-center gap-1">
+          <View className="flex-row items-center justify-center gap-1">
             <Text className="text-xl font-bold text-gray-800">{name}</Text>
             {!gender || gender === "prefer_not" ? null : gender === "male" ? (
               <Ionicons name="male" size={20} color="#FFA840" />
@@ -60,11 +70,13 @@ export default function MyProfile() {
               <Ionicons name="female" size={20} color="#FFA840" />
             )}
           </View>
+          {useAppStore.getState().preRegistered && <PreRegBadge />}
+
           <Text className="text-base text-gray-400">
             {formatPHNumber(useAppStore.getState().phoneNumber)}
           </Text>
           {address && (
-            <View className="flex-row gap-1 items-center">
+            <View className="flex-row items-center gap-1">
               <Ionicons name="location-outline" size={20} color="#FFA840" />
               <Text
                 className="text-base text-gray-400 max-w-[70%]"
@@ -85,7 +97,7 @@ export default function MyProfile() {
             onPress={item.onPress}
             className="flex-row items-center px-5 py-3 bg-gray-100 rounded-2xl active:opacity-70"
           >
-            <View className="justify-center items-center w-10 h-10">
+            <View className="items-center justify-center w-10 h-10">
               <Ionicons name={item.icon as any} size={22} color="#FFA840" />
             </View>
 

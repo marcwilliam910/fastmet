@@ -36,13 +36,13 @@ export default function ActiveRoute() {
 
   if (isPending)
     return (
-      <View className="flex-1 justify-center items-center">
+      <View className="items-center justify-center flex-1">
         <ActivityIndicator size="large" color="#FFA840" />
       </View>
     );
   if (error)
     return (
-      <View className="flex-1 justify-center items-center">
+      <View className="items-center justify-center flex-1">
         <Text className="text-lg font-semibold text-gray-500">
           {error.message}
         </Text>
@@ -97,7 +97,7 @@ export default function ActiveRoute() {
           return null;
         }}
         ListEmptyComponent={() => (
-          <View className="justify-center items-center px-8 py-12">
+          <View className="items-center justify-center px-8 py-12">
             <View className="items-center">
               <Ionicons name="alert-circle-outline" size={80} color="#9CA3AF" />
               <Text className="mt-6 text-2xl font-bold text-center text-gray-800">
@@ -146,6 +146,7 @@ const ActiveCard = ({
   driver,
   onPressSeeMore,
 }: ActiveCardProps) => {
+  console.log(driver);
   return (
     <View
       style={{
@@ -162,10 +163,10 @@ const ActiveCard = ({
         className="overflow-hidden bg-white rounded-2xl active:opacity-90"
       >
         {/* Header */}
-        <View className="flex-row justify-between items-center px-5 py-3 bg-lightPrimary">
+        <View className="flex-row items-center justify-between px-5 py-3 bg-lightPrimary">
           <Text className="text-lg font-semibold text-white">{vehicle}</Text>
           <Pressable
-            className="flex-row gap-2 items-center active:scale-105"
+            className="flex-row items-center gap-2 active:scale-105"
             hitSlop={15}
             onPress={() =>
               pushOnce({
@@ -184,8 +185,8 @@ const ActiveCard = ({
           <Text className="mb-1 text-sm font-semibold text-gray-500">
             Driver
           </Text>
-          <View className="flex-row justify-between items-center">
-            <View className="flex-row gap-2 justify-center items-center">
+          <View className="flex-row items-center justify-between">
+            <View className="flex-row items-center justify-center gap-2">
               {driver.profilePictureUrl ? (
                 <View className="w-[44px] h-[44px] rounded-full overflow-hidden">
                   <Image
@@ -201,7 +202,7 @@ const ActiveCard = ({
                 <Text className="text-lg font-semibold text-gray-800">
                   {driver.name}
                 </Text>
-                <View className="flex-row gap-2 items-center">
+                <View className="flex-row items-center gap-2">
                   <StarDisplay rating={driver.rating} />
                   <Text className="text-sm font-semibold text-gray-600">
                     ({driver.rating})
@@ -258,7 +259,7 @@ const ActiveCard = ({
         {/* Body */}
         <View className="px-3 py-5">
           {/* Pickup & Drop */}
-          <View className="relative flex-row justify-between items-center pl-7 mr-2 ml-5 border-l border-dashed">
+          <View className="relative flex-row items-center justify-between ml-5 mr-2 border-l border-dashed pl-7">
             <View className="gap-4">
               <Text
                 className={`font-medium ${Platform.OS === "ios" ? "max-w-60" : "max-w-52"}`}
@@ -287,7 +288,7 @@ const ActiveCard = ({
             />
           </View>
           {/* Payment */}
-          <View className="flex-row justify-between items-center p-4 mt-6 bg-gray-100 rounded-lg">
+          <View className="flex-row items-center justify-between p-4 mt-6 bg-gray-100 rounded-lg">
             <Text className="text-base text-gray-600">
               {isCash ? "Cash Payment" : "Online Payment"}
             </Text>
@@ -301,7 +302,7 @@ const ActiveCard = ({
           </View>
 
           <Pressable
-            className="justify-center items-center mt-6 active:scale-105"
+            className="items-center justify-center mt-6 active:scale-105"
             onPress={onPressSeeMore}
           >
             <Text className="text-sm font-medium">+ See more</Text>

@@ -6,6 +6,6 @@ type DocumentResponse = {
 };
 
 export const fetchDocuments = async (): Promise<DocumentResponse> => {
-  const res = await api.get("/documents");
+  const res = await api.get("/profile/documents");
   return res.data.images;
 };
