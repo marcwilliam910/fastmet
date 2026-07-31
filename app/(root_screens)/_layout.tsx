@@ -1,19 +1,19 @@
 import HeaderProfile from "@/components/headers/HeaderProfile";
-import {Stack} from "expo-router";
+import { Stack } from "expo-router";
 
 export default function RootScreenLayout() {
   return (
     <Stack
       screenOptions={{
-        headerStyle: {backgroundColor: "#0F2535"},
+        headerStyle: { backgroundColor: "#0F2535" },
         headerLeft: () => null,
         headerBackVisible: false, // <- disables built-in back
-        headerTitle: ({children}) => <HeaderProfile title={children} />,
+        headerTitle: ({ children }) => <HeaderProfile title={children} />,
       }}
     >
       <Stack.Screen
         name="message"
-        options={{title: "Message", headerShown: false}}
+        options={{ title: "Message", headerShown: false }}
       />
 
       <Stack.Screen
@@ -39,6 +39,13 @@ export default function RootScreenLayout() {
         name="searchChat"
         options={{
           title: "Search",
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="announcements"
+        options={{
+          title: "Announcement",
           headerShown: false,
         }}
       />
