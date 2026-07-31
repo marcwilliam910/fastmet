@@ -2,9 +2,10 @@ import {
   registerForPushNotificationsAsync,
   savePushTokenToBackend,
 } from "@/hooks/pushToken";
+import {handleNotificationEntry} from "@/utils/helpers/notificationRouting";
 import * as Notifications from "expo-notifications";
-import { useEffect, useRef, useState } from "react";
-import { useAuth } from "./useAuth";
+import {useEffect, useRef, useState} from "react";
+import {useAuth} from "./useAuth";
 
 // Configure notification handler
 Notifications.setNotificationHandler({
@@ -22,14 +23,15 @@ export function usePushNotifications() {
     Notifications.Notification | undefined
   >();
   const notificationListener = useRef<Notifications.EventSubscription | null>(
-    null
+    null,
   );
   const responseListener = useRef<Notifications.EventSubscription | null>(null);
-  const { isLoggedIn } = useAuth();
+  const {isLoggedIn} = useAuth();
 
   useEffect(() => {
     if (!isLoggedIn) return;
 
+    // Soft-ask once (if needed), then register token — never hard-requires permission.
     registerForPushNotificationsAsync().then((token) => {
       setExpoPushToken(token);
       if (token) {
@@ -37,29 +39,36 @@ export function usePushNotifications() {
       }
     });
 
-    // Listen for notifications received while app is in foreground
+    // Cold start: app launched by tapping a notification while killed.
+    Notifications.getLastNotificationResponseAsync().then((response) => {
+      if (response) {
+        handleNotificationEntry(response.notification.request.content.data);
+      }
+    });
+
+    // Foreground receives — same as before (state + log only).
     notificationListener.current =
       Notifications.addNotificationReceivedListener((notification) => {
         setNotification(notification);
         console.log("📬 Notification received:", notification);
       });
 
-    // Listen for user taps on notifications
+    // User taps (foreground or background).
     responseListener.current =
       Notifications.addNotificationResponseReceivedListener((response) => {
         const data = response.notification.request.content.data;
         console.log("👆 Notification tapped:", data);
-
-        // Handle navigation based on notification data
-        // You can implement this later with your navigation
+        handleNotificationEntry(data);
       });
 
     return () => {
       if (notificationListener.current) {
         notificationListener.current.remove();
+        notificationListener.current = null;
       }
       if (responseListener.current) {
         responseListener.current.remove();
+        responseListener.current = null;
       }
     };
   }, [isLoggedIn]);

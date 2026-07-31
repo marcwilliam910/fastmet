@@ -1,111 +1,26 @@
 import api from "@/lib/axios";
 import {useAppStore} from "@/store/useAppStore";
+import {
+  getPushRegistration,
+  PUSH_REGISTRATION_KEY,
+} from "@/utils/helpers/pushRegistration";
 import Constants from "expo-constants";
 import * as Device from "expo-device";
 import * as Notifications from "expo-notifications";
-import {
-  deleteItemAsync,
-  getItemAsync,
-  setItemAsync,
-} from "expo-secure-store";
+import {getItemAsync, setItemAsync} from "expo-secure-store";
 import {Alert, Platform} from "react-native";
 
-export const PUSH_REGISTRATION_KEY = "push_registration";
+export {PUSH_REGISTRATION_KEY};
 export const NOTIFICATION_PERMISSION_KEY = "notification_permission_asked";
-
-type PushRegistration = {
-  token: string;
-  userId: string;
-};
 
 export function getEasProjectId() {
   return (
-    Constants.expoConfig?.extra?.eas?.projectId ?? Constants.easConfig?.projectId
+    Constants.expoConfig?.extra?.eas?.projectId ??
+    Constants.easConfig?.projectId
   );
 }
 
-export async function registerForPushNotificationsAsync() {
-  try {
-    if (Platform.OS === "android") {
-      await Notifications.setNotificationChannelAsync("default", {
-        name: "default",
-        importance: Notifications.AndroidImportance.MAX,
-        vibrationPattern: [0, 250, 250, 250],
-        lightColor: "#FFA840",
-      });
-    }
-
-    if (!Device.isDevice) {
-      console.log("⚠️ Must use physical device for Push Notifications");
-      return undefined;
-    }
-
-    const projectId = getEasProjectId();
-    if (!projectId) {
-      console.error("❌ EAS projectId missing");
-      return undefined;
-    }
-
-    const hasAsked = await getItemAsync(NOTIFICATION_PERMISSION_KEY);
-    const {status: existingStatus} = await Notifications.getPermissionsAsync();
-
-    if (existingStatus !== "granted") {
-      if (!hasAsked) {
-        return await new Promise<string | undefined>((resolve) => {
-          Alert.alert(
-            "🔔 Stay Updated",
-            "Enable notifications to receive alerts about scheduled trips and booking updates.",
-            [
-              {
-                text: "Not Now",
-                style: "cancel",
-                onPress: async () => {
-                  await setItemAsync(NOTIFICATION_PERMISSION_KEY, "declined");
-                  resolve(undefined);
-                },
-              },
-              {
-                text: "Enable",
-                onPress: async () => {
-                  const {status} =
-                    await Notifications.requestPermissionsAsync();
-                  await setItemAsync(NOTIFICATION_PERMISSION_KEY, "asked");
-
-                  if (status !== "granted") {
-                    resolve(undefined);
-                    return;
-                  }
-
-                  try {
-                    const token = (
-                      await Notifications.getExpoPushTokenAsync({projectId})
-                    ).data;
-                    console.log("📱 Push token obtained:", token);
-                    resolve(token);
-                  } catch (error) {
-                    console.error("❌ Token fetch failed:", error);
-                    resolve(undefined);
-                  }
-                },
-              },
-            ],
-          );
-        });
-      }
-
-      console.log("⚠️ Permission previously declined");
-      return undefined;
-    }
-
-    const token = (await Notifications.getExpoPushTokenAsync({projectId})).data;
-    console.log("📱 Push token obtained:", token);
-    return token;
-  } catch (error) {
-    console.error("❌ registerForPushNotificationsAsync failed:", error);
-    return undefined;
-  }
-}
-
+/** Lean token fetch — only works if OS permission is already granted. */
 export async function getExpoPushToken() {
   try {
     if (Platform.OS === "android") {
@@ -143,14 +58,63 @@ export async function getExpoPushToken() {
   }
 }
 
-async function getPushRegistration(): Promise<PushRegistration | null> {
-  const raw = await getItemAsync(PUSH_REGISTRATION_KEY);
-  if (!raw) return null;
-
+/**
+ * Soft-ask once (Alert). Does not block the app if declined.
+ * Returns true when permission is granted.
+ */
+export async function ensureNotificationPermissionSoft(): Promise<boolean> {
   try {
-    return JSON.parse(raw) as PushRegistration;
-  } catch {
-    return null;
+    if (!Device.isDevice) return false;
+
+    const hasAsked = await getItemAsync(NOTIFICATION_PERMISSION_KEY);
+    const {status: existingStatus} = await Notifications.getPermissionsAsync();
+
+    if (existingStatus === "granted") return true;
+
+    if (hasAsked) {
+      console.log("⚠️ Permission previously declined");
+      return false;
+    }
+
+    return await new Promise<boolean>((resolve) => {
+      Alert.alert(
+        "🔔 Stay Updated",
+        "Enable notifications to receive alerts about scheduled trips and booking updates.",
+        [
+          {
+            text: "Not Now",
+            style: "cancel",
+            onPress: async () => {
+              await setItemAsync(NOTIFICATION_PERMISSION_KEY, "declined");
+              resolve(false);
+            },
+          },
+          {
+            text: "Enable",
+            onPress: async () => {
+              const {status} = await Notifications.requestPermissionsAsync();
+              await setItemAsync(NOTIFICATION_PERMISSION_KEY, "asked");
+              resolve(status === "granted");
+            },
+          },
+        ],
+      );
+    });
+  } catch (error) {
+    console.error("❌ ensureNotificationPermissionSoft failed:", error);
+    return false;
+  }
+}
+
+/** Soft-ask (if needed) then fetch token. Used on login by the push hook. */
+export async function registerForPushNotificationsAsync() {
+  try {
+    const granted = await ensureNotificationPermissionSoft();
+    if (!granted) return undefined;
+    return await getExpoPushToken();
+  } catch (error) {
+    console.error("❌ registerForPushNotificationsAsync failed:", error);
+    return undefined;
   }
 }
 
@@ -186,8 +150,4 @@ export async function savePushTokenToBackend(token: string) {
     );
     return false;
   }
-}
-
-export async function clearPushRegistrationCache() {
-  await deleteItemAsync(PUSH_REGISTRATION_KEY);
 }

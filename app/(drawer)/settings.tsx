@@ -4,13 +4,21 @@ import { getExpoPushToken, savePushTokenToBackend } from "@/hooks/pushToken";
 import { useAuth } from "@/hooks/useAuth";
 import { useDrawerFallbackBack } from "@/hooks/useDrawerFallbackBack";
 import api from "@/lib/axios";
-import { useAppStore } from "@/store/useAppStore";
 import { pushOnce } from "@/utils/helpers/navigation";
 import { Ionicons } from "@expo/vector-icons";
 import * as Notifications from "expo-notifications";
-import { useFocusEffect } from "expo-router";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Alert, Linking, Pressable, Switch, Text, View } from "react-native";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  AppState,
+  type AppStateStatus,
+  Linking,
+  Pressable,
+  Switch,
+  Text,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 
@@ -18,12 +26,22 @@ const Settings = () => {
   useDrawerFallbackBack();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const { isLoggedIn } = useAuth();
-  const setIsLoading = useAppStore
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [isLoadingNotifications, setIsLoadingNotifications] = useState(true);
   const [osPermissionStatus, setOsPermissionStatus] = useState<
     "granted" | "denied" | "undetermined"
   >("undetermined");
+  const appState = useRef(AppState.currentState);
+  const lastOsStatus = useRef(osPermissionStatus);
+  const isLoggedInRef = useRef(isLoggedIn);
+
+  useEffect(() => {
+    isLoggedInRef.current = isLoggedIn;
+  }, [isLoggedIn]);
+
+  useEffect(() => {
+    lastOsStatus.current = osPermissionStatus;
+  }, [osPermissionStatus]);
 
   // Fetch notification settings on mount
   useEffect(() => {
@@ -39,6 +57,7 @@ const Settings = () => {
       // Check OS permission
       const { status } = await Notifications.getPermissionsAsync();
       setOsPermissionStatus(status);
+      lastOsStatus.current = status;
 
       // Check backend setting
       const response = await api.get("/notifications/settings");
@@ -70,6 +89,55 @@ const Settings = () => {
 
     return api.post("/notifications/enable");
   };
+
+  // Resume from OS settings: cheap permission check; sync only if status changed.
+  useEffect(() => {
+    const onAppStateChange = async (nextState: AppStateStatus) => {
+      if (
+        appState.current.match(/inactive|background/) &&
+        nextState === "active" &&
+        isLoggedInRef.current
+      ) {
+        try {
+          const { status } = await Notifications.getPermissionsAsync();
+          if (status === lastOsStatus.current) {
+            appState.current = nextState;
+            return;
+          }
+
+          lastOsStatus.current = status;
+          setOsPermissionStatus(status);
+
+          if (status === "granted") {
+            setIsLoadingNotifications(true);
+            try {
+              await enableNotificationsWithToken();
+              setNotificationsEnabled(true);
+              Toast.show({
+                type: "success",
+                text1: "✅ Notifications Enabled",
+                text2: "You will receive alerts for booking updates",
+              });
+            } catch (error) {
+              console.error("Error enabling notifications on resume:", error);
+              await fetchNotificationSettings();
+            } finally {
+              setIsLoadingNotifications(false);
+            }
+          } else {
+            setNotificationsEnabled(false);
+          }
+        } catch (error) {
+          console.error("Error checking notification permission on resume:", error);
+        }
+      }
+
+      appState.current = nextState;
+    };
+
+    const sub = AppState.addEventListener("change", onAppStateChange);
+    return () => sub.remove();
+  }, []);
 
   const handleNotificationToggle = async (value: boolean) => {
     try {
@@ -217,14 +285,6 @@ const Settings = () => {
       },
     ],
     [isLoggedIn],
-  );
-
-  useFocusEffect(
-    useCallback(() => {
-      if (isLoggedIn) {
-        fetchNotificationSettings();
-      }
-    }, [isLoggedIn]),
   );
 
   if (!isLoggedIn) {

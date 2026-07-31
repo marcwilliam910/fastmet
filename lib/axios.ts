@@ -2,18 +2,18 @@ import {
   ACCOUNT_DEACTIVATED_ROUTE,
   DEVICE_BANNED_ROUTE,
 } from "@/constants/routes";
-import {clearPushRegistrationCache} from "@/hooks/pushToken";
-import {getSocket} from "@/sockets/socket";
-import {useAppStore} from "@/store/useAppStore";
-import axios, {InternalAxiosRequestConfig} from "axios";
-import {router} from "expo-router";
+import { getSocket } from "@/sockets/socket";
+import { useAppStore } from "@/store/useAppStore";
+import { clearPushRegistrationCache } from "@/utils/helpers/pushRegistration";
+import axios, { InternalAxiosRequestConfig } from "axios";
+import { router } from "expo-router";
 import Toast from "react-native-toast-message";
 
 export const apiUrl = `${process.env.EXPO_PUBLIC_BASE_URL}/api/client`;
 
 const api = axios.create({
   baseURL: apiUrl,
-  headers: {"Content-Type": "application/json"},
+  headers: { "Content-Type": "application/json" },
 });
 
 // --- Shared refresh promise ---
@@ -29,11 +29,11 @@ export const ensureFreshToken = (): Promise<string> => {
   if (!storedRefreshToken) return Promise.reject(new Error("No refresh token"));
 
   activeRefreshPromise = axios
-    .post<{accessToken: string; refreshToken: string}>(
+    .post<{ accessToken: string; refreshToken: string }>(
       `${apiUrl}/auth/refresh`,
-      {refreshToken: storedRefreshToken},
+      { refreshToken: storedRefreshToken },
     )
-    .then(({data}) => {
+    .then(({ data }) => {
       useAppStore.getState().setAuthData({
         token: data.accessToken,
         refreshToken: data.refreshToken,
@@ -55,7 +55,7 @@ export const performLogout = async () => {
     const token = store.token;
     if (token) {
       await api.post("/auth/logout", null, {
-        headers: {Authorization: `Bearer ${token}`},
+        headers: { Authorization: `Bearer ${token}` },
       });
     }
   } catch {
