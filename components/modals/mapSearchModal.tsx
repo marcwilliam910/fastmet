@@ -1,14 +1,19 @@
-import {useShake} from "@/hooks/useShakeAnimation";
-import {useAppStore} from "@/store/useAppStore";
-import {LocationDetails} from "@/types/book";
-import {GOOGLE_MAPS_API_KEY, METRO_MANILA_POLYGON} from "@/utils/constants";
-import {formatLocation} from "@/utils/helpers/location";
-import {getArray, pushToArray} from "@/utils/helpers/recentPlaceStorage";
-import {Ionicons} from "@expo/vector-icons";
+import { useShake } from "@/hooks/useShakeAnimation";
+import { useAppStore } from "@/store/useAppStore";
+import { LocationDetails } from "@/types/book";
+import {
+  addressMentionsAllowedPickupCity,
+  GOOGLE_MAPS_API_KEY,
+  isAllowedPickupCity,
+  isDropOffAllowed,
+  isWithinAllowedPickupBounds,
+} from "@/utils/constants";
+import { formatLocation } from "@/utils/helpers/location";
+import { getArray, pushToArray } from "@/utils/helpers/recentPlaceStorage";
+import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
-import {router} from "expo-router";
-import {isPointInPolygon} from "geolib";
-import React, {useEffect, useRef, useState} from "react";
+import { router } from "expo-router";
+import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -28,9 +33,9 @@ import {
 import GooglePlacesTextInput, {
   Place,
 } from "react-native-google-places-textinput";
-import MapView, {PROVIDER_GOOGLE, Region} from "react-native-maps";
+import MapView, { PROVIDER_GOOGLE, Region } from "react-native-maps";
 import Animated from "react-native-reanimated";
-import {useSafeAreaInsets} from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type SearchType = "pickup" | "dropoff";
 
@@ -42,31 +47,33 @@ type SearchModalProps = {
 
 type Step = "search" | "map";
 
-type Coords = {lat: number; lng: number};
+type Coords = { lat: number; lng: number };
 
 // Theme color — same hex used for the back chevron elsewhere in this file.
 // Swap for a themed constant if one exists in utils/constants.
 const THEME_COLOR = "#FFA840";
 
-function isWithinMetroManila(lat: number, lng: number) {
-  return isPointInPolygon(
-    {latitude: lat, longitude: lng},
-    METRO_MANILA_POLYGON.map(([lat, lng]) => ({
-      latitude: lat,
-      longitude: lng,
-    })),
-  );
-}
+export const PICKUP_AREA_ERROR =
+  "Sorry, this pickup location is outside our current service area.";
 
-// Centralized zone/overlap validation so search-select, recent, home,
-// current-location, and map-move all enforce identical rules.
-// Cheap/local — no network call — so it's fine to run on every region change.
+const DROPOFF_AREA_ERROR =
+  "Drop-off location must be reachable by road (no ferry required).";
+
+const MAP_DRAG_VALIDATE_DELAY_MS = 400;
+
+// Sync gates: pickup bbox + drop-off Mainland Luzon allowlist.
 function validateCoords(
   type: SearchType,
   lat: number,
   lng: number,
-  other: LocationDetails | null,
+  _other: LocationDetails | null,
 ): string | null {
+  if (type === "pickup" && !isWithinAllowedPickupBounds(lat, lng)) {
+    return PICKUP_AREA_ERROR;
+  }
+  if (type === "dropoff" && !isDropOffAllowed(lat, lng)) {
+    return DROPOFF_AREA_ERROR;
+  }
   return null;
 }
 
@@ -78,13 +85,47 @@ function showValidationError(message: string) {
   }
 }
 
+/** Extract city/municipality from Google Places (new) addressComponents. */
+function extractCityFromPlaceComponents(
+  components: { longText?: string; long_name?: string; types?: string[] }[] | undefined,
+): string | null {
+  if (!components?.length) return null;
+
+  const locality = components.find((c) => c.types?.includes("locality"));
+  if (locality) return locality.longText || locality.long_name || null;
+
+  const admin2 = components.find((c) =>
+    c.types?.includes("administrative_area_level_2"),
+  );
+  if (admin2) return admin2.longText || admin2.long_name || null;
+
+  return null;
+}
+
+/** Extract city from Geocoding API (legacy) address_components. */
+function extractCityFromGeocodeComponents(
+  components: { long_name?: string; types?: string[] }[] | undefined,
+): string | null {
+  if (!components?.length) return null;
+
+  const locality = components.find((c) => c.types?.includes("locality"));
+  if (locality?.long_name) return locality.long_name;
+
+  const admin2 = components.find((c) =>
+    c.types?.includes("administrative_area_level_2"),
+  );
+  if (admin2?.long_name) return admin2.long_name;
+
+  return null;
+}
+
 // Only ever called on: (1) initial current-location fix, since GPS gives no
 // name, and (2) "Confirm pin" press when the user has actually moved the
 // map. Never on drag/region-change — that's billed per call.
 async function reverseGeocode(
   lat: number,
   lng: number,
-): Promise<{name: string; address: string} | null> {
+): Promise<{ name: string; address: string; city: string | null } | null> {
   try {
     const response = await fetch(
       `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${GOOGLE_MAPS_API_KEY}`,
@@ -95,6 +136,7 @@ async function reverseGeocode(
       return {
         name: result.address_components?.[0]?.long_name || "Dropped pin",
         address: result.formatted_address || "Unknown address",
+        city: extractCityFromGeocodeComponents(result.address_components),
       };
     }
     return null;
@@ -128,7 +170,7 @@ function cleanPhoneInput(value: string) {
 }
 const RECENT_PLACE_KEY = "recent_places";
 
-const SearchModal: React.FC<SearchModalProps> = ({visible, onClose, type}) => {
+const SearchModal: React.FC<SearchModalProps> = ({ visible, onClose, type }) => {
   const [recentPlaces, setRecentPlaces] = useState<LocationDetails[]>([]);
   const inset = useSafeAreaInsets();
   const insets = useSafeAreaInsets();
@@ -160,7 +202,7 @@ const SearchModal: React.FC<SearchModalProps> = ({visible, onClose, type}) => {
   const dropOff = useAppStore((state) => state.dropOff);
   const pickUp = useAppStore((state) => state.pickUp);
   const homeAddress = useAppStore((state) => state.address);
-  const {shake, animatedStyle} = useShake();
+  const { shake, animatedStyle } = useShake();
   const [additionalDetails, setAdditionalDetails] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -190,8 +232,10 @@ const SearchModal: React.FC<SearchModalProps> = ({visible, onClose, type}) => {
   const [resolvingAddress, setResolvingAddress] = useState(false);
   const mapRef = useRef<MapView>(null);
   const isInitialRegion = useRef(true);
+  const dragValidateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
 
-  // seed it wherever you currently seed confirmedLocation
   useEffect(() => {
     if (visible) {
       setAdditionalDetails(haveValue?.additionalDetails || "");
@@ -201,8 +245,19 @@ const SearchModal: React.FC<SearchModalProps> = ({visible, onClose, type}) => {
       setMarkerCoord(null);
       setContactName("");
       setContactPhone("");
+    } else if (dragValidateTimerRef.current) {
+      clearTimeout(dragValidateTimerRef.current);
+      dragValidateTimerRef.current = null;
     }
-  }, [visible, haveValue?.additionalDetails]);
+  }, [visible, haveValue?.additionalDetails, haveValue]);
+
+  useEffect(() => {
+    return () => {
+      if (dragValidateTimerRef.current) {
+        clearTimeout(dragValidateTimerRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     async function getRecentPlaces() {
@@ -224,7 +279,7 @@ const SearchModal: React.FC<SearchModalProps> = ({visible, onClose, type}) => {
       setContactName("");
       setContactPhone("");
     }
-  }, [visible, haveValue?.additionalDetails]);
+  }, [visible, haveValue?.additionalDetails, haveValue]);
 
   const handleUseMyNumber = () => {
     const myNumber = useAppStore.getState().phoneNumber;
@@ -233,11 +288,20 @@ const SearchModal: React.FC<SearchModalProps> = ({visible, onClose, type}) => {
   };
 
   // Entry point for every source (search select, recent, home, current
-  // location). Validates, then hands off to the map/pin step.
-  const goToMapStep = (coords: Coords, name: string, address: string) => {
-    const error = validateCoords(type, coords.lat, coords.lng, otherValue);
-    if (error) {
-      showValidationError(error);
+  // location). Bounds gate only — city allowlist is enforced by each caller.
+  const goToMapStep = (
+    coords: Coords,
+    name: string,
+    address: string,
+  ) => {
+    const boundsError = validateCoords(
+      type,
+      coords.lat,
+      coords.lng,
+      otherValue,
+    );
+    if (boundsError) {
+      showValidationError(boundsError);
       shake();
       return;
     }
@@ -266,8 +330,33 @@ const SearchModal: React.FC<SearchModalProps> = ({visible, onClose, type}) => {
     const loc = place.details?.location;
     if (!loc) return;
 
+    if (type === "pickup") {
+      const city = extractCityFromPlaceComponents(
+        place.details?.addressComponents,
+      );
+      const address = place.details?.formattedAddress || "";
+      const allowed =
+        isAllowedPickupCity(city) ||
+        addressMentionsAllowedPickupCity(address);
+
+      if (!allowed) {
+        showValidationError(PICKUP_AREA_ERROR);
+        shake();
+        return;
+      }
+    }
+
+    if (
+      type === "dropoff" &&
+      !isDropOffAllowed(loc.latitude, loc.longitude)
+    ) {
+      showValidationError(DROPOFF_AREA_ERROR);
+      shake();
+      return;
+    }
+
     goToMapStep(
-      {lat: loc.latitude, lng: loc.longitude},
+      { lat: loc.latitude, lng: loc.longitude },
       place.details?.displayName?.text || "Unknown location",
       place.details?.formattedAddress || "Unknown address",
     );
@@ -275,6 +364,26 @@ const SearchModal: React.FC<SearchModalProps> = ({visible, onClose, type}) => {
 
   const handleRecentPlacePress = async (place: LocationDetails) => {
     if (!place) return;
+
+    if (
+      type === "pickup" &&
+      !addressMentionsAllowedPickupCity(place.address) &&
+      !addressMentionsAllowedPickupCity(place.name)
+    ) {
+      showValidationError(PICKUP_AREA_ERROR);
+      shake();
+      return;
+    }
+
+    if (
+      type === "dropoff" &&
+      !isDropOffAllowed(place.coords.lat, place.coords.lng)
+    ) {
+      showValidationError(DROPOFF_AREA_ERROR);
+      shake();
+      return;
+    }
+
     goToMapStep(place.coords, place.name, place.address);
   };
 
@@ -288,7 +397,7 @@ const SearchModal: React.FC<SearchModalProps> = ({visible, onClose, type}) => {
           "Location Services Disabled",
           "Please enable location services in your device settings to use this feature.",
           [
-            {text: "Cancel", style: "cancel"},
+            { text: "Cancel", style: "cancel" },
             {
               text: "Open Settings",
               onPress: () => {
@@ -304,7 +413,7 @@ const SearchModal: React.FC<SearchModalProps> = ({visible, onClose, type}) => {
         return;
       }
 
-      const {status} = await Location.requestForegroundPermissionsAsync();
+      const { status } = await Location.requestForegroundPermissionsAsync();
 
       if (status !== "granted") {
         showValidationError("Permission to access location was denied");
@@ -315,12 +424,28 @@ const SearchModal: React.FC<SearchModalProps> = ({visible, onClose, type}) => {
         accuracy: Location.Accuracy.Balanced,
       });
 
-      const {latitude, longitude} = location.coords;
+      const { latitude, longitude } = location.coords;
       // Necessary call — GPS coords alone have no name/address.
       const geocoded = await reverseGeocode(latitude, longitude);
 
+      if (type === "pickup") {
+        const allowed =
+          isAllowedPickupCity(geocoded?.city) ||
+          addressMentionsAllowedPickupCity(geocoded?.address);
+
+        if (!allowed) {
+          showValidationError(PICKUP_AREA_ERROR);
+          return;
+        }
+      }
+
+      if (type === "dropoff" && !isDropOffAllowed(latitude, longitude)) {
+        showValidationError(DROPOFF_AREA_ERROR);
+        return;
+      }
+
       goToMapStep(
-        {lat: latitude, lng: longitude},
+        { lat: latitude, lng: longitude },
         geocoded?.name || "Current Location",
         geocoded?.address || "Current Location",
       );
@@ -334,8 +459,28 @@ const SearchModal: React.FC<SearchModalProps> = ({visible, onClose, type}) => {
 
   const handleHomePress = () => {
     if (!homeAddress) return;
+
+    if (
+      type === "pickup" &&
+      !addressMentionsAllowedPickupCity(homeAddress.fullAddress) &&
+      !addressMentionsAllowedPickupCity(homeAddress.name)
+    ) {
+      showValidationError(PICKUP_AREA_ERROR);
+      shake();
+      return;
+    }
+
+    if (
+      type === "dropoff" &&
+      !isDropOffAllowed(homeAddress.coords.lat, homeAddress.coords.lng)
+    ) {
+      showValidationError(DROPOFF_AREA_ERROR);
+      shake();
+      return;
+    }
+
     goToMapStep(
-      {lat: homeAddress.coords.lat, lng: homeAddress.coords.lng},
+      { lat: homeAddress.coords.lat, lng: homeAddress.coords.lng },
       homeAddress.name,
       homeAddress.fullAddress,
     );
@@ -344,8 +489,9 @@ const SearchModal: React.FC<SearchModalProps> = ({visible, onClose, type}) => {
   // Fixed center pin: the pin never moves, the map moves under it.
   // No network call here — just tracks the candidate coord + whether it
   // has actually moved from the initial position.
+  // Pickup bounds toast is debounced so rapid region events don't spam.
   const handleRegionChangeComplete = (region: Region) => {
-    const {latitude, longitude} = region;
+    const { latitude, longitude } = region;
 
     // Skip the event MapView fires for the initial region on mount.
     if (isInitialRegion.current) {
@@ -353,25 +499,47 @@ const SearchModal: React.FC<SearchModalProps> = ({visible, onClose, type}) => {
       return;
     }
 
-    const error = validateCoords(type, latitude, longitude, otherValue);
-    if (error) {
-      showValidationError(error);
-      shake();
-      return;
+    // Always track the pin so UX stays smooth while dragging.
+    setMarkerCoord({ lat: latitude, lng: longitude });
+    setPinMoved(true);
+
+    if (dragValidateTimerRef.current) {
+      clearTimeout(dragValidateTimerRef.current);
     }
 
-    setMarkerCoord({lat: latitude, lng: longitude});
-    setPinMoved(true);
+    dragValidateTimerRef.current = setTimeout(() => {
+      dragValidateTimerRef.current = null;
+      const error = validateCoords(type, latitude, longitude, otherValue);
+      if (error) {
+        showValidationError(error);
+        shake();
+      }
+    }, MAP_DRAG_VALIDATE_DELAY_MS);
   };
 
   const handleMapConfirmPin = async () => {
     if (!markerCoord) return;
 
+    // Hard gate: pickup must stay inside service area before confirm.
+    const boundsError = validateCoords(
+      type,
+      markerCoord.lat,
+      markerCoord.lng,
+      otherValue,
+    );
+    if (boundsError) {
+      showValidationError(boundsError);
+      shake();
+      return;
+    }
+
     let finalName = mapName;
     let finalAddress = mapAddress;
+    let finalCity: string | null = null;
 
     // Only geocode if the user actually dragged the map — otherwise the
     // original name/address from the search result/recent/home is still valid.
+    // For pickup, always re-check allowlist after a drag (city may have changed).
     if (pinMoved) {
       setResolvingAddress(true);
       const geocoded = await reverseGeocode(markerCoord.lat, markerCoord.lng);
@@ -381,6 +549,28 @@ const SearchModal: React.FC<SearchModalProps> = ({visible, onClose, type}) => {
       finalAddress =
         geocoded?.address ||
         `${markerCoord.lat.toFixed(6)}, ${markerCoord.lng.toFixed(6)}`;
+      finalCity = geocoded?.city ?? null;
+
+      if (type === "pickup") {
+        const allowed =
+          isAllowedPickupCity(finalCity) ||
+          addressMentionsAllowedPickupCity(finalAddress);
+
+        if (!allowed) {
+          showValidationError(PICKUP_AREA_ERROR);
+          shake();
+          return;
+        }
+      }
+
+      if (
+        type === "dropoff" &&
+        !isDropOffAllowed(markerCoord.lat, markerCoord.lng)
+      ) {
+        showValidationError(DROPOFF_AREA_ERROR);
+        shake();
+        return;
+      }
     }
 
     // placeId is intentionally dropped: after moving the map the point no
@@ -417,7 +607,7 @@ const SearchModal: React.FC<SearchModalProps> = ({visible, onClose, type}) => {
     onClose();
   };
 
-  const renderRecentPlace = ({item}: {item: LocationDetails}) => (
+  const renderRecentPlace = ({ item }: { item: LocationDetails }) => (
     <Pressable
       onPress={() => handleRecentPlacePress(item)}
       className="flex-row items-center px-4 py-3 border-b border-gray-100 rounded-xl active:bg-gray-100"
@@ -456,11 +646,11 @@ const SearchModal: React.FC<SearchModalProps> = ({visible, onClose, type}) => {
           }}
         >
           {step === "map" && markerCoord ? (
-            <View style={{flex: 1}}>
+            <View style={{ flex: 1 }}>
               {/* Header */}
               <View
                 className="flex-row items-center justify-center px-4"
-                style={{paddingBottom: Platform.OS === "ios" ? 25 : 16}}
+                style={{ paddingBottom: Platform.OS === "ios" ? 25 : 16 }}
               >
                 <Pressable
                   onPress={() => setStep("search")}
@@ -499,11 +689,11 @@ const SearchModal: React.FC<SearchModalProps> = ({visible, onClose, type}) => {
               </View>
 
               {/* Map with fixed center pin */}
-              <View style={{flex: 1}}>
+              <View style={{ flex: 1 }}>
                 <MapView
                   ref={mapRef}
                   provider={PROVIDER_GOOGLE}
-                  style={{flex: 1}}
+                  style={{ flex: 1 }}
                   initialRegion={{
                     latitude: markerCoord.lat,
                     longitude: markerCoord.lng,
@@ -531,7 +721,7 @@ const SearchModal: React.FC<SearchModalProps> = ({visible, onClose, type}) => {
               {/* Confirm pin card — hint text + button together */}
               <View
                 className="px-6 pt-3 bg-white"
-                style={{paddingBottom: inset.bottom || 12}}
+                style={{ paddingBottom: inset.bottom || 12 }}
               >
                 <Text className="mb-2 text-xs text-center text-gray-400">
                   Move the map to adjust the pin position
@@ -556,7 +746,7 @@ const SearchModal: React.FC<SearchModalProps> = ({visible, onClose, type}) => {
               {/* Header */}
               <View
                 className="flex-row items-center justify-center px-4"
-                style={{paddingBottom: Platform.OS === "ios" ? 25 : 16}}
+                style={{ paddingBottom: Platform.OS === "ios" ? 25 : 16 }}
               >
                 <Pressable
                   onPress={onClose}
@@ -594,6 +784,13 @@ const SearchModal: React.FC<SearchModalProps> = ({visible, onClose, type}) => {
                       includedRegionCodes={["ph"]}
                       minCharsToFetch={2}
                       fetchDetails={true}
+                      detailsFields={[
+                        "displayName",
+                        "formattedAddress",
+                        "location",
+                        "addressComponents",
+                        "id",
+                      ]}
                       placeHolderText={`Where to ${type === "pickup" ? "pick up" : "drop off"}?`}
                       returnKeyType="search"
                       textContentType="location"
@@ -644,7 +841,7 @@ const SearchModal: React.FC<SearchModalProps> = ({visible, onClose, type}) => {
                           name="information-circle-outline"
                           size={18}
                           color="#D97706"
-                          style={{marginTop: 2, marginRight: 8}}
+                          style={{ marginTop: 2, marginRight: 8 }}
                         />
 
                         <View className="flex-1">
@@ -781,7 +978,7 @@ const SearchModal: React.FC<SearchModalProps> = ({visible, onClose, type}) => {
                           name="time-outline"
                           size={18}
                           color="#6B7280"
-                          style={{marginRight: 8}}
+                          style={{ marginRight: 8 }}
                         />
                         <Text className="text-xs font-semibold tracking-wider text-gray-600 uppercase">
                           Recent Places
@@ -801,7 +998,7 @@ const SearchModal: React.FC<SearchModalProps> = ({visible, onClose, type}) => {
               {/* Final confirm — commits location + contact + closes modal */}
               <View
                 className="px-6 py-3 bg-white border-t border-gray-100"
-                style={{paddingBottom: inset.bottom || 12}}
+                style={{ paddingBottom: inset.bottom || 12 }}
               >
                 <Pressable
                   className="items-center justify-center p-3.5 rounded-lg bg-lightPrimary active:bg-darkPrimary disabled:opacity-40"
