@@ -1,29 +1,30 @@
 import CustomKeyAvoidingView from "@/components/CustomKeyAvoid";
 import AddressInput from "@/components/inputs/AddressInput";
-import { useAuthGuard } from "@/hooks/useAuthGuard";
+import {useAuthGuard} from "@/hooks/useAuthGuard";
 import api from "@/lib/axios";
-import { ProfileSchema } from "@/schemas/authSchema";
-import { useAppStore } from "@/store/useAppStore";
-import { NewUser, UserAddress } from "@/types/user";
-import { openGallery } from "@/utils/helpers/imagePicker";
-import { validateForm } from "@/utils/helpers/validateForm";
-import { Ionicons } from "@expo/vector-icons";
-import { Image } from "expo-image";
-import { router, type Href } from "expo-router";
-import React, { useCallback, useState } from "react";
-import { Alert, Pressable, Text, TextInput, View } from "react-native";
-import { Dropdown } from "react-native-element-dropdown";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import {ProfileSchema} from "@/schemas/authSchema";
+import {useAppStore} from "@/store/useAppStore";
+import {NewUser, UserAddress} from "@/types/user";
+import {openGallery} from "@/utils/helpers/imagePicker";
+import {validateForm} from "@/utils/helpers/validateForm";
+import {Ionicons} from "@expo/vector-icons";
+import {Image} from "expo-image";
+import {router, type Href} from "expo-router";
+import React, {useCallback, useState} from "react";
+import {Alert, Platform, Pressable, Text, TextInput, View} from "react-native";
+import {Dropdown} from "react-native-element-dropdown";
+import {SafeAreaView, useSafeAreaInsets} from "react-native-safe-area-context";
 
 export default function ProfileRegistration() {
   const [form, setForm] = useState<NewUser>({
     fullName: "",
     address: null,
     gender: "",
+    email: "",
     profilePictureUrl: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const { isAuthenticated } = useAuthGuard();
+  const {isAuthenticated} = useAuthGuard();
   const [selectedAsset, setSelectedAsset] = useState<any>(null);
   const inset = useSafeAreaInsets();
   const setLoading = useAppStore((state) => state.setLoading);
@@ -34,19 +35,20 @@ export default function ProfileRegistration() {
     if (result && !result.canceled && result.assets[0]) {
       const asset = result.assets[0];
       setSelectedAsset(asset);
-      setForm({ ...form, profilePictureUrl: asset.uri });
+      setForm({...form, profilePictureUrl: asset.uri});
     }
   };
   const onFormChange = (name: string, value: string) => {
-    setForm({ ...form, [name]: value });
+    setForm({...form, [name]: value});
   };
 
   const onAddressChange = useCallback((address: UserAddress) => {
-    setForm((prev) => ({ ...prev, address }));
+    setForm((prev) => ({...prev, address}));
   }, []);
 
   const onSubmit = async () => {
     const result = validateForm(ProfileSchema, {
+      email: form.email,
       fullName: form.fullName,
       address: form.address?.fullAddress,
       street: form.address?.street,
@@ -66,7 +68,7 @@ export default function ProfileRegistration() {
     const formData = new FormData();
     formData.append("fullName", form.fullName.trim());
     formData.append("gender", form.gender || "");
-
+    if (form.email) formData.append("email", form.email);
     if (form.address) {
       formData.append("addressName", form.address.name);
       formData.append("addressFullAddress", form.address.fullAddress);
@@ -102,6 +104,7 @@ export default function ProfileRegistration() {
 
         useAppStore.getState().setAuthData({
           name: user.fullName,
+          email: user.email,
           registrationStep: user.registrationStep ?? 2,
           approvalStatus: user.approvalStatus ?? "pending",
           profilePictureUrl: user.profilePictureUrl,
@@ -120,32 +123,32 @@ export default function ProfileRegistration() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
+    <SafeAreaView style={{flex: 1, backgroundColor: "#fff"}}>
       <CustomKeyAvoidingView>
-        <View className="flex-1 p-6 pb-36 gap-6">
-          <View className="items-center gap-3">
+        <View className="flex-1 gap-6 p-6">
+          <View className="gap-3 items-center">
             <Pressable
-              className="items-center justify-center border rounded-full size-40 border-lightPrimary active:border-2"
+              className="justify-center items-center rounded-full border size-40 border-lightPrimary active:border-2"
               onPress={pickProfilePic}
             >
               {form.profilePictureUrl ? (
-                <View className="items-center justify-center bg-gray-100 rounded-full size-36">
+                <View className="justify-center items-center bg-gray-100 rounded-full size-36">
                   <Image
-                    source={{ uri: form.profilePictureUrl }}
-                    style={{ width: 120, height: 120, borderRadius: 999 }}
+                    source={{uri: form.profilePictureUrl}}
+                    style={{width: 120, height: 120, borderRadius: 999}}
                     contentFit="cover"
                   />
                   <Pressable
-                    className="absolute right-0 p-1 bg-white rounded-full top-2"
+                    className="absolute right-0 top-2 p-1 bg-white rounded-full"
                     onPress={() =>
-                      setForm((prev) => ({ ...prev, profilePictureUrl: "" }))
+                      setForm((prev) => ({...prev, profilePictureUrl: ""}))
                     }
                   >
                     <Ionicons name="close-outline" size={20} color="red" />
                   </Pressable>
                 </View>
               ) : (
-                <View className="items-center justify-center bg-gray-100 rounded-full size-36">
+                <View className="justify-center items-center bg-gray-100 rounded-full size-36">
                   <Ionicons name="camera" size={24} color="#FFA840" />
                 </View>
               )}
@@ -167,8 +170,39 @@ export default function ProfileRegistration() {
               }`}
             />
             {errors.fullName && (
-              <Text className="text-xs ml-2 text-red-500">
+              <Text className="ml-2 text-xs text-red-500">
                 {errors.fullName}
+              </Text>
+            )}
+          </View>
+
+          <View>
+            <Text className="mb-2 text-sm font-medium text-gray-700">
+              Email <Text className="text-red-500">*</Text>
+            </Text>
+
+            <TextInput
+              value={form.email}
+              returnKeyType="done"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+              onChangeText={(text) => onFormChange("email", text)}
+              placeholder="name@gmail.com"
+              placeholderTextColor="#9CA3AF"
+              className={`px-4 text-gray-800 bg-gray-50 border rounded-xl ${
+                errors.email ? "border-red-500" : "border-gray-200"
+              }`}
+              style={{height: Platform.OS === "ios" ? 48 : 46}}
+            />
+
+            {errors.email ? (
+              <Text className="mt-1 ml-1 text-xs text-red-500">
+                {errors.email}
+              </Text>
+            ) : (
+              <Text className="mt-1 ml-1 text-xs text-gray-400">
+                Only gmail.com, yahoo.com, or icloud.com addresses are accepted.
               </Text>
             )}
           </View>
@@ -194,12 +228,12 @@ export default function ProfileRegistration() {
                 paddingVertical: 14,
                 borderRadius: 10,
               }}
-              placeholderStyle={{ color: "#9CA3AF" }}
-              selectedTextStyle={{ color: "#111827" }}
+              placeholderStyle={{color: "#9CA3AF"}}
+              selectedTextStyle={{color: "#111827"}}
               data={[
-                { label: "Male", value: "male" },
-                { label: "Female", value: "female" },
-                { label: "Prefer not to say", value: "prefer_not" },
+                {label: "Male", value: "male"},
+                {label: "Female", value: "female"},
+                {label: "Prefer not to say", value: "prefer_not"},
               ]}
               labelField="label"
               valueField="value"
@@ -208,30 +242,26 @@ export default function ProfileRegistration() {
               onChange={(item) => onFormChange("gender", item.value)}
             />
           </View>
+          <View>
+            <Pressable
+              className="items-center py-4 my-2 rounded-lg bg-lightPrimary active:bg-darkPrimary"
+              onPress={onSubmit}
+              disabled={loading}
+            >
+              <Text className="text-base font-bold text-white">Create</Text>
+            </Pressable>
+
+            <Pressable
+              onPress={() => router.replace("/(drawer)/book")}
+              className="items-center py-4 my-2 bg-white rounded-lg border border-lightPrimary active:bg-gray-100"
+            >
+              <Text className="text-base font-bold text-lightPrimary">
+                Skip for now
+              </Text>
+            </Pressable>
+          </View>
         </View>
       </CustomKeyAvoidingView>
-
-      <View
-        className="absolute bg-white left-0 right-0 mx-6"
-        style={{ bottom: inset.bottom + 10 }}
-      >
-        <Pressable
-          className="items-center py-4 my-2 rounded-lg bg-lightPrimary active:bg-darkPrimary"
-          onPress={onSubmit}
-          disabled={loading}
-        >
-          <Text className="text-base font-bold text-white">Create</Text>
-        </Pressable>
-
-        <Pressable
-          onPress={() => router.replace("/(drawer)/book")}
-          className="items-center py-4 my-2 border rounded-lg bg-white border-lightPrimary active:bg-gray-100"
-        >
-          <Text className="text-base font-bold text-lightPrimary">
-            Skip for now
-          </Text>
-        </Pressable>
-      </View>
     </SafeAreaView>
   );
 }

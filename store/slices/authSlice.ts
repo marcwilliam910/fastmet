@@ -9,6 +9,7 @@ export interface AuthSlice {
   registrationStep: number;
   approvalStatus: ApprovalStatus;
   name: string;
+  email: string | null;
   token: string | null;
   refreshToken: string | null;
   gender: "male" | "female" | "prefer_not" | null;
@@ -28,6 +29,7 @@ export const createAuthSlice: StateCreator<AuthSlice> = (set) => ({
   registrationStep: 1,
   approvalStatus: "pending",
   name: "",
+  email: null,
   token: null,
   refreshToken: null,
   gender: null,
@@ -46,6 +48,7 @@ export const createAuthSlice: StateCreator<AuthSlice> = (set) => ({
       phoneNumber: "",
       id: null,
       name: "",
+      email: null,
       token: null,
       refreshToken: null,
       address: null,

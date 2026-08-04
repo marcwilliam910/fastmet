@@ -43,6 +43,7 @@ type LoginResponse = {
     address: UserAddress | null;
     gender: "male" | "female" | "prefer_not";
     preRegistered: boolean;
+    email: string | null;
   };
   status: "new" | "existing" | "pre-registered";
 };
@@ -217,6 +218,7 @@ export default function PhoneOTPScreen() {
           address: data.client.address,
           gender: data.client.gender,
           preRegistered: data.client.preRegistered,
+          email: data.client.email,
         });
 
         const message =

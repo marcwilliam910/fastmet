@@ -22,6 +22,7 @@ export const ResetPassSchema = z.object({
 });
 
 export const ProfileSchema = z.object({
+  email: z.string().email("Invalid email").optional(),
   fullName: z
     .string()
     .trim()

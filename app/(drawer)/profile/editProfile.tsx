@@ -1,19 +1,20 @@
 import CustomKeyAvoidingView from "@/components/CustomKeyAvoid";
 import AddressInput from "@/components/inputs/AddressInput";
-import { useAuthGuard } from "@/hooks/useAuthGuard";
+import {useAuthGuard} from "@/hooks/useAuthGuard";
 import api from "@/lib/axios";
-import { ProfileSchema } from "@/schemas/authSchema";
-import { useAppStore } from "@/store/useAppStore";
-import { NewUser, UserAddress } from "@/types/user";
-import { openGallery } from "@/utils/helpers/imagePicker";
-import { validateForm } from "@/utils/helpers/validateForm";
-import { Ionicons } from "@expo/vector-icons";
-import { Image } from "expo-image";
-import { router, useFocusEffect } from "expo-router";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import {ProfileSchema} from "@/schemas/authSchema";
+import {useAppStore} from "@/store/useAppStore";
+import {NewUser, UserAddress} from "@/types/user";
+import {openGallery} from "@/utils/helpers/imagePicker";
+import {validateForm} from "@/utils/helpers/validateForm";
+import {Ionicons} from "@expo/vector-icons";
+import {Image} from "expo-image";
+import {router, useFocusEffect} from "expo-router";
+import React, {useCallback, useEffect, useRef, useState} from "react";
 import {
   findNodeHandle,
   Keyboard,
+  Platform,
   Pressable,
   ScrollView,
   Text,
@@ -21,15 +22,12 @@ import {
   UIManager,
   View,
 } from "react-native";
-import { Dropdown } from "react-native-element-dropdown";
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from "react-native-safe-area-context";
+import {Dropdown} from "react-native-element-dropdown";
+import {SafeAreaView, useSafeAreaInsets} from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 
 const EditProfile = () => {
-  const { isAuthenticated } = useAuthGuard();
+  const {isAuthenticated} = useAuthGuard();
 
   const inset = useSafeAreaInsets();
 
@@ -40,6 +38,7 @@ const EditProfile = () => {
     address: null,
     gender: "",
     profilePictureUrl: "",
+    email: "",
   });
   // Store original values to compare against
   const [originalForm, setOriginalForm] = useState<NewUser>({
@@ -47,6 +46,7 @@ const EditProfile = () => {
     address: null,
     gender: "",
     profilePictureUrl: "",
+    email: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [selectedAsset, setSelectedAsset] = useState<any>(null);
@@ -58,6 +58,7 @@ const EditProfile = () => {
   const profilePictureUrl = useAppStore((state) => state.profilePictureUrl);
   const address = useAppStore((state) => state.address);
   const gender = useAppStore((state) => state.gender);
+  const email = useAppStore((state) => state.email);
 
   const input1Ref = useRef<TextInput>(null);
 
@@ -67,11 +68,12 @@ const EditProfile = () => {
       profilePictureUrl: profilePictureUrl,
       address: address,
       gender: gender || "",
+      email: email || "",
     };
 
     setForm(initialData);
     setOriginalForm(initialData); // Store original values
-  }, [name, profilePictureUrl, address, gender]);
+  }, [name, profilePictureUrl, address, gender, email]);
 
   // Track keyboard visibility
   useEffect(() => {
@@ -124,18 +126,19 @@ const EditProfile = () => {
     return (
       form.fullName !== originalForm.fullName ||
       addressChanged ||
-      form.gender !== originalForm.gender
+      form.gender !== originalForm.gender ||
+      form.email !== originalForm.email
     );
   };
 
   const isButtonDisabled = loading || !hasChanges();
 
   const onFormChange = (name: string, value: string) => {
-    setForm({ ...form, [name]: value });
+    setForm({...form, [name]: value});
   };
 
   const onAddressChange = useCallback((address: UserAddress) => {
-    setForm((prev) => ({ ...prev, address }));
+    setForm((prev) => ({...prev, address}));
   }, []);
 
   const scrollToInput = (ref: React.RefObject<TextInput | null>) => {
@@ -148,7 +151,7 @@ const EditProfile = () => {
             findNodeHandle(scrollRef.current) as number,
             () => {},
             (x, y) => {
-              scrollRef.current?.scrollTo({ y: y, animated: true });
+              scrollRef.current?.scrollTo({y: y, animated: true});
             },
           );
         }
@@ -160,7 +163,7 @@ const EditProfile = () => {
     const result = await openGallery();
     if (result && !result.canceled && result.assets[0]) {
       setSelectedAsset(result.assets[0]); // Store the asset
-      setForm({ ...form, profilePictureUrl: result.assets[0].uri });
+      setForm({...form, profilePictureUrl: result.assets[0].uri});
     }
     setLoading(false);
   };
@@ -187,7 +190,7 @@ const EditProfile = () => {
     const formData = new FormData();
     formData.append("fullName", form.fullName);
     formData.append("gender", form.gender || "");
-
+    formData.append("email", form.email || "");
     // Send structured address data
     if (form.address) {
       formData.append("addressName", form.address.name);
@@ -240,12 +243,12 @@ const EditProfile = () => {
           profilePictureUrl: response.data.user.profilePictureUrl || "",
           address: response.data.user.address,
           gender: response.data.user.gender,
+          email: response.data.user.email,
         };
 
         useAppStore.getState().setAuthData(updatedData);
 
         router.back();
-        console.log("Profile updated successfully");
       }
     } catch (error: any) {
       console.error("Error updating profile:", error);
@@ -269,14 +272,11 @@ const EditProfile = () => {
   const bottomPadding = keyboardVisible ? inset.bottom + 80 : 200;
 
   return (
-    <SafeAreaView
-      style={{ flex: 1, backgroundColor: "#fff" }}
-      edges={["bottom"]}
-    >
+    <SafeAreaView style={{flex: 1, backgroundColor: "#fff"}} edges={["bottom"]}>
       <CustomKeyAvoidingView ref={scrollRef}>
         <View
-          className="gap-6 px-6 pt-6 flex-1"
-          style={{ paddingBottom: bottomPadding }}
+          className="flex-1 gap-6 px-6 pt-6"
+          style={{paddingBottom: bottomPadding}}
         >
           {/* profile picture */}
           <Pressable
@@ -285,8 +285,8 @@ const EditProfile = () => {
           >
             {form.profilePictureUrl ? (
               <Image
-                source={{ uri: form.profilePictureUrl }}
-                style={{ width: 128, height: 128, borderRadius: 999 }}
+                source={{uri: form.profilePictureUrl}}
+                style={{width: 128, height: 128, borderRadius: 999}}
                 contentFit="cover"
               />
             ) : (
@@ -295,9 +295,9 @@ const EditProfile = () => {
 
             {form.profilePictureUrl && (
               <Pressable
-                className="absolute p-1 bg-white rounded-full right-2 top-2"
+                className="absolute top-2 right-2 p-1 bg-white rounded-full"
                 onPress={() =>
-                  setForm((prev) => ({ ...prev, profilePictureUrl: "" }))
+                  setForm((prev) => ({...prev, profilePictureUrl: ""}))
                 }
               >
                 <Ionicons name="close-outline" size={24} color="red" />
@@ -305,10 +305,10 @@ const EditProfile = () => {
             )}
 
             <View
-              className="absolute p-2 bg-white rounded-full bottom-2 right-2 "
+              className="absolute right-2 bottom-2 p-2 bg-white rounded-full"
               style={{
                 shadowColor: "#000", // color of the shadow
-                shadowOffset: { width: 0, height: 2 }, // x/y offset
+                shadowOffset: {width: 0, height: 2}, // x/y offset
                 shadowOpacity: 0.25, // opacity 0–1
                 shadowRadius: 3.84, // blur radius
                 elevation: 5, // Android only
@@ -320,7 +320,7 @@ const EditProfile = () => {
 
           {/* full name */}
           <View className="gap-2">
-            <Text className="text-sm font-medium text-gray-700 ">
+            <Text className="text-sm font-medium text-gray-700">
               Full Name <Text className="text-red-500">*</Text>
             </Text>
             <TextInput
@@ -338,8 +338,40 @@ const EditProfile = () => {
               }`}
             />
             {errors.fullName && (
-              <Text className="text-xs ml-2 text-red-500">
+              <Text className="ml-2 text-xs text-red-500">
                 {errors.fullName}
+              </Text>
+            )}
+          </View>
+
+          {/* Email */}
+          <View>
+            <Text className="mb-2 text-sm font-medium text-gray-700">
+              Email <Text className="text-red-500">*</Text>
+            </Text>
+
+            <TextInput
+              value={form.email}
+              returnKeyType="done"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+              onChangeText={(text) => onFormChange("email", text)}
+              placeholder="name@gmail.com"
+              placeholderTextColor="#9CA3AF"
+              className={`px-4 text-gray-800 bg-gray-50 border rounded-xl ${
+                errors.email ? "border-red-500" : "border-gray-200"
+              }`}
+              style={{height: Platform.OS === "ios" ? 48 : 46}}
+            />
+
+            {errors.email ? (
+              <Text className="mt-1 ml-1 text-xs text-red-500">
+                {errors.email}
+              </Text>
+            ) : (
+              <Text className="mt-1 ml-1 text-xs text-gray-400">
+                Only gmail.com, yahoo.com, or icloud.com addresses are accepted.
               </Text>
             )}
           </View>
@@ -366,12 +398,12 @@ const EditProfile = () => {
                 paddingVertical: 14,
                 borderRadius: 10,
               }}
-              placeholderStyle={{ color: "#9CA3AF", fontSize: 14 }}
-              selectedTextStyle={{ color: "#111827" }}
+              placeholderStyle={{color: "#9CA3AF", fontSize: 14}}
+              selectedTextStyle={{color: "#111827"}}
               data={[
-                { label: "Male", value: "male" },
-                { label: "Female", value: "female" },
-                { label: "Prefer not to say", value: "prefer_not" },
+                {label: "Male", value: "male"},
+                {label: "Female", value: "female"},
+                {label: "Prefer not to say", value: "prefer_not"},
               ]}
               dropdownPosition="top"
               labelField="label"
@@ -387,7 +419,7 @@ const EditProfile = () => {
       {/* Fixed buttons at bottom - only show when keyboard is hidden */}
       {!keyboardVisible && (
         <View
-          className="absolute left-0 right-0 px-6 bg-white border-t border-gray-100"
+          className="absolute right-0 left-0 px-6 bg-white border-t border-gray-100"
           style={{
             bottom: inset.bottom,
             paddingTop: 8,
@@ -404,10 +436,10 @@ const EditProfile = () => {
             </Text>
           </Pressable>
           <Pressable
-            className="items-center py-4 my-2  border-gray-200 rounded-lg bg-ctaSecondary active:bg-ctaSecondaryActive"
+            className="items-center py-4 my-2 rounded-lg border-gray-200 bg-ctaSecondary active:bg-ctaSecondaryActive"
             onPress={() => router.back()}
           >
-            <Text className="text-base font-bold ">Back</Text>
+            <Text className="text-base font-bold">Back</Text>
           </Pressable>
         </View>
       )}
