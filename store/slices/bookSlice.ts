@@ -1,6 +1,11 @@
 import type {LocationDetails, RouteData} from "@/types/book";
 import {BookingTypeConfig} from "@/types/bookingType";
 import {SelectedVehicle, Service} from "@/types/vehicle";
+import {
+  addressMentionsAllowedPickupCity,
+  isDropOffAllowed,
+  isWithinAllowedPickupBounds,
+} from "@/utils/constants";
 import {StateCreator} from "zustand";
 import {BookingTypeSlice} from "./bookingTypeSlice";
 import {LoadingSlice} from "./loadingStore";
@@ -39,6 +44,7 @@ export interface BookSlice {
   selectedVehicle: SelectedVehicle | null;
   routeData: RouteData;
   paymentMethod: "cash" | "gcash";
+  paidBy: "sender" | "receiver";
   note: string;
   itemType: string | null;
   photos: string[];
@@ -60,12 +66,15 @@ export interface BookSlice {
   setDropOffAdditionalDetails: (details: string) => void;
   setDropOffContactName: (contactName: string) => void;
   setDropOffContactPhone: (contactPhone: string) => void;
+  /** Swaps pickup/dropoff only if both pass service-area checks. Returns false if blocked. */
+  swapLocations: () => boolean;
   setBookingType: (payload: {type: Type; value: string}) => void;
   setSelectedVehicle: (vehicle: SelectedVehicle) => void;
   setRouteData: (data: RouteData) => void;
   setNote: (note: string) => void;
   setItemType: (itemType: string | null) => void;
   setPaymentMethod: (method: "cash" | "gcash") => void;
+  setPaidBy: (paidBy: "sender" | "receiver") => void;
 
   setPhoto: (photo: string) => void;
   removePhoto: (photo: string) => void;
@@ -96,6 +105,7 @@ export const createBookSlice: StateCreator<
     gasAdjFactor: 1.0,
   },
   paymentMethod: "cash",
+  paidBy: "sender",
   note: "",
   itemType: null,
   photos: [],
@@ -182,6 +192,29 @@ export const createBookSlice: StateCreator<
         : null,
     })),
 
+  swapLocations: () => {
+    const {pickUp, dropOff} = get();
+    if (!pickUp || !dropOff) return false;
+
+    // Current dropOff becomes the new pickup — must pass pickup gates
+    const newPickupInBounds = isWithinAllowedPickupBounds(
+      dropOff.coords.lat,
+      dropOff.coords.lng,
+    );
+    const newPickupCityOk =
+      addressMentionsAllowedPickupCity(dropOff.address) ||
+      addressMentionsAllowedPickupCity(dropOff.name);
+    // Current pickUp becomes the new dropoff — must pass dropoff gates
+    const newDropoffOk = isDropOffAllowed(pickUp.coords.lat, pickUp.coords.lng);
+
+    if (!newPickupInBounds || !newPickupCityOk || !newDropoffOk) {
+      return false;
+    }
+
+    set({pickUp: dropOff, dropOff: pickUp});
+    return true;
+  },
+
   setBookingType: ({type, value}) => {
     const priceModifier = resolveModifier(get().bookingTypes, type, value);
     set({bookingType: {type, value, priceModifier}});
@@ -195,6 +228,7 @@ export const createBookSlice: StateCreator<
   removePhoto: (photo) =>
     set((state) => ({photos: state.photos.filter((p) => p !== photo)})),
   setPaymentMethod: (method) => set({paymentMethod: method}),
+  setPaidBy: (paidBy) => set({paidBy}),
 
   clearStates: () =>
     set((state) => ({
@@ -219,6 +253,7 @@ export const createBookSlice: StateCreator<
       itemType: null,
       photos: [],
       paymentMethod: "cash",
+      paidBy: "sender",
       addedServices: [],
     })),
 });

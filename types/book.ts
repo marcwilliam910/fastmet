@@ -40,6 +40,7 @@ export type Booking = {
   };
   routeData: RouteData;
   paymentMethod: string;
+  paidBy?: "sender" | "receiver";
   addedServices: Service[];
   note: string;
   itemType: string | null;
@@ -89,6 +90,7 @@ export type RequestBooking = {
   };
   routeData: RouteData;
   paymentMethod: "cash" | "gcash";
+  paidBy: "sender" | "receiver";
   addedServices: Partial<Service>[];
   photos: string[];
   note: string;

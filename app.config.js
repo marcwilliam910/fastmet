@@ -79,6 +79,13 @@ export default {
           color: "#fff",
         },
       ],
+      [
+        "expo-contacts",
+        {
+          "contactsPermission":
+            "Allow $(PRODUCT_NAME) to access your contacts.",
+        },
+      ],
       // [
       //   "@sentry/react-native/expo",
       //   {

@@ -47,6 +47,7 @@ export default function PaymentMethod() {
         photos,
         note,
         itemType,
+        paidBy,
       } = useAppStore.getState();
 
       if (!selectedVehicle || !selectedVehicle.variant || !pickUp || !dropOff) {
@@ -103,6 +104,7 @@ export default function PaymentMethod() {
         },
         routeData: routeData,
         paymentMethod: paymentMethod,
+        paidBy: paidBy,
         addedServices: addedServices.map((service) => ({
           key: service.key,
           name: service.name,
@@ -172,6 +174,7 @@ export default function PaymentMethod() {
           },
           routeData: state.routeData,
           paymentMethod: state.paymentMethod,
+          paidBy: state.paidBy,
           addedServices: state.addedServices,
           note: state.note.trim(),
           itemType: state.itemType,

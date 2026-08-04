@@ -1,10 +1,10 @@
 import SheetButton from "@/components/maps/SheetButton";
-import { useAppStore } from "@/store/useAppStore";
-import { openGallery, takePhoto } from "@/utils/helpers/imagePicker";
-import { Ionicons } from "@expo/vector-icons";
-import { Image } from "expo-image";
-import { router } from "expo-router";
-import React, { useState } from "react";
+import {useAppStore} from "@/store/useAppStore";
+import {openGallery, takePhoto} from "@/utils/helpers/imagePicker";
+import {Ionicons} from "@expo/vector-icons";
+import {Image} from "expo-image";
+import {router} from "expo-router";
+import React, {useState} from "react";
 import {
   Alert,
   KeyboardAvoidingView,
@@ -15,11 +15,8 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { Dropdown } from "react-native-element-dropdown";
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from "react-native-safe-area-context";
+import {Dropdown} from "react-native-element-dropdown";
+import {SafeAreaView, useSafeAreaInsets} from "react-native-safe-area-context";
 
 // Size rank used to derive compatible vehicle lists dynamically
 const VEHICLE_SIZE_RANK: Record<string, number> = {
@@ -34,14 +31,14 @@ const VEHICLE_SIZE_RANK: Record<string, number> = {
 };
 
 const ITEM_OPTIONS = [
-  { label: "Documents / Envelope", value: "Documents / Envelope" },
-  { label: "Small Package / Bag", value: "Small Package / Bag" },
-  { label: "Medium Box / Carton", value: "Medium Box / Carton" },
+  {label: "Documents / Envelope", value: "Documents / Envelope"},
+  {label: "Small Package / Bag", value: "Small Package / Bag"},
+  {label: "Medium Box / Carton", value: "Medium Box / Carton"},
   {
     label: "Large Box / Furniture / Appliance",
     value: "Large Box / Furniture / Appliance",
   },
-  { label: "Other / Oversized", value: "Other / Oversized" },
+  {label: "Other / Oversized", value: "Other / Oversized"},
 ];
 
 export default function AdditionalInfo() {
@@ -56,6 +53,8 @@ export default function AdditionalInfo() {
   const setPhoto = useAppStore((s) => s.setPhoto);
   const removePhoto = useAppStore((s) => s.removePhoto);
   const vehicles = useAppStore((s) => s.vehicles);
+  const paidBy = useAppStore((s) => s.paidBy);
+  const setPaidBy = useAppStore((s) => s.setPaidBy);
 
   const vehicleKeys = vehicles.map((v) => v.key);
 
@@ -83,7 +82,7 @@ export default function AdditionalInfo() {
       "Add Photo",
       "Choose an option",
       [
-        { text: "Cancel", style: "cancel" },
+        {text: "Cancel", style: "cancel"},
         {
           text: "Take Photo",
           onPress: async () => {
@@ -105,7 +104,7 @@ export default function AdditionalInfo() {
           },
         },
       ],
-      { cancelable: true },
+      {cancelable: true},
     );
   };
 
@@ -118,11 +117,11 @@ export default function AdditionalInfo() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
+    <SafeAreaView style={{flex: 1, backgroundColor: "white"}}>
       {/* Header */}
-      <View className="relative flex-row items-center justify-center px-6 pt-2 pb-4">
+      <View className="relative flex-row justify-center items-center px-6 pt-2 pb-4">
         <Pressable
-          className="absolute left-5 top-1"
+          className="absolute top-1 left-5"
           onPress={() => router.back()}
           hitSlop={20}
         >
@@ -140,7 +139,7 @@ export default function AdditionalInfo() {
 
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={{ flex: 1 }}
+        style={{flex: 1}}
       >
         <ScrollView
           className="flex-1 px-6 py-2"
@@ -162,8 +161,8 @@ export default function AdditionalInfo() {
                 placeholder="Type here..."
                 value={note}
                 onChangeText={setNote}
-                style={{ height: 120, textAlignVertical: "top" }}
-                className="p-4 border border-gray-300 rounded-lg"
+                style={{height: 120, textAlignVertical: "top"}}
+                className="p-4 rounded-lg border border-gray-300"
               />
             </View>
 
@@ -182,9 +181,9 @@ export default function AdditionalInfo() {
                   paddingHorizontal: 12,
                   backgroundColor: "white",
                 }}
-                placeholderStyle={{ color: "#9CA3AF" }}
-                selectedTextStyle={{ color: "#111827" }}
-                itemTextStyle={{ color: "#111827" }}
+                placeholderStyle={{color: "#9CA3AF"}}
+                selectedTextStyle={{color: "#111827"}}
+                itemTextStyle={{color: "#111827"}}
                 data={ITEM_OPTIONS}
                 labelField="label"
                 valueField="value"
@@ -193,7 +192,7 @@ export default function AdditionalInfo() {
                 onChange={(item) => setItemType(item.value)}
               />
               {itemType && !isItemCompatible(itemType) && (
-                <Text className="text-red-500 text-xs font-semibold mt-1 ml-2">
+                <Text className="mt-1 ml-2 text-xs font-semibold text-red-500">
                   Warning: Your selected item may not fit in the chosen vehicle.{" "}
                   <Text className="capitalize">
                     (Compatible:{" "}
@@ -203,12 +202,54 @@ export default function AdditionalInfo() {
               )}
             </View>
 
+            {/* Who is paying */}
+            <View className="gap-2">
+              <Text className="font-semibold">
+                Who is paying? <Text className="text-xs text-red-500">*</Text>
+              </Text>
+              <View className="flex-row gap-3">
+                <Pressable
+                  onPress={() => setPaidBy("sender")}
+                  className={`flex-1 py-3 px-4 rounded-xl border ${
+                    paidBy === "sender"
+                      ? "border-[#FFA840] bg-[#FFF6EB]"
+                      : "border-gray-300 bg-white"
+                  }`}
+                >
+                  <Text
+                    className={`text-center font-semibold ${
+                      paidBy === "sender" ? "text-[#FFA840]" : "text-gray-700"
+                    }`}
+                  >
+                    Sender
+                  </Text>
+                </Pressable>
+
+                <Pressable
+                  onPress={() => setPaidBy("receiver")}
+                  className={`flex-1 py-3 px-4 rounded-xl border ${
+                    paidBy === "receiver"
+                      ? "border-[#FFA840] bg-[#FFF6EB]"
+                      : "border-gray-300 bg-white"
+                  }`}
+                >
+                  <Text
+                    className={`text-center font-semibold ${
+                      paidBy === "receiver" ? "text-[#FFA840]" : "text-gray-700"
+                    }`}
+                  >
+                    Receiver
+                  </Text>
+                </Pressable>
+              </View>
+            </View>
+
             {/* Upload Photos */}
             <View className="gap-2">
               <Text className="font-semibold">
                 Upload Photo <Text className="text-xs text-red-500">*</Text>
               </Text>
-              <View className="flex-row items-center justify-between gap-2">
+              <View className="flex-row gap-2 justify-between items-center">
                 {[0, 1, 2].map((i) => (
                   <Pressable
                     key={i}
@@ -222,7 +263,7 @@ export default function AdditionalInfo() {
                     {photos[i] ? (
                       <>
                         <Image
-                          source={{ uri: photos[i] }}
+                          source={{uri: photos[i]}}
                           style={{
                             width: "100%",
                             height: "100%",
@@ -252,7 +293,7 @@ export default function AdditionalInfo() {
                 ))}
               </View>
               {photoError && (
-                <Text className="text-red-500 text-xs font-semibold ml-1">
+                <Text className="ml-1 text-xs font-semibold text-red-500">
                   At least one photo is required.
                 </Text>
               )}

@@ -1,6 +1,7 @@
-import { useShake } from "@/hooks/useShakeAnimation";
-import { useAppStore } from "@/store/useAppStore";
-import { LocationDetails } from "@/types/book";
+import {useShake} from "@/hooks/useShakeAnimation";
+import ContactInfoCard from "@/components/maps/ContactInfoCard";
+import {useAppStore} from "@/store/useAppStore";
+import {LocationDetails} from "@/types/book";
 import {
   addressMentionsAllowedPickupCity,
   GOOGLE_MAPS_API_KEY,
@@ -8,12 +9,13 @@ import {
   isDropOffAllowed,
   isWithinAllowedPickupBounds,
 } from "@/utils/constants";
-import { formatLocation } from "@/utils/helpers/location";
-import { getArray, pushToArray } from "@/utils/helpers/recentPlaceStorage";
-import { Ionicons } from "@expo/vector-icons";
+import {formatLocation} from "@/utils/helpers/location";
+import {getArray, pushToArray} from "@/utils/helpers/recentPlaceStorage";
+import {Ionicons} from "@expo/vector-icons";
+import * as Contacts from "expo-contacts";
 import * as Location from "expo-location";
-import { router } from "expo-router";
-import React, { useEffect, useRef, useState } from "react";
+import {router} from "expo-router";
+import React, {useEffect, useMemo, useRef, useState} from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -33,9 +35,9 @@ import {
 import GooglePlacesTextInput, {
   Place,
 } from "react-native-google-places-textinput";
-import MapView, { PROVIDER_GOOGLE, Region } from "react-native-maps";
+import MapView, {PROVIDER_GOOGLE, Region} from "react-native-maps";
 import Animated from "react-native-reanimated";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import {useSafeAreaInsets} from "react-native-safe-area-context";
 
 type SearchType = "pickup" | "dropoff";
 
@@ -47,7 +49,7 @@ type SearchModalProps = {
 
 type Step = "search" | "map";
 
-type Coords = { lat: number; lng: number };
+type Coords = {lat: number; lng: number};
 
 // Theme color — same hex used for the back chevron elsewhere in this file.
 // Swap for a themed constant if one exists in utils/constants.
@@ -87,7 +89,8 @@ function showValidationError(message: string) {
 
 /** Extract city/municipality from Google Places (new) addressComponents. */
 function extractCityFromPlaceComponents(
-  components: { longText?: string; long_name?: string; types?: string[] }[] | undefined,
+  components:
+    {longText?: string; long_name?: string; types?: string[]}[] | undefined,
 ): string | null {
   if (!components?.length) return null;
 
@@ -104,7 +107,7 @@ function extractCityFromPlaceComponents(
 
 /** Extract city from Geocoding API (legacy) address_components. */
 function extractCityFromGeocodeComponents(
-  components: { long_name?: string; types?: string[] }[] | undefined,
+  components: {long_name?: string; types?: string[]}[] | undefined,
 ): string | null {
   if (!components?.length) return null;
 
@@ -125,7 +128,7 @@ function extractCityFromGeocodeComponents(
 async function reverseGeocode(
   lat: number,
   lng: number,
-): Promise<{ name: string; address: string; city: string | null } | null> {
+): Promise<{name: string; address: string; city: string | null} | null> {
   try {
     const response = await fetch(
       `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${GOOGLE_MAPS_API_KEY}`,
@@ -170,7 +173,7 @@ function cleanPhoneInput(value: string) {
 }
 const RECENT_PLACE_KEY = "recent_places";
 
-const SearchModal: React.FC<SearchModalProps> = ({ visible, onClose, type }) => {
+const SearchModal: React.FC<SearchModalProps> = ({visible, onClose, type}) => {
   const [recentPlaces, setRecentPlaces] = useState<LocationDetails[]>([]);
   const inset = useSafeAreaInsets();
   const insets = useSafeAreaInsets();
@@ -202,15 +205,21 @@ const SearchModal: React.FC<SearchModalProps> = ({ visible, onClose, type }) => 
   const dropOff = useAppStore((state) => state.dropOff);
   const pickUp = useAppStore((state) => state.pickUp);
   const homeAddress = useAppStore((state) => state.address);
-  const { shake, animatedStyle } = useShake();
+  const {shake, animatedStyle} = useShake();
   const [additionalDetails, setAdditionalDetails] = useState("");
   const [loading, setLoading] = useState(false);
 
   // Sender (pickup) / Receiver (dropoff) contact fields — live on the search step now.
   const [contactName, setContactName] = useState("");
   const [contactPhone, setContactPhone] = useState("");
+  const [nameError, setNameError] = useState(false);
+  const [phoneError, setPhoneError] = useState(false);
 
   const contactLabel = type === "pickup" ? "Sender" : "Receiver";
+  const isContactValid = useMemo(
+    () => contactName.trim().length > 0 && contactPhone.length === 10,
+    [contactName, contactPhone],
+  );
 
   const haveValue = type === "pickup" ? pickUp : dropOff;
   const otherValue = type === "pickup" ? dropOff : pickUp;
@@ -243,8 +252,10 @@ const SearchModal: React.FC<SearchModalProps> = ({ visible, onClose, type }) => 
       setSearchText(haveValue ? formatLocation(haveValue) : "");
       setStep("search");
       setMarkerCoord(null);
-      setContactName("");
-      setContactPhone("");
+      setContactName(haveValue?.contactName || "");
+      setContactPhone(haveValue?.contactPhone || "");
+      setNameError(false);
+      setPhoneError(false);
     } else if (dragValidateTimerRef.current) {
       clearTimeout(dragValidateTimerRef.current);
       dragValidateTimerRef.current = null;
@@ -267,33 +278,40 @@ const SearchModal: React.FC<SearchModalProps> = ({ visible, onClose, type }) => 
     getRecentPlaces();
   }, [visible]);
 
-  // Initialize fields when modal opens with existing value.
-  useEffect(() => {
-    if (visible) {
-      setAdditionalDetails(haveValue?.additionalDetails || "");
-      setConfirmedLocation(haveValue ?? null);
-      setStep("search");
-      setMarkerCoord(null);
-      // TODO: seed contactName/contactPhone from store if you persist them
-      // per pickup/dropoff (e.g. haveValue?.contactName).
-      setContactName("");
-      setContactPhone("");
+  const handleUseMyInfo = () => {
+    const {name, phoneNumber} = useAppStore.getState();
+    if (name) {
+      setContactName(name);
+      setNameError(false);
     }
-  }, [visible, haveValue?.additionalDetails, haveValue]);
+    if (phoneNumber) {
+      setContactPhone(cleanPhoneInput(phoneNumber));
+      setPhoneError(false);
+    }
+  };
 
-  const handleUseMyNumber = () => {
-    const myNumber = useAppStore.getState().phoneNumber;
-    if (!myNumber) return;
-    setContactPhone(cleanPhoneInput(myNumber));
+  const handlePickContact = async () => {
+    try {
+      if (Platform.OS === "android") {
+        const {status} = await Contacts.requestPermissionsAsync();
+        if (status !== "granted") return;
+      }
+
+      const contact = await Contacts.presentContactPickerAsync();
+      if (!contact) return; // user cancelled
+
+      if (contact.name) setContactName(contact.name);
+
+      const rawNumber = contact.phoneNumbers?.[0]?.number;
+      if (rawNumber) setContactPhone(cleanPhoneInput(rawNumber));
+    } catch (err) {
+      console.warn("Contact pick failed:", err);
+    }
   };
 
   // Entry point for every source (search select, recent, home, current
   // location). Bounds gate only — city allowlist is enforced by each caller.
-  const goToMapStep = (
-    coords: Coords,
-    name: string,
-    address: string,
-  ) => {
+  const goToMapStep = (coords: Coords, name: string, address: string) => {
     const boundsError = validateCoords(
       type,
       coords.lat,
@@ -336,8 +354,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ visible, onClose, type }) => 
       );
       const address = place.details?.formattedAddress || "";
       const allowed =
-        isAllowedPickupCity(city) ||
-        addressMentionsAllowedPickupCity(address);
+        isAllowedPickupCity(city) || addressMentionsAllowedPickupCity(address);
 
       if (!allowed) {
         showValidationError(PICKUP_AREA_ERROR);
@@ -346,17 +363,14 @@ const SearchModal: React.FC<SearchModalProps> = ({ visible, onClose, type }) => 
       }
     }
 
-    if (
-      type === "dropoff" &&
-      !isDropOffAllowed(loc.latitude, loc.longitude)
-    ) {
+    if (type === "dropoff" && !isDropOffAllowed(loc.latitude, loc.longitude)) {
       showValidationError(DROPOFF_AREA_ERROR);
       shake();
       return;
     }
 
     goToMapStep(
-      { lat: loc.latitude, lng: loc.longitude },
+      {lat: loc.latitude, lng: loc.longitude},
       place.details?.displayName?.text || "Unknown location",
       place.details?.formattedAddress || "Unknown address",
     );
@@ -397,7 +411,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ visible, onClose, type }) => 
           "Location Services Disabled",
           "Please enable location services in your device settings to use this feature.",
           [
-            { text: "Cancel", style: "cancel" },
+            {text: "Cancel", style: "cancel"},
             {
               text: "Open Settings",
               onPress: () => {
@@ -413,7 +427,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ visible, onClose, type }) => 
         return;
       }
 
-      const { status } = await Location.requestForegroundPermissionsAsync();
+      const {status} = await Location.requestForegroundPermissionsAsync();
 
       if (status !== "granted") {
         showValidationError("Permission to access location was denied");
@@ -424,7 +438,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ visible, onClose, type }) => 
         accuracy: Location.Accuracy.Balanced,
       });
 
-      const { latitude, longitude } = location.coords;
+      const {latitude, longitude} = location.coords;
       // Necessary call — GPS coords alone have no name/address.
       const geocoded = await reverseGeocode(latitude, longitude);
 
@@ -445,7 +459,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ visible, onClose, type }) => 
       }
 
       goToMapStep(
-        { lat: latitude, lng: longitude },
+        {lat: latitude, lng: longitude},
         geocoded?.name || "Current Location",
         geocoded?.address || "Current Location",
       );
@@ -480,7 +494,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ visible, onClose, type }) => 
     }
 
     goToMapStep(
-      { lat: homeAddress.coords.lat, lng: homeAddress.coords.lng },
+      {lat: homeAddress.coords.lat, lng: homeAddress.coords.lng},
       homeAddress.name,
       homeAddress.fullAddress,
     );
@@ -491,7 +505,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ visible, onClose, type }) => 
   // has actually moved from the initial position.
   // Pickup bounds toast is debounced so rapid region events don't spam.
   const handleRegionChangeComplete = (region: Region) => {
-    const { latitude, longitude } = region;
+    const {latitude, longitude} = region;
 
     // Skip the event MapView fires for the initial region on mount.
     if (isInitialRegion.current) {
@@ -500,7 +514,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ visible, onClose, type }) => 
     }
 
     // Always track the pin so UX stays smooth while dragging.
-    setMarkerCoord({ lat: latitude, lng: longitude });
+    setMarkerCoord({lat: latitude, lng: longitude});
     setPinMoved(true);
 
     if (dragValidateTimerRef.current) {
@@ -589,6 +603,19 @@ const SearchModal: React.FC<SearchModalProps> = ({ visible, onClose, type }) => 
   const handleFinalConfirm = async () => {
     if (!confirmedLocation) return;
 
+    const validName = contactName.trim().length > 0;
+    const validPhone = contactPhone.length === 10;
+
+    if (!validName || !validPhone) {
+      setNameError(!validName);
+      setPhoneError(!validPhone);
+      shake();
+      showValidationError(
+        `${contactLabel} name and mobile number are required.`,
+      );
+      return;
+    }
+
     if (type === "pickup") {
       setPickUp(confirmedLocation);
       setPickUpAdditionalDetails(additionalDetails);
@@ -601,18 +628,16 @@ const SearchModal: React.FC<SearchModalProps> = ({ visible, onClose, type }) => 
       setDropOffContactPhone(contactPhone);
     }
 
-    // TODO: persist contactName/contactPhone alongside the location once
-    // the store/type supports it.
     await pushToArray(RECENT_PLACE_KEY, confirmedLocation);
     onClose();
   };
 
-  const renderRecentPlace = ({ item }: { item: LocationDetails }) => (
+  const renderRecentPlace = ({item}: {item: LocationDetails}) => (
     <Pressable
       onPress={() => handleRecentPlacePress(item)}
-      className="flex-row items-center px-4 py-3 border-b border-gray-100 rounded-xl active:bg-gray-100"
+      className="flex-row items-center px-4 py-3 rounded-xl border-b border-gray-100 active:bg-gray-100"
     >
-      <View className="items-center justify-center w-10 h-10 mr-3 bg-gray-100 rounded-full">
+      <View className="justify-center items-center mr-3 w-10 h-10 bg-gray-100 rounded-full">
         <Ionicons name="location-outline" size={20} color="#6B7280" />
       </View>
       <View className="flex-1">
@@ -646,11 +671,11 @@ const SearchModal: React.FC<SearchModalProps> = ({ visible, onClose, type }) => 
           }}
         >
           {step === "map" && markerCoord ? (
-            <View style={{ flex: 1 }}>
+            <View style={{flex: 1}}>
               {/* Header */}
               <View
-                className="flex-row items-center justify-center px-4"
-                style={{ paddingBottom: Platform.OS === "ios" ? 25 : 16 }}
+                className="flex-row justify-center items-center px-4"
+                style={{paddingBottom: Platform.OS === "ios" ? 25 : 16}}
               >
                 <Pressable
                   onPress={() => setStep("search")}
@@ -679,7 +704,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ visible, onClose, type }) => 
                   onChangeText={setAdditionalDetails}
                   placeholder="e.g. In front of Jollibee or near gate 3"
                   placeholderTextColor="#9CA3AF"
-                  className="p-3 text-base text-gray-800 bg-white border border-gray-200 rounded-xl"
+                  className="p-3 text-base text-gray-800 bg-white rounded-xl border border-gray-200"
                 />
                 <Text className="mt-2 text-sm text-gray-500" numberOfLines={2}>
                   {pinMoved
@@ -689,11 +714,11 @@ const SearchModal: React.FC<SearchModalProps> = ({ visible, onClose, type }) => 
               </View>
 
               {/* Map with fixed center pin */}
-              <View style={{ flex: 1 }}>
+              <View style={{flex: 1}}>
                 <MapView
                   ref={mapRef}
                   provider={PROVIDER_GOOGLE}
-                  style={{ flex: 1 }}
+                  style={{flex: 1}}
                   initialRegion={{
                     latitude: markerCoord.lat,
                     longitude: markerCoord.lng,
@@ -721,7 +746,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ visible, onClose, type }) => 
               {/* Confirm pin card — hint text + button together */}
               <View
                 className="px-6 pt-3 bg-white"
-                style={{ paddingBottom: inset.bottom || 12 }}
+                style={{paddingBottom: inset.bottom || 12}}
               >
                 <Text className="mb-2 text-xs text-center text-gray-400">
                   Move the map to adjust the pin position
@@ -745,8 +770,8 @@ const SearchModal: React.FC<SearchModalProps> = ({ visible, onClose, type }) => 
             <>
               {/* Header */}
               <View
-                className="flex-row items-center justify-center px-4"
-                style={{ paddingBottom: Platform.OS === "ios" ? 25 : 16 }}
+                className="flex-row justify-center items-center px-4"
+                style={{paddingBottom: Platform.OS === "ios" ? 25 : 16}}
               >
                 <Pressable
                   onPress={onClose}
@@ -771,7 +796,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ visible, onClose, type }) => 
                     name="search-outline"
                     size={24}
                     color="#4B5563"
-                    className="absolute z-50 bg-white left-3 top-5"
+                    className="absolute left-3 top-5 z-50 bg-white"
                   />
                   <Animated.View className="flex-1 ml-6" style={animatedStyle}>
                     <GooglePlacesTextInput
@@ -812,109 +837,34 @@ const SearchModal: React.FC<SearchModalProps> = ({ visible, onClose, type }) => 
                 className="flex-1"
                 keyboardShouldPersistTaps="handled"
               >
-                {/* Sender / Receiver contact fields */}
-                {/* Contact Information */}
-                <View className="px-4 mt-4">
-                  <View className="p-4 bg-white border border-gray-200 rounded-2xl">
-                    <View className="flex-row items-center mb-4">
-                      <View className="items-center justify-center w-10 h-10 mr-3 rounded-full bg-lightPrimary/10">
-                        <Ionicons
-                          name="person-outline"
-                          size={20}
-                          color={THEME_COLOR}
-                        />
-                      </View>
-
-                      <View>
-                        <Text className="text-base font-semibold text-gray-900">
-                          {contactLabel} Information
-                        </Text>
-                        <Text className="text-xs text-gray-500">
-                          Who will be at this location?
-                        </Text>
-                      </View>
-                    </View>
-
-                    {additionalDetails && (
-                      <View className="flex-row p-3 mb-4 border rounded-xl bg-amber-50 border-amber-200">
-                        <Ionicons
-                          name="information-circle-outline"
-                          size={18}
-                          color="#D97706"
-                          style={{ marginTop: 2, marginRight: 8 }}
-                        />
-
-                        <View className="flex-1">
-                          <Text className="text-xs font-semibold tracking-wide uppercase text-amber-700">
-                            Note
-                          </Text>
-
-                          <Text className="mt-1 text-sm leading-5 text-amber-900">
-                            {additionalDetails}
-                          </Text>
-                        </View>
-                      </View>
-                    )}
-                    {/* Name */}
-                    <View className="mb-4">
-                      <Text className="mb-2 text-sm font-medium text-gray-700">
-                        Full Name
-                      </Text>
-
-                      <TextInput
-                        value={contactName}
-                        onChangeText={setContactName}
-                        placeholder={`${contactLabel} full name`}
-                        placeholderTextColor="#9CA3AF"
-                        className="px-4 py-3 text-base text-gray-800 border border-gray-200 bg-gray-50 rounded-xl"
-                      />
-                    </View>
-
-                    {/* Mobile */}
-                    <View>
-                      <View className="flex-row items-center justify-between mb-2">
-                        <Text className="text-sm font-medium text-gray-700">
-                          Mobile Number
-                        </Text>
-
-                        <Pressable onPress={handleUseMyNumber} hitSlop={8}>
-                          <Text className="text-sm font-medium text-lightPrimary">
-                            Use my number
-                          </Text>
-                        </Pressable>
-                      </View>
-
-                      <View className="flex-row items-center px-4 border border-gray-200 bg-gray-50 rounded-xl">
-                        <Text className="pr-3 mr-3 text-gray-700 border-r border-gray-300">
-                          +63
-                        </Text>
-
-                        <TextInput
-                          value={contactPhone}
-                          onChangeText={(value) =>
-                            setContactPhone(cleanPhoneInput(value))
-                          }
-                          keyboardType="numeric"
-                          placeholder={`${contactLabel} mobile number`}
-                          placeholderTextColor="#9CA3AF"
-                          className="flex-1 text-base text-gray-800"
-                          style={{
-                            height: Platform.OS === "ios" ? 52 : 48,
-                          }}
-                        />
-                      </View>
-                    </View>
-                  </View>
-                </View>
+                <ContactInfoCard
+                  contactLabel={contactLabel}
+                  contactName={contactName}
+                  setContactName={(value) => {
+                    setContactName(value);
+                    if (nameError) setNameError(false);
+                  }}
+                  contactPhone={contactPhone}
+                  setContactPhone={(value) => {
+                    setContactPhone(value);
+                    if (phoneError) setPhoneError(false);
+                  }}
+                  additionalDetails={additionalDetails}
+                  onUseMyInfo={handleUseMyInfo}
+                  onPickContact={handlePickContact}
+                  showNameError={nameError}
+                  showPhoneError={phoneError}
+                  cleanPhoneInput={cleanPhoneInput}
+                />
 
                 {/* Current Location Button */}
                 <View className="px-4 mt-5 mb-2">
                   <Pressable
                     onPress={handleCurrentLocation}
                     disabled={loading}
-                    className="flex-row items-center px-4 py-3 bg-white border border-gray-200 rounded-xl active:bg-gray-50"
+                    className="flex-row items-center px-4 py-3 bg-white rounded-xl border border-gray-200 active:bg-gray-50"
                   >
-                    <View className="items-center justify-center mr-3 bg-blue-500 rounded-full w-11 h-11">
+                    <View className="justify-center items-center mr-3 w-11 h-11 bg-blue-500 rounded-full">
                       <Ionicons name="navigate" size={20} color="#FFFFFF" />
                     </View>
                     {loading ? (
@@ -944,9 +894,9 @@ const SearchModal: React.FC<SearchModalProps> = ({ visible, onClose, type }) => 
                   <View className="px-4 mb-2">
                     <Pressable
                       onPress={handleHomePress}
-                      className="flex-row items-center px-4 py-3 bg-white border border-gray-200 rounded-xl active:bg-gray-50"
+                      className="flex-row items-center px-4 py-3 bg-white rounded-xl border border-gray-200 active:bg-gray-50"
                     >
-                      <View className="items-center justify-center mr-3 rounded-full w-11 h-11 bg-amber-500">
+                      <View className="justify-center items-center mr-3 w-11 h-11 bg-amber-500 rounded-full">
                         <Ionicons name="home" size={20} color="#FFFFFF" />
                       </View>
                       <View className="flex-1">
@@ -978,7 +928,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ visible, onClose, type }) => 
                           name="time-outline"
                           size={18}
                           color="#6B7280"
-                          style={{ marginRight: 8 }}
+                          style={{marginRight: 8}}
                         />
                         <Text className="text-xs font-semibold tracking-wider text-gray-600 uppercase">
                           Recent Places
@@ -998,12 +948,12 @@ const SearchModal: React.FC<SearchModalProps> = ({ visible, onClose, type }) => 
               {/* Final confirm — commits location + contact + closes modal */}
               <View
                 className="px-6 py-3 bg-white border-t border-gray-100"
-                style={{ paddingBottom: inset.bottom || 12 }}
+                style={{paddingBottom: inset.bottom || 12}}
               >
                 <Pressable
                   className="items-center justify-center p-3.5 rounded-lg bg-lightPrimary active:bg-darkPrimary disabled:opacity-40"
                   onPress={handleFinalConfirm}
-                  disabled={!confirmedLocation}
+                  disabled={!confirmedLocation || !isContactValid}
                 >
                   <Text className="text-lg font-bold text-white">Confirm</Text>
                 </Pressable>
