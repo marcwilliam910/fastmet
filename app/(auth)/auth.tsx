@@ -48,7 +48,11 @@ const Auth = () => {
         router.replace("/(auth)/otp");
       }
     } catch (error: any) {
-      handleSendOtpError(error, { onRetry: handleSignIn });
+      handleSendOtpError(
+        error,
+        {deviceId, phoneNumber: formattedPhoneNumber},
+        {onRetry: handleSignIn},
+      );
     } finally {
       setLoading(false);
     }

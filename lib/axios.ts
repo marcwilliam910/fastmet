@@ -2,18 +2,18 @@ import {
   ACCOUNT_DEACTIVATED_ROUTE,
   DEVICE_BANNED_ROUTE,
 } from "@/constants/routes";
-import { getSocket } from "@/sockets/socket";
-import { useAppStore } from "@/store/useAppStore";
-import { clearPushRegistrationCache } from "@/utils/helpers/pushRegistration";
-import axios, { InternalAxiosRequestConfig } from "axios";
-import { router } from "expo-router";
+import {getSocket} from "@/sockets/socket";
+import {useAppStore} from "@/store/useAppStore";
+import {clearPushRegistrationCache} from "@/utils/helpers/pushRegistration";
+import axios, {InternalAxiosRequestConfig} from "axios";
+import {router} from "expo-router";
 import Toast from "react-native-toast-message";
 
 export const apiUrl = `${process.env.EXPO_PUBLIC_BASE_URL}/api/client`;
 
 const api = axios.create({
   baseURL: apiUrl,
-  headers: { "Content-Type": "application/json" },
+  headers: {"Content-Type": "application/json"},
 });
 
 // --- Shared refresh promise ---
@@ -29,11 +29,11 @@ export const ensureFreshToken = (): Promise<string> => {
   if (!storedRefreshToken) return Promise.reject(new Error("No refresh token"));
 
   activeRefreshPromise = axios
-    .post<{ accessToken: string; refreshToken: string }>(
+    .post<{accessToken: string; refreshToken: string}>(
       `${apiUrl}/auth/refresh`,
-      { refreshToken: storedRefreshToken },
+      {refreshToken: storedRefreshToken},
     )
-    .then(({ data }) => {
+    .then(({data}) => {
       useAppStore.getState().setAuthData({
         token: data.accessToken,
         refreshToken: data.refreshToken,
@@ -55,7 +55,7 @@ export const performLogout = async () => {
     const token = store.token;
     if (token) {
       await api.post("/auth/logout", null, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: {Authorization: `Bearer ${token}`},
       });
     }
   } catch {
@@ -105,31 +105,45 @@ api.interceptors.response.use(
       return new Promise(() => {});
     }
 
-    // Access token expired — attempt refresh
-    if (status === 401 && data?.tokenExpired && !originalRequest._retry) {
-      originalRequest._retry = true;
-
-      try {
-        const newToken = await ensureFreshToken();
-        originalRequest.headers.set("Authorization", `Bearer ${newToken}`);
-        return api(originalRequest);
-      } catch {
+    if (status === 401) {
+      // Session displaced — another device took over, no refresh attempt
+      if (data?.sessionDisplaced) {
         Toast.show({
           type: "error",
-          text1: "Session Expired",
-          text2: "Please log in again.",
+          text1: "Signed Out",
+          text2: "Your account was signed in on another device.",
           position: "top",
-          visibilityTime: 4000,
+          visibilityTime: 6000,
           swipeable: true,
         });
-
         await performLogout();
         return new Promise(() => {});
       }
-    }
 
-    // Any other 401 (e.g. truly invalid token) — hard logout
-    if (status === 401) {
+      // Access token expired — attempt refresh
+      if (data?.tokenExpired && !originalRequest._retry) {
+        originalRequest._retry = true;
+
+        try {
+          const newToken = await ensureFreshToken();
+          originalRequest.headers.set("Authorization", `Bearer ${newToken}`);
+          return api(originalRequest);
+        } catch {
+          Toast.show({
+            type: "error",
+            text1: "Session Expired",
+            text2: "Please log in again.",
+            position: "top",
+            visibilityTime: 4000,
+            swipeable: true,
+          });
+
+          await performLogout();
+          return new Promise(() => {});
+        }
+      }
+
+      // Any other 401 (e.g. truly invalid token) — hard logout
       Toast.show({
         type: "error",
         text1: "Session Expired",

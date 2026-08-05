@@ -66,7 +66,7 @@ export default {
         {
           image: "./assets/fastmet/splash.png",
           resizeMode: "contain",
-          backgroundColor: "#ffffff",
+          backgroundColor: "#1C2B39",
         },
       ],
       "expo-font",

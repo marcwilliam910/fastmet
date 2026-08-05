@@ -2,33 +2,54 @@ import {
   ACCOUNT_DEACTIVATED_ROUTE,
   DEVICE_BANNED_ROUTE,
 } from "@/constants/routes";
-import { router } from "expo-router";
-import { Alert } from "react-native";
+import {router} from "expo-router";
+import {Alert} from "react-native";
 
-export function routeAuthGuardError(error: {
-  response?: { status?: number; data?: Record<string, unknown> };
-}): boolean {
+interface AuthGuardContext {
+  deviceId?: string;
+  phoneNumber?: string;
+}
+
+export function routeAuthGuardError(
+  error: {response?: {status?: number; data?: Record<string, unknown>}},
+  context: AuthGuardContext = {},
+): boolean {
   const status = error.response?.status;
   const data = error.response?.data;
 
-  if (status === 403) {
-    if (data?.deviceBanned) {
-      router.replace(DEVICE_BANNED_ROUTE);
-    }
+  if (status !== 403) return false;
 
-    if (data?.accountDeactivated) {
-      router.replace(ACCOUNT_DEACTIVATED_ROUTE);
-    }
+  if (data?.deviceBanned) {
+    router.replace(DEVICE_BANNED_ROUTE);
+    return true;
+  }
 
-    if (data?.accountSuspended) {
-      router.replace({
-        pathname: "/(auth)/account-suspended",
-        params: {
-          suspendedUntil: (data.suspendedUntil as string) ?? "",
-          suspensionReason: (data.suspensionReason as string) ?? "",
-        },
-      });
-    }
+  if (data?.deviceBlocked) {
+    router.push({
+      pathname: "/(auth)/device-blocked",
+      params: {
+        deviceId: context.deviceId ?? "",
+        phoneNumber: context.phoneNumber ?? "",
+        requestStatus: (data.requestStatus as string) ?? "none",
+        adminNote: (data.adminNote as string) ?? "",
+      },
+    });
+    return true;
+  }
+
+  if (data?.accountDeactivated) {
+    router.replace(ACCOUNT_DEACTIVATED_ROUTE);
+    return true;
+  }
+
+  if (data?.accountSuspended) {
+    router.replace({
+      pathname: "/(auth)/account-suspended",
+      params: {
+        suspendedUntil: (data.suspendedUntil as string) ?? "",
+        suspensionReason: (data.suspensionReason as string) ?? "",
+      },
+    });
     return true;
   }
 
@@ -37,11 +58,12 @@ export function routeAuthGuardError(error: {
 
 export function handleSendOtpError(
   error: {
-    response?: { status?: number; data?: Record<string, unknown> };
+    response?: {status?: number; data?: Record<string, unknown>};
   },
-  options?: { onRetry?: () => void },
+  context: AuthGuardContext = {},
+  options?: {onRetry?: () => void},
 ): boolean {
-  if (routeAuthGuardError(error)) return true;
+  if (routeAuthGuardError(error, context)) return true;
 
   const statusCode = error.response?.status;
   const errorMessage = error.response?.data?.error as string | undefined;
@@ -83,8 +105,8 @@ export function handleSendOtpError(
     "Connection Error",
     "Failed to send OTP. Please check your internet connection and try again.",
     options?.onRetry
-      ? [{ text: "Retry", onPress: options.onRetry }, { text: "Cancel" }]
-      : [{ text: "OK" }],
+      ? [{text: "Retry", onPress: options.onRetry}, {text: "Cancel"}]
+      : [{text: "OK"}],
   );
   return true;
 }

@@ -106,11 +106,11 @@ export default function PhoneOTPScreen() {
   const handleResendOtp = async () => {
     if (!canResend || isResending) return;
 
+    const deviceId = await getDeviceId();
+
     try {
       setIsResending(true);
       setLoading(true);
-
-      const deviceId = await getDeviceId();
 
       await axios.post(
         `${process.env.EXPO_PUBLIC_BASE_URL}/api/auth/send-otp-client`,
@@ -139,7 +139,17 @@ export default function PhoneOTPScreen() {
         topOffset: 50,
       });
     } catch (error: any) {
-      if (handleSendOtpError(error, {onRetry: handleResendOtp})) return;
+      if (
+        handleSendOtpError(
+          error,
+          {
+            deviceId,
+            phoneNumber: useAppStore.getState().phoneNumber ?? "",
+          },
+          {onRetry: handleResendOtp},
+        )
+      )
+        return;
     } finally {
       setIsResending(false);
       setLoading(false);
@@ -289,7 +299,12 @@ export default function PhoneOTPScreen() {
     } catch (error: any) {
       const statusCode: number | undefined = error.response?.status;
 
-      if (routeAuthGuardError(error)) {
+      if (
+        routeAuthGuardError(error, {
+          deviceId: await getDeviceId(),
+          phoneNumber: useAppStore.getState().phoneNumber ?? "",
+        })
+      ) {
         pendingVerifyToken.current = null;
         return;
       }
