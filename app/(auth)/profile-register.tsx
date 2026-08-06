@@ -1,10 +1,15 @@
 import CustomKeyAvoidingView from "@/components/CustomKeyAvoid";
 import AddressInput from "@/components/inputs/AddressInput";
+import {useAllowedDomains} from "@/hooks/useAllowedDomains";
 import {useAuthGuard} from "@/hooks/useAuthGuard";
 import api from "@/lib/axios";
 import {ProfileSchema} from "@/schemas/authSchema";
 import {useAppStore} from "@/store/useAppStore";
 import {NewUser, UserAddress} from "@/types/user";
+import {
+  allowedDomainsMessage,
+  isAllowedEmailDomain,
+} from "@/utils/helpers/emailDomain";
 import {openGallery} from "@/utils/helpers/imagePicker";
 import {validateForm} from "@/utils/helpers/validateForm";
 import {Ionicons} from "@expo/vector-icons";
@@ -29,6 +34,7 @@ export default function ProfileRegistration() {
   const inset = useSafeAreaInsets();
   const setLoading = useAppStore((state) => state.setLoading);
   const loading = useAppStore((state) => state.isLoading);
+  const allowedDomains = useAllowedDomains();
 
   const pickProfilePic = async () => {
     const result = await openGallery();
@@ -58,6 +64,10 @@ export default function ProfileRegistration() {
     });
     if (!result.success) {
       setErrors(result.errors);
+      return;
+    }
+    if (!form.email?.trim() || !isAllowedEmailDomain(form.email, allowedDomains)) {
+      setErrors({email: allowedDomainsMessage(allowedDomains)});
       return;
     }
     setErrors({});
@@ -202,7 +212,7 @@ export default function ProfileRegistration() {
               </Text>
             ) : (
               <Text className="mt-1 ml-1 text-xs text-gray-400">
-                Only gmail.com, yahoo.com, or icloud.com addresses are accepted.
+                {allowedDomainsMessage(allowedDomains)}.
               </Text>
             )}
           </View>

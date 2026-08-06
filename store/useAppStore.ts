@@ -28,10 +28,7 @@ type PersistedAuth = {
   gender: "male" | "female" | "prefer_not" | null;
   address: UserAddress;
   preRegistered: boolean;
-};
-
-type LegacyPersistedAuth = PersistedAuth & {
-  isProfileComplete?: boolean;
+  email: string | null;
 };
 
 export type AppStore = BookSlice &
@@ -70,29 +67,8 @@ export const useAppStore = create<AppStore>()(
         gender: state.gender,
         address: state.address,
         preRegistered: state.preRegistered,
+        email: state.email ?? null,
       }),
-      migrate: (persisted) => {
-        const state = persisted as LegacyPersistedAuth;
-        if (!state || typeof state !== "object") return state as PersistedAuth;
-
-        if (
-          state.registrationStep === undefined &&
-          "isProfileComplete" in state
-        ) {
-          return {
-            ...state,
-            registrationStep: state.isProfileComplete ? 2 : 1,
-            approvalStatus: state.approvalStatus ?? "pending",
-          };
-        }
-
-        return {
-          ...state,
-          registrationStep: state.registrationStep ?? 1,
-          approvalStatus: state.approvalStatus ?? "pending",
-        };
-      },
-      version: 1,
     },
   ),
 );
