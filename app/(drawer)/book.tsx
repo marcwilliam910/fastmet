@@ -59,7 +59,7 @@ const Book = () => {
     useSurgeFactors(pickUp);
   // ── Pricing ───────────────────────────────────────────────────────────────
   const pricing = useMemo(() => {
-    if (!route || !selectedVehicle?.variant) return null;
+    if (!route || !selectedVehicle?.variant || !bookingType) return null;
 
     const {distanceKm, durationMin} = route;
     const variant = selectedVehicle.variant;
@@ -142,7 +142,7 @@ const Book = () => {
           region={region}
           setRegion={setRegion}
           setIsDragging={setIsDragging}
-          bookingType={bookingType.type}
+          bookingType={bookingType?.type ?? "asap"}
           onRouteFitChange={setIsRouteFitted}
         />
 

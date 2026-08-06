@@ -20,7 +20,7 @@ const Services = () => {
     (state) => state.updateServiceQuantity,
   );
   const selectedVehicle = useAppStore((state) => state.selectedVehicle);
-  const bookingType = useAppStore((state) => state.bookingType.type);
+  const bookingType = useAppStore((state) => state.bookingType?.type);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>

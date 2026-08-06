@@ -215,7 +215,7 @@ export default function BookingTypeModal({
                               .sort((a, b) => a.order - b.order)
                               .map((subOption) => {
                                 const isSubSelected =
-                                  bookingType.value === subOption.key;
+                                  bookingType?.value === subOption.key;
                                 return (
                                   <Pressable
                                     key={subOption.key}

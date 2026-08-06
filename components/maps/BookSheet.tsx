@@ -91,12 +91,13 @@ const BookSheet = ({
   }, [insets.bottom, hasMultipleVariants]);
 
   const bookingTypeDisplay = useMemo(() => {
+    if (!bookingType) return "Select option";
     if (bookingType.type === "asap") {
       return `${bookingType.type.toUpperCase()} - ${bookingType.value}`;
     } else if (bookingType.type === "schedule") {
       return formatDate(bookingType.value);
     } else return bookingType.value;
-  }, [bookingType.type, bookingType.value]);
+  }, [bookingType]);
 
   const handleVehicleSelect = (vehicle: IVehicleType, index: number) => {
     setSelectedVehicle({

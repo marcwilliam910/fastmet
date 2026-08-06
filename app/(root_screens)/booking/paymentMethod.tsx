@@ -56,6 +56,20 @@ export default function PaymentMethod() {
         return;
       }
 
+      if (!bookingType) {
+        Toast.show({
+          type: "error",
+          text1: "Booking type required",
+          text2: "Please select a booking type and try again.",
+          position: "top",
+          visibilityTime: 4000,
+        });
+        setLoading(false);
+        isSubmittingRef.current = false;
+        router.back();
+        return;
+      }
+
       const bookingRef = generateBookingRef({
         bookingType: bookingType.type,
         vehicleType: selectedVehicle.key,
@@ -165,8 +179,8 @@ export default function PaymentMethod() {
           pickUp: state.pickUp,
           dropOff: state.dropOff,
           bookingType: {
-            type: state.bookingType.type,
-            value: state.bookingType.value,
+            type: state.bookingType!.type,
+            value: state.bookingType!.value,
           },
           selectedVehicle: {
             name: state.selectedVehicle?.name ?? "",
@@ -186,12 +200,17 @@ export default function PaymentMethod() {
           requestedDrivers: [],
         };
 
-        if (bookingType.type === "asap" || bookingType.type === "pooling")
+        if (!state.bookingType) return;
+
+        if (
+          state.bookingType.type === "asap" ||
+          state.bookingType.type === "pooling"
+        )
           router.push({
             pathname: "/(root_screens)/booking/searchingDriver",
             params: {
               bookingId: data.bookingId,
-              type: bookingType.type,
+              type: state.bookingType.type,
               city: data.city,
             },
           });
@@ -232,7 +251,7 @@ export default function PaymentMethod() {
     return () => {
       socket.off("bookingRequestSaved", bookingSaved);
     };
-  }, [id, setLoading, socket, bookingType.type]);
+  }, [id, setLoading, socket, bookingType?.type]);
 
   useEffect(() => {
     const handleBookingFailed = (data: {
