@@ -1,9 +1,9 @@
-import { LocationDetails, RouteData } from "@/types/book";
-import { Service } from "@/types/vehicle";
-import { formatLocation } from "@/utils/helpers/location";
-import { Ionicons } from "@expo/vector-icons";
-import { Image } from "expo-image";
-import { Platform, Pressable, Text, View } from "react-native";
+import {LocationDetails, RouteData} from "@/types/book";
+import {Service} from "@/types/vehicle";
+import {formatLocation} from "@/utils/helpers/location";
+import {Ionicons} from "@expo/vector-icons";
+import {Image} from "expo-image";
+import {Platform, Pressable, Text, View} from "react-native";
 
 export const SeeMoreHeader = ({
   onClose,
@@ -13,11 +13,11 @@ export const SeeMoreHeader = ({
   bookingType: string;
 }) => {
   return (
-    <View className="flex-row items-center justify-center px-4 pt-2 pb-4">
+    <View className="flex-row justify-center items-center px-4 pt-2 pb-4">
       <Pressable
         onPress={onClose}
-        className="absolute left-4 top-1"
-        hitSlop={{ top: 20, left: 20, bottom: 20, right: 20 }}
+        className="absolute top-1 left-4"
+        hitSlop={{top: 20, left: 20, bottom: 20, right: 20}}
       >
         <Ionicons
           name="chevron-back-outline"
@@ -38,8 +38,8 @@ export const LocationUI = ({
   dropOff: LocationDetails;
 }) => {
   return (
-    <View className="relative flex-row items-start justify-between ml-5 mr-2 border-l border-dashed border-lightPrimary pl-7">
-      <View className="gap-5 flex-1">
+    <View className="relative flex-row justify-between items-start pl-7 mr-2 ml-5 border-l border-dashed border-lightPrimary">
+      <View className="flex-1 gap-5">
         {/* Pickup */}
         <View>
           <Text className="text-sm font-medium text-gray-900">
@@ -50,6 +50,22 @@ export const LocationUI = ({
             <Text className="mt-1 text-xs text-gray-500" numberOfLines={3}>
               {pickUp.additionalDetails}
             </Text>
+          )}
+          {pickUp?.contactName && (
+            <View className="flex-row items-center mt-2">
+              <Ionicons
+                name="person-circle-outline"
+                size={15}
+                color="#9CA3AF"
+              />
+
+              <Text
+                className="flex-1 ml-1.5 text-xs text-gray-500"
+                numberOfLines={1}
+              >
+                {pickUp.contactName}
+              </Text>
+            </View>
           )}
         </View>
 
@@ -63,6 +79,22 @@ export const LocationUI = ({
             <Text className="mt-1 text-xs text-gray-500" numberOfLines={3}>
               {dropOff.additionalDetails}
             </Text>
+          )}
+          {dropOff?.contactName && (
+            <View className="flex-row items-center mt-2">
+              <Ionicons
+                name="person-circle-outline"
+                size={15}
+                color="#9CA3AF"
+              />
+
+              <Text
+                className="flex-1 ml-1.5 text-xs text-gray-500"
+                numberOfLines={1}
+              >
+                {dropOff.contactName}
+              </Text>
+            </View>
           )}
         </View>
       </View>
@@ -87,9 +119,11 @@ export const LocationUI = ({
 export const PaymentInfo = ({
   paymentMethod,
   routeData,
+  paidBy,
 }: {
   paymentMethod: string;
   routeData: RouteData;
+  paidBy?: "sender" | "receiver";
 }) => {
   return (
     <View className="p-5 bg-gray-50 rounded-2xl">
@@ -97,8 +131,16 @@ export const PaymentInfo = ({
         Payment Information (
         {paymentMethod === "cash" ? "Cash Payment" : "Gcash Payment"})
       </Text>
+      {paidBy && (
+        <View className="flex-row justify-between items-center p-3 mb-2 bg-white rounded-lg">
+          <Text className="text-sm text-gray-600">Paid by</Text>
+          <Text className="text-sm font-bold text-gray-800 capitalize">
+            {paidBy}
+          </Text>
+        </View>
+      )}
       {/* Price Breakdown */}
-      <View className="p-4 bg-white rounded-xl gap-2">
+      <View className="gap-2 p-4 bg-white rounded-xl">
         <View className="flex-row justify-between">
           <Text className="text-xs text-gray-500">Base Fare</Text>
           <Text className="text-xs font-semibold text-gray-700">
@@ -134,10 +176,10 @@ export const PaymentInfo = ({
         </View>
 
         {/* Divider */}
-        <View className="h-px my-2 bg-gray-200" />
+        <View className="my-2 h-px bg-gray-200" />
 
         {/* Total */}
-        <View className="flex-row justify-between ">
+        <View className="flex-row justify-between">
           <Text className="text-base font-semibold text-gray-800">
             Total Amount
           </Text>
@@ -168,8 +210,8 @@ export const SelectedServices = ({
   freeServices: Service[];
 }) => {
   return (
-    <View className="p-4 border border-gray-200 rounded-2xl bg-white">
-      <View className="flex-row items-center justify-between mb-3">
+    <View className="p-4 bg-white rounded-2xl border border-gray-200">
+      <View className="flex-row justify-between items-center mb-3">
         <Text className="text-base font-semibold text-gray-800">
           Selected Services
         </Text>
@@ -190,9 +232,9 @@ export const SelectedServices = ({
             {freeServices.map((service: Service) => (
               <View
                 key={service.key}
-                className="flex-row items-center justify-between py-2"
+                className="flex-row justify-between items-center py-2"
               >
-                <View className="flex-row items-center flex-1 gap-2">
+                <View className="flex-row flex-1 gap-2 items-center">
                   <View className="w-1.5 h-1.5 bg-green-500 rounded-full" />
                   <Text className="flex-1 text-sm text-gray-700">
                     {service.name}
@@ -223,7 +265,7 @@ export const SelectedServices = ({
               return (
                 <View
                   key={service.key}
-                  className="flex-row items-center justify-between py-2"
+                  className="flex-row justify-between items-center py-2"
                 >
                   <View className="flex-1">
                     <Text className="text-sm font-medium text-gray-800">
@@ -236,10 +278,9 @@ export const SelectedServices = ({
                     )}
                   </View>
                   <Text className="font-semibold text-lightPrimary">
-                    ₱
                     {service.price > 0
-                      ? service.price.toLocaleString("en-US")
-                      : "0.00"}
+                      ? `₱${service.price.toLocaleString("en-US")}`
+                      : "-"}
                   </Text>
                 </View>
               );
@@ -250,7 +291,7 @@ export const SelectedServices = ({
 
       {/* Total */}
       {hasAddedServices && (
-        <View className="flex-row items-center justify-between pt-3 mt-3 border-t border-gray-300">
+        <View className="flex-row justify-between items-center pt-3 mt-3 border-t border-gray-300">
           <Text className="text-base font-semibold text-gray-800">
             Services Total
           </Text>
@@ -268,7 +309,7 @@ export const SelectedServices = ({
   );
 };
 
-export const ItemType = ({ itemType }: { itemType: string }) => {
+export const ItemType = ({itemType}: {itemType: string}) => {
   return (
     <View className="p-5 bg-blue-50 rounded-2xl">
       <View className="flex-row items-center mb-2">
@@ -282,7 +323,7 @@ export const ItemType = ({ itemType }: { itemType: string }) => {
   );
 };
 
-export const Note = ({ note }: { note: string }) => {
+export const Note = ({note}: {note: string}) => {
   return (
     <View className="p-5 bg-amber-50 rounded-2xl">
       <View className="flex-row items-center mb-2">
@@ -322,7 +363,7 @@ export const AttachedImages = ({
             className="flex-1"
           >
             <Image
-              source={{ uri: img }}
+              source={{uri: img}}
               style={{
                 flex: 1,
                 height: photos.length > 1 ? 100 : 200,

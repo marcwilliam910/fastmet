@@ -3,16 +3,16 @@ import {
   useMarkAsReadMutation,
   useRateDriverMutation,
 } from "@/mutations/booking";
-import { useUserBookings } from "@/queries/bookingQueries";
-import { useAppStore } from "@/store/useAppStore";
-import { CompletedBooking, LocationDetails } from "@/types/book";
-import { createConversationId } from "@/utils/helpers/booking";
-import { formatDate } from "@/utils/helpers/date";
-import { formatLocation } from "@/utils/helpers/location";
-import { Ionicons } from "@expo/vector-icons";
-import { Image } from "expo-image";
-import { router } from "expo-router";
-import { useEffect, useMemo, useState } from "react";
+import {useUserBookings} from "@/queries/bookingQueries";
+import {useAppStore} from "@/store/useAppStore";
+import {CompletedBooking, LocationDetails} from "@/types/book";
+import {createConversationId} from "@/utils/helpers/booking";
+import {formatDate} from "@/utils/helpers/date";
+import {formatLocation} from "@/utils/helpers/location";
+import {Ionicons} from "@expo/vector-icons";
+import {Image} from "expo-image";
+import {router} from "expo-router";
+import {useEffect, useMemo, useState} from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -24,7 +24,7 @@ import {
   View,
 } from "react-native";
 import ImageView from "react-native-image-viewing";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import {useSafeAreaInsets} from "react-native-safe-area-context";
 import {
   AttachedImages,
   ItemType,
@@ -36,8 +36,8 @@ import {
 } from "../BookingSeeMoreInfo";
 import StarDisplay from "../StarDisplay";
 
-export default function CompletedRoute({ count }: { count: number }) {
-  const { modalVisible, setModalVisible, selectedRequest, handleSeeMorePress } =
+export default function CompletedRoute({count}: {count: number}) {
+  const {modalVisible, setModalVisible, selectedRequest, handleSeeMorePress} =
     useSeeMoreDetails<CompletedBooking>();
 
   const {
@@ -50,7 +50,7 @@ export default function CompletedRoute({ count }: { count: number }) {
     isFetchingNextPage,
   } = useUserBookings<CompletedBooking>("completed", 5);
 
-  const { mutate: markAsReadBooking, isPending: isMarkingAsRead } =
+  const {mutate: markAsReadBooking, isPending: isMarkingAsRead} =
     useMarkAsReadMutation();
 
   useEffect(() => {
@@ -59,13 +59,13 @@ export default function CompletedRoute({ count }: { count: number }) {
 
   if (isPending || isMarkingAsRead)
     return (
-      <View className="flex-1 items-center justify-center">
+      <View className="flex-1 justify-center items-center">
         <ActivityIndicator size="large" color="#FFA840" />
       </View>
     );
   if (error)
     return (
-      <View className="flex-1 items-center justify-center">
+      <View className="flex-1 justify-center items-center">
         <Text className="text-lg font-semibold text-gray-500">
           {error.message}
         </Text>
@@ -78,9 +78,10 @@ export default function CompletedRoute({ count }: { count: number }) {
     <>
       <FlatList
         data={completedBookings}
-        renderItem={({ item }) => (
+        renderItem={({item}) => (
           <CompletedCard
             vehicle={item.selectedVehicle.name}
+            maxLoadKg={item.selectedVehicle.maxLoadKg ?? 0}
             bookingType={item.bookingType}
             pickup={item.pickUp}
             dropoff={item.dropOff}
@@ -99,13 +100,13 @@ export default function CompletedRoute({ count }: { count: number }) {
           gap: 15,
         }}
         ListEmptyComponent={() => (
-          <View className=" items-center justify-center px-8 py-12">
+          <View className="justify-center items-center px-8 py-12">
             <View className="items-center">
               <Ionicons name="alert-circle-outline" size={80} color="#9CA3AF" />
-              <Text className="text-2xl font-bold text-gray-800 mt-6 text-center">
+              <Text className="mt-6 text-2xl font-bold text-center text-gray-800">
                 No Requests Yet
               </Text>
-              <Text className="text-base text-gray-500 text-center mt-2">
+              <Text className="mt-2 text-base text-center text-gray-500">
                 You currently don&apos;t have any active requests.
               </Text>
             </View>
@@ -147,6 +148,7 @@ export default function CompletedRoute({ count }: { count: number }) {
 
 type CompleteCardProps = {
   vehicle: string;
+  maxLoadKg: number;
   pickup: LocationDetails;
   bookingType: {
     type: string; // "asap" | "schedule"
@@ -162,6 +164,7 @@ type CompleteCardProps = {
 
 const CompletedCard = ({
   vehicle,
+  maxLoadKg,
   completedTime,
   pickup,
   dropoff,
@@ -182,7 +185,7 @@ const CompletedCard = ({
     <View
       style={{
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
+        shadowOffset: {width: 0, height: 4},
         shadowOpacity: 0.3,
         shadowRadius: 8,
         elevation: 8, // for Android
@@ -194,15 +197,19 @@ const CompletedCard = ({
         className="overflow-hidden bg-white rounded-2xl active:opacity-90"
       >
         {/* Header */}
-        <View className="flex-row items-center justify-between px-5 py-3 bg-lightPrimary">
-          <Text className="text-lg font-semibold text-white">{vehicle}</Text>
+        <View className="flex-row justify-between items-center px-5 py-3 bg-lightPrimary">
+          <Text
+            className={`font-semibold text-white ${maxLoadKg ? "text-base" : "text-lg"}`}
+          >
+            {vehicle} {maxLoadKg ? `(${maxLoadKg}kg)` : ""}
+          </Text>
           <Text className="text-sm text-white">Completed at {formatted}</Text>
         </View>
 
         {/* Body */}
         <View className="px-3 py-5">
           {/* Pickup & Drop */}
-          <View className="relative flex-row items-center justify-between ml-5 mr-2 border-l border-dashed pl-7">
+          <View className="relative flex-row justify-between items-center pl-7 mr-2 ml-5 border-l border-dashed">
             <View className="gap-4">
               <Text
                 className={`font-medium ${Platform.OS === "ios" ? "max-w-60" : "max-w-52"}`}
@@ -231,7 +238,7 @@ const CompletedCard = ({
             />
           </View>
           {/* Payment */}
-          <View className="flex-row items-center justify-between p-4 mt-6 bg-gray-100 rounded-lg">
+          <View className="flex-row justify-between items-center p-4 mt-6 bg-gray-100 rounded-lg">
             <Text className="text-base text-gray-600">
               {isCash ? "Cash Payment" : "Online Payment"}
             </Text>
@@ -240,7 +247,7 @@ const CompletedCard = ({
             </Text>
           </View>
           <Pressable
-            className="items-center justify-center mt-6 active:scale-105"
+            className="justify-center items-center mt-6 active:scale-105"
             onPress={onPressSeeMore}
           >
             <Text className="text-sm font-medium">+ See more</Text>
@@ -267,7 +274,7 @@ function SeeMoreModal({
   const [userRating, setUserRating] = useState(0);
   const [showRatingCard, setShowRatingCard] = useState(false);
 
-  const { mutate, isPending, error } = useRateDriverMutation();
+  const {mutate, isPending, error} = useRateDriverMutation();
 
   const openImageViewer = (imageUrl: string) => {
     setSelectedImage(imageUrl);
@@ -277,7 +284,7 @@ function SeeMoreModal({
   const handleRateDriver = () => {
     if (userRating > 0) {
       mutate(
-        { bookingId: data._id, rating: userRating },
+        {bookingId: data._id, rating: userRating},
         {
           onSuccess: (data) => {
             setShowRatingCard(false);
@@ -299,7 +306,7 @@ function SeeMoreModal({
   }, [visible, data.driverRating]);
 
   // Memoize calculations to prevent recalculation on every render
-  const { totalServicesPrice, hasAddedServices, hasFreeServices } =
+  const {totalServicesPrice, hasAddedServices, hasFreeServices} =
     useMemo(() => {
       if (!data)
         return {
@@ -353,8 +360,8 @@ function SeeMoreModal({
           }}
         >
           <View className="p-5 rounded-2xl bg-lightPrimary">
-            <View className="flex-row items-center justify-between">
-              <View>
+            <View className="flex-row justify-between items-center">
+              <View className="flex-1 pr-3">
                 <Text className="mb-1 text-sm text-white opacity-90">
                   Order Reference
                 </Text>
@@ -362,13 +369,21 @@ function SeeMoreModal({
                   #{data.bookingRef}
                 </Text>
               </View>
-              <View className="items-end">
+              <View className="items-end shrink-0 max-w-[55%]">
                 <Text className="mb-1 text-sm text-white opacity-90">
                   Vehicle Type
                 </Text>
-                <Text className="text-lg font-semibold text-white">
+                <Text
+                  className="text-lg font-semibold text-right text-white"
+                  numberOfLines={2}
+                >
                   {data.selectedVehicle.name}
                 </Text>
+                {data.selectedVehicle.maxLoadKg != null && (
+                  <Text className="mt-0.5 text-sm text-white opacity-90 text-right">
+                    {data.selectedVehicle.maxLoadKg}kg
+                  </Text>
+                )}
               </View>
             </View>
           </View>
@@ -379,8 +394,8 @@ function SeeMoreModal({
               <Text className="mb-1 text-sm font-semibold text-gray-500">
                 Driver
               </Text>
-              <View className="flex-row items-center justify-between">
-                <View className="flex-row items-center justify-center gap-2">
+              <View className="flex-row justify-between items-center">
+                <View className="flex-row gap-2 justify-center items-center">
                   {data.driver.profilePictureUrl ? (
                     <Pressable
                       className="w-[48px] h-[48px] rounded-full overflow-hidden"
@@ -389,8 +404,8 @@ function SeeMoreModal({
                       }
                     >
                       <Image
-                        source={{ uri: data.driver.profilePictureUrl }}
-                        style={{ width: "100%", height: "100%" }}
+                        source={{uri: data.driver.profilePictureUrl}}
+                        style={{width: "100%", height: "100%"}}
                         contentFit="cover"
                       />
                     </Pressable>
@@ -401,7 +416,7 @@ function SeeMoreModal({
                     <Text className="text-lg font-semibold text-gray-800">
                       {data.driver.name}
                     </Text>
-                    <View className="flex-row items-center gap-2 ">
+                    <View className="flex-row gap-2 items-center">
                       <StarDisplay rating={data.driver.rating} />
                       <Text className="text-sm font-semibold text-gray-600">
                         ({data.driver.rating})
@@ -445,7 +460,7 @@ function SeeMoreModal({
             <LocationUI pickUp={data.pickUp} dropOff={data.dropOff} />
 
             {/* Distance */}
-            <View className="flex-row items-center justify-between p-3 mt-4 bg-white rounded-lg">
+            <View className="flex-row justify-between items-center p-3 mt-4 bg-white rounded-lg">
               <Text className="text-sm text-gray-600">Distance</Text>
               <Text className="text-lg font-bold text-lightPrimary">
                 {data.routeData.distance.toFixed(2)}km
@@ -453,7 +468,7 @@ function SeeMoreModal({
             </View>
 
             {/* Booking Type */}
-            <View className="flex-row items-center justify-between p-3  bg-white rounded-lg">
+            <View className="flex-row justify-between items-center p-3 bg-white rounded-lg">
               <Text className="text-sm font-semibold text-gray-600">
                 {data.bookingType.type === "schedule"
                   ? "Scheduled on"
@@ -467,7 +482,7 @@ function SeeMoreModal({
             </View>
 
             {/* Completed At */}
-            <View className="flex-row items-center justify-between p-3  bg-white rounded-lg">
+            <View className="flex-row justify-between items-center p-3 bg-white rounded-lg">
               <Text className="text-sm font-semibold text-gray-600">
                 Completed on
               </Text>
@@ -481,12 +496,13 @@ function SeeMoreModal({
           <PaymentInfo
             paymentMethod={data.paymentMethod}
             routeData={data.routeData}
+            paidBy={data.paidBy}
           />
 
           {/* Delivery Proof Images */}
           <View className="p-5 bg-gray-50 rounded-2xl">
-            <View className="flex-row items-center mb-3 gap-2">
-              <View className="bg-green-100 rounded-full p-1">
+            <View className="flex-row gap-2 items-center mb-3">
+              <View className="p-1 bg-green-100 rounded-full">
                 <Ionicons
                   name="checkmark-done-circle"
                   size={22}
@@ -498,7 +514,7 @@ function SeeMoreModal({
               </Text>
             </View>
 
-            <View className="p-4 bg-white rounded-xl gap-3">
+            <View className="gap-3 p-4 bg-white rounded-xl">
               {/* Pickup Section */}
               <View className="gap-2">
                 <Text className="text-xs font-bold text-gray-500">
@@ -519,7 +535,7 @@ function SeeMoreModal({
                         source={{
                           uri: data.bookingImages.pickup.beforeImageUrl,
                         }}
-                        style={{ height: 90, width: "100%" }}
+                        style={{height: 90, width: "100%"}}
                         contentFit="cover"
                       />
                       <View className="p-2">
@@ -541,7 +557,7 @@ function SeeMoreModal({
                         source={{
                           uri: data.bookingImages.pickup.afterImageUrl,
                         }}
-                        style={{ height: 90, width: "100%" }}
+                        style={{height: 90, width: "100%"}}
                         contentFit="cover"
                       />
                       <View className="p-2">
@@ -574,7 +590,7 @@ function SeeMoreModal({
                         source={{
                           uri: data.bookingImages.dropoff.signatureImageUrl,
                         }}
-                        style={{ height: 90, width: "100%" }}
+                        style={{height: 90, width: "100%"}}
                         contentFit="cover"
                       />
                       <View className="p-2">
@@ -598,7 +614,7 @@ function SeeMoreModal({
                         source={{
                           uri: data.bookingImages.dropoff.packageImageUrl,
                         }}
-                        style={{ height: 90, width: "100%" }}
+                        style={{height: 90, width: "100%"}}
                         contentFit="cover"
                       />
                       <View className="p-2">
@@ -652,26 +668,26 @@ function SeeMoreModal({
               borderRadius: 16,
               padding: 16,
               shadowColor: "#000",
-              shadowOffset: { width: 0, height: -2 },
+              shadowOffset: {width: 0, height: -2},
               shadowOpacity: 0.1,
               shadowRadius: 8,
               elevation: 5,
             }}
           >
-            <View className="flex-row items-center justify-between mb-3">
+            <View className="flex-row justify-between items-center mb-3">
               <Text className="text-base font-semibold text-gray-800">
                 Rate this driver
               </Text>
               <Pressable
                 onPress={() => setShowRatingCard(false)}
-                hitSlop={{ top: 10, left: 10, bottom: 10, right: 10 }}
+                hitSlop={{top: 10, left: 10, bottom: 10, right: 10}}
               >
                 <Ionicons name="close" size={24} color="#666" />
               </Pressable>
             </View>
 
             {/* Star Rating */}
-            <View className="flex-row items-center justify-center gap-2 mb-4">
+            <View className="flex-row gap-2 justify-center items-center mb-4">
               {[1, 2, 3, 4, 5].map((star) => (
                 <Pressable
                   key={star}
@@ -691,8 +707,9 @@ function SeeMoreModal({
             <Pressable
               onPress={handleRateDriver}
               disabled={userRating === 0 || isPending}
-              className={`py-3 rounded-xl ${userRating > 0 ? "bg-lightPrimary" : "bg-gray-300"
-                }`}
+              className={`py-3 rounded-xl ${
+                userRating > 0 ? "bg-lightPrimary" : "bg-gray-300"
+              }`}
             >
               <Text className="text-base font-semibold text-center text-white">
                 {isPending
@@ -712,7 +729,7 @@ function SeeMoreModal({
         )}
       </View>
       <ImageView
-        images={[{ uri: selectedImage }]}
+        images={[{uri: selectedImage}]}
         imageIndex={0}
         visible={isImageViewVisible}
         onRequestClose={() => setIsImageViewVisible(false)}

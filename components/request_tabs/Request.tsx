@@ -1,19 +1,14 @@
 import useSeeMoreDetails from "@/hooks/useSeeMoreDetails";
-import { queryClient } from "@/lib/queryClient";
-import { useUserBookings } from "@/queries/bookingQueries";
-import { useSocket } from "@/sockets/context/SocketProvider";
-import { useAppStore } from "@/store/useAppStore";
-import {
-  Booking,
-  Driver,
-  LocationDetails,
-  RequestedDriver,
-} from "@/types/book";
-import { formatDate } from "@/utils/helpers/date";
-import { formatLocation } from "@/utils/helpers/location";
-import { Ionicons } from "@expo/vector-icons";
-import { Image } from "expo-image";
-import { useCallback, useEffect, useState } from "react";
+import {queryClient} from "@/lib/queryClient";
+import {useUserBookings} from "@/queries/bookingQueries";
+import {useSocket} from "@/sockets/context/SocketProvider";
+import {useAppStore} from "@/store/useAppStore";
+import {Booking, Driver, LocationDetails, RequestedDriver} from "@/types/book";
+import {formatDate} from "@/utils/helpers/date";
+import {formatLocation} from "@/utils/helpers/location";
+import {Ionicons} from "@expo/vector-icons";
+import {Image} from "expo-image";
+import {useCallback, useEffect, useState} from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -24,8 +19,8 @@ import {
   Text,
   View,
 } from "react-native";
-import Popover, { PopoverPlacement } from "react-native-popover-view";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Popover, {PopoverPlacement} from "react-native-popover-view";
+import {useSafeAreaInsets} from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 import ConfirmCancelBookingModal from "../modals/confirmCancelBookingModal";
 import DriverDetailsModal from "../modals/driverDetailsModal";
@@ -33,7 +28,7 @@ import SeeMoreModalDisplay from "../modals/seeMoreModalDisplay";
 import StarDisplay from "../StarDisplay";
 
 export default function RequestRoute() {
-  const { modalVisible, setModalVisible, selectedRequest, handleSeeMorePress } =
+  const {modalVisible, setModalVisible, selectedRequest, handleSeeMorePress} =
     useSeeMoreDetails<Booking>();
   /** Which booking's drivers list is open. Null = drivers modal closed. */
   const [driversModalBookingId, setDriversModalBookingId] = useState<
@@ -109,7 +104,7 @@ export default function RequestRoute() {
 
   const handleCancelBook = () => {
     setLoading(true);
-    socket.emit("cancelBookingRequest", { bookingId: selectedId });
+    socket.emit("cancelBookingRequest", {bookingId: selectedId});
     setSelectedId(null);
   };
 
@@ -136,7 +131,7 @@ export default function RequestRoute() {
 
     // Optimistically remove declined driver from pending booking card
     queryClient.setQueriesData(
-      { queryKey: ["userBookings", "pending"] },
+      {queryKey: ["userBookings", "pending"]},
       (oldData: any) => {
         if (!oldData?.pages) return oldData;
 
@@ -270,14 +265,14 @@ export default function RequestRoute() {
 
   if (isLoading)
     return (
-      <View className="flex-1 items-center justify-center">
+      <View className="flex-1 justify-center items-center">
         <ActivityIndicator size="large" color="#FFA840" />
       </View>
     );
 
   if (error)
     return (
-      <View className="flex-1 items-center justify-center">
+      <View className="flex-1 justify-center items-center">
         <Text className="text-lg font-semibold text-gray-500">
           {error.message}
         </Text>
@@ -286,7 +281,7 @@ export default function RequestRoute() {
 
   return (
     <>
-      <View className="flex-row items-center justify-between px-4 py-2">
+      <View className="flex-row justify-between items-center px-4 py-2">
         {/* Display current filter */}
         <Text className="font-bold">
           {selectedFilters.length === 2
@@ -311,7 +306,7 @@ export default function RequestRoute() {
               <Pressable
                 onPress={() => handleFilterPress(option)}
                 key={option}
-                className="flex-row items-center justify-between p-3 active:scale-105"
+                className="flex-row justify-between items-center p-3 active:scale-105"
               >
                 <Text className="font-semibold">{option}</Text>
                 {
@@ -338,8 +333,9 @@ export default function RequestRoute() {
           paddingBottom: 40,
           gap: 15,
         }}
-        renderItem={({ item }) => (
+        renderItem={({item}) => (
           <RequestCard
+            maxLoadKg={item.selectedVehicle.maxLoadKg ?? 0}
             driver={item.driver}
             status={item.status as "pending" | "scheduled"}
             vehicle={item.selectedVehicle.name}
@@ -371,12 +367,12 @@ export default function RequestRoute() {
           ) : null
         }
         ListEmptyComponent={() => (
-          <View className="items-center justify-center px-8 py-12">
+          <View className="justify-center items-center px-8 py-12">
             <Ionicons name="alert-circle-outline" size={80} color="#9CA3AF" />
-            <Text className="text-2xl font-bold text-gray-800 mt-6 text-center">
+            <Text className="mt-6 text-2xl font-bold text-center text-gray-800">
               No Requests Yet
             </Text>
-            <Text className="text-base text-gray-500 text-center mt-2">
+            <Text className="mt-2 text-base text-center text-gray-500">
               You currently don&apos;t have any active requests.
             </Text>
           </View>
@@ -431,6 +427,7 @@ export default function RequestRoute() {
 }
 
 type RequestCardProps = {
+  maxLoadKg: number;
   vehicle: string;
   bookingType: {
     type: string;
@@ -451,6 +448,7 @@ type RequestCardProps = {
 };
 
 const RequestCard = ({
+  maxLoadKg,
   status,
   driver,
   vehicle,
@@ -476,7 +474,7 @@ const RequestCard = ({
       <View
         style={{
           shadowColor: "#000",
-          shadowOffset: { width: 0, height: 4 },
+          shadowOffset: {width: 0, height: 4},
           shadowOpacity: 0.3,
           shadowRadius: 8,
           elevation: 8,
@@ -488,8 +486,12 @@ const RequestCard = ({
           className="overflow-hidden bg-white rounded-2xl active:opacity-90"
         >
           {/* Header */}
-          <View className="flex-row items-center justify-between px-5 py-3 bg-lightPrimary">
-            <Text className="text-lg font-semibold text-white">{vehicle}</Text>
+          <View className="flex-row justify-between items-center px-5 py-3 bg-lightPrimary">
+            <Text
+              className={`font-semibold text-white ${maxLoadKg ? "text-base" : "text-lg"}`}
+            >
+              {vehicle} {maxLoadKg ? `(${maxLoadKg}kg)` : ""}
+            </Text>
             <Text className="text-sm text-white">
               {status === "pending"
                 ? bookingType.type.toUpperCase()
@@ -500,7 +502,7 @@ const RequestCard = ({
           {/* Body */}
           <View className="px-3 py-5">
             {/* Pickup & Drop */}
-            <View className="relative flex-row items-center justify-between ml-5 mr-2 border-l border-dashed pl-7">
+            <View className="relative flex-row justify-between items-center pl-7 mr-2 ml-5 border-l border-dashed">
               <View className="gap-4">
                 <Text className="font-medium max-w-56" numberOfLines={2}>
                   {formatLocation(pickup)}
@@ -525,10 +527,10 @@ const RequestCard = ({
 
             {/* Assigned Driver */}
             {driver && (
-              <View className="mt-6 flex-row items-center bg-green-50 p-3 rounded-xl">
+              <View className="flex-row items-center p-3 mt-6 bg-green-50 rounded-xl">
                 {driver.profilePictureUrl ? (
                   <Image
-                    source={{ uri: driver.profilePictureUrl }}
+                    source={{uri: driver.profilePictureUrl}}
                     style={{
                       width: 48,
                       height: 48,
@@ -553,18 +555,18 @@ const RequestCard = ({
                     <Ionicons name="person-circle" size={48} color="#F7931E" />
                   </View>
                 )}
-                <View className="ml-3 flex-1">
+                <View className="flex-1 ml-3">
                   <Text className="text-base font-semibold text-green-900">
                     {driver.name}
                   </Text>
                   <View className="flex-row items-center mt-1">
                     <StarDisplay rating={driver.rating} />
-                    <Text className="text-xs text-green-700 ml-2">
+                    <Text className="ml-2 text-xs text-green-700">
                       {driver.rating.toFixed(1)}
                     </Text>
                   </View>
                 </View>
-                <View className="bg-green-500 px-2 py-1 rounded-md">
+                <View className="px-2 py-1 bg-green-500 rounded-md">
                   <Text className="text-xs font-medium text-white">
                     Assigned
                   </Text>
@@ -576,19 +578,19 @@ const RequestCard = ({
             {hasOffers && (
               <Pressable
                 onPress={onOpenDrivers}
-                className="mt-6 flex-row items-center justify-between bg-orange-50 p-3 rounded-xl active:bg-orange-100"
+                className="flex-row justify-between items-center p-3 mt-6 bg-orange-50 rounded-xl active:bg-orange-100"
               >
                 <View className="flex-row items-center">
                   {/* Stacked Avatars */}
                   <View
                     className="flex-row items-center"
-                    style={{ marginRight: 12 }}
+                    style={{marginRight: 12}}
                   >
                     {displayedAvatars.map((driver, index) =>
                       driver.profilePicture ? (
                         <Image
                           key={driver.id}
-                          source={{ uri: driver.profilePicture }}
+                          source={{uri: driver.profilePicture}}
                           style={{
                             width: 40,
                             height: 40,
@@ -620,7 +622,7 @@ const RequestCard = ({
                             color="#F7931E"
                           />
                         </View>
-                      )
+                      ),
                     )}
                     {remainingCount > 0 && (
                       <View
@@ -659,7 +661,7 @@ const RequestCard = ({
             )}
 
             {/* Payment */}
-            <View className="flex-row items-center justify-between p-4 mt-6 bg-gray-100 rounded-lg">
+            <View className="flex-row justify-between items-center p-4 mt-6 bg-gray-100 rounded-lg">
               <Text className="text-base text-gray-600">
                 {isCash ? "Cash Payment" : "Online Payment"}
               </Text>
@@ -676,7 +678,7 @@ const RequestCard = ({
             {status === "pending" && (
               <View className="flex-row justify-between mt-6">
                 <Pressable
-                  className="flex-row items-center justify-center flex-1 py-3 mr-2 border border-lightPrimary rounded-xl active:bg-gray-50"
+                  className="flex-row flex-1 justify-center items-center py-3 mr-2 rounded-xl border border-lightPrimary active:bg-gray-50"
                   onPress={onCancel}
                 >
                   <Ionicons name="close" size={18} color="#333" />
@@ -687,7 +689,7 @@ const RequestCard = ({
 
                 {bookingType.type === "schedule" && (
                   <Pressable
-                    className="flex-row items-center justify-center flex-1 py-3 ml-2 border border-lightPrimary rounded-xl active:bg-gray-50"
+                    className="flex-row flex-1 justify-center items-center py-3 ml-2 rounded-xl border border-lightPrimary active:bg-gray-50"
                     onPress={onReschedule}
                   >
                     <Ionicons name="time-outline" size={18} color="#333" />
@@ -735,10 +737,10 @@ const DriversListModal = ({
         />
         <View
           className="max-h-[75%] rounded-t-3xl bg-white"
-          style={{ paddingBottom: inset.bottom }}
+          style={{paddingBottom: inset.bottom}}
         >
           {/* Header */}
-          <View className="flex-row items-center justify-between border-b border-gray-200 px-6 py-4">
+          <View className="flex-row justify-between items-center px-6 py-4 border-b border-gray-200">
             <Text className="text-xl font-bold text-gray-900">
               Driver Offers ({drivers.length})
             </Text>
@@ -755,19 +757,19 @@ const DriversListModal = ({
           <ScrollView
             className="px-4 py-4"
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingBottom: 20 }}
+            contentContainerStyle={{paddingBottom: 20}}
           >
             {drivers.map((driver) => (
               <Pressable
                 key={driver.id}
                 onPress={() => onSelectDriver(driver)}
-                className="flex-row items-center justify-between bg-gray-50 rounded-xl p-3 mb-3 active:bg-gray-100"
+                className="flex-row justify-between items-center p-3 mb-3 bg-gray-50 rounded-xl active:bg-gray-100"
               >
-                <View className="flex-row items-center gap-3 flex-1">
+                <View className="flex-row flex-1 gap-3 items-center">
                   {driver.profilePicture ? (
                     <Image
-                      source={{ uri: driver.profilePicture }}
-                      style={{ width: 50, height: 50, borderRadius: 25 }}
+                      source={{uri: driver.profilePicture}}
+                      style={{width: 50, height: 50, borderRadius: 25}}
                     />
                   ) : (
                     <Ionicons name="person-circle" size={50} color="#F7931E" />
@@ -777,7 +779,7 @@ const DriversListModal = ({
                     <Text className="text-base font-semibold text-gray-900">
                       {driver.name}
                     </Text>
-                    <View className="mt-1 flex-row items-center gap-1">
+                    <View className="flex-row gap-1 items-center mt-1">
                       <Ionicons name="star" size={14} color="#FBBF24" />
                       <Text className="text-sm text-gray-600">
                         {driver.rating} ({driver.totalBookings} bookings)

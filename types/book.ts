@@ -37,6 +37,7 @@ export type Booking = {
     name: string;
     gasCategory?: GasCategory; // populated on read for active bookings (live tracking icon)
     freeServices: Service[];
+    maxLoadKg?: number | null;
   };
   routeData: RouteData;
   paymentMethod: string;

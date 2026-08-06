@@ -107,15 +107,23 @@ export default function SeeMoreModalDisplay({
             className={`p-5 rounded-2xl ${type === "Cancelled Booking" ? "bg-red-500" : "bg-lightPrimary"}`}
           >
             <View className="flex-row justify-between items-center">
-              <View>
+              <View className="flex-1 pr-3">
                 <Text className="mb-1 text-sm text-white opacity-90">
                   Vehicle Type
                 </Text>
-                <Text className="text-xl font-bold text-white">
+                <Text
+                  className="text-xl font-bold text-white"
+                  numberOfLines={2}
+                >
                   {data.selectedVehicle.name}
                 </Text>
+                {data.selectedVehicle.maxLoadKg != null && (
+                  <Text className="mt-0.5 text-sm text-white opacity-90">
+                    {data.selectedVehicle.maxLoadKg}kg
+                  </Text>
+                )}
               </View>
-              <View className="items-end">
+              <View className="items-end shrink-0">
                 <Text className="mb-1 text-sm text-white opacity-90">
                   {type === "Cancelled Booking" ? "Cancelled At" : "Booked At"}
                 </Text>
@@ -269,6 +277,7 @@ export default function SeeMoreModalDisplay({
           <PaymentInfo
             paymentMethod={data.paymentMethod}
             routeData={data.routeData}
+            paidBy={data.paidBy}
           />
 
           {/* Selected Services */}

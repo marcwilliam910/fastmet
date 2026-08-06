@@ -1,10 +1,10 @@
 import useSeeMoreDetails from "@/hooks/useSeeMoreDetails";
-import { useMarkAsReadMutation } from "@/mutations/booking";
-import { useUserBookings } from "@/queries/bookingQueries";
-import { ActiveBooking, Booking } from "@/types/book";
-import { formatDate } from "@/utils/helpers/date";
-import { Ionicons } from "@expo/vector-icons";
-import { useEffect } from "react";
+import {useMarkAsReadMutation} from "@/mutations/booking";
+import {useUserBookings} from "@/queries/bookingQueries";
+import {ActiveBooking, Booking} from "@/types/book";
+import {formatDate} from "@/utils/helpers/date";
+import {Ionicons} from "@expo/vector-icons";
+import {useEffect} from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -15,8 +15,8 @@ import {
 } from "react-native";
 import SeeMoreModalDisplay from "../modals/seeMoreModalDisplay";
 
-export default function CancelledRoute({ count }: { count: number }) {
-  const { modalVisible, setModalVisible, selectedRequest, handleSeeMorePress } =
+export default function CancelledRoute({count}: {count: number}) {
+  const {modalVisible, setModalVisible, selectedRequest, handleSeeMorePress} =
     useSeeMoreDetails<Booking>();
 
   const {
@@ -29,7 +29,7 @@ export default function CancelledRoute({ count }: { count: number }) {
     isFetchingNextPage,
   } = useUserBookings<ActiveBooking>("cancelled", 5);
 
-  const { mutate: markAsReadBooking, isPending: isMarkingAsRead } =
+  const {mutate: markAsReadBooking, isPending: isMarkingAsRead} =
     useMarkAsReadMutation();
 
   useEffect(() => {
@@ -38,13 +38,13 @@ export default function CancelledRoute({ count }: { count: number }) {
 
   if (isPending || isMarkingAsRead)
     return (
-      <View className="flex-1 items-center justify-center">
+      <View className="flex-1 justify-center items-center">
         <ActivityIndicator size="large" color="#FFA840" />
       </View>
     );
   if (error)
     return (
-      <View className="flex-1 items-center justify-center">
+      <View className="flex-1 justify-center items-center">
         <Text className="text-lg font-semibold text-gray-500">
           {error.message}
         </Text>
@@ -57,9 +57,10 @@ export default function CancelledRoute({ count }: { count: number }) {
     <>
       <FlatList
         data={cancelledBookings}
-        renderItem={({ item }) => (
+        renderItem={({item}) => (
           <CancelledCard
             vehicle={item.selectedVehicle.name}
+            maxLoadKg={item.selectedVehicle.maxLoadKg ?? 0}
             bookingRef={item.bookingRef}
             pickup={item.pickUp?.address || ""}
             dropoff={item.dropOff?.address || ""}
@@ -72,19 +73,19 @@ export default function CancelledRoute({ count }: { count: number }) {
         )}
         keyExtractor={(item) => item._id}
         showsVerticalScrollIndicator={false}
-        className="flex-1 p-4 "
+        className="flex-1 p-4"
         contentContainerStyle={{
           paddingBottom: 40,
           gap: 15,
         }}
         ListEmptyComponent={() => (
-          <View className=" items-center justify-center px-8 py-12">
+          <View className="justify-center items-center px-8 py-12">
             <View className="items-center">
               <Ionicons name="alert-circle-outline" size={80} color="#9CA3AF" />
-              <Text className="text-2xl font-bold text-gray-800 mt-6 text-center">
+              <Text className="mt-6 text-2xl font-bold text-center text-gray-800">
                 No Requests Yet
               </Text>
-              <Text className="text-base text-gray-500 text-center mt-2">
+              <Text className="mt-2 text-base text-center text-gray-500">
                 You currently don&apos;t have any active requests.
               </Text>
             </View>
@@ -127,6 +128,7 @@ export default function CancelledRoute({ count }: { count: number }) {
 
 type CancelledCardProps = {
   vehicle: string;
+  maxLoadKg: number;
   bookingRef: string;
   pickup: string;
   dropoff: string;
@@ -139,6 +141,7 @@ type CancelledCardProps = {
 
 const CancelledCard = ({
   vehicle,
+  maxLoadKg,
   bookingRef,
   pickup,
   dropoff,
@@ -152,7 +155,7 @@ const CancelledCard = ({
     <View
       style={{
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
+        shadowOffset: {width: 0, height: 4},
         shadowOpacity: 0.3,
         shadowRadius: 8,
         elevation: 8, // for Android
@@ -164,15 +167,19 @@ const CancelledCard = ({
         className="overflow-hidden bg-white rounded-2xl active:opacity-90"
       >
         {/* Header */}
-        <View className="flex-row items-center justify-between px-5 py-3 bg-red-500">
-          <Text className="text-lg font-semibold text-white">{vehicle}</Text>
+        <View className="flex-row justify-between items-center px-5 py-3 bg-red-500">
+          <Text
+            className={`font-semibold text-white ${maxLoadKg ? "text-base" : "text-lg"}`}
+          >
+            {vehicle} {maxLoadKg ? `(${maxLoadKg}kg)` : ""}
+          </Text>
           <Text className="text-sm text-white">{bookingRef}</Text>
         </View>
 
         {/* Body */}
         <View className="px-3 py-5">
           {/* Pickup & Drop */}
-          <View className="relative flex-row items-center justify-between ml-5 mr-2 border-l border-dashed pl-7">
+          <View className="relative flex-row justify-between items-center pl-7 mr-2 ml-5 border-l border-dashed">
             <View className="gap-4">
               <Text
                 className={`font-medium ${Platform.OS === "ios" ? "max-w-60" : "max-w-52"}`}
@@ -201,7 +208,7 @@ const CancelledCard = ({
             />
           </View>
           {/* Payment */}
-          <View className="flex-row items-center justify-between p-4 mt-6 bg-gray-100 rounded-lg">
+          <View className="flex-row justify-between items-center p-4 mt-6 bg-gray-100 rounded-lg">
             <Text className="text-base text-gray-600">
               {isCash ? "Cash Payment" : "Online Payment"}
             </Text>
@@ -209,7 +216,7 @@ const CancelledCard = ({
               Php {amount.toLocaleString("en-US")}
             </Text>
           </View>
-          <View className="flex-row items-center justify-between px-2 mt-6">
+          <View className="flex-row justify-between items-center px-2 mt-6">
             <Text className="text-sm font-semibold text-red-500">
               Cancelled Request
             </Text>
@@ -219,7 +226,7 @@ const CancelledCard = ({
           </View>
 
           <Pressable
-            className="items-center justify-center mt-6 active:scale-105"
+            className="justify-center items-center mt-6 active:scale-105"
             onPress={onPressSeeMore}
           >
             <Text className="text-sm font-medium">+ See more</Text>
