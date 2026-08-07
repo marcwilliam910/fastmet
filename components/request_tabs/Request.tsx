@@ -1,14 +1,14 @@
 import useSeeMoreDetails from "@/hooks/useSeeMoreDetails";
-import {queryClient} from "@/lib/queryClient";
-import {useUserBookings} from "@/queries/bookingQueries";
-import {useSocket} from "@/sockets/context/SocketProvider";
-import {useAppStore} from "@/store/useAppStore";
-import {Booking, Driver, LocationDetails, RequestedDriver} from "@/types/book";
-import {formatDate} from "@/utils/helpers/date";
-import {formatLocation} from "@/utils/helpers/location";
-import {Ionicons} from "@expo/vector-icons";
-import {Image} from "expo-image";
-import {useCallback, useEffect, useState} from "react";
+import { queryClient } from "@/lib/queryClient";
+import { useUserBookings } from "@/queries/bookingQueries";
+import { useSocket } from "@/sockets/context/SocketProvider";
+import { useAppStore } from "@/store/useAppStore";
+import { Booking, Driver, LocationDetails, RequestedDriver } from "@/types/book";
+import { formatDate } from "@/utils/helpers/date";
+import { formatLocation } from "@/utils/helpers/location";
+import { Ionicons } from "@expo/vector-icons";
+import { Image } from "expo-image";
+import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -19,8 +19,8 @@ import {
   Text,
   View,
 } from "react-native";
-import Popover, {PopoverPlacement} from "react-native-popover-view";
-import {useSafeAreaInsets} from "react-native-safe-area-context";
+import Popover, { PopoverPlacement } from "react-native-popover-view";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 import ConfirmCancelBookingModal from "../modals/confirmCancelBookingModal";
 import DriverDetailsModal from "../modals/driverDetailsModal";
@@ -28,7 +28,7 @@ import SeeMoreModalDisplay from "../modals/seeMoreModalDisplay";
 import StarDisplay from "../StarDisplay";
 
 export default function RequestRoute() {
-  const {modalVisible, setModalVisible, selectedRequest, handleSeeMorePress} =
+  const { modalVisible, setModalVisible, selectedRequest, handleSeeMorePress } =
     useSeeMoreDetails<Booking>();
   /** Which booking's drivers list is open. Null = drivers modal closed. */
   const [driversModalBookingId, setDriversModalBookingId] = useState<
@@ -104,7 +104,7 @@ export default function RequestRoute() {
 
   const handleCancelBook = () => {
     setLoading(true);
-    socket.emit("cancelBookingRequest", {bookingId: selectedId});
+    socket.emit("cancelBookingRequest", { bookingId: selectedId });
     setSelectedId(null);
   };
 
@@ -131,7 +131,7 @@ export default function RequestRoute() {
 
     // Optimistically remove declined driver from pending booking card
     queryClient.setQueriesData(
-      {queryKey: ["userBookings", "pending"]},
+      { queryKey: ["userBookings", "pending"] },
       (oldData: any) => {
         if (!oldData?.pages) return oldData;
 
@@ -333,10 +333,10 @@ export default function RequestRoute() {
           paddingBottom: 40,
           gap: 15,
         }}
-        renderItem={({item}) => (
+        renderItem={({ item }) => (
           <RequestCard
-            maxLoadKg={item.selectedVehicle.maxLoadKg ?? 0}
             driver={item.driver}
+            maxLoadKg={item.selectedVehicle.maxLoadKg ?? 0}
             status={item.status as "pending" | "scheduled"}
             vehicle={item.selectedVehicle.name}
             bookingType={item.bookingType}
@@ -346,7 +346,7 @@ export default function RequestRoute() {
             amount={item.routeData.totalPrice}
             isCash={item.paymentMethod === "cash"}
             onCancel={() => setSelectedId(item._id)}
-            onReschedule={() => {}}
+            onReschedule={() => { }}
             onPressSeeMore={() => handleSeeMorePress(item)}
             driverOffers={item.requestedDrivers}
             onOpenDrivers={() => {
@@ -474,7 +474,7 @@ const RequestCard = ({
       <View
         style={{
           shadowColor: "#000",
-          shadowOffset: {width: 0, height: 4},
+          shadowOffset: { width: 0, height: 4 },
           shadowOpacity: 0.3,
           shadowRadius: 8,
           elevation: 8,
@@ -530,7 +530,7 @@ const RequestCard = ({
               <View className="flex-row items-center p-3 mt-6 bg-green-50 rounded-xl">
                 {driver.profilePictureUrl ? (
                   <Image
-                    source={{uri: driver.profilePictureUrl}}
+                    source={{ uri: driver.profilePictureUrl }}
                     style={{
                       width: 48,
                       height: 48,
@@ -584,13 +584,13 @@ const RequestCard = ({
                   {/* Stacked Avatars */}
                   <View
                     className="flex-row items-center"
-                    style={{marginRight: 12}}
+                    style={{ marginRight: 12 }}
                   >
                     {displayedAvatars.map((driver, index) =>
                       driver.profilePicture ? (
                         <Image
                           key={driver.id}
-                          source={{uri: driver.profilePicture}}
+                          source={{ uri: driver.profilePicture }}
                           style={{
                             width: 40,
                             height: 40,
@@ -737,7 +737,7 @@ const DriversListModal = ({
         />
         <View
           className="max-h-[75%] rounded-t-3xl bg-white"
-          style={{paddingBottom: inset.bottom}}
+          style={{ paddingBottom: inset.bottom }}
         >
           {/* Header */}
           <View className="flex-row justify-between items-center px-6 py-4 border-b border-gray-200">
@@ -757,7 +757,7 @@ const DriversListModal = ({
           <ScrollView
             className="px-4 py-4"
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={{paddingBottom: 20}}
+            contentContainerStyle={{ paddingBottom: 20 }}
           >
             {drivers.map((driver) => (
               <Pressable
@@ -768,8 +768,8 @@ const DriversListModal = ({
                 <View className="flex-row flex-1 gap-3 items-center">
                   {driver.profilePicture ? (
                     <Image
-                      source={{uri: driver.profilePicture}}
-                      style={{width: 50, height: 50, borderRadius: 25}}
+                      source={{ uri: driver.profilePicture }}
+                      style={{ width: 50, height: 50, borderRadius: 25 }}
                     />
                   ) : (
                     <Ionicons name="person-circle" size={50} color="#F7931E" />
@@ -782,7 +782,7 @@ const DriversListModal = ({
                     <View className="flex-row gap-1 items-center mt-1">
                       <Ionicons name="star" size={14} color="#FBBF24" />
                       <Text className="text-sm text-gray-600">
-                        {driver.rating} ({driver.totalBookings} bookings)
+                        {driver.rating} ({driver.totalBookings} trip{driver.totalBookings !== 1 ? "s" : ""} completed)
                       </Text>
                     </View>
                   </View>
@@ -797,89 +797,3 @@ const DriversListModal = ({
     </Modal>
   );
 };
-
-// Mock data
-// const MOCK_DRIVER_OFFERS: RequestedDriver[] = [
-//   {
-//     id: "driver_001",
-//     name: "Juan Dela Cruz",
-//     profilePicture: "https://i.pravatar.cc/150?img=12",
-//     rating: 4.8,
-//     totalBookings: 245,
-//     vehicleImage:
-//       "https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=400",
-//   },
-//   {
-//     id: "driver_002",
-//     name: "Maria Santos",
-//     profilePicture: "https://i.pravatar.cc/150?img=47",
-//     rating: 4.9,
-//     totalBookings: 312,
-//     vehicleImage:
-//       "https://images.unsplash.com/photo-1619405399517-d7fce0f13302?w=400",
-//   },
-//   {
-//     id: "driver_003",
-//     name: "Pedro Reyes",
-//     profilePicture: "https://i.pravatar.cc/150?img=33",
-//     rating: 4.7,
-//     totalBookings: 189,
-//     vehicleImage:
-//       "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=400",
-//   },
-//   {
-//     id: "driver_004",
-//     name: "Ana Garcia",
-//     profilePicture: "", // No profile picture
-//     rating: 5.0,
-//     totalBookings: 428,
-//     vehicleImage:
-//       "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=400",
-//   },
-//   {
-//     id: "driver_005",
-//     name: "Roberto Aquino",
-//     profilePicture: "https://i.pravatar.cc/150?img=68",
-//     rating: 4.6,
-//     totalBookings: 156,
-//     vehicleImage:
-//       "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=400",
-//   },
-
-//   {
-//     id: "342",
-//     name: "Carmen Lopez",
-//     profilePicture: "https://i.pravatar.cc/150?img=45",
-//     rating: 4.85,
-//     totalBookings: 267,
-//     vehicleImage:
-//       "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400",
-//   },
-//   {
-//     id: "5435",
-//     name: "Carmen Lopez",
-//     profilePicture: "https://i.pravatar.cc/150?img=45",
-//     rating: 4.85,
-//     totalBookings: 267,
-//     vehicleImage:
-//       "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400",
-//   },
-//   {
-//     id: "12",
-//     name: "Carmen Lopez",
-//     profilePicture: "https://i.pravatar.cc/150?img=45",
-//     rating: 4.85,
-//     totalBookings: 267,
-//     vehicleImage:
-//       "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400",
-//   },
-//   {
-//     id: "driver_011",
-//     name: "Carmen Lopez",
-//     profilePicture: "https://i.pravatar.cc/150?img=45",
-//     rating: 4.85,
-//     totalBookings: 267,
-//     vehicleImage:
-//       "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400",
-//   },
-// ];

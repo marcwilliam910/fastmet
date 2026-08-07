@@ -127,7 +127,7 @@ export default function AnnouncementsScreen() {
   return (
     <SafeAreaView className="flex-1 bg-white">
       <View className="flex-row items-center justify-between py-3 px-4">
-        <View className="flex-row gap-2  border-b border-gray-100">
+        <View className="flex-row gap-2">
           {(["All", "News"] as Tab[]).map((t) => (
             <Pressable
               key={t}

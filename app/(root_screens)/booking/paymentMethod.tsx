@@ -1,18 +1,18 @@
-import {useAuth} from "@/hooks/useAuth";
-import {queryClient} from "@/lib/queryClient";
-import {useSocket} from "@/sockets/context/SocketProvider";
-import {useAppStore} from "@/store/useAppStore";
-import {Booking, RequestBooking} from "@/types/book";
-import {STATIC_IMAGES} from "@/utils/constants";
-import {generateBookingRef} from "@/utils/helpers/booking";
-import {uploadBookingImages} from "@/utils/helpers/imagePicker";
-import {Ionicons} from "@expo/vector-icons";
-import {InfiniteData} from "@tanstack/react-query";
-import {Image} from "expo-image";
-import {router} from "expo-router";
-import React, {useEffect, useRef, useState} from "react";
-import {Platform, Pressable, Text, View} from "react-native";
-import {SafeAreaView, useSafeAreaInsets} from "react-native-safe-area-context";
+import { useAuth } from "@/hooks/useAuth";
+import { queryClient } from "@/lib/queryClient";
+import { useSocket } from "@/sockets/context/SocketProvider";
+import { useAppStore } from "@/store/useAppStore";
+import { Booking, RequestBooking } from "@/types/book";
+import { STATIC_IMAGES } from "@/utils/constants";
+import { generateBookingRef } from "@/utils/helpers/booking";
+import { uploadBookingImages } from "@/utils/helpers/imagePicker";
+import { Ionicons } from "@expo/vector-icons";
+import { InfiniteData } from "@tanstack/react-query";
+import { Image } from "expo-image";
+import { router } from "expo-router";
+import React, { useEffect, useRef, useState } from "react";
+import { Platform, Pressable, Text, View } from "react-native";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 
 export default function PaymentMethod() {
@@ -20,10 +20,10 @@ export default function PaymentMethod() {
   const paymentMethod = useAppStore((state) => state.paymentMethod);
   const isLoading = useAppStore((state) => state.isLoading);
 
-  const {bookingType, setPaymentMethod, routeData} = useAppStore.getState();
+  const { bookingType, setPaymentMethod, routeData } = useAppStore.getState();
   const [loading, setLoading] = useState(false);
 
-  const {id} = useAuth();
+  const { id } = useAuth();
   const socket = useSocket();
   const hasNavigatedRef = useRef(false);
   const isSubmittingRef = useRef(false);
@@ -184,6 +184,7 @@ export default function PaymentMethod() {
           },
           selectedVehicle: {
             name: state.selectedVehicle?.name ?? "",
+            maxLoadKg: state.selectedVehicle?.variant?.maxLoadKg ?? 0,
             freeServices: state.selectedVehicle?.freeServices ?? [],
           },
           routeData: state.routeData,
@@ -231,15 +232,15 @@ export default function PaymentMethod() {
 
           // Prepend to pending cache so the Request tab shows it immediately
           queryClient.setQueriesData<
-            InfiniteData<{bookings: Booking[]; nextPage: number | null}>
-          >({queryKey: ["userBookings", "pending"]}, (oldData) => {
+            InfiniteData<{ bookings: Booking[]; nextPage: number | null }>
+          >({ queryKey: ["userBookings", "pending"] }, (oldData) => {
             if (!oldData) return oldData;
             const newPages = [...oldData.pages];
             newPages[0] = {
               ...newPages[0],
               bookings: [newBooking, ...newPages[0].bookings],
             };
-            return {...oldData, pages: newPages};
+            return { ...oldData, pages: newPages };
           });
         }
 
@@ -285,7 +286,7 @@ export default function PaymentMethod() {
   }, [socket, setLoading]);
 
   return (
-    <SafeAreaView style={{flex: 1, backgroundColor: "white"}}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
       {/* header */}
       <View className="relative flex-row justify-center items-center px-6 pt-2 pb-8">
         <Pressable
@@ -309,17 +310,16 @@ export default function PaymentMethod() {
         {/* Cash Payment Option */}
         <Pressable
           onPress={() => setPaymentMethod("cash")}
-          className={`flex-row items-center justify-between rounded-xl border px-4 py-3 ${
-            paymentMethod === "cash"
+          className={`flex-row items-center justify-between rounded-xl border px-4 py-3 ${paymentMethod === "cash"
               ? "border-[#FFA840] bg-[#FFF6EB]"
               : "border-gray-300 bg-white"
-          }`}
+            }`}
         >
           <View className="flex-row gap-3 items-center">
             <View className="justify-center items-center w-10 h-10 bg-blue-50 rounded-full">
               <Image
                 source={STATIC_IMAGES.cashPayment}
-                style={{width: 24, height: 24}}
+                style={{ width: 24, height: 24 }}
                 contentFit="contain"
               />
             </View>
@@ -340,17 +340,16 @@ export default function PaymentMethod() {
         {/* GCash Payment Option */}
         <Pressable
           onPress={() => setPaymentMethod("gcash")}
-          className={`flex-row items-center justify-between rounded-xl border px-4 py-3 ${
-            paymentMethod === "gcash"
+          className={`flex-row items-center justify-between rounded-xl border px-4 py-3 ${paymentMethod === "gcash"
               ? "border-[#FFA840] bg-[#FFF6EB]"
               : "border-gray-300 bg-white"
-          }`}
+            }`}
         >
           <View className="flex-row gap-3 items-center">
             <View className="justify-center items-center w-10 h-10 bg-blue-50 rounded-full">
               <Image
                 source={STATIC_IMAGES.gcash}
-                style={{width: 24, height: 24}}
+                style={{ width: 24, height: 24 }}
                 contentFit="contain"
               />
             </View>
