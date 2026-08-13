@@ -304,7 +304,11 @@ const MapScreen = forwardRef<MapScreenHandle, Props>(function MapScreen(
 
 export default memo(MapScreen);
 
-export function DistanceBubble({routeData}: {routeData: RouteData}) {
+export function DistanceBubble({
+  routeData,
+}: {
+  routeData: Pick<RouteData, "distance" | "duration">;
+}) {
   const inset = useSafeAreaInsets();
 
   return (

@@ -1,5 +1,10 @@
 import {useSocket} from "@/sockets/context/SocketProvider";
-import {Driver, LocationDetails, RouteData} from "@/types/book";
+import {useAppStore} from "@/store/useAppStore";
+import {
+  BookingETAUpdatedPayload,
+  Driver,
+  LocationDetails,
+} from "@/types/book";
 import {GOOGLE_MAPS_API_KEY} from "@/utils/constants";
 import {useFocusEffect} from "expo-router";
 import React, {useCallback, useEffect, useRef, useState} from "react";
@@ -8,6 +13,7 @@ import MapView, {LatLng, Marker, PROVIDER_GOOGLE} from "react-native-maps";
 import MapViewDirections from "react-native-maps-directions";
 import {MapMarkerPin} from "../MapMarkerPin";
 import {GasCategory, VehicleMarkerIcon} from "../VehicleMarkerIcon";
+import {DistanceBubble} from "./MapScreen";
 
 type Region = {
   latitude: number;
@@ -19,7 +25,6 @@ type Region = {
 type Props = {
   pickUp: LocationDetails;
   dropOff: LocationDetails;
-  routeData: RouteData;
   gasCategory: GasCategory;
   region: Region | null;
   setRegion: React.Dispatch<React.SetStateAction<Region | null>>;
@@ -32,7 +37,6 @@ const MAP_EDGE_PADDING = {top: 80, right: 80, bottom: 80, left: 80};
 export default function LiveTrackingMapScreen({
   pickUp,
   dropOff,
-  routeData,
   gasCategory,
   region,
   setRegion,
@@ -42,10 +46,15 @@ export default function LiveTrackingMapScreen({
   const mapRef = useRef<MapView>(null);
   const routeCoordinatesRef = useRef<LatLng[]>([]);
   const socket = useSocket();
+  const getLiveEtaCache = useAppStore((state) => state.getLiveEtaCache);
+  const setLiveEtaCache = useAppStore((state) => state.setLiveEtaCache);
   const [driverLocation, setDriverLocation] = useState<{
     lat: number;
     lng: number;
-    // heading: number;
+  } | null>(null);
+  const [liveETA, setLiveETA] = useState<{
+    distance: number;
+    duration: number;
   } | null>(null);
   const [tracksViewChanges, setTracksViewChanges] = useState(true);
   const [isLoadingDriverLocation, setIsLoadingDriverLocation] =
@@ -99,6 +108,44 @@ export default function LiveTrackingMapScreen({
         console.log("🔌 Unsubscribed from driver location");
       };
     }, [bookingId, socket]),
+  );
+
+  // Live ETA — cache locally; request only when server may need to recalc
+  useFocusEffect(
+    useCallback(() => {
+      if (!socket || !bookingId) return;
+
+      const cached = getLiveEtaCache(bookingId);
+      if (cached) {
+        setLiveETA({
+          distance: cached.distance,
+          duration: cached.duration,
+        });
+      }
+
+      const handleBookingETAUpdated = (data: BookingETAUpdatedPayload) => {
+        if (data.bookingId !== bookingId) return;
+        if (data.distanceKm <= 0 || data.durationMin <= 0) return;
+        if (!data.etaRevision) return;
+
+        setLiveEtaCache(bookingId, {
+          etaRevision: data.etaRevision,
+          distance: data.distanceKm,
+          duration: data.durationMin,
+        });
+        setLiveETA({
+          distance: data.distanceKm,
+          duration: data.durationMin,
+        });
+      };
+
+      socket.on("bookingETAUpdated", handleBookingETAUpdated);
+      socket.emit("requestBookingETA", {bookingId});
+
+      return () => {
+        socket.off("bookingETAUpdated", handleBookingETAUpdated);
+      };
+    }, [bookingId, getLiveEtaCache, setLiveEtaCache, socket]),
   );
 
   useEffect(() => {
@@ -217,9 +264,9 @@ export default function LiveTrackingMapScreen({
         </MapView>
       )}
 
-      {/* {routeData.distance > 0 && routeData.duration > 0 && (
-        <DistanceBubble routeData={routeData} />
-      )} */}
+      {liveETA && liveETA.distance > 0 && liveETA.duration > 0 && (
+        <DistanceBubble routeData={liveETA} />
+      )}
     </View>
   );
 }

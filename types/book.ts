@@ -23,6 +23,13 @@ export type RouteData = {
   gasAdjFactor?: number;
 };
 
+export type BookingETAUpdatedPayload = {
+  bookingId: string;
+  distanceKm: number;
+  durationMin: number;
+  etaRevision: string;
+};
+
 export type Booking = {
   _id: string;
   bookingRef: string;

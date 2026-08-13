@@ -14,6 +14,7 @@ import {
   createNotificationSlice,
   NotificationSlice,
 } from "./slices/notificationSlice";
+import {createLiveEtaSlice, LiveEtaSlice} from "./slices/liveEtaSlice";
 import {createVehicleSlice, VehicleSlice} from "./slices/vehicleSlice";
 
 type PersistedAuth = {
@@ -37,7 +38,8 @@ export type AppStore = BookSlice &
   ChatSlice &
   VehicleSlice &
   NotificationSlice &
-  BookingTypeSlice;
+  BookingTypeSlice &
+  LiveEtaSlice;
 
 const secureStorage = createSecureStorage<PersistedAuth>();
 
@@ -51,6 +53,7 @@ export const useAppStore = create<AppStore>()(
       ...createVehicleSlice(...a),
       ...createNotificationSlice(...a),
       ...createBookingTypeSlice(...a),
+      ...createLiveEtaSlice(...a),
     }),
     {
       name: "fastmet-client-storage",

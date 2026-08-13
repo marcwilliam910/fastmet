@@ -60,7 +60,6 @@ export default function ViewOnMap() {
         <LiveTrackingMapScreen
           pickUp={booking.pickUp}
           dropOff={booking.dropOff}
-          routeData={booking.routeData}
           gasCategory={booking.selectedVehicle.gasCategory ?? "light"}
           region={region}
           setRegion={setRegion}

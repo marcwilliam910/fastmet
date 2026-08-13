@@ -70,9 +70,22 @@ export default function PaymentMethod() {
         return;
       }
 
+      if (!selectedVehicle.refCode) {
+        Toast.show({
+          type: "error",
+          text1: "Vehicle unavailable",
+          text2: "Please reselect your vehicle and try again.",
+          position: "top",
+          visibilityTime: 4000,
+        });
+        setLoading(false);
+        isSubmittingRef.current = false;
+        return;
+      }
+
       const bookingRef = generateBookingRef({
         bookingType: bookingType.type,
-        vehicleType: selectedVehicle.key,
+        refCode: selectedVehicle.refCode,
         priority: bookingType.type === "asap" ? bookingType.value : undefined,
       });
 

@@ -14,6 +14,7 @@ export interface ILoadVariant {
 export interface IVehicleType extends Document {
   _id: string;
   key: string; // motorcycle, sedan, l300, closed_van, wing_van
+  refCode: string; // MC, SD, L3 — immutable booking-ref code
   name: string; // UI display
   imageUrl: string; // Cloudinary
   desc: string;
@@ -34,6 +35,7 @@ export interface SearchConfig {
 export interface SelectedVehicle {
   _id: string;
   key: string;
+  refCode: string;
   name: string;
   imageUrl: string;
   freeServices: Service[];
