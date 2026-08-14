@@ -42,7 +42,6 @@ export const createBookingTypeSlice: StateCreator<
         get().bookingType === null
           ? deriveDefaultBookingType(bookingTypes)
           : null;
-      console.log("defaultBookingType", defaultBookingType);
       set({
         bookingTypes,
         ...(defaultBookingType ? {bookingType: defaultBookingType} : {}),

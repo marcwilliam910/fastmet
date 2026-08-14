@@ -198,3 +198,85 @@ export const driverUnavailable = (socket: Socket) => {
     socket.off("driverUnavailable", handleDriverUnavailable);
   };
 };
+
+export const scheduledReminder = (socket: Socket) => {
+  const handleScheduledReminder = ({
+    notification,
+    unreadNotifications,
+    title,
+    message,
+    type,
+  }: {
+    checkpoint: string;
+    notification?: Notification | null;
+    unreadNotifications?: number;
+    bookingId?: string;
+    title: string;
+    message: string;
+    type: string;
+  }) => {
+    if (notification?._id && typeof unreadNotifications === "number") {
+      updateNotificationHelper(
+        notification,
+        unreadNotifications,
+        (notification.type || type) as NOTIFICATION_TYPES,
+      );
+    }
+
+    if (type === NOTIFICATION_TYPES.scheduled_auto_assigned) {
+      queryClient.invalidateQueries({
+        queryKey: ["userBookings", "scheduled"],
+        exact: false,
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["userBookings", "pending"],
+        exact: false,
+      });
+      queryClient.invalidateQueries({queryKey: ["userBookingCounts"]});
+    }
+
+    if (type === NOTIFICATION_TYPES.driver_started_scheduled_trip) {
+      queryClient.invalidateQueries({
+        queryKey: ["userBookings", "scheduled"],
+        exact: false,
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["userBookings", "active"],
+        exact: false,
+      });
+      queryClient.invalidateQueries({queryKey: ["userBookingCounts"]});
+    }
+
+    if (type === NOTIFICATION_TYPES.scheduled_auto_cancelled) {
+      queryClient.invalidateQueries({
+        queryKey: ["userBookings", "pending"],
+        exact: false,
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["userBookings", "cancelled"],
+        exact: false,
+      });
+      queryClient.invalidateQueries({queryKey: ["userBookingCounts"]});
+      // bookingCancelled already toasts; skip a second toast here.
+      return;
+    }
+
+    Toast.show({
+      type:
+        type === NOTIFICATION_TYPES.scheduled_auto_assigned
+          ? "success"
+          : "info",
+      text1: notification?.title || title,
+      text2: notification?.message || message,
+      position: "top",
+      visibilityTime: 8000,
+      swipeable: true,
+      topOffset: 50,
+    });
+  };
+
+  socket.on("scheduledReminder", handleScheduledReminder);
+  return () => {
+    socket.off("scheduledReminder", handleScheduledReminder);
+  };
+};

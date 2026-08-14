@@ -123,6 +123,18 @@ export default function BookingTypeModal({
       return;
     }
 
+    const maxDateTime = new Date();
+    maxDateTime.setMonth(maxDateTime.getMonth() + 1);
+    if (combined > maxDateTime) {
+      Toast.show({
+        type: "info",
+        text1: "Invalid schedule time",
+        text2: "Pickup time cannot be more than 1 month from now",
+      });
+      resetCalendar();
+      return;
+    }
+
     setBookingType({ type: "schedule", value: combined.toISOString() });
     resetCalendar();
     setStep("main");

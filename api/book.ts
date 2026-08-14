@@ -35,3 +35,13 @@ export const getRecentBookings = async (limit = 5) => {
   const res = await api.get(`/booking/recent/${limit}`);
   return res.data;
 };
+
+export const rescheduleBooking = async (
+  bookingId: string,
+  newScheduledTime: string,
+) => {
+  const res = await api.patch(`/booking/reschedule/${bookingId}`, {
+    newScheduledTime,
+  });
+  return res.data;
+};

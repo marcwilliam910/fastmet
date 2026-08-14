@@ -13,8 +13,7 @@ export enum NOTIFICATION_TYPES {
   scheduled_auto_assigned = "scheduled_auto_assigned",
   scheduled_auto_cancelled = "scheduled_auto_cancelled",
   driver_unavailable = "driver_unavailable",
-  // Add new notification types here as needed
-  // Example: payment_received = "payment_received",
+  driver_started_scheduled_trip = "driver_started_scheduled_trip",
 }
 
 export const NOTIFICATION_CONFIG: Record<
@@ -61,7 +60,11 @@ export const NOTIFICATION_CONFIG: Record<
     color: "#DC2626", // red
     label: "Driver Unavailable",
   },
-  // Add new notification configs here
+  [NOTIFICATION_TYPES.driver_started_scheduled_trip]: {
+    icon: "navigate",
+    color: "#10B981", // green
+    label: "Trip Started",
+  },
 };
 // Default fallback for unknown notification types
 export const DEFAULT_NOTIFICATION_CONFIG: NotificationConfig = {

@@ -23,6 +23,8 @@ import Popover, { PopoverPlacement } from "react-native-popover-view";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 import ConfirmCancelBookingModal from "../modals/confirmCancelBookingModal";
+import RescheduleModal from "../modals/rescheduleModal";
+import { useRescheduleBookingMutation } from "@/mutations/booking";
 import DriverDetailsModal from "../modals/driverDetailsModal";
 import SeeMoreModalDisplay from "../modals/seeMoreModalDisplay";
 import StarDisplay from "../StarDisplay";
@@ -43,7 +45,11 @@ export default function RequestRoute() {
   ]);
   const setLoading = useAppStore((state) => state.setLoading);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [rescheduleBookingId, setRescheduleBookingId] = useState<string | null>(
+    null,
+  );
   const socket = useSocket();
+  const rescheduleMutation = useRescheduleBookingMutation();
 
   // Fetch first page of both statuses on mount
   const pendingQuery = useUserBookings<Booking>("pending", 5);
@@ -168,6 +174,11 @@ export default function RequestRoute() {
       setLoading(false);
       queryClient.invalidateQueries({
         queryKey: ["userBookings", "pending"],
+        exact: false,
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["userBookings", "scheduled"],
         exact: false,
       });
 
@@ -346,7 +357,7 @@ export default function RequestRoute() {
             amount={item.routeData.totalPrice}
             isCash={item.paymentMethod === "cash"}
             onCancel={() => setSelectedId(item._id)}
-            onReschedule={() => { }}
+            onReschedule={() => setRescheduleBookingId(item._id)}
             onPressSeeMore={() => handleSeeMorePress(item)}
             driverOffers={item.requestedDrivers}
             onOpenDrivers={() => {
@@ -400,6 +411,24 @@ export default function RequestRoute() {
           onConfirm={handleCancelBook}
         />
       )}
+
+      <RescheduleModal
+        visible={rescheduleBookingId !== null}
+        isSubmitting={rescheduleMutation.isPending}
+        onClose={() => setRescheduleBookingId(null)}
+        onConfirm={(isoTime) => {
+          if (!rescheduleBookingId) return;
+          rescheduleMutation.mutate(
+            {
+              bookingId: rescheduleBookingId,
+              newScheduledTime: isoTime,
+            },
+            {
+              onSuccess: () => setRescheduleBookingId(null),
+            },
+          );
+        }}
+      />
 
       <DriversListModal
         visible={driversModalBookingId !== null && selectedDriver === null}
@@ -675,7 +704,7 @@ const RequestCard = ({
             </View>
 
             {/* Buttons */}
-            {status === "pending" && (
+            {(status === "pending" || status === "scheduled") && (
               <View className="flex-row justify-between mt-6">
                 <Pressable
                   className="flex-row flex-1 justify-center items-center py-3 mr-2 rounded-xl border border-lightPrimary active:bg-gray-50"

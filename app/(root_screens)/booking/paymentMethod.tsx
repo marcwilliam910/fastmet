@@ -28,6 +28,14 @@ export default function PaymentMethod() {
   const hasNavigatedRef = useRef(false);
   const isSubmittingRef = useRef(false);
   const lastBookingRefRef = useRef<string | null>(null);
+  const submitTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearSubmitTimeout = () => {
+    if (submitTimeoutRef.current) {
+      clearTimeout(submitTimeoutRef.current);
+      submitTimeoutRef.current = null;
+    }
+  };
 
   const handleBookNow = async () => {
     // Immediate protection against rapid clicks (ref is synchronous, no render delay)
@@ -114,6 +122,8 @@ export default function PaymentMethod() {
           visibilityTime: 4000,
         });
         setLoading(false);
+        isSubmittingRef.current = false;
+        lastBookingRefRef.current = null;
         return;
       }
 
@@ -153,10 +163,27 @@ export default function PaymentMethod() {
       } else if (bookingType.type === "pooling") {
         socket.emit("request_pooling_booking", payload);
       }
+
+      clearSubmitTimeout();
+      submitTimeoutRef.current = setTimeout(() => {
+        if (hasNavigatedRef.current) return;
+        setLoading(false);
+        isSubmittingRef.current = false;
+        lastBookingRefRef.current = null;
+        Toast.show({
+          type: "error",
+          text1: "Request Timeout",
+          text2: "Server not responding. Please try again.",
+          position: "top",
+          visibilityTime: 4000,
+        });
+      }, 15000);
     } catch (error) {
       console.error("Booking submission error:", error);
+      clearSubmitTimeout();
       setLoading(false);
       isSubmittingRef.current = false;
+      lastBookingRefRef.current = null;
 
       Toast.show({
         type: "error",
@@ -174,7 +201,9 @@ export default function PaymentMethod() {
       bookingId: string;
       city?: string;
       message: string;
+      noDriversOnline?: boolean;
     }) => {
+      clearSubmitTimeout();
       // Guard against duplicate events causing multiple navigation
       if (hasNavigatedRef.current) return;
 
@@ -230,8 +259,10 @@ export default function PaymentMethod() {
           });
         else {
           Toast.show({
-            type: "success",
-            text1: "Booking Request Saved",
+            type: data.noDriversOnline ? "info" : "success",
+            text1: data.noDriversOnline
+              ? "Booking saved"
+              : "Booking Request Saved",
             text2: data.message,
             position: "top",
             visibilityTime: 5_000,
@@ -264,6 +295,7 @@ export default function PaymentMethod() {
     socket.on("bookingRequestSaved", bookingSaved);
     return () => {
       socket.off("bookingRequestSaved", bookingSaved);
+      clearSubmitTimeout();
     };
   }, [id, setLoading, socket, bookingType?.type]);
 
@@ -272,6 +304,7 @@ export default function PaymentMethod() {
       message: string;
       approvalStatus?: string;
     }) => {
+      clearSubmitTimeout();
       setLoading(false);
       isSubmittingRef.current = false;
       lastBookingRefRef.current = null;
@@ -297,6 +330,32 @@ export default function PaymentMethod() {
       socket.off("bookingRequestFailed", handleBookingFailed);
     };
   }, [socket, setLoading]);
+
+  useEffect(() => {
+    const handleNoDriversAvailable = (data: { message: string }) => {
+      // ASAP/pooling keep existing behavior. Schedule already toasts via
+      // bookingRequestSaved; only show this if that event already ran.
+      if (bookingType?.type !== "schedule") return;
+      if (!hasNavigatedRef.current) return;
+
+      Toast.show({
+        type: "info",
+        text1: "No drivers online yet",
+        text2:
+          data.message ||
+          "Your booking is saved. You'll be notified when a driver offers.",
+        position: "top",
+        visibilityTime: 5000,
+        swipeable: true,
+        topOffset: 50,
+      });
+    };
+
+    socket.on("no_drivers_available", handleNoDriversAvailable);
+    return () => {
+      socket.off("no_drivers_available", handleNoDriversAvailable);
+    };
+  }, [bookingType?.type, socket]);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
