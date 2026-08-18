@@ -206,12 +206,14 @@ export default function AddressInput({
 
   return (
     <View className="gap-3">
-      <Text className="text-sm font-medium text-gray-700">Home Address</Text>
+      <Text className="text-sm font-medium text-gray-700">
+        Home Address <Text className="text-red-500">*</Text>
+      </Text>
 
       {/* Existing address display */}
       {hasSelected && !isSearching && (
         <View className="flex-row items-center p-4 bg-gray-100 rounded-xl">
-          <View className="justify-center items-center mr-3 w-10 h-10 bg-amber-500 rounded-full">
+          <View className="items-center justify-center w-10 h-10 mr-3 rounded-full bg-amber-500">
             <Ionicons name="home" size={18} color="#FFFFFF" />
           </View>
           <View className="flex-1">
@@ -245,7 +247,7 @@ export default function AddressInput({
               name="search-outline"
               size={20}
               color="#9CA3AF"
-              className="absolute left-3 top-4 z-50 bg-gray-100"
+              className="absolute z-50 bg-gray-100 left-3 top-4"
             />
             <View className="flex-1">
               <GooglePlacesTextInput
@@ -300,7 +302,7 @@ export default function AddressInput({
               onChangeText={(text) => handleFieldChange("street", text)}
               placeholder="e.g. 123 Rizal Street"
               placeholderTextColor="#9CA3AF"
-              className="p-3 text-sm bg-white rounded-lg border border-gray-200"
+              className="p-3 text-sm bg-white border border-gray-200 rounded-lg"
             />
           </View>
 
@@ -312,7 +314,7 @@ export default function AddressInput({
               onChangeText={(text) => handleFieldChange("barangay", text)}
               placeholder="e.g. Brgy. San Antonio"
               placeholderTextColor="#9CA3AF"
-              className="p-3 text-sm bg-white rounded-lg border border-gray-200"
+              className="p-3 text-sm bg-white border border-gray-200 rounded-lg"
             />
           </View>
 
@@ -327,7 +329,7 @@ export default function AddressInput({
                 onChangeText={(text) => handleFieldChange("city", text)}
                 placeholder="e.g. Makati"
                 placeholderTextColor="#9CA3AF"
-                className="p-3 text-sm bg-white rounded-lg border border-gray-200"
+                className="p-3 text-sm bg-white border border-gray-200 rounded-lg"
               />
             </View>
 
@@ -340,13 +342,13 @@ export default function AddressInput({
                 onChangeText={(text) => handleFieldChange("province", text)}
                 placeholder="e.g. Metro Manila"
                 placeholderTextColor="#9CA3AF"
-                className="p-3 text-sm bg-white rounded-lg border border-gray-200"
+                className="p-3 text-sm bg-white border border-gray-200 rounded-lg"
               />
             </View>
           </View>
 
           {/* Postal Code
-          <View className="gap-1 w-1/2">
+          <View className="w-1/2 gap-1">
             <Text className="text-xs font-medium text-gray-600">
               Postal Code
             </Text>
@@ -357,7 +359,7 @@ export default function AddressInput({
               placeholderTextColor="#9CA3AF"
               keyboardType="number-pad"
               maxLength={6}
-              className="p-3 text-sm bg-white rounded-lg border border-gray-200"
+              className="p-3 text-sm bg-white border border-gray-200 rounded-lg"
             />
           </View> */}
         </View>

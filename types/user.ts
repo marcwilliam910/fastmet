@@ -11,7 +11,7 @@ export type UserAddress = {
 export type NewUser = {
   fullName: string;
   address: UserAddress;
-  gender?: string;
-  email?: string;
+  gender: string;
+  email: string;
   profilePictureUrl?: string;
 };
