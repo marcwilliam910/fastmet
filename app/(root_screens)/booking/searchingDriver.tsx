@@ -427,7 +427,7 @@ export default function SearchingDriver() {
         )}
 
         {/* Center Section: The Radar */}
-        <View className="items-center justify-center flex-1">
+        <View className="flex-1 justify-center items-center">
           {/* Ambient Pulse Glow */}
           <AnimatedView
             className="absolute rounded-full size-64 bg-orange-500/50"
@@ -438,7 +438,7 @@ export default function SearchingDriver() {
           />
 
           {/* Main Radar Disc */}
-          <View className="items-center justify-center overflow-hidden border rounded-full size-72 border-white/10 bg-black/40">
+          <View className="overflow-hidden justify-center items-center rounded-full border size-72 border-white/10 bg-black/40">
             {/* Background Rings */}
             {[1, 2, 3].map((i) => (
               <View
@@ -474,7 +474,7 @@ export default function SearchingDriver() {
             </AnimatedView>
 
             {/* Center Logo Hub */}
-            <View className="items-center justify-center border-2 border-orange-500 rounded-full shadow-2xl size-28 bg-slate-900 shadow-orange-500/50">
+            <View className="justify-center items-center rounded-full border-2 border-orange-500 shadow-2xl size-28 bg-slate-900 shadow-orange-500/50">
               <Image
                 source={STATIC_IMAGES.fastmetLogo}
                 style={{width: 50, height: 50}}
@@ -503,7 +503,7 @@ export default function SearchingDriver() {
 
           {/* Waiting for trip start banner — pooling only */}
           {isPooling && waitingForTripStart ? (
-            <View className="flex-row items-center gap-3 px-4 py-3 mb-3 border bg-green-500/20 border-green-500/40 rounded-2xl">
+            <View className="flex-row gap-3 items-center px-4 py-3 mb-3 rounded-2xl border bg-green-500/20 border-green-500/40">
               <Ionicons name="checkmark-circle" size={24} color="#10B981" />
               <View className="flex-1">
                 <Text className="font-bold text-white">Offer Accepted!</Text>
@@ -515,7 +515,7 @@ export default function SearchingDriver() {
           ) : (
             <Pressable
               onPress={handleCancelRequest}
-              className="items-center w-full py-4 mt-4 shadow-lg bg-white/30 rounded-2xl active:opacity-90"
+              className="items-center py-4 mt-4 w-full rounded-2xl shadow-lg bg-white/30 active:opacity-90"
             >
               <Text className="text-lg font-bold text-white">
                 Cancel Request
@@ -580,13 +580,7 @@ const DriverListCard = ({
         type: "asap",
       });
     }
-  }, [
-    bookingId,
-    selectedDriver,
-    socket,
-    isPooling,
-    setSelectedDriver,
-  ]);
+  }, [bookingId, selectedDriver, socket, isPooling, setSelectedDriver]);
 
   const rejectDriver = useCallback(() => {
     if (!selectedDriver) return;
@@ -609,13 +603,7 @@ const DriverListCard = ({
     setSelectedDriver(null);
     setAreAllPaused(false);
     setDrivers((prev) => prev.filter((d) => d.id !== selectedDriver.id));
-  }, [
-    selectedDriver,
-    socket,
-    bookingId,
-    setSelectedDriver,
-    setDrivers,
-  ]);
+  }, [selectedDriver, socket, bookingId, setSelectedDriver, setDrivers]);
 
   const handleDriverSelect = useCallback(
     (driver: RequestedDriver) => {
@@ -800,7 +788,7 @@ const DriverRow = memo(
         }}
       >
         <Pressable onPress={handlePress}>
-          <View className="relative flex-row items-center justify-between px-4 py-3 bg-gray-100 rounded-md">
+          <View className="relative flex-row justify-between items-center px-4 py-3 bg-gray-100 rounded-md">
             {/* Progress Bar (background) */}
             <View className="absolute bottom-0 left-0 right-0 h-[3px] bg-black/5">
               <Animated.View
@@ -813,7 +801,7 @@ const DriverRow = memo(
             </View>
 
             {/* Left: Driver Info */}
-            <View className="flex-row items-center gap-3">
+            <View className="flex-row gap-3 items-center">
               {driver.profilePicture ? (
                 <Image
                   source={{uri: driver.profilePicture}}
@@ -840,9 +828,9 @@ const DriverRow = memo(
 
             {/* Right: Distance */}
             {driver.distance && (
-              <View className="items-center justify-center px-3 py-2 bg-orange-500 rounded-xl">
+              <View className="justify-center items-center px-3 py-2 bg-orange-500 rounded-xl">
                 <Text className="text-[10px] uppercase tracking-wide text-white">
-                  Distance
+                  Approx. Distance
                 </Text>
                 <Text className="text-sm font-bold text-white">
                   {driver.distance < 1
@@ -894,8 +882,8 @@ const SearchRadiusIndicator = () => {
       </Text>
 
       {/* Search Radius Indicator */}
-      <View className="px-4 py-2 mt-4 border rounded-full bg-orange-500/20 border-orange-500/30">
-        <View className="flex-row items-center gap-2">
+      <View className="px-4 py-2 mt-4 rounded-full border bg-orange-500/20 border-orange-500/30">
+        <View className="flex-row gap-2 items-center">
           <Ionicons name="radio-outline" size={16} color="#FB923D" />
           <Text className="text-sm font-semibold text-orange-400">
             Searching within {formatRadius(searchRadius)} radius
@@ -921,8 +909,8 @@ const CitySearchIndicator = ({city}: {city?: string}) => {
         Looking for available drivers in your area
       </Text>
 
-      <View className="px-4 py-2 mt-4 border rounded-full bg-orange-500/20 border-orange-500/30">
-        <View className="flex-row items-center gap-2">
+      <View className="px-4 py-2 mt-4 rounded-full border bg-orange-500/20 border-orange-500/30">
+        <View className="flex-row gap-2 items-center">
           <Ionicons name="location-outline" size={16} color="#FB923D" />
           <Text className="text-sm font-semibold text-orange-400">
             Searching in {city ?? "your pick up location"}

@@ -65,6 +65,7 @@ export default function ViewOnMap() {
           setRegion={setRegion}
           bookingId={bookingId}
           driver={booking.driver!}
+          status={booking.status}
         />
       </View>
       <View className="absolute right-0 bottom-0 left-0">

@@ -1,10 +1,6 @@
 import {useSocket} from "@/sockets/context/SocketProvider";
 import {useAppStore} from "@/store/useAppStore";
-import {
-  BookingETAUpdatedPayload,
-  Driver,
-  LocationDetails,
-} from "@/types/book";
+import {BookingETAUpdatedPayload, Driver, LocationDetails} from "@/types/book";
 import {GOOGLE_MAPS_API_KEY} from "@/utils/constants";
 import {useFocusEffect} from "expo-router";
 import React, {useCallback, useEffect, useRef, useState} from "react";
@@ -14,6 +10,7 @@ import MapViewDirections from "react-native-maps-directions";
 import {MapMarkerPin} from "../MapMarkerPin";
 import {GasCategory, VehicleMarkerIcon} from "../VehicleMarkerIcon";
 import {DistanceBubble} from "./MapScreen";
+import {fastmetMapStyle} from "./mapStyle";
 
 type Region = {
   latitude: number;
@@ -30,6 +27,7 @@ type Props = {
   setRegion: React.Dispatch<React.SetStateAction<Region | null>>;
   bookingId: string;
   driver: Driver;
+  status: string;
 };
 
 const MAP_EDGE_PADDING = {top: 80, right: 80, bottom: 80, left: 80};
@@ -42,6 +40,7 @@ export default function LiveTrackingMapScreen({
   setRegion,
   bookingId,
   driver,
+  status,
 }: Props) {
   const mapRef = useRef<MapView>(null);
   const routeCoordinatesRef = useRef<LatLng[]>([]);
@@ -180,6 +179,7 @@ export default function LiveTrackingMapScreen({
         <MapView
           provider={PROVIDER_GOOGLE}
           ref={mapRef}
+          customMapStyle={fastmetMapStyle}
           style={StyleSheet.absoluteFillObject}
           showsCompass
           mapType="standard"
@@ -197,7 +197,9 @@ export default function LiveTrackingMapScreen({
               tracksViewChanges={tracksViewChanges}
               zIndex={1000}
             >
-              <View style={{width: MARKER_SIZE, height: MARKER_SIZE, opacity: 1}}>
+              <View
+                style={{width: MARKER_SIZE, height: MARKER_SIZE, opacity: 1}}
+              >
                 <MapMarkerPin color="#0074FF" size={MARKER_SIZE} />
               </View>
             </Marker>
@@ -233,33 +235,40 @@ export default function LiveTrackingMapScreen({
               tracksViewChanges={tracksViewChanges}
               zIndex={1001} // ← Higher than pickup
             >
-              <View style={{width: MARKER_SIZE, height: MARKER_SIZE, opacity: 1}}>
+              <View
+                style={{width: MARKER_SIZE, height: MARKER_SIZE, opacity: 1}}
+              >
                 <MapMarkerPin color="#ED1C24" size={MARKER_SIZE} />
               </View>
             </Marker>
           )}
 
-          {pickUp && dropOff && (
-            <>
-              <MapViewDirections
-                origin={{
-                  latitude: pickUp.coords.lat,
-                  longitude: pickUp.coords.lng,
-                }}
-                destination={{
-                  latitude: dropOff.coords.lat,
-                  longitude: dropOff.coords.lng,
-                }}
-                apikey={GOOGLE_MAPS_API_KEY ?? ""}
-                strokeWidth={5}
-                strokeColor="#007AFF"
-                optimizeWaypoints
-                onReady={(result) => {
-                  routeCoordinatesRef.current = result.coordinates;
-                  fitToRoute(result.coordinates);
-                }}
-              />
-            </>
+          {driverLocation && !isLoadingDriverLocation && (
+            <MapViewDirections
+              origin={{
+                latitude: driverLocation.lat,
+                longitude: driverLocation.lng,
+              }}
+              destination={
+                status === "picked_up"
+                  ? {
+                      latitude: dropOff!.coords.lat,
+                      longitude: dropOff!.coords.lng,
+                    }
+                  : {
+                      latitude: pickUp!.coords.lat,
+                      longitude: pickUp!.coords.lng,
+                    }
+              }
+              apikey={GOOGLE_MAPS_API_KEY ?? ""}
+              strokeWidth={5}
+              strokeColor="#007AFF"
+              optimizeWaypoints
+              onReady={(result) => {
+                routeCoordinatesRef.current = result.coordinates;
+                fitToRoute(result.coordinates);
+              }}
+            />
           )}
         </MapView>
       )}

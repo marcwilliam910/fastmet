@@ -47,7 +47,7 @@ const MapPinStepView: React.FC<MapPinStepViewProps> = ({
   return (
     <View style={{flex: 1}}>
       <View
-        className="flex-row items-center justify-center px-4"
+        className="flex-row justify-center items-center px-4"
         style={{paddingBottom: Platform.OS === "ios" ? 25 : 16}}
       >
         <Pressable
@@ -76,7 +76,7 @@ const MapPinStepView: React.FC<MapPinStepViewProps> = ({
           onChangeText={setAdditionalDetails}
           placeholder="e.g. In front of Jollibee or near gate 3"
           placeholderTextColor="#9CA3AF"
-          className="p-3 text-base text-gray-800 bg-white border border-gray-200 rounded-xl"
+          className="p-3 text-base text-gray-800 bg-white rounded-xl border border-gray-200"
         />
         <Text className="mt-2 text-sm text-gray-500" numberOfLines={2}>
           {pinMoved

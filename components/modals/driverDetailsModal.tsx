@@ -84,7 +84,7 @@ function DriverDetailsModal({
               {driver.distance && (
                 <View className="p-4 rounded-xl bg-orange-50">
                   <Text className="mb-1 text-xs font-semibold tracking-wide text-orange-600 uppercase">
-                    Distance from pick up
+                    Approx. distance from pickup
                   </Text>
                   <Text className="text-2xl font-bold text-orange-600">
                     {driver.distance < 1

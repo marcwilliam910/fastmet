@@ -1,10 +1,10 @@
-import { queryClient } from "@/lib/queryClient";
-import { Booking, RequestedDriver } from "@/types/book";
-import { Notification } from "@/types/notification";
-import { updateNotificationHelper } from "@/utils/helpers/query";
-import { NOTIFICATION_TYPES } from "@/utils/notification";
+import {queryClient} from "@/lib/queryClient";
+import {Booking, RequestedDriver} from "@/types/book";
+import {Notification} from "@/types/notification";
+import {updateNotificationHelper} from "@/utils/helpers/query";
+import {NOTIFICATION_TYPES} from "@/utils/notification";
 import Toast from "react-native-toast-message";
-import { Socket } from "socket.io-client";
+import {Socket} from "socket.io-client";
 
 export const acceptanceRequestedSchedule = (socket: Socket) => {
   const handleAcceptanceRequestedSchedule = ({
@@ -18,7 +18,7 @@ export const acceptanceRequestedSchedule = (socket: Socket) => {
   }) => {
     // Update ALL pending bookings to add the driver offer
     queryClient.setQueriesData(
-      { queryKey: ["userBookings", "pending"] },
+      {queryKey: ["userBookings", "pending"]},
       (oldData: any) => {
         if (!oldData?.pages) return oldData;
 
@@ -81,7 +81,7 @@ export const cancelScheduleDriverOffer = (socket: Socket) => {
     bookingId: string;
   }) => {
     queryClient.setQueriesData(
-      { queryKey: ["userBookings", "pending"] },
+      {queryKey: ["userBookings", "pending"]},
       (oldData: any) => {
         if (!oldData?.pages) return oldData;
 
@@ -129,7 +129,7 @@ export const driverUnavailable = (socket: Socket) => {
     let bookingToRestore: Booking | null = null;
 
     queryClient.setQueriesData(
-      { queryKey: ["userBookings", "scheduled"] },
+      {queryKey: ["userBookings", "scheduled"]},
       (oldData: any) => {
         if (!oldData?.pages) return oldData;
 
@@ -151,7 +151,7 @@ export const driverUnavailable = (socket: Socket) => {
 
     // Add back to pending bookings with updated status (remove unavailable driver)
     if (bookingToRestore) {
-      const { driver: _, ...rest } = bookingToRestore as Booking;
+      const {driver: _, ...rest} = bookingToRestore as Booking;
       const updatedBooking: Booking = {
         ...rest,
         status: "pending",
@@ -161,7 +161,7 @@ export const driverUnavailable = (socket: Socket) => {
       };
 
       queryClient.setQueriesData(
-        { queryKey: ["userBookings", "pending"] },
+        {queryKey: ["userBookings", "pending"]},
         (oldData: any) => {
           if (!oldData?.pages) return oldData;
           const newPages = [...oldData.pages];
@@ -169,7 +169,7 @@ export const driverUnavailable = (socket: Socket) => {
             ...newPages[0],
             bookings: [updatedBooking, ...(newPages[0]?.bookings || [])],
           };
-          return { ...oldData, pages: newPages };
+          return {...oldData, pages: newPages};
         },
       );
 
@@ -278,5 +278,39 @@ export const scheduledReminder = (socket: Socket) => {
   socket.on("scheduledReminder", handleScheduledReminder);
   return () => {
     socket.off("scheduledReminder", handleScheduledReminder);
+  };
+};
+
+export const driverArrivedAtPickup = (socket: Socket) => {
+  const handleArrivedAtPickup = () => {
+    Toast.show({
+      type: "success",
+      text1: "Driver Arrived at Pickup",
+      text2:
+        "The driver has arrived at the pickup location. Please assist them with the delivery.",
+      position: "top",
+      visibilityTime: 5000,
+    });
+  };
+
+  socket.on("driverArrivedAtPickup", handleArrivedAtPickup);
+  return () => {
+    socket.off("driverArrivedAtPickup", handleArrivedAtPickup);
+  };
+};
+export const driverArrivedAtDropoff = (socket: Socket) => {
+  const handleArrivedAtDropoff = () => {
+    Toast.show({
+      type: "success",
+      text1: "Driver Arrived at Drop-off",
+      text2: "The driver has arrived at the drop-off location.",
+      position: "top",
+      visibilityTime: 5000,
+    });
+  };
+
+  socket.on("driverArrivedAtDropoff", handleArrivedAtDropoff);
+  return () => {
+    socket.off("driverArrivedAtDropoff", handleArrivedAtDropoff);
   };
 };
