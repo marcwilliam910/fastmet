@@ -10,7 +10,6 @@ import MapViewDirections from "react-native-maps-directions";
 import {MapMarkerPin} from "../MapMarkerPin";
 import {GasCategory, VehicleMarkerIcon} from "../VehicleMarkerIcon";
 import {DistanceBubble} from "./MapScreen";
-import {fastmetMapStyle} from "./mapStyle";
 
 type Region = {
   latitude: number;
@@ -179,7 +178,6 @@ export default function LiveTrackingMapScreen({
         <MapView
           provider={PROVIDER_GOOGLE}
           ref={mapRef}
-          customMapStyle={fastmetMapStyle}
           style={StyleSheet.absoluteFillObject}
           showsCompass
           mapType="standard"
