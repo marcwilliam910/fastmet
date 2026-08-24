@@ -62,7 +62,7 @@ export default Sentry.wrap(function RootLayout() {
         `${process.env.EXPO_PUBLIC_BASE_URL}/api/app-config/pre-registration`,
       );
       const data = await res.json();
-      setPreRegActive(data?.isUserPreReg === true);
+      setPreRegActive(data?.isClientPreReg === true);
       setPreRegStatus("loaded");
     } catch (e) {
       setPreRegStatus("error");

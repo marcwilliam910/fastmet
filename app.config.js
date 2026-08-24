@@ -86,14 +86,14 @@ export default {
             "Allow $(PRODUCT_NAME) to access your contacts.",
         },
       ],
-      // [
-      //   "@sentry/react-native/expo",
-      //   {
-      //     url: "https://sentry.io/",
-      //     project: "fastmet-client",
-      //     organization: "guildsman-technology",
-      //   },
-      // ],
+      [
+        "@sentry/react-native/expo",
+        {
+          url: "https://sentry.io/",
+          project: "fastmet-client",
+          organization: "guildsman-technology",
+        },
+      ],
     ],
     experiments: {
       typedRoutes: true,

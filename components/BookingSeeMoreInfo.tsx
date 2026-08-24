@@ -129,7 +129,7 @@ export const PaymentInfo = ({
     <View className="p-5 bg-gray-50 rounded-2xl">
       <Text className="mb-3 text-base font-semibold text-gray-800">
         Payment Information (
-        {paymentMethod === "cash" ? "Cash Payment" : "Gcash Payment"})
+        {paymentMethod === "cash" ? "Cash Payment" : "Gcash Manual Payment"})
       </Text>
       {paidBy && (
         <View className="flex-row justify-between items-center p-3 mb-2 bg-white rounded-lg">

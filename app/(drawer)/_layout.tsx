@@ -1,4 +1,5 @@
 import HeaderDrawer from "@/components/headers/HeaderDrawer";
+import {CustomAlertModal} from "@/components/modals/alertModal";
 import LogoutModal from "@/components/modals/logoutModal";
 import NotLoggedInModal from "@/components/modals/notLoggedInModal";
 import { useAuth } from "@/hooks/useAuth";
@@ -101,7 +102,7 @@ export default function DrawerLayout() {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showNotLoggedInModal, setShowNotLoggedInModal] = useState(false);
 
-  const { notification } = usePushNotifications();
+  const {permissionModalProps} = usePushNotifications();
   // Fetch and sync unread notification count
   useUnreadNotificationCount();
   useAnnouncementUnreadCount();
@@ -253,6 +254,17 @@ export default function DrawerLayout() {
       <NotLoggedInModal
         visible={showNotLoggedInModal}
         setVisible={setShowNotLoggedInModal}
+      />
+      <CustomAlertModal
+        visible={permissionModalProps.visible}
+        title="Stay Updated"
+        message="Enable notifications to receive alerts about scheduled trips and booking updates."
+        variant="default"
+        onRequestClose={permissionModalProps.onClose}
+        buttons={[
+          {text: "Not Now", style: "cancel", onPress: permissionModalProps.onDecline},
+          {text: "Enable", onPress: permissionModalProps.onEnable},
+        ]}
       />
     </GestureHandlerRootView>
   );
