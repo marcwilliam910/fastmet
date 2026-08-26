@@ -278,6 +278,7 @@ export default function SeeMoreModalDisplay({
             paymentMethod={data.paymentMethod}
             routeData={data.routeData}
             paidBy={data.paidBy}
+            voucherApplied={data.voucherApplied}
           />
 
           {/* Selected Services */}

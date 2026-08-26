@@ -191,6 +191,12 @@ export default function RequestRoute() {
         queryKey: ["userBookingCounts"],
       });
 
+      // Invalidate voucher queries (voucher may have been released)
+      queryClient.invalidateQueries({
+        queryKey: ["rewards"],
+        exact: false,
+      });
+
       Toast.show({
         type: "success",
         text1: "Booking Cancelled",

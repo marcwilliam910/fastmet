@@ -120,11 +120,21 @@ export const PaymentInfo = ({
   paymentMethod,
   routeData,
   paidBy,
+  voucherApplied,
 }: {
   paymentMethod: string;
   routeData: RouteData;
   paidBy?: "sender" | "receiver";
+  voucherApplied?: {
+    issuedRewardId: string;
+    voucherTemplateId: string;
+    discountAmount: number;
+  } | null;
 }) => {
+  const netAmount = voucherApplied
+    ? routeData.totalPrice - voucherApplied.discountAmount
+    : routeData.totalPrice;
+
   return (
     <View className="p-5 bg-gray-50 rounded-2xl">
       <Text className="mb-3 text-base font-semibold text-gray-800">
@@ -175,17 +185,46 @@ export const PaymentInfo = ({
           </Text>
         </View>
 
+        {/* Voucher Discount */}
+        {voucherApplied && (
+          <>
+            <View className="flex-row justify-between">
+              <Text className="text-xs text-gray-500">Gross Fare</Text>
+              <Text className="text-xs font-semibold text-gray-700">
+                Php{" "}
+                {routeData.totalPrice.toLocaleString("en-US", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </Text>
+            </View>
+
+            <View className="flex-row justify-between">
+              <Text className="text-xs text-green-600 font-medium">
+                Voucher Discount
+              </Text>
+              <Text className="text-xs font-semibold text-green-600">
+                - Php{" "}
+                {voucherApplied.discountAmount.toLocaleString("en-US", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </Text>
+            </View>
+          </>
+        )}
+
         {/* Divider */}
         <View className="my-2 h-px bg-gray-200" />
 
         {/* Total */}
         <View className="flex-row justify-between">
           <Text className="text-base font-semibold text-gray-800">
-            Total Amount
+            {voucherApplied ? "Amount Paid" : "Total Amount"}
           </Text>
           <Text className="text-xl font-bold text-darkPrimary">
             Php{" "}
-            {routeData.totalPrice.toLocaleString("en-US", {
+            {netAmount.toLocaleString("en-US", {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
             })}

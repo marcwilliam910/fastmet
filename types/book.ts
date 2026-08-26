@@ -59,6 +59,11 @@ export type Booking = {
   cancelledAt: string | null;
   requestedDrivers: RequestedDriver[];
   driver?: Driver;
+  voucherApplied?: {
+    issuedRewardId: string;
+    voucherTemplateId: string;
+    discountAmount: number;
+  } | null;
 };
 
 export type ActiveBooking = Booking & {driver: Driver};
@@ -103,6 +108,7 @@ export type RequestBooking = {
   photos: string[];
   note: string;
   itemType: string | null;
+  voucherRewardId?: string;
 };
 
 export type RequestedDriver = {

@@ -497,6 +497,7 @@ function SeeMoreModal({
             paymentMethod={data.paymentMethod}
             routeData={data.routeData}
             paidBy={data.paidBy}
+            voucherApplied={data.voucherApplied}
           />
 
           {/* Delivery Proof Images */}

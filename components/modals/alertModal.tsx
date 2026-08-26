@@ -3,51 +3,25 @@ import React from "react";
 import {InteractionManager, Modal, Pressable, Text, View} from "react-native";
 import Animated, {FadeIn, ZoomIn} from "react-native-reanimated";
 
-type AlertButton = {
-  text: string;
-  style?: "default" | "cancel" | "destructive";
-  onPress?: () => void;
-};
-
-type AlertVariant = "default" | "info" | "success" | "warning" | "destructive";
-
-type CustomAlertModalProps = {
+type NotificationPermissionModalProps = {
   visible: boolean;
-  title: string;
-  message: string;
-  buttons: AlertButton[];
-  variant?: AlertVariant;
-  onRequestClose?: () => void;
+  onDecline: () => void;
+  onEnable: () => void;
 };
 
-const VARIANT_CONFIG: Record<
-  AlertVariant,
-  {icon: keyof typeof Ionicons.glyphMap; bg: string; fg: string}
-> = {
-  default: {icon: "notifications", bg: "#FDEEDC", fg: "#ED8718"},
-  info: {icon: "information-circle", bg: "#DBEAFE", fg: "#2563EB"},
-  success: {icon: "checkmark-circle", bg: "#DCFCE7", fg: "#16A34A"},
-  warning: {icon: "warning", bg: "#FEF3C7", fg: "#D97706"},
-  destructive: {icon: "alert-circle", bg: "#FEE2E2", fg: "#DC2626"},
-};
-
-export function CustomAlertModal({
+export function NotificationPermissionModal({
   visible,
-  title,
-  message,
-  buttons,
-  variant = "default",
-  onRequestClose,
-}: CustomAlertModalProps) {
+  onDecline,
+  onEnable,
+}: NotificationPermissionModalProps) {
   if (!visible) return null;
 
-  const {icon, bg, fg} = VARIANT_CONFIG[variant];
+  const handlePress = (action: () => void) => {
+    onDecline === action ? undefined : undefined; // no-op guard removed below
+  };
 
-  const handlePress = (btn: AlertButton) => {
-    onRequestClose?.();
-    InteractionManager.runAfterInteractions(() => {
-      btn.onPress?.();
-    });
+  const press = (action: () => void) => () => {
+    InteractionManager.runAfterInteractions(action);
   };
 
   return (
@@ -56,7 +30,7 @@ export function CustomAlertModal({
       visible={visible}
       animationType="none"
       statusBarTranslucent
-      onRequestClose={onRequestClose}
+      onRequestClose={onDecline}
     >
       <Animated.View
         entering={FadeIn.duration(150)}
@@ -65,62 +39,63 @@ export function CustomAlertModal({
       >
         <Animated.View
           entering={ZoomIn.duration(180)}
-          className="p-6 w-full max-w-sm bg-white rounded-2xl"
+          className="w-full max-w-sm bg-white rounded-3xl overflow-hidden"
           style={{
             shadowColor: "#000",
-            shadowOffset: {width: 0, height: 8},
-            shadowOpacity: 0.15,
-            shadowRadius: 20,
-            elevation: 8,
+            shadowOffset: {width: 0, height: 12},
+            shadowOpacity: 0.18,
+            shadowRadius: 24,
+            elevation: 10,
           }}
         >
-          <View
-            className="justify-center items-center self-center mb-4 w-12 h-12 rounded-full"
-            style={{backgroundColor: bg}}
-          >
-            <Ionicons name={icon} size={24} color={fg} />
+          {/* Icon header */}
+          <View className="items-center pt-8 pb-2">
+            <View
+              className="justify-center items-center w-16 h-16 rounded-full"
+              style={{backgroundColor: "#FDEEDC"}}
+            >
+              <Ionicons name="notifications" size={30} color="#ED8718" />
+            </View>
           </View>
 
-          <Text
-            accessibilityRole="header"
-            className="text-lg font-semibold text-center text-neutral-900"
-          >
-            {title}
-          </Text>
-          <Text className="mt-2 text-sm leading-5 text-center text-neutral-500">
-            {message}
-          </Text>
+          <View className="px-6 pt-3 pb-6">
+            <Text
+              accessibilityRole="header"
+              className="text-lg font-semibold text-center text-neutral-900"
+            >
+              Stay Updated
+            </Text>
+            <Text className="mt-2 text-sm leading-5 text-center text-neutral-500">
+              Enable notifications to receive alerts about scheduled trips and
+              booking updates.
+            </Text>
+          </View>
 
-          <View className="flex-row gap-3 justify-end mt-6">
-            {buttons.map((btn, i) => (
-              <Pressable
-                key={i}
-                onPress={() => handlePress(btn)}
-                accessibilityRole="button"
-                accessibilityLabel={btn.text}
-                hitSlop={4}
-                className="min-h-[40px] justify-center rounded-lg px-4 py-2 active:opacity-70"
-                style={
-                  btn.style === "destructive"
-                    ? {backgroundColor: "#FEE2E2"}
-                    : btn.style !== "cancel"
-                      ? {backgroundColor: "#ED8718"}
-                      : undefined
-                }
-              >
-                <Text
-                  className={
-                    btn.style === "cancel"
-                      ? "font-medium text-neutral-500"
-                      : btn.style === "destructive"
-                        ? "font-medium text-red-600"
-                        : "font-medium text-white"
-                  }
-                >
-                  {btn.text}
-                </Text>
-              </Pressable>
-            ))}
+          {/* Buttons stacked, primary on top — easier thumb reach, clearer hierarchy */}
+          <View className="px-4 pb-4 gap-2">
+            <Pressable
+              onPress={press(onEnable)}
+              accessibilityRole="button"
+              accessibilityLabel="Enable"
+              hitSlop={4}
+              className="justify-center items-center h-12 rounded-xl active:bg-darkPrimary bg-lightPrimary"
+            >
+              <Text className="font-semibold text-white text-[15px]">
+                Enable
+              </Text>
+            </Pressable>
+
+            <Pressable
+              onPress={press(onDecline)}
+              accessibilityRole="button"
+              accessibilityLabel="Not Now"
+              hitSlop={4}
+              className="justify-center items-center h-12 rounded-xl active:opacity-60"
+            >
+              <Text className="font-medium text-neutral-500 text-[15px]">
+                Not Now
+              </Text>
+            </Pressable>
           </View>
         </Animated.View>
       </Animated.View>

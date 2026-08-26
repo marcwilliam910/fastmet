@@ -271,6 +271,13 @@ export default function SearchingDriver() {
       unreadNotifications: number;
     }) => {
       setShouldPrevent(false);
+
+      // Invalidate voucher queries (voucher may have been released)
+      queryClient.invalidateQueries({
+        queryKey: ["rewards"],
+        exact: false,
+      });
+
       Toast.show({
         type: "error",
         text1: "Request Expired",

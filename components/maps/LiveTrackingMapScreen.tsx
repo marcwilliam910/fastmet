@@ -1,13 +1,12 @@
 import {useSocket} from "@/sockets/context/SocketProvider";
 import {useAppStore} from "@/store/useAppStore";
 import {BookingETAUpdatedPayload, Driver, LocationDetails} from "@/types/book";
-import {GOOGLE_MAPS_API_KEY} from "@/utils/constants";
+import {GOOGLE_MAPS_API_KEY, STATIC_IMAGES} from "@/utils/constants";
 import {useFocusEffect} from "expo-router";
 import React, {useCallback, useEffect, useRef, useState} from "react";
-import {StatusBar, StyleSheet, View} from "react-native";
+import {Image, StatusBar, StyleSheet, View} from "react-native";
 import MapView, {LatLng, Marker, PROVIDER_GOOGLE} from "react-native-maps";
 import MapViewDirections from "react-native-maps-directions";
-import {MapMarkerPin} from "../MapMarkerPin";
 import {GasCategory, VehicleMarkerIcon} from "../VehicleMarkerIcon";
 import {DistanceBubble} from "./MapScreen";
 
@@ -57,8 +56,6 @@ export default function LiveTrackingMapScreen({
   const [tracksViewChanges, setTracksViewChanges] = useState(true);
   const [isLoadingDriverLocation, setIsLoadingDriverLocation] =
     useState<boolean>(false);
-
-  const MARKER_SIZE = 40;
 
   const fitToRoute = useCallback((coords: LatLng[]) => {
     if (!mapRef.current || coords.length === 0) return;
@@ -195,10 +192,11 @@ export default function LiveTrackingMapScreen({
               tracksViewChanges={tracksViewChanges}
               zIndex={1000}
             >
-              <View
-                style={{width: MARKER_SIZE, height: MARKER_SIZE, opacity: 1}}
-              >
-                <MapMarkerPin color="#0074FF" size={MARKER_SIZE} />
+              <View>
+                <Image
+                  source={STATIC_IMAGES.pickup}
+                  style={{width: 50, height: 50}}
+                />
               </View>
             </Marker>
           )}
@@ -233,10 +231,11 @@ export default function LiveTrackingMapScreen({
               tracksViewChanges={tracksViewChanges}
               zIndex={1001} // ← Higher than pickup
             >
-              <View
-                style={{width: MARKER_SIZE, height: MARKER_SIZE, opacity: 1}}
-              >
-                <MapMarkerPin color="#ED1C24" size={MARKER_SIZE} />
+              <View>
+                <Image
+                  source={STATIC_IMAGES.dropoff}
+                  style={{width: 50, height: 50}}
+                />
               </View>
             </Marker>
           )}

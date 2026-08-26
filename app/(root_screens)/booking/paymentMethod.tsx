@@ -1,18 +1,22 @@
-import { useAuth } from "@/hooks/useAuth";
-import { queryClient } from "@/lib/queryClient";
-import { useSocket } from "@/sockets/context/SocketProvider";
-import { useAppStore } from "@/store/useAppStore";
-import { Booking, RequestBooking } from "@/types/book";
-import { STATIC_IMAGES } from "@/utils/constants";
-import { generateBookingRef } from "@/utils/helpers/booking";
-import { uploadBookingImages } from "@/utils/helpers/imagePicker";
-import { Ionicons } from "@expo/vector-icons";
-import { InfiniteData } from "@tanstack/react-query";
-import { Image } from "expo-image";
-import { router } from "expo-router";
-import React, { useEffect, useRef, useState } from "react";
-import { Platform, Pressable, Text, View } from "react-native";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import VoucherPickerModal from "@/components/voucher/VoucherPickerModal";
+import {useAuth} from "@/hooks/useAuth";
+import {queryClient} from "@/lib/queryClient";
+import {rewardKeys} from "@/queries/rewardQueries";
+import {useSocket} from "@/sockets/context/SocketProvider";
+import {useAppStore} from "@/store/useAppStore";
+import {Booking, RequestBooking} from "@/types/book";
+import {IssuedReward} from "@/types/voucher";
+import {STATIC_IMAGES} from "@/utils/constants";
+import {generateBookingRef} from "@/utils/helpers/booking";
+import {uploadBookingImages} from "@/utils/helpers/imagePicker";
+import {formatCurrency} from "@/utils/helpers/voucher";
+import {Ionicons} from "@expo/vector-icons";
+import {InfiniteData} from "@tanstack/react-query";
+import {Image} from "expo-image";
+import {router, useFocusEffect} from "expo-router";
+import React, {useCallback, useEffect, useRef, useState} from "react";
+import {Platform, Pressable, Text, View} from "react-native";
+import {SafeAreaView, useSafeAreaInsets} from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 
 export default function PaymentMethod() {
@@ -20,10 +24,18 @@ export default function PaymentMethod() {
   const paymentMethod = useAppStore((state) => state.paymentMethod);
   const isLoading = useAppStore((state) => state.isLoading);
 
-  const { bookingType, setPaymentMethod, routeData } = useAppStore.getState();
+  const {bookingType, setPaymentMethod, routeData} = useAppStore.getState();
   const [loading, setLoading] = useState(false);
 
-  const { id } = useAuth();
+  // Voucher state
+  const [showVoucherPicker, setShowVoucherPicker] = useState(false);
+  const [selectedVoucher, setSelectedVoucher] = useState<{
+    reward: IssuedReward;
+    discountAmount: number;
+    netAmount: number;
+  } | null>(null);
+
+  const {id} = useAuth();
   const socket = useSocket();
   const hasNavigatedRef = useRef(false);
   const isSubmittingRef = useRef(false);
@@ -35,6 +47,31 @@ export default function PaymentMethod() {
       clearTimeout(submitTimeoutRef.current);
       submitTimeoutRef.current = null;
     }
+  };
+
+  // Clear voucher selection when screen loses focus or fare changes
+  useFocusEffect(
+    useCallback(() => {
+      // Keep voucher selected on focus
+      return () => {
+        // Cleanup on unfocus if needed
+      };
+    }, []),
+  );
+
+  const handleVoucherSelect = (
+    reward: IssuedReward,
+    preview: {discountAmount: number; netAmount: number},
+  ) => {
+    setSelectedVoucher({
+      reward,
+      discountAmount: preview.discountAmount,
+      netAmount: preview.netAmount,
+    });
+  };
+
+  const handleRemoveVoucher = () => {
+    setSelectedVoucher(null);
   };
 
   const handleBookNow = async () => {
@@ -151,6 +188,7 @@ export default function PaymentMethod() {
         photos: uploadResult.images, // Cloudinary URLs
         note: note.trim(),
         itemType: itemType,
+        voucherRewardId: selectedVoucher?.reward._id, // Include voucher if selected
       };
 
       console.log("📤 Sending booking request:", payload);
@@ -212,6 +250,11 @@ export default function PaymentMethod() {
       if (data.success) {
         hasNavigatedRef.current = true;
 
+        // Invalidate voucher queries if a voucher was used
+        if (selectedVoucher) {
+          void queryClient.invalidateQueries({queryKey: rewardKeys.all});
+        }
+
         // Build a Booking from store state and prepend to pending cache
         const state = useAppStore.getState();
         const newBooking: Booking = {
@@ -241,6 +284,13 @@ export default function PaymentMethod() {
           driverRating: null,
           cancelledAt: null,
           requestedDrivers: [],
+          voucherApplied: selectedVoucher
+            ? {
+                issuedRewardId: selectedVoucher.reward._id,
+                voucherTemplateId: selectedVoucher.reward.voucherId?._id ?? "",
+                discountAmount: selectedVoucher.discountAmount,
+              }
+            : null,
         };
 
         if (!state.bookingType) return;
@@ -276,15 +326,15 @@ export default function PaymentMethod() {
 
           // Prepend to pending cache so the Request tab shows it immediately
           queryClient.setQueriesData<
-            InfiniteData<{ bookings: Booking[]; nextPage: number | null }>
-          >({ queryKey: ["userBookings", "pending"] }, (oldData) => {
+            InfiniteData<{bookings: Booking[]; nextPage: number | null}>
+          >({queryKey: ["userBookings", "pending"]}, (oldData) => {
             if (!oldData) return oldData;
             const newPages = [...oldData.pages];
             newPages[0] = {
               ...newPages[0],
               bookings: [newBooking, ...newPages[0].bookings],
             };
-            return { ...oldData, pages: newPages };
+            return {...oldData, pages: newPages};
           });
         }
 
@@ -297,17 +347,36 @@ export default function PaymentMethod() {
       socket.off("bookingRequestSaved", bookingSaved);
       clearSubmitTimeout();
     };
-  }, [id, setLoading, socket, bookingType?.type]);
+  }, [id, setLoading, socket, bookingType?.type, selectedVoucher]);
 
   useEffect(() => {
     const handleBookingFailed = (data: {
       message: string;
       approvalStatus?: string;
+      voucherError?: boolean;
     }) => {
       clearSubmitTimeout();
       setLoading(false);
       isSubmittingRef.current = false;
       lastBookingRefRef.current = null;
+
+      // Handle voucher-specific errors
+      if (data.voucherError && selectedVoucher) {
+        // Invalidate voucher queries to refresh the list
+        void queryClient.invalidateQueries({queryKey: rewardKeys.all});
+
+        // Clear invalid voucher selection
+        setSelectedVoucher(null);
+
+        Toast.show({
+          type: "error",
+          text1: "Voucher Error",
+          text2: data.message || "Selected voucher is no longer valid",
+          position: "top",
+          visibilityTime: 5000,
+        });
+        return;
+      }
 
       if (data.approvalStatus) {
         useAppStore.getState().setAuthData({
@@ -329,10 +398,10 @@ export default function PaymentMethod() {
     return () => {
       socket.off("bookingRequestFailed", handleBookingFailed);
     };
-  }, [socket, setLoading]);
+  }, [socket, setLoading, selectedVoucher]);
 
   useEffect(() => {
-    const handleNoDriversAvailable = (data: { message: string }) => {
+    const handleNoDriversAvailable = (data: {message: string}) => {
       // ASAP/pooling keep existing behavior. Schedule already toasts via
       // bookingRequestSaved; only show this if that event already ran.
       if (bookingType?.type !== "schedule") return;
@@ -358,7 +427,7 @@ export default function PaymentMethod() {
   }, [bookingType?.type, socket]);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
+    <SafeAreaView style={{flex: 1, backgroundColor: "white"}}>
       {/* header */}
       <View className="relative flex-row justify-center items-center px-6 pt-2 pb-8">
         <Pressable
@@ -378,64 +447,119 @@ export default function PaymentMethod() {
         </Text>
       </View>
 
-      <View className="gap-3 px-6">
-        {/* Cash Payment Option */}
-        <Pressable
-          onPress={() => setPaymentMethod("cash")}
-          className={`flex-row items-center justify-between rounded-xl border px-4 py-3 ${paymentMethod === "cash"
-              ? "border-[#FFA840] bg-[#FFF6EB]"
-              : "border-gray-300 bg-white"
-            }`}
-        >
-          <View className="flex-row gap-3 items-center">
-            <View className="justify-center items-center w-10 h-10 bg-blue-50 rounded-full">
-              <Image
-                source={STATIC_IMAGES.cashPayment}
-                style={{ width: 24, height: 24 }}
-                contentFit="contain"
-              />
+      <View className="gap-4 px-6">
+        {/* Voucher Selection */}
+        {selectedVoucher ? (
+          <Pressable
+            onPress={() => setShowVoucherPicker(true)}
+            className="flex-row items-center justify-between rounded-xl border border-green-500 bg-green-50 px-4 py-3"
+          >
+            <View className="flex-1 flex-row gap-3 items-center">
+              <View className="justify-center items-center w-10 h-10 bg-green-100 rounded-full">
+                <Ionicons name="ticket" size={24} color="#10B981" />
+              </View>
+              <View className="flex-1">
+                <Text className="text-sm font-semibold text-green-900">
+                  {selectedVoucher.reward.voucherId?.code}
+                </Text>
+                <Text className="text-xs text-green-700">
+                  Saving {formatCurrency(selectedVoucher.discountAmount)}
+                </Text>
+              </View>
             </View>
-            <View>
-              <Text className="text-sm font-medium text-gray-800">
-                Cash Payment
-              </Text>
-              <Text className="text-xs text-gray-500">
-                Pay directly to driver
-              </Text>
+            <Pressable
+              onPress={handleRemoveVoucher}
+              hitSlop={10}
+              className="ml-2 p-1"
+            >
+              <Ionicons name="close-circle" size={24} color="#EF4444" />
+            </Pressable>
+          </Pressable>
+        ) : (
+          <Pressable
+            onPress={() => setShowVoucherPicker(true)}
+            className="flex-row items-center justify-between rounded-xl border border-dashed border-gray-300 bg-white px-4 py-3 active:bg-gray-50"
+          >
+            <View className="flex-row gap-3 items-center">
+              <View className="justify-center items-center w-10 h-10 bg-orange-50 rounded-full">
+                <Ionicons name="ticket-outline" size={24} color="#FFA840" />
+              </View>
+              <View>
+                <Text className="text-sm font-medium text-gray-800">
+                  Use Voucher
+                </Text>
+                <Text className="text-xs text-gray-500">
+                  Apply discount to your booking
+                </Text>
+              </View>
             </View>
-          </View>
-          {paymentMethod === "cash" && (
-            <Ionicons name="checkmark-sharp" size={24} color="#FFA840" />
-          )}
-        </Pressable>
+            <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+          </Pressable>
+        )}
 
-        {/* GCash Payment Option */}
-        <Pressable
-          onPress={() => setPaymentMethod("gcash")}
-          className={`flex-row items-center justify-between rounded-xl border px-4 py-3 ${paymentMethod === "gcash"
-              ? "border-[#FFA840] bg-[#FFF6EB]"
-              : "border-gray-300 bg-white"
-            }`}
-        >
-          <View className="flex-row gap-3 items-center">
-            <View className="justify-center items-center w-10 h-10 bg-blue-50 rounded-full">
-              <Image
-                source={STATIC_IMAGES.gcash}
-                style={{ width: 24, height: 24 }}
-                contentFit="contain"
-              />
-            </View>
-            <View>
-              <Text className="text-sm font-medium text-gray-800">GCash</Text>
-              <Text className="text-xs text-gray-500">
-                Pay via GCash wallet
-              </Text>
-            </View>
+        {/* Payment Method Group */}
+        <View>
+          <Text className="text-xs font-semibold text-gray-500 uppercase mb-2 ml-1">
+            Payment Method
+          </Text>
+          <View className="rounded-xl border border-gray-200 bg-white overflow-hidden">
+            <Pressable
+              onPress={() => setPaymentMethod("cash")}
+              className={`flex-row items-center justify-between px-4 py-3 border-b border-gray-100 ${
+                paymentMethod === "cash" ? "bg-[#FFF6EB]" : "bg-white"
+              }`}
+            >
+              <View className="flex-row gap-3 items-center">
+                <View className="justify-center items-center w-10 h-10 bg-blue-50 rounded-full">
+                  <Image
+                    source={STATIC_IMAGES.cashPayment}
+                    style={{width: 24, height: 24}}
+                    contentFit="contain"
+                  />
+                </View>
+                <View>
+                  <Text className="text-sm font-medium text-gray-800">
+                    Cash Payment
+                  </Text>
+                  <Text className="text-xs text-gray-500">
+                    Pay directly to driver
+                  </Text>
+                </View>
+              </View>
+              {paymentMethod === "cash" && (
+                <Ionicons name="checkmark-circle" size={22} color="#FFA840" />
+              )}
+            </Pressable>
+
+            <Pressable
+              onPress={() => setPaymentMethod("gcash")}
+              className={`flex-row items-center justify-between px-4 py-3 ${
+                paymentMethod === "gcash" ? "bg-[#FFF6EB]" : "bg-white"
+              }`}
+            >
+              <View className="flex-row gap-3 items-center">
+                <View className="justify-center items-center w-10 h-10 bg-blue-50 rounded-full">
+                  <Image
+                    source={STATIC_IMAGES.gcash}
+                    style={{width: 24, height: 24}}
+                    contentFit="contain"
+                  />
+                </View>
+                <View>
+                  <Text className="text-sm font-medium text-gray-800">
+                    GCash Manual Payment
+                  </Text>
+                  <Text className="text-xs text-gray-500">
+                    Pay via GCash wallet manually
+                  </Text>
+                </View>
+              </View>
+              {paymentMethod === "gcash" && (
+                <Ionicons name="checkmark-circle" size={22} color="#FFA840" />
+              )}
+            </Pressable>
           </View>
-          {paymentMethod === "gcash" && (
-            <Ionicons name="checkmark-sharp" size={24} color="#FFA840" />
-          )}
-        </Pressable>
+        </View>
       </View>
       <View
         className="z-30 gap-2 px-5 py-3 bg-white"
@@ -482,13 +606,36 @@ export default function PaymentMethod() {
           </View>
         )}
 
-        {/* Total */}
+        {/* Voucher Discount */}
+        {selectedVoucher && (
+          <View className="flex-row justify-between items-center">
+            <Text className="text-xs font-semibold text-green-600">
+              Voucher Discount
+            </Text>
+            <Text className="text-xs font-semibold text-green-600">
+              - Php {selectedVoucher.discountAmount.toFixed(2)}
+            </Text>
+          </View>
+        )}
+
+        {/* Total / Amount to Pay */}
         <View className="flex-row justify-between items-center mt-1">
-          <Text className="font-semibold">Total Amount</Text>
+          <Text className="font-semibold">
+            {selectedVoucher ? "Amount to Pay" : "Total Amount"}
+          </Text>
           <Text className="text-lg font-bold text-lightPrimary">
-            Php {routeData.totalPrice.toFixed(2)}
+            Php{" "}
+            {selectedVoucher
+              ? selectedVoucher.netAmount.toFixed(2)
+              : routeData.totalPrice.toFixed(2)}
           </Text>
         </View>
+
+        {selectedVoucher && (
+          <Text className="text-xs text-gray-500 text-right -mt-1">
+            Original: Php {routeData.totalPrice.toFixed(2)}
+          </Text>
+        )}
 
         <Pressable
           className={`flex-1 py-3 rounded-md bg-lightPrimary ${loading ? "opacity-50" : "active:bg-darkPrimary"}`}
@@ -500,6 +647,15 @@ export default function PaymentMethod() {
           </Text>
         </Pressable>
       </View>
+
+      {/* Voucher Picker Modal */}
+      <VoucherPickerModal
+        visible={showVoucherPicker}
+        onClose={() => setShowVoucherPicker(false)}
+        onSelect={handleVoucherSelect}
+        orderValue={routeData.totalPrice}
+        selectedRewardId={selectedVoucher?.reward._id}
+      />
     </SafeAreaView>
   );
 }
