@@ -3,6 +3,7 @@ import { queryClient } from "@/lib/queryClient";
 import { useUserBookings } from "@/queries/bookingQueries";
 import { useSocket } from "@/sockets/context/SocketProvider";
 import { useAppStore } from "@/store/useAppStore";
+import { useDriverLocationStore } from "@/store/useDriverLocationStore";
 import { Booking, Driver, LocationDetails, RequestedDriver } from "@/types/book";
 import { formatDate } from "@/utils/helpers/date";
 import { formatLocation } from "@/utils/helpers/location";
@@ -172,6 +173,10 @@ export default function RequestRoute() {
   useEffect(() => {
     const bookingCancelled = (bookingId: string) => {
       setLoading(false);
+      
+      // Clear driver location cache for this booking
+      useDriverLocationStore.getState().clearDriverLocationCache(bookingId);
+      
       queryClient.invalidateQueries({
         queryKey: ["userBookings", "pending"],
         exact: false,

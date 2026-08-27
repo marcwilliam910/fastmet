@@ -1,4 +1,6 @@
+import {STATIC_IMAGES} from "@/utils/constants";
 import {Ionicons} from "@expo/vector-icons";
+import {Image} from "expo-image";
 import React, {RefObject} from "react";
 import {
   ActivityIndicator,
@@ -108,7 +110,7 @@ const MapPinStepView: React.FC<MapPinStepViewProps> = ({
             marginTop: -40,
           }}
         >
-          <Ionicons name="pin" size={40} color={themeColor} />
+          <Image source={STATIC_IMAGES.pin} style={{width: 30, height: 50}} />
         </View>
       </View>
 

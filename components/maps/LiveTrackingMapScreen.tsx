@@ -1,10 +1,11 @@
 import {useSocket} from "@/sockets/context/SocketProvider";
 import {useAppStore} from "@/store/useAppStore";
+import {useDriverLocationStore} from "@/store/useDriverLocationStore";
 import {BookingETAUpdatedPayload, Driver, LocationDetails} from "@/types/book";
 import {GOOGLE_MAPS_API_KEY, STATIC_IMAGES} from "@/utils/constants";
 import {useFocusEffect} from "expo-router";
-import React, {useCallback, useEffect, useRef, useState} from "react";
-import {Image, StatusBar, StyleSheet, View} from "react-native";
+import React, {useCallback, useEffect, useMemo, useRef, useState} from "react";
+import {Image, StatusBar, StyleSheet, Text, View} from "react-native";
 import MapView, {LatLng, Marker, PROVIDER_GOOGLE} from "react-native-maps";
 import MapViewDirections from "react-native-maps-directions";
 import {GasCategory, VehicleMarkerIcon} from "../VehicleMarkerIcon";
@@ -29,6 +30,15 @@ type Props = {
 };
 
 const MAP_EDGE_PADDING = {top: 80, right: 80, bottom: 80, left: 80};
+const WRITE_THROTTLE_MS = 15000; // 15 seconds
+const LAST_SEEN_TICK_MS = 30000; // 30 seconds
+
+function formatLastSeenLabel(timestamp: number, now: number): string {
+  const minutesAgo = Math.floor((now - timestamp) / 60000);
+  if (minutesAgo <= 0) return "just now";
+  if (minutesAgo === 1) return "1 minute ago";
+  return `${minutesAgo} minutes ago`;
+}
 
 export default function LiveTrackingMapScreen({
   pickUp,
@@ -42,13 +52,27 @@ export default function LiveTrackingMapScreen({
 }: Props) {
   const mapRef = useRef<MapView>(null);
   const routeCoordinatesRef = useRef<LatLng[]>([]);
+  const lastPersistedWriteRef = useRef<number>(0);
+  const driverLocationRef = useRef<{lat: number; lng: number} | null>(null);
   const socket = useSocket();
   const getLiveEtaCache = useAppStore((state) => state.getLiveEtaCache);
   const setLiveEtaCache = useAppStore((state) => state.setLiveEtaCache);
+  const getDriverLocationCache = useDriverLocationStore(
+    (state) => state.getDriverLocationCache,
+  );
+  const setDriverLocationCache = useDriverLocationStore(
+    (state) => state.setDriverLocationCache,
+  );
+  const clearDriverLocationCache = useDriverLocationStore(
+    (state) => state.clearDriverLocationCache,
+  );
   const [driverLocation, setDriverLocation] = useState<{
     lat: number;
     lng: number;
   } | null>(null);
+  const [liveLocationReceivedThisSession, setLiveLocationReceivedThisSession] =
+    useState(false);
+  const [lastSeenTick, setLastSeenTick] = useState(() => Date.now());
   const [liveETA, setLiveETA] = useState<{
     distance: number;
     duration: number;
@@ -56,6 +80,16 @@ export default function LiveTrackingMapScreen({
   const [tracksViewChanges, setTracksViewChanges] = useState(true);
   const [isLoadingDriverLocation, setIsLoadingDriverLocation] =
     useState<boolean>(false);
+
+  const isShowingLastKnown =
+    !liveLocationReceivedThisSession && !!getDriverLocationCache(bookingId);
+
+  const lastSeenLabel = useMemo(() => {
+    if (!isShowingLastKnown) return null;
+    const cached = getDriverLocationCache(bookingId);
+    if (!cached) return null;
+    return formatLastSeenLabel(cached.timestamp, lastSeenTick);
+  }, [bookingId, getDriverLocationCache, isShowingLastKnown, lastSeenTick]);
 
   const fitToRoute = useCallback((coords: LatLng[]) => {
     if (!mapRef.current || coords.length === 0) return;
@@ -65,6 +99,24 @@ export default function LiveTrackingMapScreen({
       animated: true,
     });
   }, []);
+
+  useEffect(() => {
+    driverLocationRef.current = driverLocation;
+  }, [driverLocation]);
+
+  // Live-updating "Xm ago" label while showing cached location
+  useEffect(() => {
+    if (!isShowingLastKnown) return;
+    const id = setInterval(() => setLastSeenTick(Date.now()), LAST_SEEN_TICK_MS);
+    return () => clearInterval(id);
+  }, [isShowingLastKnown]);
+
+  // Clear cache when booking reaches a terminal state
+  useEffect(() => {
+    if (status === "completed" || status === "cancelled") {
+      clearDriverLocationCache(bookingId);
+    }
+  }, [bookingId, clearDriverLocationCache, status]);
 
   useFocusEffect(
     useCallback(() => {
@@ -81,28 +133,81 @@ export default function LiveTrackingMapScreen({
       let isSubscribed = true;
       setIsLoadingDriverLocation(true);
 
+      // Seed from cache if no live location received yet this session
+      if (!liveLocationReceivedThisSession) {
+        const cached = getDriverLocationCache(bookingId);
+        if (cached) {
+          const seeded = {lat: cached.lat, lng: cached.lng};
+          setDriverLocation(seeded);
+          driverLocationRef.current = seeded;
+          setIsLoadingDriverLocation(false);
+          setLastSeenTick(Date.now());
+          console.log("📦 Seeded from cache:", cached);
+        }
+      }
+
       const handleDriverLocationResponse = (data: {
         driverLoc: {lat: number; lng: number} | null;
       }) => {
-        if (isSubscribed) {
-          if (data.driverLoc) {
-            setDriverLocation(data.driverLoc);
-            console.log("📍 Driver location received:", data.driverLoc);
+        if (isSubscribed && data.driverLoc) {
+          const {lat, lng} = data.driverLoc;
+
+          setDriverLocation({lat, lng});
+          driverLocationRef.current = {lat, lng};
+          setLiveLocationReceivedThisSession(true);
+          console.log("📍 Driver location received:", data.driverLoc);
+
+          const now = Date.now();
+          const existingCache = getDriverLocationCache(bookingId);
+
+          if (!existingCache) {
+            setDriverLocationCache(bookingId, {lat, lng, timestamp: now});
+            lastPersistedWriteRef.current = now;
+            console.log("💾 First cache write (immediate)");
+          } else if (now - lastPersistedWriteRef.current >= WRITE_THROTTLE_MS) {
+            setDriverLocationCache(bookingId, {lat, lng, timestamp: now});
+            lastPersistedWriteRef.current = now;
+            console.log("💾 Throttled cache write");
           }
+        }
+        if (isSubscribed) {
           setIsLoadingDriverLocation(false);
         }
       };
 
-      // Listen for driver location response
       socket.on("driverLocationResponse", handleDriverLocationResponse);
 
-      // Cleanup when leaving the screen
       return () => {
         isSubscribed = false;
+
+        const isTerminal = status === "completed" || status === "cancelled";
+        const latest = driverLocationRef.current;
+        if (latest && !isTerminal) {
+          const cached = getDriverLocationCache(bookingId);
+          if (
+            !cached ||
+            cached.lat !== latest.lat ||
+            cached.lng !== latest.lng
+          ) {
+            setDriverLocationCache(bookingId, {
+              ...latest,
+              timestamp: Date.now(),
+            });
+            console.log("💾 Unmount flush");
+          }
+        }
+
         socket.off("driverLocationResponse", handleDriverLocationResponse);
         console.log("🔌 Unsubscribed from driver location");
       };
-    }, [bookingId, socket]),
+    }, [
+      bookingId,
+      getDriverLocationCache,
+      liveLocationReceivedThisSession,
+      setDriverLocationCache,
+      socket,
+      status,
+    ]),
   );
 
   // Live ETA — cache locally; request only when server may need to recalc
@@ -169,6 +274,9 @@ export default function LiveTrackingMapScreen({
     driverLocation?.lng,
   ]);
 
+  const showDriverOnMap =
+    !!driverLocation && (!isLoadingDriverLocation || isShowingLastKnown);
+
   return (
     <View className="flex-1">
       {region && (
@@ -201,7 +309,7 @@ export default function LiveTrackingMapScreen({
             </Marker>
           )}
           {/* DRIVER LOCATION */}
-          {driverLocation && !isLoadingDriverLocation && (
+          {driverLocation && showDriverOnMap && (
             <Marker
               key={`driver-${driverLocation.lat}-${driverLocation.lng}`}
               coordinate={{
@@ -240,7 +348,7 @@ export default function LiveTrackingMapScreen({
             </Marker>
           )}
 
-          {driverLocation && !isLoadingDriverLocation && (
+          {driverLocation && showDriverOnMap && (
             <MapViewDirections
               origin={{
                 latitude: driverLocation.lat,
@@ -272,6 +380,24 @@ export default function LiveTrackingMapScreen({
 
       {liveETA && liveETA.distance > 0 && liveETA.duration > 0 && (
         <DistanceBubble routeData={liveETA} />
+      )}
+
+      {isShowingLastKnown && lastSeenLabel && (
+        <View
+          style={{
+            position: "absolute",
+            top: 60,
+            alignSelf: "center",
+            backgroundColor: "rgba(255, 152, 0, 0.95)",
+            paddingHorizontal: 16,
+            paddingVertical: 8,
+            borderRadius: 20,
+          }}
+        >
+          <Text style={{color: "white", fontSize: 13, fontWeight: "600"}}>
+            Showing driver's last location: {lastSeenLabel}
+          </Text>
+        </View>
       )}
     </View>
   );

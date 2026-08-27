@@ -1,4 +1,6 @@
 import {queryClient} from "@/lib/queryClient";
+import {useAppStore} from "@/store/useAppStore";
+import {useDriverLocationStore} from "@/store/useDriverLocationStore";
 import {Booking, RequestedDriver} from "@/types/book";
 import {Notification} from "@/types/notification";
 import {updateNotificationHelper} from "@/utils/helpers/query";
@@ -298,6 +300,7 @@ export const driverArrivedAtPickup = (socket: Socket) => {
     socket.off("driverArrivedAtPickup", handleArrivedAtPickup);
   };
 };
+
 export const driverArrivedAtDropoff = (socket: Socket) => {
   const handleArrivedAtDropoff = () => {
     Toast.show({
@@ -312,5 +315,90 @@ export const driverArrivedAtDropoff = (socket: Socket) => {
   socket.on("driverArrivedAtDropoff", handleArrivedAtDropoff);
   return () => {
     socket.off("driverArrivedAtDropoff", handleArrivedAtDropoff);
+  };
+};
+
+export const bookingCompleted = (socket: Socket) => {
+  const handleBookingCompleted = ({bookingId}: {bookingId: string}) => {
+    if (!bookingId) return;
+
+    let completedBooking: Booking | null = null;
+
+    // Remove from active (includes status active | picked_up) and capture for completed list
+    queryClient.setQueriesData(
+      {queryKey: ["userBookings", "active"]},
+      (oldData: any) => {
+        if (!oldData?.pages) return oldData;
+
+        return {
+          ...oldData,
+          pages: oldData.pages.map((page: any) => ({
+            ...page,
+            bookings: page.bookings.filter((booking: Booking) => {
+              if (booking._id === bookingId) {
+                completedBooking = booking;
+                return false;
+              }
+              return true;
+            }),
+          })),
+        };
+      },
+    );
+
+    if (completedBooking) {
+      const source = completedBooking as Booking;
+      const bookingForCompleted = {
+        ...source,
+        status: "completed",
+        completedAt: new Date().toISOString(),
+      };
+
+      queryClient.setQueriesData(
+        {queryKey: ["userBookings", "completed"]},
+        (oldData: any) => {
+          if (!oldData?.pages) return oldData;
+          const newPages = [...oldData.pages];
+          newPages[0] = {
+            ...newPages[0],
+            bookings: [bookingForCompleted, ...(newPages[0]?.bookings || [])],
+          };
+          return {...oldData, pages: newPages};
+        },
+      );
+    }
+
+    // Clear local tracking caches for this booking only
+    useAppStore.getState().clearLiveEtaCache(bookingId);
+    useDriverLocationStore.getState().clearDriverLocationCache(bookingId);
+
+    // Fallback sync + counts (and voucher may have been fulfilled)
+    queryClient.invalidateQueries({
+      queryKey: ["userBookings", "active"],
+      exact: false,
+    });
+    queryClient.invalidateQueries({
+      queryKey: ["userBookings", "completed"],
+      exact: false,
+    });
+    queryClient.invalidateQueries({queryKey: ["userBooking", bookingId]});
+    queryClient.invalidateQueries({queryKey: ["userBookingCounts"]});
+    queryClient.invalidateQueries({
+      queryKey: ["rewards"],
+      exact: false,
+    });
+
+    Toast.show({
+      type: "success",
+      text1: "Trip Completed",
+      text2: "Your delivery has been completed successfully.",
+      position: "top",
+      visibilityTime: 5000,
+    });
+  };
+
+  socket.on("bookingCompleted", handleBookingCompleted);
+  return () => {
+    socket.off("bookingCompleted", handleBookingCompleted);
   };
 };

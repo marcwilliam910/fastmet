@@ -2,6 +2,7 @@ import DriverDetailsModal from "@/components/modals/driverDetailsModal";
 import {queryClient} from "@/lib/queryClient";
 import {useSocket} from "@/sockets/context/SocketProvider";
 import {useAppStore} from "@/store/useAppStore";
+import {useDriverLocationStore} from "@/store/useDriverLocationStore";
 import {RequestedDriver} from "@/types/book";
 import type {Notification, NotificationsResponse} from "@/types/notification";
 import {STATIC_IMAGES} from "@/utils/constants";
@@ -120,6 +121,9 @@ export default function SearchingDriver() {
   //SOCKETS LISTENER
   useEffect(() => {
     const handleBookingCancelled = ({bookingId}: {bookingId: string}) => {
+      // Clear driver location cache for this booking
+      useDriverLocationStore.getState().clearDriverLocationCache(bookingId);
+      
       router.replace("/(drawer)/(tabs)/request?tab=cancelled");
       setShouldPrevent(false);
       useAppStore.getState().clearStates();

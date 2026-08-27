@@ -1,12 +1,13 @@
 import LiveTrackingMapScreen from "@/components/maps/LiveTrackingMapScreen";
 import StarDisplay from "@/components/StarDisplay";
 import {useBooking} from "@/queries/bookingQueries";
+import {useSocket} from "@/sockets/context/SocketProvider";
 import {useAppStore} from "@/store/useAppStore";
 import {createConversationId} from "@/utils/helpers/booking";
 import {Ionicons} from "@expo/vector-icons";
 import {Image} from "expo-image";
-import {router, useLocalSearchParams} from "expo-router";
-import React, {useState} from "react";
+import {router, useFocusEffect, useLocalSearchParams} from "expo-router";
+import React, {useCallback, useState} from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -26,8 +27,30 @@ export default function ViewOnMap() {
     shouldGoBack: string;
   }>();
   const insets = useSafeAreaInsets();
+  const socket = useSocket();
 
   const {data: booking, isPending, error} = useBooking(bookingId);
+
+  // Only leave the live map when this screen is focused and this booking completes
+  useFocusEffect(
+    useCallback(() => {
+      if (!socket || !bookingId) return;
+
+      const handleBookingCompleted = ({
+        bookingId: completedId,
+      }: {
+        bookingId: string;
+      }) => {
+        if (completedId !== bookingId) return;
+        router.replace("/(drawer)/(tabs)/request?tab=completed");
+      };
+
+      socket.on("bookingCompleted", handleBookingCompleted);
+      return () => {
+        socket.off("bookingCompleted", handleBookingCompleted);
+      };
+    }, [bookingId, socket]),
+  );
 
   if (isPending)
     return (
