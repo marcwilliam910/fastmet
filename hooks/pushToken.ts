@@ -63,7 +63,7 @@ export async function isNotificationPermissionGranted(): Promise<boolean> {
   return status === "granted";
 }
 
-/** True when we should show the one-time soft-ask modal. */
+/** True when we should ask the OS for notification permission once. */
 export async function shouldPromptForNotificationPermission(): Promise<boolean> {
   if (!Device.isDevice) return false;
 
@@ -71,10 +71,6 @@ export async function shouldPromptForNotificationPermission(): Promise<boolean> 
   if (hasAsked) return false;
 
   return !(await isNotificationPermissionGranted());
-}
-
-export async function declineNotificationPermission() {
-  await setItemAsync(NOTIFICATION_PERMISSION_KEY, "declined");
 }
 
 export async function requestNotificationPermission(): Promise<boolean> {

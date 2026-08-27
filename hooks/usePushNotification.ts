@@ -1,5 +1,4 @@
 import {
-  declineNotificationPermission,
   registerForPushNotificationsAsync,
   requestNotificationPermission,
   savePushTokenToBackend,
@@ -7,7 +6,7 @@ import {
 } from "@/hooks/pushToken";
 import {handleNotificationEntry} from "@/utils/helpers/notificationRouting";
 import * as Notifications from "expo-notifications";
-import {useCallback, useEffect, useRef, useState} from "react";
+import {useEffect, useRef, useState} from "react";
 import {useAuth} from "./useAuth";
 
 Notifications.setNotificationHandler({
@@ -42,37 +41,11 @@ export function usePushNotifications() {
   const [notification, setNotification] = useState<
     Notifications.Notification | undefined
   >();
-  const [showPermissionModal, setShowPermissionModal] = useState(false);
   const notificationListener = useRef<Notifications.EventSubscription | null>(
     null,
   );
   const responseListener = useRef<Notifications.EventSubscription | null>(null);
   const {isLoggedIn} = useAuth();
-
-  const registerToken = useCallback(async () => {
-    const token = await registerForPushNotificationsAsync();
-    setExpoPushToken(token);
-    if (token) {
-      await savePushTokenToBackend(token);
-    }
-  }, []);
-
-  const closePermissionModal = useCallback(() => {
-    setShowPermissionModal(false);
-  }, []);
-
-  const handlePermissionDecline = useCallback(() => {
-    void declineNotificationPermission();
-  }, []);
-
-  const handlePermissionEnable = useCallback(() => {
-    void (async () => {
-      const granted = await requestNotificationPermission();
-      if (granted) {
-        await registerToken();
-      }
-    })();
-  }, [registerToken]);
 
   useEffect(() => {
     if (!isLoggedIn) return;
@@ -86,7 +59,14 @@ export function usePushNotifications() {
       }
 
       if (await shouldPromptForNotificationPermission()) {
-        setShowPermissionModal(true);
+        const granted = await requestNotificationPermission();
+        if (granted) {
+          const newToken = await registerForPushNotificationsAsync();
+          setExpoPushToken(newToken);
+          if (newToken) {
+            await savePushTokenToBackend(newToken);
+          }
+        }
       }
     })();
 
@@ -119,11 +99,5 @@ export function usePushNotifications() {
   return {
     expoPushToken,
     notification,
-    permissionModalProps: {
-      visible: showPermissionModal,
-      onClose: closePermissionModal,
-      onDecline: handlePermissionDecline,
-      onEnable: handlePermissionEnable,
-    },
   };
 }

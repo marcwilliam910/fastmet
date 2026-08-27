@@ -1,5 +1,4 @@
 import HeaderDrawer from "@/components/headers/HeaderDrawer";
-import {NotificationPermissionModal} from "@/components/modals/alertModal";
 import LogoutModal from "@/components/modals/logoutModal";
 import NotLoggedInModal from "@/components/modals/notLoggedInModal";
 import {useAuth} from "@/hooks/useAuth";
@@ -103,7 +102,7 @@ export default function DrawerLayout() {
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showNotLoggedInModal, setShowNotLoggedInModal] = useState(false);
 
-  const {permissionModalProps} = usePushNotifications();
+  usePushNotifications();
   const {isLoggedIn} = useAuth();
 
   // Fetch and sync unread counts
@@ -311,11 +310,6 @@ export default function DrawerLayout() {
       <NotLoggedInModal
         visible={showNotLoggedInModal}
         setVisible={setShowNotLoggedInModal}
-      />
-      <NotificationPermissionModal
-        visible={permissionModalProps.visible}
-        onDecline={permissionModalProps.onDecline}
-        onEnable={permissionModalProps.onEnable}
       />
     </GestureHandlerRootView>
   );

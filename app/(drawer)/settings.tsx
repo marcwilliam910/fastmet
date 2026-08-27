@@ -1,31 +1,46 @@
+import {
+  fetchDeletionEligibility,
+  requestAccountDeletion,
+  sendOTPAccountDeletion,
+  type DeletionEligibility,
+} from "@/api/accountDeletion";
+import DeleteAccountModal from "@/components/modals/deleteAccountModal";
+import DeleteAccountOtpModal from "@/components/modals/DeleteAccountOtpModal";
 import LogoutModal from "@/components/modals/logoutModal";
 import NotLoggedIn from "@/components/notLoggedIn";
-import { getExpoPushToken, savePushTokenToBackend } from "@/hooks/pushToken";
-import { useAuth } from "@/hooks/useAuth";
-import { useDrawerFallbackBack } from "@/hooks/useDrawerFallbackBack";
-import api from "@/lib/axios";
-import { pushOnce } from "@/utils/helpers/navigation";
-import { Ionicons } from "@expo/vector-icons";
+import {getExpoPushToken, savePushTokenToBackend} from "@/hooks/pushToken";
+import {useAuth} from "@/hooks/useAuth";
+import {useDrawerFallbackBack} from "@/hooks/useDrawerFallbackBack";
+import api, {performLogout} from "@/lib/axios";
+import {useAppStore} from "@/store/useAppStore";
+import {pushOnce} from "@/utils/helpers/navigation";
+import {Ionicons} from "@expo/vector-icons";
 import * as Notifications from "expo-notifications";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, {useEffect, useMemo, useRef, useState} from "react";
 import {
   ActivityIndicator,
   Alert,
   AppState,
-  type AppStateStatus,
   Linking,
   Pressable,
   Switch,
   Text,
   View,
+  type AppStateStatus,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {SafeAreaView} from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 
 const Settings = () => {
   useDrawerFallbackBack();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const { isLoggedIn } = useAuth();
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [eligibility, setEligibility] = useState<DeletionEligibility | null>(
+    null,
+  );
+  const [eligibilityLoading, setEligibilityLoading] = useState(false);
+  const {isLoggedIn} = useAuth();
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [isLoadingNotifications, setIsLoadingNotifications] = useState(true);
   const [osPermissionStatus, setOsPermissionStatus] = useState<
@@ -34,6 +49,9 @@ const Settings = () => {
   const appState = useRef(AppState.currentState);
   const lastOsStatus = useRef(osPermissionStatus);
   const isLoggedInRef = useRef(isLoggedIn);
+  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [otpSending, setOtpSending] = useState(false);
+  const phoneNumber = useAppStore((s) => s.phoneNumber);
 
   useEffect(() => {
     isLoggedInRef.current = isLoggedIn;
@@ -50,12 +68,25 @@ const Settings = () => {
     }
 
     fetchNotificationSettings();
+    void loadDeletionEligibility();
   }, [isLoggedIn]);
+
+  const loadDeletionEligibility = async () => {
+    try {
+      setEligibilityLoading(true);
+      const result = await fetchDeletionEligibility();
+      setEligibility(result);
+    } catch (error) {
+      console.error("Error fetching deletion eligibility:", error);
+    } finally {
+      setEligibilityLoading(false);
+    }
+  };
 
   const fetchNotificationSettings = async () => {
     try {
       // Check OS permission
-      const { status } = await Notifications.getPermissionsAsync();
+      const {status} = await Notifications.getPermissionsAsync();
       setOsPermissionStatus(status);
       lastOsStatus.current = status;
 
@@ -99,7 +130,7 @@ const Settings = () => {
         isLoggedInRef.current
       ) {
         try {
-          const { status } = await Notifications.getPermissionsAsync();
+          const {status} = await Notifications.getPermissionsAsync();
           if (status === lastOsStatus.current) {
             appState.current = nextState;
             return;
@@ -128,7 +159,10 @@ const Settings = () => {
             setNotificationsEnabled(false);
           }
         } catch (error) {
-          console.error("Error checking notification permission on resume:", error);
+          console.error(
+            "Error checking notification permission on resume:",
+            error,
+          );
         }
       }
 
@@ -143,7 +177,7 @@ const Settings = () => {
     try {
       if (value) {
         // User wants to ENABLE notifications
-        const { status } = await Notifications.getPermissionsAsync();
+        const {status} = await Notifications.getPermissionsAsync();
 
         if (status === "denied") {
           // OS permission was denied - send to device settings
@@ -151,7 +185,7 @@ const Settings = () => {
             "Notifications Blocked",
             "To receive trip alerts, please enable notifications in your device settings.",
             [
-              { text: "Cancel", style: "cancel" },
+              {text: "Cancel", style: "cancel"},
               {
                 text: "Open Settings",
                 onPress: () => Linking.openSettings(),
@@ -175,7 +209,7 @@ const Settings = () => {
               {
                 text: "Allow",
                 onPress: async () => {
-                  const { status: newStatus } =
+                  const {status: newStatus} =
                     await Notifications.requestPermissionsAsync();
 
                   if (newStatus === "granted") {
@@ -287,6 +321,77 @@ const Settings = () => {
     [isLoggedIn],
   );
 
+  const canDelete = eligibility?.canDelete === true;
+  const deleteBlockedMessage =
+    eligibility?.message ||
+    "Complete or cancel your booking(s) before deleting your account.";
+
+  const handleSendDeletionOtp = async () => {
+    try {
+      setOtpSending(true);
+      await sendOTPAccountDeletion();
+      setShowDeleteModal(false);
+      setShowOtpModal(true);
+    } catch (error: any) {
+      console.error("Error sending deletion OTP:", error);
+      Toast.show({
+        type: "error",
+        text1: "Couldn't send code",
+        text2: error.response?.data?.error ?? "Please try again",
+        topOffset: 50,
+      });
+    } finally {
+      setOtpSending(false);
+    }
+  };
+
+  const handleOpenDelete = () => {
+    if (eligibilityLoading) return;
+    if (!canDelete) {
+      Alert.alert("Cannot Delete Account", deleteBlockedMessage);
+      return;
+    }
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async (verifyToken: string) => {
+    try {
+      setDeleteLoading(true);
+      const result = await requestAccountDeletion(verifyToken);
+      setShowOtpModal(false);
+      const date = new Date(result.scheduledAt);
+      const formatted = Number.isNaN(date.getTime())
+        ? "the scheduled date"
+        : date.toLocaleDateString(undefined, {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          });
+      Toast.show({
+        type: "info",
+        text1: "Deletion scheduled",
+        text2: `Your account will be deleted on ${formatted}.`,
+        visibilityTime: 5000,
+        topOffset: 50,
+      });
+      await performLogout();
+    } catch (error: any) {
+      const message =
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to schedule account deletion";
+      Toast.show({
+        type: "error",
+        text1: "Delete failed",
+        text2: message,
+        topOffset: 50,
+      });
+      void loadDeletionEligibility();
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
   if (!isLoggedIn) {
     return <NotLoggedIn />;
   }
@@ -317,18 +422,18 @@ const Settings = () => {
               </Text>
             )}
           </View>
-          {
-            isLoadingNotifications ? <ActivityIndicator size="small" color="#FFA840" /> :
-
-              <Switch
-                value={notificationsEnabled}
-                onValueChange={handleNotificationToggle}
-                disabled={isLoadingNotifications}
-                trackColor={{ false: "#D1D5DB", true: "#FFA840" }}
-                thumbColor={notificationsEnabled ? "#fff" : "#f4f3f4"}
-                ios_backgroundColor="#D1D5DB"
-              />
-          }
+          {isLoadingNotifications ? (
+            <ActivityIndicator size="small" color="#FFA840" />
+          ) : (
+            <Switch
+              value={notificationsEnabled}
+              onValueChange={handleNotificationToggle}
+              disabled={isLoadingNotifications}
+              trackColor={{false: "#D1D5DB", true: "#FFA840"}}
+              thumbColor={notificationsEnabled ? "#fff" : "#f4f3f4"}
+              ios_backgroundColor="#D1D5DB"
+            />
+          )}
         </Pressable>
         {menuItems.map((item, index) => (
           <Pressable
@@ -343,8 +448,59 @@ const Settings = () => {
             <Ionicons name="chevron-forward" size={24} color="#FFA840" />
           </Pressable>
         ))}
+
+        <View className="mt-4 mb-2">
+          <Text className="mb-2 ml-1 text-xs font-semibold tracking-wide text-red-500 uppercase">
+            Danger Zone
+          </Text>
+          <Pressable
+            onPress={handleOpenDelete}
+            disabled={eligibilityLoading}
+            className={`flex-row items-center px-5 py-4 border rounded-2xl ${
+              canDelete
+                ? "bg-red-50 border-red-200 active:opacity-70"
+                : "bg-gray-100 border-gray-200 opacity-70"
+            }`}
+          >
+            <Ionicons
+              name="trash-outline"
+              size={22}
+              color={canDelete ? "#DC2626" : "#9CA3AF"}
+            />
+            <View className="flex-1 ml-4">
+              <Text
+                className={`text-base font-semibold ${
+                  canDelete ? "text-red-600" : "text-gray-500"
+                }`}
+              >
+                Delete Account
+              </Text>
+              {!canDelete && !eligibilityLoading && (
+                <Text className="mt-1 text-xs text-gray-500">
+                  {deleteBlockedMessage}
+                </Text>
+              )}
+            </View>
+            {eligibilityLoading ? (
+              <ActivityIndicator size="small" color="#DC2626" />
+            ) : null}
+          </Pressable>
+        </View>
       </View>
       <LogoutModal isOpen={showLogoutModal} setIsOpen={setShowLogoutModal} />
+      <DeleteAccountModal
+        isOpen={showDeleteModal}
+        setIsOpen={setShowDeleteModal}
+        onConfirm={handleSendDeletionOtp}
+        loading={otpSending}
+      />
+      <DeleteAccountOtpModal
+        isOpen={showOtpModal}
+        setIsOpen={setShowOtpModal}
+        phoneNumber={phoneNumber}
+        onVerifySuccess={handleConfirmDelete}
+        loading={deleteLoading}
+      />
     </SafeAreaView>
   );
 };
