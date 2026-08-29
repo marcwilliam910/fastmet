@@ -59,13 +59,13 @@ export default function CompletedRoute({count}: {count: number}) {
 
   if (isPending || isMarkingAsRead)
     return (
-      <View className="flex-1 justify-center items-center">
+      <View className="items-center justify-center flex-1">
         <ActivityIndicator size="large" color="#FFA840" />
       </View>
     );
   if (error)
     return (
-      <View className="flex-1 justify-center items-center">
+      <View className="items-center justify-center flex-1">
         <Text className="text-lg font-semibold text-gray-500">
           {error.message}
         </Text>
@@ -100,7 +100,7 @@ export default function CompletedRoute({count}: {count: number}) {
           gap: 15,
         }}
         ListEmptyComponent={() => (
-          <View className="justify-center items-center px-8 py-12">
+          <View className="items-center justify-center px-8 py-12">
             <View className="items-center">
               <Ionicons name="alert-circle-outline" size={80} color="#9CA3AF" />
               <Text className="mt-6 text-2xl font-bold text-center text-gray-800">
@@ -197,7 +197,7 @@ const CompletedCard = ({
         className="overflow-hidden bg-white rounded-2xl active:opacity-90"
       >
         {/* Header */}
-        <View className="flex-row justify-between items-center px-5 py-3 bg-lightPrimary">
+        <View className="flex-row items-center justify-between px-5 py-3 bg-lightPrimary">
           <Text
             className={`font-semibold text-white ${maxLoadKg ? "text-base" : "text-lg"}`}
           >
@@ -209,7 +209,7 @@ const CompletedCard = ({
         {/* Body */}
         <View className="px-3 py-5">
           {/* Pickup & Drop */}
-          <View className="relative flex-row justify-between items-center pl-7 mr-2 ml-5 border-l border-dashed">
+          <View className="relative flex-row items-center justify-between ml-5 mr-2 border-l border-dashed pl-7">
             <View className="gap-4">
               <Text
                 className={`font-medium ${Platform.OS === "ios" ? "max-w-60" : "max-w-52"}`}
@@ -238,7 +238,7 @@ const CompletedCard = ({
             />
           </View>
           {/* Payment */}
-          <View className="flex-row justify-between items-center p-4 mt-6 bg-gray-100 rounded-lg">
+          <View className="flex-row items-center justify-between p-4 mt-6 bg-gray-100 rounded-lg">
             <Text className="text-base text-gray-600">
               {isCash ? "Cash Payment" : "Online Payment"}
             </Text>
@@ -247,7 +247,7 @@ const CompletedCard = ({
             </Text>
           </View>
           <Pressable
-            className="justify-center items-center mt-6 active:scale-105"
+            className="items-center justify-center mt-6 active:scale-105"
             onPress={onPressSeeMore}
           >
             <Text className="text-sm font-medium">+ See more</Text>
@@ -360,7 +360,7 @@ function SeeMoreModal({
           }}
         >
           <View className="p-5 rounded-2xl bg-lightPrimary">
-            <View className="flex-row justify-between items-center">
+            <View className="flex-row items-center justify-between">
               <View className="flex-1 pr-3">
                 <Text className="mb-1 text-sm text-white opacity-90">
                   Order Reference
@@ -394,8 +394,8 @@ function SeeMoreModal({
               <Text className="mb-1 text-sm font-semibold text-gray-500">
                 Driver
               </Text>
-              <View className="flex-row justify-between items-center">
-                <View className="flex-row gap-2 justify-center items-center">
+              <View className="flex-row items-center justify-between">
+                <View className="flex-row items-center justify-center gap-2">
                   {data.driver.profilePictureUrl ? (
                     <Pressable
                       className="w-[48px] h-[48px] rounded-full overflow-hidden"
@@ -416,7 +416,7 @@ function SeeMoreModal({
                     <Text className="text-lg font-semibold text-gray-800">
                       {data.driver.name}
                     </Text>
-                    <View className="flex-row gap-2 items-center">
+                    <View className="flex-row items-center gap-2">
                       <StarDisplay rating={data.driver.rating} />
                       <Text className="text-sm font-semibold text-gray-600">
                         ({data.driver.rating})
@@ -460,7 +460,7 @@ function SeeMoreModal({
             <LocationUI pickUp={data.pickUp} dropOff={data.dropOff} />
 
             {/* Distance */}
-            <View className="flex-row justify-between items-center p-3 mt-4 bg-white rounded-lg">
+            <View className="flex-row items-center justify-between p-3 mt-4 bg-white rounded-lg">
               <Text className="text-sm text-gray-600">Distance</Text>
               <Text className="text-lg font-bold text-lightPrimary">
                 {data.routeData.distance.toFixed(2)}km
@@ -468,7 +468,7 @@ function SeeMoreModal({
             </View>
 
             {/* Booking Type */}
-            <View className="flex-row justify-between items-center p-3 bg-white rounded-lg">
+            <View className="flex-row items-center justify-between p-3 bg-white rounded-lg">
               <Text className="text-sm font-semibold text-gray-600">
                 {data.bookingType.type === "schedule"
                   ? "Scheduled on"
@@ -482,7 +482,7 @@ function SeeMoreModal({
             </View>
 
             {/* Completed At */}
-            <View className="flex-row justify-between items-center p-3 bg-white rounded-lg">
+            <View className="flex-row items-center justify-between p-3 bg-white rounded-lg">
               <Text className="text-sm font-semibold text-gray-600">
                 Completed on
               </Text>
@@ -491,6 +491,9 @@ function SeeMoreModal({
               </Text>
             </View>
           </View>
+
+          {/* Note */}
+          {data.note && <Note note={data.note} />}
 
           {/* Payment Info */}
           <PaymentInfo
@@ -502,7 +505,7 @@ function SeeMoreModal({
 
           {/* Delivery Proof Images */}
           <View className="p-5 bg-gray-50 rounded-2xl">
-            <View className="flex-row gap-2 items-center mb-3">
+            <View className="flex-row items-center gap-2 mb-3">
               <View className="p-1 bg-green-100 rounded-full">
                 <Ionicons
                   name="checkmark-done-circle"
@@ -644,9 +647,6 @@ function SeeMoreModal({
           {/* Item Type */}
           {data.itemType && <ItemType itemType={data.itemType} />}
 
-          {/* Note */}
-          {data.note && <Note note={data.note} />}
-
           {/* Images */}
           {data.photos && data.photos.length > 0 && (
             <AttachedImages
@@ -675,7 +675,7 @@ function SeeMoreModal({
               elevation: 5,
             }}
           >
-            <View className="flex-row justify-between items-center mb-3">
+            <View className="flex-row items-center justify-between mb-3">
               <Text className="text-base font-semibold text-gray-800">
                 Rate this driver
               </Text>
@@ -688,7 +688,7 @@ function SeeMoreModal({
             </View>
 
             {/* Star Rating */}
-            <View className="flex-row gap-2 justify-center items-center mb-4">
+            <View className="flex-row items-center justify-center gap-2 mb-4">
               {[1, 2, 3, 4, 5].map((star) => (
                 <Pressable
                   key={star}
