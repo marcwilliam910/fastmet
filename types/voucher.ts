@@ -10,7 +10,7 @@ export interface VoucherTemplate {
   maxDiscount: number | null;
   maxClaim: number;
   totalClaimed: number;
-  claimType: "public" | "assigned";
+  claimType: "public_card" | "public_code" | "assigned";
   expiresAt: string;
   isActive: boolean;
   createdAt: string;
