@@ -1,6 +1,10 @@
 import {useAppStore} from "@/store/useAppStore";
 import {ActiveBooking, Booking} from "@/types/book";
-import {createConversationId} from "@/utils/helpers/booking";
+import {
+  createConversationId,
+  getBookingTimelineContext,
+  getBookingTimelineItems,
+} from "@/utils/helpers/booking";
 import {formatDate} from "@/utils/helpers/date";
 import {Ionicons} from "@expo/vector-icons";
 import {Image} from "expo-image";
@@ -20,6 +24,7 @@ import ImageView from "react-native-image-viewing";
 import {useSafeAreaInsets} from "react-native-safe-area-context";
 import {
   AttachedImages,
+  BookingTimeline,
   ItemType,
   LocationUI,
   Note,
@@ -75,6 +80,14 @@ export default function SeeMoreModalDisplay({
         hasFreeServices: freeServices.length > 0,
       };
     }, [data]);
+
+  const timelineItems = useMemo(
+    () =>
+      data
+        ? getBookingTimelineItems(data, getBookingTimelineContext(type))
+        : [],
+    [data, type],
+  );
 
   if (!data) return null;
 
@@ -272,6 +285,8 @@ export default function SeeMoreModalDisplay({
               </Text>
             </View>
           </View>
+
+          <BookingTimeline items={timelineItems} />
 
           {/* Payment Info */}
           <PaymentInfo

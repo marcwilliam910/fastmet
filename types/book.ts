@@ -56,6 +56,9 @@ export type Booking = {
   createdAt: string;
   status: string;
   driverRating: number | null;
+  acceptedAt?: string | null;
+  activeAt?: string | null;
+  pickedUpAt?: string | null;
   cancelledAt: string | null;
   requestedDrivers: RequestedDriver[];
   driver?: Driver;

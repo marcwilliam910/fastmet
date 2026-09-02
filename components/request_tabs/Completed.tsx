@@ -6,8 +6,7 @@ import {
 import {useUserBookings} from "@/queries/bookingQueries";
 import {useAppStore} from "@/store/useAppStore";
 import {CompletedBooking, LocationDetails} from "@/types/book";
-import {createConversationId} from "@/utils/helpers/booking";
-import {formatDate} from "@/utils/helpers/date";
+import {createConversationId, getBookingTimelineItems} from "@/utils/helpers/booking";
 import {formatLocation} from "@/utils/helpers/location";
 import {Ionicons} from "@expo/vector-icons";
 import {Image} from "expo-image";
@@ -27,6 +26,7 @@ import ImageView from "react-native-image-viewing";
 import {useSafeAreaInsets} from "react-native-safe-area-context";
 import {
   AttachedImages,
+  BookingTimeline,
   ItemType,
   LocationUI,
   Note,
@@ -329,6 +329,11 @@ function SeeMoreModal({
       };
     }, [data]);
 
+  const timelineItems = useMemo(
+    () => (data ? getBookingTimelineItems(data, "completed") : []),
+    [data],
+  );
+
   if (!data) return null;
 
   return (
@@ -466,31 +471,9 @@ function SeeMoreModal({
                 {data.routeData.distance.toFixed(2)}km
               </Text>
             </View>
-
-            {/* Booking Type */}
-            <View className="flex-row items-center justify-between p-3 bg-white rounded-lg">
-              <Text className="text-sm font-semibold text-gray-600">
-                {data.bookingType.type === "schedule"
-                  ? "Scheduled on"
-                  : data.bookingType.value}
-              </Text>
-              {data.bookingType.type === "schedule" && (
-                <Text className="text-sm font-bold text-gray-600">
-                  {formatDate(data.bookingType.value || "")}
-                </Text>
-              )}
-            </View>
-
-            {/* Completed At */}
-            <View className="flex-row items-center justify-between p-3 bg-white rounded-lg">
-              <Text className="text-sm font-semibold text-gray-600">
-                Completed on
-              </Text>
-              <Text className="text-sm font-bold text-gray-800">
-                {formatDate(data.completedAt)}
-              </Text>
-            </View>
           </View>
+
+          <BookingTimeline items={timelineItems} />
 
           {/* Note */}
           {data.note && <Note note={data.note} />}

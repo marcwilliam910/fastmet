@@ -1,10 +1,17 @@
 import {pushOnce} from "@/utils/helpers/navigation";
+import {router} from "expo-router";
 
 type NotificationData = Record<string, unknown> | undefined | null;
 
 /**
- * Applies a notification payload and routes when appropriate.
- * Shared by tap and cold-start handlers so behavior matches either entry path.
+ * CLIENT APP - Push Notification Routing Handler
+ * 
+ * This function handles all push notification taps and routes to the appropriate screen.
+ * See NOTIFICATION_ROUTING_GUIDE.md in backend for how to add new routes.
+ * 
+ * Current supported targets:
+ * - "searchingDriver": Navigate back to driver search screen (for driver offers)
+ * - default: Navigate to generic notification viewer
  */
 export function handleNotificationEntry(
   data: NotificationData,
@@ -12,6 +19,27 @@ export function handleNotificationEntry(
 ): void {
   if (!data || !options.navigate) return;
 
+  const target = data.target as string | undefined;
+
+  // Driver offer notification → navigate back to searchingDriver page
+  if (target === "searchingDriver") {
+    const bookingId = data.bookingId as string | undefined;
+    if (bookingId) {
+      setTimeout(() => {
+        try {
+          router.push({
+            pathname: "/(root_screens)/booking/searchingDriver",
+            params: {bookingId},
+          });
+        } catch {
+          // navigation not ready — ignore
+        }
+      }, 0);
+    }
+    return;
+  }
+
+  // Default notification viewer for other types
   const notificationId =
     (data.notificationId as string | undefined) ??
     (data._id as string | undefined);
