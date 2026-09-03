@@ -1,3 +1,4 @@
+import ImageViewer from "@/components/ImageViewer";
 import {useDocuments} from "@/queries/documentQueries";
 import {Ionicons} from "@expo/vector-icons";
 import {Image} from "expo-image";
@@ -9,7 +10,6 @@ import {
   Text,
   View,
 } from "react-native";
-import ImageView from "react-native-image-viewing";
 
 export default function MyDocuments() {
   const {data, isLoading, isError, refetch} = useDocuments();
@@ -28,7 +28,7 @@ export default function MyDocuments() {
 
   if (isLoading) {
     return (
-      <View className="items-center justify-center flex-1">
+      <View className="flex-1 justify-center items-center">
         <ActivityIndicator size="large" />
       </View>
     );
@@ -36,7 +36,7 @@ export default function MyDocuments() {
 
   if (isError || !data) {
     return (
-      <View className="items-center justify-center flex-1 px-6">
+      <View className="flex-1 justify-center items-center px-6">
         <Text className="text-base text-gray-600">
           Failed to load documents.
         </Text>
@@ -55,7 +55,7 @@ export default function MyDocuments() {
 
   if (isEmpty) {
     return (
-      <View className="items-center justify-center flex-1 gap-2 px-6">
+      <View className="flex-1 gap-2 justify-center items-center px-6">
         <Ionicons name="document-text-outline" size={48} color="#9CA3AF" />
         <Text className="text-base text-center text-gray-600">
           You haven&apos;t uploaded any documents yet. Please upload your ID and
@@ -76,19 +76,19 @@ export default function MyDocuments() {
         showsVerticalScrollIndicator={false}
       >
         {}
-        <View className="p-4 ">
+        <View className="p-4">
           <View className="flex-row flex-wrap justify-between">
             <Pressable
               onPress={() => openViewer(data.idImage)}
-              className={`w-full mb-3`}
+              className={`mb-3 w-full`}
             >
-              <View className="overflow-hidden bg-white border border-gray-200 rounded-2xl">
+              <View className="overflow-hidden bg-white rounded-2xl border border-gray-200">
                 <Image
                   source={{uri: data.idImage}}
                   contentFit="cover"
                   transition={200}
                   style={{width: "100%", height: 130}}
-                  className="bg-gray-100 "
+                  className="bg-gray-100"
                 />
 
                 <View className="px-3 py-2 border-t border-gray-100">
@@ -105,15 +105,15 @@ export default function MyDocuments() {
           <View className="flex-row flex-wrap justify-between">
             <Pressable
               onPress={() => openViewer(data.selfieWithId)}
-              className={`w-full mb-3`}
+              className={`mb-3 w-full`}
             >
-              <View className="overflow-hidden bg-white border border-gray-200 rounded-2xl">
+              <View className="overflow-hidden bg-white rounded-2xl border border-gray-200">
                 <Image
                   source={{uri: data.selfieWithId}}
                   contentFit="cover"
                   transition={200}
                   style={{width: "100%", height: 130}}
-                  className="bg-gray-100 "
+                  className="bg-gray-100"
                 />
 
                 <View className="px-3 py-2 border-t border-gray-100">
@@ -130,11 +130,12 @@ export default function MyDocuments() {
         </View>
       </ScrollView>
 
-      <ImageView
+      <ImageViewer
         images={images}
         imageIndex={0}
         visible={viewerVisible}
         onRequestClose={() => setViewerVisible(false)}
+        showCounter
       />
     </>
   );

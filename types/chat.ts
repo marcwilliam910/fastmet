@@ -3,6 +3,7 @@ export type ConversationResponse = {
   lastMessage: string;
   lastMessageBy: "client" | "driver";
   lastMessageAt: string;
+  hasActiveBooking?: boolean;
 
   participantId: string;
   unreadCount: {
@@ -20,6 +21,7 @@ export type ConversationResponse = {
 
 export type MessageResponse = {
   _id: string;
+  hasActiveBooking?: boolean;
   driver: {
     _id: string;
     firstName: string;

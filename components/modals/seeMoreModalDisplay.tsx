@@ -20,7 +20,6 @@ import {
   Text,
   View,
 } from "react-native";
-import ImageView from "react-native-image-viewing";
 import {useSafeAreaInsets} from "react-native-safe-area-context";
 import {
   AttachedImages,
@@ -32,6 +31,7 @@ import {
   SeeMoreHeader,
   SelectedServices,
 } from "../BookingSeeMoreInfo";
+import ImageViewer from "../ImageViewer";
 import StarDisplay from "../StarDisplay";
 
 function isActiveBooking(
@@ -352,7 +352,7 @@ export default function SeeMoreModalDisplay({
           )}
         </ScrollView>
       </View>
-      <ImageView
+      <ImageViewer
         images={[{uri: selectedImageUrl}]}
         imageIndex={0}
         visible={imageViewerVisible}
