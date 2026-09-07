@@ -1,6 +1,6 @@
-import {useQuery} from "@tanstack/react-query";
-import {getMyRewards, getClaimableVouchers} from "@/api/reward";
+import {getClaimableVouchers, getMyRewards, getMyVouchersCount} from "@/api/reward";
 import {useAppStore} from "@/store/useAppStore";
+import {useQuery} from "@tanstack/react-query";
 
 /**
  * Query key factory for rewards
@@ -11,6 +11,7 @@ export const rewardKeys = {
     ["rewards", "my-rewards", filters] as const,
   claimable: () => ["rewards", "claimable"] as const,
   badge: () => ["rewards", "badge-count"] as const,
+  myVouchersCount: () => ["rewards", "my-vouchers-count"] as const,
 };
 
 /**
@@ -47,9 +48,25 @@ export const useClaimableVouchers = () => {
 };
 
 /**
+ * Get owned voucher count for My Vouchers tab badge
+ */
+export const useMyVouchersCount = () => {
+  const {token} = useAppStore();
+
+  return useQuery({
+    queryKey: rewardKeys.myVouchersCount(),
+    queryFn: async () => {
+      const result = await getMyVouchersCount();
+      return result.success ? result.count : 0;
+    },
+    enabled: !!token,
+    staleTime: 1000 * 60,
+    refetchOnWindowFocus: true,
+  });
+};
+
+/**
  * Get actionable voucher count for badge
- * Counts: pending rewards + claimable public vouchers
- * Only enabled when authenticated
  */
 export const useVoucherBadgeCount = () => {
   const {token} = useAppStore();
@@ -58,19 +75,9 @@ export const useVoucherBadgeCount = () => {
     queryKey: rewardKeys.badge(),
     queryFn: async () => {
       // Fetch both in parallel
-      const [pendingResult, claimableResult] = await Promise.all([
-        getMyRewards({status: "pending", rewardType: "voucher"}),
-        getClaimableVouchers(),
-      ]);
+      const claimableResult = await getClaimableVouchers();
 
-      const pendingCount = pendingResult.success
-        ? pendingResult.rewards.length
-        : 0;
-      const claimableCount = claimableResult.success
-        ? claimableResult.vouchers.length
-        : 0;
-
-      return pendingCount + claimableCount;
+      return claimableResult.success ? claimableResult.vouchers.length : 0;
     },
     enabled: !!token,
     staleTime: 1000 * 60, // 1 minute

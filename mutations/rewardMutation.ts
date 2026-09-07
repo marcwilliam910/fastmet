@@ -1,8 +1,7 @@
-import {useMutation, useQueryClient} from "@tanstack/react-query";
 import {claimPendingReward, claimPublicVoucher} from "@/api/reward";
+import {queryClient} from "@/lib/queryClient";
 import {rewardKeys} from "@/queries/rewardQueries";
-import {ClaimPublicVoucherRequest} from "@/types/voucher";
-import {getVoucherClaimErrorToast} from "@/utils/helpers/voucher";
+import {useMutation} from "@tanstack/react-query";
 import Toast from "react-native-toast-message";
 
 /**
@@ -10,8 +9,6 @@ import Toast from "react-native-toast-message";
  * Invalidates all reward queries on success
  */
 export const useClaimPendingReward = () => {
-  const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: claimPendingReward,
     onSuccess: (data) => {
@@ -52,13 +49,9 @@ export const useClaimPendingReward = () => {
  * Invalidates all reward queries on success
  */
 export const useClaimPublicVoucher = () => {
-  const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: claimPublicVoucher,
-    onSuccess: (data, variables) => {
-      const context: "code" | "template" = variables.code ? "code" : "template";
-
+    onSuccess: (data) => {
       if (data.success) {
         Toast.show({
           type: "success",
@@ -68,28 +61,7 @@ export const useClaimPublicVoucher = () => {
 
         // Invalidate all reward queries
         void queryClient.invalidateQueries({queryKey: rewardKeys.all});
-      } else {
-        const {title, message} = getVoucherClaimErrorToast(
-          {response: {data: {error: data.error}}},
-          context,
-        );
-
-        Toast.show({
-          type: "error",
-          text1: title,
-          text2: message,
-        });
       }
-    },
-    onError: (error, variables: ClaimPublicVoucherRequest) => {
-      const context: "code" | "template" = variables.code ? "code" : "template";
-      const {title, message} = getVoucherClaimErrorToast(error, context);
-
-      Toast.show({
-        type: "error",
-        text1: title,
-        text2: message,
-      });
     },
   });
 };

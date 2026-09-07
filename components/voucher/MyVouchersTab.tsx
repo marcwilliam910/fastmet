@@ -8,7 +8,6 @@ export default function MyVouchersTab() {
     status: "claimed",
     rewardType: "voucher",
   });
-
   // Also fetch in_use vouchers
   const {
     data: inUseData,
@@ -43,19 +42,19 @@ export default function MyVouchersTab() {
 
   if (error) {
     return (
-      <View className="flex-1 justify-center items-center bg-white px-4">
+      <View className="flex-1 justify-center items-center px-4 bg-white">
         <Ionicons name="alert-circle-outline" size={64} color="#EF4444" />
-        <Text className="text-lg font-semibold text-gray-700 mt-4 text-center">
+        <Text className="mt-4 text-lg font-semibold text-center text-gray-700">
           Failed to load your vouchers
         </Text>
-        <Text className="text-sm text-gray-500 mt-2 text-center">
+        <Text className="mt-2 text-sm text-center text-gray-500">
           {error.message}
         </Text>
         <Pressable
           onPress={handleRefresh}
           className="bg-lightPrimary py-3 px-6 rounded-lg mt-4 active:bg-[#E89338]"
         >
-          <Text className="text-white font-semibold">Try Again</Text>
+          <Text className="font-semibold text-white">Try Again</Text>
         </Pressable>
       </View>
     );

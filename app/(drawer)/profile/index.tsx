@@ -36,7 +36,11 @@ export default function MyProfile() {
   if (!isLoggedIn) return <NotLoggedIn />;
 
   return (
-    <ScrollView className="flex-1 bg-white">
+    <ScrollView
+      className="flex-1 bg-white"
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={{paddingBottom: 60}}
+    >
       <View className="items-center gap-4 pt-12 pb-8">
         {/* Profile Image with Border */}
         <View className="relative p-2 border rounded-full border-lightPrimary">

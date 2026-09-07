@@ -91,7 +91,7 @@ const CustomDrawerContent = (props: any) => {
       {/* Footer */}
       <View style={{marginBottom: inset.bottom + 10}}>
         <Text className="text-sm tracking-widest text-center text-gray-400">
-          www.fastmet.com
+          www.fastmet.com.ph
         </Text>
       </View>
     </View>
@@ -275,6 +275,21 @@ export default function DrawerLayout() {
           }}
         />
         <Drawer.Screen
+          name="support"
+          options={{
+            drawerLabel: "Customer Support",
+            title: "Customer Support",
+            // headerShown: true,
+            drawerIcon: ({focused}) => (
+              <Ionicons
+                name={focused ? "headset" : "headset-outline"}
+                size={24}
+                color={focused ? "#FFA840" : "#FFFFFF"}
+              />
+            ),
+          }}
+        />
+        <Drawer.Screen
           name="settings"
           options={{
             drawerLabel: "Settings",
@@ -283,22 +298,6 @@ export default function DrawerLayout() {
             drawerIcon: ({focused}) => (
               <Ionicons
                 name={focused ? "settings" : "settings-outline"}
-                size={24}
-                color={focused ? "#FFA840" : "#FFFFFF"}
-              />
-            ),
-          }}
-        />
-
-        <Drawer.Screen
-          name="support"
-          options={{
-            drawerLabel: "Customer Support",
-            title: "Customer Support",
-            headerShown: true,
-            drawerIcon: ({focused}) => (
-              <Ionicons
-                name={focused ? "headset" : "headset-outline"}
                 size={24}
                 color={focused ? "#FFA840" : "#FFFFFF"}
               />

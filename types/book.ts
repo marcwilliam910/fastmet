@@ -59,7 +59,10 @@ export type Booking = {
   acceptedAt?: string | null;
   activeAt?: string | null;
   pickedUpAt?: string | null;
+  completedAt?: string | null;
   cancelledAt: string | null;
+  cancelledBy?: "client" | "driver" | "system" | null;
+  cancellationReason?: "no_show_client" | "no_show_driver" | "other" | null;
   requestedDrivers: RequestedDriver[];
   driver?: Driver;
   voucherApplied?: {

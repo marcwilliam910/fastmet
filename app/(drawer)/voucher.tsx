@@ -3,6 +3,7 @@ import ClaimableVoucherTab from "@/components/voucher/ClaimableVoucherTab";
 import MyVouchersTab from "@/components/voucher/MyVouchersTab";
 import VoucherHistoryTab from "@/components/voucher/VoucherHistoryTab";
 import {useAuth} from "@/hooks/useAuth";
+import {useMyVouchersCount} from "@/queries/rewardQueries";
 import {useState} from "react";
 import {
   ActivityIndicator,
@@ -25,9 +26,10 @@ type TabRoute = {
 
 type CustomTabBarProps = SceneRendererProps & {
   navigationState: NavigationState<TabRoute>;
+  counts: Record<string, number>;
 };
 
-function CustomTabBar({navigationState, jumpTo}: CustomTabBarProps) {
+function CustomTabBar({navigationState, jumpTo, counts}: CustomTabBarProps) {
   const layout = useWindowDimensions();
   const tabWidth = layout.width / navigationState.routes.length;
 
@@ -35,6 +37,7 @@ function CustomTabBar({navigationState, jumpTo}: CustomTabBarProps) {
     <View className="flex-row bg-white border-b border-gray-200">
       {navigationState.routes.map((route, idx) => {
         const isFocused = navigationState.index === idx;
+        const count = counts[route.key];
 
         return (
           <Pressable
@@ -43,13 +46,24 @@ function CustomTabBar({navigationState, jumpTo}: CustomTabBarProps) {
             className="flex-1 items-center justify-center py-4"
             style={{width: tabWidth}}
           >
-            <Text
-              className={`text-sm font-medium ${
-                isFocused ? "text-[#0F2535]" : "text-gray-400"
-              }`}
-            >
-              {route.title}
-            </Text>
+            <View className="relative">
+              <Text
+                className={`text-sm font-medium ${
+                  isFocused ? "text-[#0F2535]" : "text-gray-400"
+                }`}
+              >
+                {route.title}
+              </Text>
+              {count !== undefined && count > 0 && (
+                <View
+                  className={`absolute -top-2 -right-5 bg-red-500 rounded-full justify-center items-center ${count > 9 ? "w-5 h-4" : "size-4"}`}
+                >
+                  <Text className="text-white text-[8px] scale-125 font-bold">
+                    {count > 9 ? "9+" : count}
+                  </Text>
+                </View>
+              )}
+            </View>
           </Pressable>
         );
       })}
@@ -78,10 +92,14 @@ export default function VoucherScreen() {
     {key: "history", title: "History"},
   ]);
 
+  const {data: myVouchersCount = 0} = useMyVouchersCount();
+
   const renderScene = ({route}: {route: TabRoute}) => {
     switch (route.key) {
       case "claimable":
-        return <ClaimableVoucherTab />;
+        return (
+          <ClaimableVoucherTab onCodeClaimSuccess={() => setIndex(1)} />
+        );
       case "my-vouchers":
         return <MyVouchersTab />;
       case "history":
@@ -108,7 +126,9 @@ export default function VoucherScreen() {
         </View>
       )}
       className="bg-white"
-      renderTabBar={(props) => <CustomTabBar {...props} />}
+      renderTabBar={(props) => (
+        <CustomTabBar {...props} counts={{"my-vouchers": myVouchersCount}} />
+      )}
     />
   );
 }

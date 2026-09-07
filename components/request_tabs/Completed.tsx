@@ -200,13 +200,21 @@ const CompletedCard = ({
         className="overflow-hidden bg-white rounded-2xl active:opacity-90"
       >
         {/* Header */}
-        <View className="flex-row justify-between items-center px-5 py-3 bg-lightPrimary">
-          <Text
-            className={`font-semibold text-white ${maxLoadKg ? "text-base" : "text-lg"}`}
-          >
-            {vehicle} {maxLoadKg ? `(${maxLoadKg}kg)` : ""}
-          </Text>
-          <Text className="text-sm text-white">Completed at {formatted}</Text>
+        <View className="px-5 py-3 bg-lightPrimary">
+          <View className="flex-row justify-between items-center">
+            <View className="flex-1 mr-4">
+              <Text
+                className="text-base font-semibold text-white"
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
+                {vehicle}
+                {maxLoadKg ? ` · ${maxLoadKg}kg` : ""}
+              </Text>
+            </View>
+
+            <Text className="text-xs text-white/80 shrink-0">{formatted}</Text>
+          </View>
         </View>
 
         {/* Body */}
@@ -374,7 +382,7 @@ function SeeMoreModal({
                   Order Reference
                 </Text>
                 <Text className="text-sm font-bold text-white">
-                  #{data.bookingRef}
+                  {data.bookingRef}
                 </Text>
               </View>
               <View className="items-end shrink-0 max-w-[55%]">

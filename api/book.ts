@@ -1,15 +1,18 @@
 import api from "@/lib/axios";
-import { ActiveBooking } from "@/types/book";
+import {ActiveBooking, CompletedBooking} from "@/types/book";
 
-export const getUserBookings = async <T>(
+export const getUserBookings = async (
   status: string,
   page = 1,
   limit = 5,
-): Promise<{ bookings: T; nextPage: number | null }> => {
-  const res = await api.get<{ bookings: T; nextPage: number | null }>(
-    `/booking/filters/by-status`,
-    { params: { status, page, limit } },
-  );
+): Promise<{
+  bookings: CompletedBooking;
+  nextPage: number | null;
+}> => {
+  const res = await api.get<{
+    bookings: CompletedBooking;
+    nextPage: number | null;
+  }>(`/booking/filters/by-status`, {params: {status, page, limit}});
 
   return res.data;
 };
@@ -27,7 +30,7 @@ export const getBookingsCounts = async () => {
 };
 
 export const rateDriver = async (bookingId: string, rating: number) => {
-  const res = await api.patch(`/booking/rate-driver/${bookingId}`, { rating });
+  const res = await api.patch(`/booking/rate-driver/${bookingId}`, {rating});
   return res.data;
 };
 

@@ -1,12 +1,15 @@
+import CancelBookingButton from "@/components/CancelBookingButton";
 import useSeeMoreDetails from "@/hooks/useSeeMoreDetails";
 import {useUserBookings} from "@/queries/bookingQueries";
+import {useSocket} from "@/sockets/context/SocketProvider";
 import {useAppStore} from "@/store/useAppStore";
-import {ActiveBooking, Driver, LocationDetails} from "@/types/book";
+import {ActiveBooking} from "@/types/book";
 import {createConversationId} from "@/utils/helpers/booking";
 import {formatLocation} from "@/utils/helpers/location";
 import {pushOnce} from "@/utils/helpers/navigation";
 import {Ionicons} from "@expo/vector-icons";
 import {Image} from "expo-image";
+import {useEffect} from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -17,12 +20,14 @@ import {
   Text,
   View,
 } from "react-native";
+import Toast from "react-native-toast-message";
 import SeeMoreModalDisplay from "../modals/seeMoreModalDisplay";
 import StarDisplay from "../StarDisplay";
 
 export default function ActiveRoute() {
   const {modalVisible, setModalVisible, selectedRequest, handleSeeMorePress} =
     useSeeMoreDetails<ActiveBooking>();
+  const socket = useSocket();
 
   const {
     data,
@@ -33,6 +38,62 @@ export default function ActiveRoute() {
     hasNextPage,
     isFetchingNextPage,
   } = useUserBookings<ActiveBooking>("active", 5);
+
+  // Listen for booking cancellation events
+  useEffect(() => {
+    const handleBookingCancelledByDriver = ({
+      bookingId,
+      reason,
+    }: {
+      bookingId: string;
+      reason: string;
+    }) => {
+      Toast.show({
+        type: "info",
+        text1: "Booking Cancelled",
+        text2:
+          reason === "no_show_client"
+            ? "Driver reported you as no-show"
+            : "Driver cancelled the booking",
+        position: "top",
+        topOffset: 50,
+        visibilityTime: 5000,
+      });
+      refetch();
+    };
+
+    const handlePoolingBookingCancelled = ({
+      cancelledBookingId,
+    }: {
+      tripId: string;
+      stops: any[];
+      currentStopIndex: number;
+      cancelledBookingId: string;
+    }) => {
+      // Check if it's our booking
+      const myBooking = activeBookings.find(
+        (b) => b._id === cancelledBookingId,
+      );
+      if (myBooking) {
+        Toast.show({
+          type: "info",
+          text1: "Booking Cancelled",
+          text2: "Your stop in the pooling trip was cancelled",
+          position: "top",
+          topOffset: 50,
+        });
+        refetch();
+      }
+    };
+
+    socket.on("bookingCancelledByDriver", handleBookingCancelledByDriver);
+    socket.on("poolingBookingCancelled", handlePoolingBookingCancelled);
+
+    return () => {
+      socket.off("bookingCancelledByDriver", handleBookingCancelledByDriver);
+      socket.off("poolingBookingCancelled", handlePoolingBookingCancelled);
+    };
+  }, [socket, refetch]);
 
   if (isPending)
     return (
@@ -57,16 +118,9 @@ export default function ActiveRoute() {
         data={activeBookings}
         renderItem={({item}) => (
           <ActiveCard
-            id={item._id}
-            vehicle={item.selectedVehicle.name}
-            maxLoadKg={item.selectedVehicle.maxLoadKg ?? 0}
-            pickup={item.pickUp}
-            dropoff={item.dropOff}
-            distance={item.routeData.distance}
-            amount={item.routeData.totalPrice}
-            isCash={item.paymentMethod === "cash"}
-            driver={item.driver}
+            booking={item}
             onPressSeeMore={() => handleSeeMorePress(item)}
+            onCancelled={refetch}
           />
         )}
         keyExtractor={(item) => item._id}
@@ -125,30 +179,45 @@ export default function ActiveRoute() {
 }
 
 type ActiveCardProps = {
-  id: string;
-  vehicle: string;
-  maxLoadKg: number;
-  pickup: LocationDetails;
-  dropoff: LocationDetails;
-  distance: number;
-  amount: number;
-  driver: Driver;
-  isCash: boolean;
+  booking: ActiveBooking;
   onPressSeeMore: () => void;
+  onCancelled: () => void;
 };
 
 const ActiveCard = ({
-  id,
-  vehicle,
-  maxLoadKg,
-  pickup,
-  dropoff,
-  distance,
-  isCash,
-  amount,
-  driver,
+  booking,
   onPressSeeMore,
+  onCancelled,
 }: ActiveCardProps) => {
+  const {
+    _id: id,
+    selectedVehicle: {name: vehicle, maxLoadKg = 0},
+    pickUp: pickup,
+    dropOff: dropoff,
+    routeData: {distance, totalPrice: amount},
+    paymentMethod,
+    driver,
+    bookingType,
+    activeAt,
+  } = booking;
+
+  const isCash = paymentMethod === "cash";
+
+  // Calculate reference time for cancel grace period
+  const getReferenceTime = (): Date | null => {
+    if (bookingType.type === "schedule") {
+      return new Date(bookingType.value);
+    }
+    if (bookingType.type === "asap" && activeAt) {
+      return new Date(activeAt);
+    }
+    // TODO: For pooling, need to get last completed stop time from backend
+    // For now, use activeAt as fallback
+    if (bookingType.type === "pooling" && activeAt) {
+      return new Date(activeAt);
+    }
+    return null;
+  };
   return (
     <View
       style={{
@@ -315,6 +384,14 @@ const ActiveCard = ({
           </Pressable>
         </View>
       </Pressable>
+
+      {/* Cancel button for driver no-show */}
+      <CancelBookingButton
+        bookingId={id}
+        referenceTime={getReferenceTime()}
+        graceMinutes={50}
+        onCancelled={onCancelled}
+      />
     </View>
   );
 };

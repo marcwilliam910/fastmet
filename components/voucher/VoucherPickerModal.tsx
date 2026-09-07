@@ -134,24 +134,24 @@ export default function VoucherPickerModal({
           {isPending ? (
             <View className="justify-center items-center py-12">
               <ActivityIndicator size="large" color="#FFA840" />
-              <Text className="text-sm text-gray-500 mt-2">
+              <Text className="mt-2 text-sm text-gray-500">
                 Loading vouchers...
               </Text>
             </View>
           ) : error ? (
             <View className="justify-center items-center px-8 py-12">
               <Ionicons name="alert-circle-outline" size={64} color="#EF4444" />
-              <Text className="text-lg font-semibold text-gray-700 mt-4 text-center">
+              <Text className="mt-4 text-lg font-semibold text-center text-gray-700">
                 Failed to load vouchers
               </Text>
-              <Text className="text-sm text-gray-500 mt-2 text-center">
+              <Text className="mt-2 text-sm text-center text-gray-500">
                 {error.message}
               </Text>
               <Pressable
                 onPress={() => refetch()}
                 className="bg-lightPrimary py-3 px-6 rounded-lg mt-4 active:bg-[#E89338]"
               >
-                <Text className="text-white font-semibold">Try Again</Text>
+                <Text className="font-semibold text-white">Try Again</Text>
               </Pressable>
             </View>
           ) : !eligibleVouchers || eligibleVouchers.length === 0 ? (
@@ -190,9 +190,7 @@ export default function VoucherPickerModal({
                       disabled={isChecking}
                       accessibilityRole="button"
                       accessibilityLabel={`Select voucher ${item.voucherId?.code}`}
-                      className={
-                        isChecking ? "opacity-60" : "active:opacity-80"
-                      }
+                      className={isChecking ? "":"active:scale-95"}
                     >
                       <VoucherSelectCard
                         reward={item}
@@ -204,7 +202,7 @@ export default function VoucherPickerModal({
                     {previewError &&
                       previewingId === item._id &&
                       !isPreviewPending && (
-                        <View className="mt-2 bg-red-50 px-3 py-2 rounded-lg">
+                        <View className="px-3 py-2 mt-2 bg-red-50 rounded-lg">
                           <Text className="text-xs text-red-700">
                             {(previewError as any)?.response?.data?.error ||
                               "Failed to preview voucher"}

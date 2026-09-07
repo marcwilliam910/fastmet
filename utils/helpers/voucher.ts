@@ -70,15 +70,11 @@ export const getStatusLabel = (
   }
 };
 
-/**
- * Get minimum order label
- * Example: "Min. order: ₱100"
- */
-export const getMinOrderLabel = (minOrderValue: number): string => {
-  if (minOrderValue <= 0) {
-    return "No minimum order";
+export const getMinAmountLabel = (minAmount: number): string => {
+  if (minAmount <= 0) {
+    return "No minimum spend";
   }
-  return `Min. order: ${formatCurrency(minOrderValue)}`;
+  return `Minimum spend: ${formatCurrency(minAmount)}`;
 };
 
 /**

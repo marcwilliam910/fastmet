@@ -2,7 +2,7 @@ import {IssuedReward, VoucherTemplate} from "@/types/voucher";
 import {
   formatExpiryDate,
   getExpiryTimeRemaining,
-  getMinOrderLabel,
+  getMinAmountLabel,
   getStatusLabel,
   getVoucherValueLabel,
   isVoucherExpired,
@@ -42,10 +42,10 @@ export default function VoucherCard({
   // Claimable templates: still require isActive.
   const isOwnedReward = !!reward;
   const isRevoked = status === "revoked";
-  const isTerminal = isExpired || status === "expired" || status === "fulfilled" || isRevoked;
+  const isTerminal =
+    isExpired || status === "expired" || status === "fulfilled" || isRevoked;
   const isUnusable =
-    isTerminal ||
-    (!isOwnedReward && !voucherTemplate.isActive);
+    isTerminal || (!isOwnedReward && !voucherTemplate.isActive);
   const isInactive = !isOwnedReward && !voucherTemplate.isActive && !isExpired;
 
   const {main, sub} = getVoucherValueLabel(voucherTemplate);
@@ -73,11 +73,11 @@ export default function VoucherCard({
       >
         <View className="flex-row justify-between items-center">
           <View className="flex-1">
-            <Text className="text-xs font-semibold text-white/80 uppercase tracking-widest">
+            <Text className="text-xs font-semibold tracking-widest uppercase text-white/80">
               {voucherTemplate.code}
             </Text>
 
-            <Text className="text-2xl font-extrabold text-white mt-1">
+            <Text className="mt-1 text-2xl font-extrabold text-white">
               {main}
               {sub && (
                 <Text className="text-sm font-semibold text-white"> {sub}</Text>
@@ -98,14 +98,14 @@ export default function VoucherCard({
       <View className="relative" style={{marginHorizontal: -1}}>
         <View
           style={{borderStyle: "dashed", borderTopWidth: 1.5}}
-          className="border-gray-300 mx-4"
+          className="mx-4 border-gray-300"
         />
         <View
-          className="absolute -left-2 w-4 h-4 rounded-full bg-gray-100 border border-gray-200"
+          className="absolute -left-2 w-4 h-4 bg-gray-100 rounded-full border border-gray-200"
           style={{top: -8}}
         />
         <View
-          className="absolute -right-2 w-4 h-4 rounded-full bg-gray-100 border border-gray-200"
+          className="absolute -right-2 w-4 h-4 bg-gray-100 rounded-full border border-gray-200"
           style={{top: -8}}
         />
       </View>
@@ -113,7 +113,7 @@ export default function VoucherCard({
       {/* Body */}
       <View className="p-4">
         {/* Description */}
-        <Text className="text-sm text-gray-700 leading-5 mb-3">
+        <Text className="mb-3 text-sm leading-5 text-gray-700">
           {voucherTemplate.description}
         </Text>
 
@@ -122,8 +122,8 @@ export default function VoucherCard({
           {voucherTemplate.minOrderValue > 0 && (
             <View className="flex-row items-center">
               <Ionicons name="cart-outline" size={16} color="#6B7280" />
-              <Text className="text-xs text-gray-600 ml-2">
-                {getMinOrderLabel(voucherTemplate.minOrderValue)}
+              <Text className="ml-2 text-xs text-gray-600">
+                {getMinAmountLabel(voucherTemplate.minOrderValue)}
               </Text>
             </View>
           )}
@@ -135,7 +135,7 @@ export default function VoucherCard({
               color={isExpired ? "#EF4444" : "#6B7280"}
             />
             <Text
-              className={`text-xs ml-2 ${isExpired ? "text-red-600 font-semibold" : "text-gray-600"}`}
+              className={`text-xs ml-2 ${isExpired ? "font-semibold text-red-600" : "text-gray-600"}`}
             >
               {isExpired
                 ? "Expired"
@@ -173,7 +173,7 @@ export default function VoucherCard({
 
         {showGuidance && status === "claimed" && (
           <View className="bg-blue-50 px-3 py-2.5 rounded-lg mb-3">
-            <Text className="text-xs text-blue-800 leading-4">
+            <Text className="text-xs leading-4 text-blue-800">
               {voucherTemplate.type === "delivery"
                 ? "Apply this voucher during booking checkout to get your discount."
                 : "Please contact customer support to claim your load credit. Manual admin fulfillment required."}
@@ -183,7 +183,7 @@ export default function VoucherCard({
 
         {showFulfillment && reward?.fulfillment?.completedAt && (
           <View className="bg-green-50 px-3 py-2.5 rounded-lg mb-3">
-            <Text className="text-xs font-semibold text-green-900 mb-1">
+            <Text className="mb-1 text-xs font-semibold text-green-900">
               Fulfilled
             </Text>
             {reward.fulfillment.notes && (
@@ -192,7 +192,7 @@ export default function VoucherCard({
               </Text>
             )}
             {reward.fulfillment.payoutMethod && (
-              <Text className="text-xs text-green-700 mt-1">
+              <Text className="mt-1 text-xs text-green-700">
                 Method: {reward.fulfillment.payoutMethod.toUpperCase()}
               </Text>
             )}
@@ -210,14 +210,14 @@ export default function VoucherCard({
             {isClaiming ? (
               <>
                 <ActivityIndicator size="small" color="#FFF" />
-                <Text className="text-white font-semibold ml-2">
+                <Text className="ml-2 font-semibold text-white">
                   Claiming...
                 </Text>
               </>
             ) : (
               <>
                 <Ionicons name="gift" size={18} color="#FFF" />
-                <Text className="text-white font-semibold ml-2">
+                <Text className="ml-2 font-semibold text-white">
                   Claim Voucher
                 </Text>
               </>

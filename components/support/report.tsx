@@ -1,396 +1,107 @@
-import { Booking } from "@/types/book";
-import { formatDate, formatDuration } from "@/utils/helpers/date";
-import { Ionicons } from "@expo/vector-icons";
+import {Ionicons} from "@expo/vector-icons";
+import {router} from "expo-router";
 import React from "react";
-import {
-  FlatList,
-  Modal,
-  Pressable,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import {Pressable, ScrollView, Text, View} from "react-native";
 
-type BookingStatus =
-  | "Completed"
-  | "Cancelled"
-  | "Active"
-  | "Pending"
-  | "Scheduled";
-
-interface ReportTemplate {
-  id: string;
-  label: string;
-  icon: keyof typeof Ionicons.glyphMap;
-}
-
-export interface BookingReportTabProps {
-  bookings: Booking[];
-  selectedBooking: Booking | null;
-  onSelectBooking: (booking: Booking) => void;
-  dropdownOpen: boolean;
-  onOpenDropdown: () => void;
-  onCloseDropdown: () => void;
-  selectedTemplates: string[];
-  onToggleTemplate: (id: string) => void;
-  reportMessage: string;
-  onChangeReportMessage: (text: string) => void;
-  onSubmitReport: () => void;
-  reportTemplates: ReportTemplate[];
-}
-
-const formatStatus = (status: string): BookingStatus => {
-  const map: Record<string, BookingStatus> = {
-    completed: "Completed",
-    cancelled: "Cancelled",
-    active: "Active",
-    pending: "Pending",
-    scheduled: "Scheduled",
-  };
-  return map[status] ?? "Pending";
-};
-
-const formatPrice = (amount: number): string =>
-  `₱${amount.toLocaleString("en-US")}`;
-
-const STATUS_CONFIG: Record<
-  BookingStatus,
-  { bg: string; text: string; dot: string }
-> = {
-  Completed: { bg: "#DCFCE7", text: "#166534", dot: "#22C55E" },
-  Cancelled: { bg: "#FEE2E2", text: "#991B1B", dot: "#EF4444" },
-  Active: { bg: "#DBEAFE", text: "#1E40AF", dot: "#3B82F6" },
-  Pending: { bg: "#FEF3C7", text: "#92400E", dot: "#F59E0B" },
-  Scheduled: { bg: "#F3E8FF", text: "#6B21A8", dot: "#A855F7" },
-};
-
-const StatusBadge: React.FC<{ status: BookingStatus }> = ({ status }) => {
-  const c = STATUS_CONFIG[status];
+export default function ReportTab() {
   return (
-    <View
-      className="flex-row items-center rounded-full px-3 py-1 gap-1.5"
-      style={{ backgroundColor: c.bg }}
+    <ScrollView
+      className="flex-1 px-5 py-4"
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={{paddingBottom: 40}}
     >
-      <View
-        className="w-1.5 h-1.5 rounded-full"
-        style={{ backgroundColor: c.dot }}
-      />
-      <Text className="text-xs font-semibold" style={{ color: c.text }}>
-        {status}
-      </Text>
-    </View>
-  );
-};
-
-interface DetailRowProps {
-  label: string;
-  value: string;
-  icon: keyof typeof Ionicons.glyphMap;
-  isLast?: boolean;
-}
-
-const DetailRow: React.FC<DetailRowProps> = ({
-  label,
-  value,
-  icon,
-  isLast = false,
-}) => (
-  <View
-    className={`flex-row items-center gap-3 py-3 ${!isLast ? "border-b border-gray-100" : ""}`}
-  >
-    <View className="w-8 h-8 rounded-lg items-center justify-center bg-orange-50">
-      <Ionicons name={icon} size={15} color="#ED8718" />
-    </View>
-    <View className="flex-1">
-      <Text className="text-xs text-gray-400">{label}</Text>
-      <Text className="text-sm font-semibold text-secondary mt-0.5">
-        {value}
-      </Text>
-    </View>
-  </View>
-);
-
-export default function BookingReportTab({
-  bookings,
-  selectedBooking,
-  onSelectBooking,
-  dropdownOpen,
-  onOpenDropdown,
-  onCloseDropdown,
-  selectedTemplates,
-  onToggleTemplate,
-  reportMessage,
-  onChangeReportMessage,
-  onSubmitReport,
-  reportTemplates,
-}: BookingReportTabProps) {
-  const canSubmit =
-    selectedBooking !== null &&
-    (selectedTemplates.length > 0 || reportMessage.trim().length > 0);
-  const inset = useSafeAreaInsets();
-
-  return (
-    <View className="gap-4">
-      <Text className="text-base font-bold text-secondary">Booking Report</Text>
-
-      {/* Dropdown Selector */}
-      <Pressable
-        onPress={onOpenDropdown}
-        className={`bg-white rounded-2xl px-4 py-3.5 flex-row items-center justify-between border ${
-          selectedBooking ? "border-lightPrimary" : "border-gray-200"
-        }`}
-      >
-        <View className="flex-1">
-          {selectedBooking ? (
-            <>
-              <Text className="text-sm font-bold text-secondary">
-                {selectedBooking.bookingRef}
-              </Text>
-              <Text className="text-xs text-gray-400 mt-0.5">
-                {formatDate(selectedBooking.createdAt)} ·{" "}
-                {selectedBooking.selectedVehicle.name}
-              </Text>
-            </>
-          ) : (
-            <Text className="text-sm text-gray-400">
-              Select a booking reference...
-            </Text>
-          )}
+      <View className="items-center mb-6">
+        <View className="justify-center items-center mb-4 w-20 h-20 bg-orange-100 rounded-full">
+          <Ionicons name="document-text" size={40} color="#FFA840" />
         </View>
-        <Ionicons
-          name="chevron-down"
-          size={18}
-          color={selectedBooking ? "#FFA840" : "#9CA3AF"}
-        />
-      </Pressable>
-
-      {/* Booking Summary Card */}
-      {selectedBooking && (
-        <View className="bg-white rounded-2xl p-4 border border-gray-100">
-          <View className="flex-row justify-between items-start mb-3">
-            <View>
-              <Text className="text-sm font-bold text-secondary">
-                {selectedBooking.bookingRef}
-              </Text>
-              <Text className="text-xs text-gray-400 mt-0.5">
-                {formatDate(selectedBooking.createdAt)}
-              </Text>
-            </View>
-            <StatusBadge status={formatStatus(selectedBooking.status)} />
-          </View>
-
-          {/* Route */}
-          <View className="bg-gray-50 rounded-xl p-3 gap-2 mb-1">
-            <View className="flex-row items-center gap-2.5">
-              <View className="w-2.5 h-2.5 rounded-full bg-lightPrimary" />
-              <Text className="text-xs text-gray-500 flex-1" numberOfLines={1}>
-                {selectedBooking.pickUp?.address ?? "—"}
-              </Text>
-            </View>
-            <View className="w-px h-3 bg-gray-200 ml-1" />
-            <View className="flex-row items-center gap-2.5">
-              <Ionicons
-                name="location"
-                size={12}
-                color="#ED8718"
-                style={{ marginLeft: -1 }}
-              />
-              <Text className="text-xs text-gray-500 flex-1" numberOfLines={1}>
-                {selectedBooking.dropOff?.address ?? "—"}
-              </Text>
-            </View>
-          </View>
-
-          <DetailRow
-            label="Vehicle"
-            value={selectedBooking.selectedVehicle.name}
-            icon="car-outline"
-          />
-          <DetailRow
-            label="Driver"
-            value={selectedBooking.driver?.name ?? "N/A"}
-            icon="person-outline"
-          />
-          <DetailRow
-            label="Distance · Duration"
-            value={`${selectedBooking.routeData.distance.toFixed(1)} km · ${formatDuration(selectedBooking.routeData.duration)}`}
-            icon="navigate-outline"
-          />
-          <DetailRow
-            label="Payment"
-            value={selectedBooking.paymentMethod === "cash" ? "Cash" : "Gcash"}
-            icon="wallet-outline"
-          />
-
-          {/* Fare Breakdown */}
-          <View className="mt-3 pt-3 border-t border-gray-100 gap-1.5">
-            <View className="flex-row justify-between">
-              <Text className="text-xs text-gray-400">Base Price</Text>
-              <Text className="text-xs text-gray-500">
-                {formatPrice(selectedBooking.routeData.basePrice)}
-              </Text>
-            </View>
-            <View className="flex-row justify-between">
-              <Text className="text-xs text-gray-400">Distance Fee</Text>
-              <Text className="text-xs text-gray-500">
-                {formatPrice(selectedBooking.routeData.distanceFee)}
-              </Text>
-            </View>
-            <View className="flex-row justify-between">
-              <Text className="text-xs text-gray-400">Service Fee</Text>
-              <Text className="text-xs text-gray-500">
-                {formatPrice(selectedBooking.routeData.serviceFee)}
-              </Text>
-            </View>
-            <View className="flex-row justify-between pt-2 mt-1 border-t border-gray-100">
-              <Text className="text-sm font-bold text-secondary">Total</Text>
-              <Text className="text-sm font-bold text-secondary">
-                {formatPrice(selectedBooking.routeData.totalPrice)}
-              </Text>
-            </View>
-          </View>
-        </View>
-      )}
-
-      {/* Report Form */}
-      <View className={`gap-4 ${!selectedBooking ? "opacity-40" : ""}`}>
-        {/* Template Badges */}
-        <View className="gap-2">
-          <Text className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-            What&apos;s the issue?
-          </Text>
-          <View className="flex-row flex-wrap gap-2">
-            {reportTemplates.map((t) => {
-              const active = selectedTemplates.includes(t.id);
-              return (
-                <Pressable
-                  key={t.id}
-                  onPress={() => selectedBooking && onToggleTemplate(t.id)}
-                  className={`flex-row items-center gap-1.5 px-3 py-2 rounded-full border ${
-                    active
-                      ? " bg-lightPrimary border-lightPrimary"
-                      : "bg-white border-gray-200"
-                  }`}
-                >
-                  <Ionicons
-                    name={t.icon}
-                    size={13}
-                    color={active ? "white" : "#6B7280"}
-                  />
-                  <Text
-                    className={`text-xs font-semibold ${active ? "text-white" : "text-gray-500"}`}
-                  >
-                    {t.label}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-        </View>
-
-        {/* Message Input */}
-        <View className="gap-2">
-          <Text className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-            Additional Details
-          </Text>
-          <TextInput
-            value={reportMessage}
-            onChangeText={(t) => t.length <= 500 && onChangeReportMessage(t)}
-            placeholder="Describe your concern in detail..."
-            placeholderTextColor="#9CA3AF"
-            multiline
-            editable={!!selectedBooking}
-            numberOfLines={5}
-            textAlignVertical="top"
-            className="bg-white border border-gray-200 rounded-2xl px-4 py-3.5 text-sm text-secondary min-h-[120px]"
-            style={{ textAlignVertical: "top" }}
-          />
-          <Text className="text-xs text-gray-400 text-right">
-            {reportMessage.length} / 500
-          </Text>
-        </View>
-
-        {/* Submit */}
-        <Pressable
-          onPress={onSubmitReport}
-          disabled={!canSubmit}
-          className={`rounded-2xl py-4 items-center justify-center flex-row gap-2 ${
-            canSubmit ? "bg-lightPrimary active:bg-darkPrimary" : "bg-gray-200"
-          }`}
-        >
-          <Ionicons
-            name="send"
-            size={16}
-            color={canSubmit ? "white" : "#9CA3AF"}
-          />
-          <Text
-            className={`text-sm font-bold ${canSubmit ? "text-white" : "text-gray-400"}`}
-          >
-            Submit Report
-          </Text>
-        </Pressable>
+        <Text className="mb-2 text-2xl font-bold text-gray-900">
+          File a Report
+        </Text>
+        <Text className="text-center text-gray-600">
+          Report issues with completed or cancelled bookings
+        </Text>
       </View>
 
-      {/* Booking Dropdown Modal */}
-      <Modal
-        visible={dropdownOpen}
-        transparent
-        animationType="fade"
-        onRequestClose={onCloseDropdown}
+      <Pressable
+        onPress={() => router.push("/(drawer)/support/fileReport")}
+        className="flex-row justify-between items-center px-3 py-4 mb-4 bg-white rounded-2xl border border-gray-200 active:bg-gray-50"
       >
-        <Pressable
-          className="flex-1 bg-black/40 justify-end"
-          onPress={onCloseDropdown}
-        >
-          <View
-            className="bg-white rounded-t-3xl pt-3"
-            style={{ maxHeight: "60%", paddingBottom: inset.bottom + 10 }}
-          >
-            <View className="w-8 h-1 rounded-full bg-lightPrimary self-center mb-4" />
-            <Text className="text-sm font-bold text-secondary px-5 mb-3">
-              Select Booking
-            </Text>
-            <FlatList
-              data={bookings}
-              keyExtractor={(item) => item._id}
-              showsVerticalScrollIndicator={false}
-              renderItem={({ item }) => {
-                const isSelected = selectedBooking?._id === item._id;
-                return (
-                  <Pressable
-                    onPress={() => {
-                      onSelectBooking(item);
-                      onCloseDropdown();
-                    }}
-                    className={`flex-row items-center px-5 py-3.5 border-b border-gray-50 gap-3 active:bg-gray-100 ${
-                      isSelected ? "bg-orange-50" : "bg-white"
-                    }`}
-                  >
-                    <View className="flex-1">
-                      <Text className="text-sm font-bold text-secondary">
-                        {item.bookingRef}
-                      </Text>
-                      <Text className="text-xs text-gray-400 mt-0.5">
-                        {formatDate(item.createdAt)} ·{" "}
-                        {item.selectedVehicle.name}
-                      </Text>
-                    </View>
-                    <StatusBadge status={formatStatus(item.status)} />
-                    {isSelected && (
-                      <Ionicons
-                        name="checkmark-circle"
-                        size={18}
-                        color="#FFA840"
-                      />
-                    )}
-                  </Pressable>
-                );
-              }}
-            />
+        <View className="flex-row gap-2 items-center">
+          <View className="justify-center items-center bg-orange-100 rounded-full size-12">
+            <Ionicons name="alert-circle" size={24} color="#FFA840" />
           </View>
-        </Pressable>
-      </Modal>
-    </View>
+          <View>
+            <Text className="text-base font-semibold text-gray-900">
+              New Report
+            </Text>
+            <Text className="text-[12px] text-gray-500">
+              File a complaint about a driver or booking
+            </Text>
+          </View>
+        </View>
+        <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+      </Pressable>
+
+      <View className="mt-6">
+        <Text className="mb-3 text-sm font-semibold text-gray-700">
+          Common Issues
+        </Text>
+
+        <View className="gap-2">
+          {[
+            {
+              icon: "time-outline",
+              label: "Driver No-Show",
+              description: "Driver didn't arrive",
+            },
+            {
+              icon: "warning-outline",
+              label: "Damaged Package",
+              description: "Item was damaged during delivery",
+            },
+            {
+              icon: "location-outline",
+              label: "Wrong Drop-off",
+              description: "Delivered to wrong location",
+            },
+            {
+              icon: "person-remove-outline",
+              label: "Driver Misconduct",
+              description: "Unprofessional behavior",
+            },
+          ].map((issue, index) => (
+            <View
+              key={index}
+              className="flex-row items-center p-4 bg-gray-50 rounded-xl"
+            >
+              <Ionicons name={issue.icon as any} size={20} color="#6B7280" />
+              <View className="flex-1 ml-3">
+                <Text className="font-medium text-gray-900">{issue.label}</Text>
+                <Text className="text-xs text-gray-500">
+                  {issue.description}
+                </Text>
+              </View>
+            </View>
+          ))}
+        </View>
+      </View>
+
+      <View className="p-4 mt-6 bg-amber-50 rounded-xl">
+        <View className="flex-row gap-2 items-start">
+          <Ionicons name="information-circle" size={20} color="#F59E0B" />
+          <View className="flex-1">
+            <Text className="mb-1 font-semibold text-amber-900">
+              Reporting Guidelines
+            </Text>
+            <Text className="text-sm text-amber-700">
+              • Reports must be filed within 5 days of completion/cancellation
+              {"\n"}• Provide clear description and photos if available{"\n"}•
+              Driver can reply to your report once{"\n"}• Admin will review and
+              take appropriate action
+            </Text>
+          </View>
+        </View>
+      </View>
+    </ScrollView>
   );
 }

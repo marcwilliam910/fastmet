@@ -1,6 +1,7 @@
 import api from "@/lib/axios";
 import {
   GetMyRewardsResponse,
+  GetMyVouchersCountResponse,
   GetClaimableVouchersResponse,
   ClaimRewardResponse,
   PreviewVoucherResponse,
@@ -20,6 +21,15 @@ export const getMyRewards = async (params?: {
   });
   return response.data;
 };
+
+/**
+ * Get count of user's owned vouchers (claimed + in_use)
+ */
+export const getMyVouchersCount =
+  async (): Promise<GetMyVouchersCountResponse> => {
+    const response = await api.get("/rewards/my-rewards/count");
+    return response.data;
+  };
 
 /**
  * Claim a pending reward (transition pending → claimed)

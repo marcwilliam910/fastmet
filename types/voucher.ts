@@ -50,6 +50,12 @@ export interface GetMyRewardsResponse {
   error?: string;
 }
 
+export interface GetMyVouchersCountResponse {
+  success: boolean;
+  count: number;
+  error?: string;
+}
+
 export interface GetClaimableVouchersResponse {
   success: boolean;
   vouchers: VoucherTemplate[];

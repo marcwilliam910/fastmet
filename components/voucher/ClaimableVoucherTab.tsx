@@ -17,7 +17,13 @@ import {
 } from "react-native";
 import VoucherCard from "./VoucherCard";
 
-export default function ClaimableVoucherTab() {
+type ClaimableVoucherTabProps = {
+  onCodeClaimSuccess?: () => void;
+};
+
+export default function ClaimableVoucherTab({
+  onCodeClaimSuccess,
+}: ClaimableVoucherTabProps) {
   const [voucherCode, setVoucherCode] = useState("");
   const [codeError, setCodeError] = useState("");
   const [claimingId, setClaimingId] = useState<string | null>(null);
@@ -84,6 +90,7 @@ export default function ClaimableVoucherTab() {
           if (data.success) {
             setVoucherCode("");
             setCodeError("");
+            onCodeClaimSuccess?.();
           } else {
             const {message} = getVoucherClaimErrorToast(
               {response: {data: {error: data.error}}},
@@ -118,19 +125,19 @@ export default function ClaimableVoucherTab() {
 
   if (error) {
     return (
-      <View className="flex-1 justify-center items-center bg-white px-4">
+      <View className="flex-1 justify-center items-center px-4 bg-white">
         <Ionicons name="alert-circle-outline" size={64} color="#EF4444" />
-        <Text className="text-lg font-semibold text-gray-700 mt-4 text-center">
+        <Text className="mt-4 text-lg font-semibold text-center text-gray-700">
           Failed to load vouchers
         </Text>
-        <Text className="text-sm text-gray-500 mt-2 text-center">
+        <Text className="mt-2 text-sm text-center text-gray-500">
           {error.message}
         </Text>
         <Pressable
           onPress={handleRefresh}
-          className="bg-lightPrimary py-3 px-6 rounded-lg mt-4 active:bg-darkPrimary"
+          className="px-6 py-3 mt-4 rounded-lg bg-lightPrimary active:bg-darkPrimary"
         >
-          <Text className="text-white font-semibold">Try Again</Text>
+          <Text className="font-semibold text-white">Try Again</Text>
         </Pressable>
       </View>
     );
@@ -140,10 +147,10 @@ export default function ClaimableVoucherTab() {
     <View className="flex-1 bg-white">
       {/* Voucher Code Input */}
       <View className="px-4 pt-4 pb-2 bg-gray-50 border-b border-gray-200">
-        <Text className="text-sm font-semibold text-gray-700 mb-2">
+        <Text className="mb-2 text-sm font-semibold text-gray-700">
           Have a voucher code?
         </Text>
-        <View className="flex-row items-center gap-2">
+        <View className="flex-row gap-2 items-center">
           <TextInput
             className={`flex-1 bg-white border rounded-lg px-4 py-3 text-base ${
               codeError ? "border-red-400" : "border-gray-300"
@@ -151,7 +158,7 @@ export default function ClaimableVoucherTab() {
             placeholder="Enter code (e.g., WELCOME50)"
             value={voucherCode}
             onChangeText={(text) => {
-              setVoucherCode(text);
+              setVoucherCode(text.toUpperCase());
               if (codeError) setCodeError("");
             }}
             autoCapitalize="characters"
@@ -173,12 +180,12 @@ export default function ClaimableVoucherTab() {
             {claimingId === "code-claim" ? (
               <ActivityIndicator size="small" color="#FFF" />
             ) : (
-              <Text className="text-white font-semibold">Claim</Text>
+              <Text className="font-semibold text-white">Claim</Text>
             )}
           </Pressable>
         </View>
         {codeError ? (
-          <Text className="text-sm text-red-600 mt-2">{codeError}</Text>
+          <Text className="mt-2 text-sm text-red-600">{codeError}</Text>
         ) : null}
       </View>
 

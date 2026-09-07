@@ -1,8 +1,7 @@
-// components/voucher/VoucherSelectCard.tsx
 import {IssuedReward} from "@/types/voucher";
 import {
   formatExpiryDate,
-  getMinOrderLabel,
+  getMinAmountLabel,
   getVoucherValueLabel,
 } from "@/utils/helpers/voucher";
 import {Ionicons} from "@expo/vector-icons";
@@ -36,14 +35,13 @@ export default function VoucherSelectCard({
         elevation: 3,
       }}
       className={`rounded-xl overflow-hidden bg-white ${
-        isSelected ? "border-2 border-green-500" : ""
-      }`}
+        isSelected ? "border-2 border-green-500" : ""}`}
     >
       {/* Header — code, value, selection state */}
       <View className={`px-4 py-3 ${headerColor}`}>
         <View className="flex-row justify-between items-center">
           <View className="flex-1 mr-3">
-            <Text className="text-xs font-semibold text-white/80 uppercase tracking-widest">
+            <Text className="text-xs font-semibold tracking-widest uppercase text-white/80">
               {voucher.code}
             </Text>
             <Text className="text-xl font-extrabold text-white mt-0.5">
@@ -54,7 +52,7 @@ export default function VoucherSelectCard({
             </Text>
           </View>
 
-          <View className="w-7 h-7 justify-center items-center">
+          <View className="justify-center items-center w-7 h-7">
             {isChecking ? (
               <ActivityIndicator size="small" color="#FFF" />
             ) : isSelected ? (
@@ -70,14 +68,14 @@ export default function VoucherSelectCard({
       <View className="relative" style={{marginHorizontal: -1}}>
         <View
           style={{borderStyle: "dashed", borderTopWidth: 1.5}}
-          className="border-gray-300 mx-4"
+          className="mx-4 border-gray-300"
         />
         <View
-          className="absolute -left-2 w-4 h-4 rounded-full bg-gray-100 border border-gray-200"
+          className="absolute -left-2 w-4 h-4 bg-gray-100 rounded-full border border-gray-200"
           style={{top: -8}}
         />
         <View
-          className="absolute -right-2 w-4 h-4 rounded-full bg-gray-100 border border-gray-200"
+          className="absolute -right-2 w-4 h-4 bg-gray-100 rounded-full border border-gray-200"
           style={{top: -8}}
         />
       </View>
@@ -87,14 +85,14 @@ export default function VoucherSelectCard({
         {voucher.minOrderValue > 0 && (
           <View className="flex-row items-center">
             <Ionicons name="cart-outline" size={14} color="#6B7280" />
-            <Text className="text-xs text-gray-600 ml-2">
-              {getMinOrderLabel(voucher.minOrderValue)}
+            <Text className="ml-2 text-xs text-gray-600">
+              {getMinAmountLabel(voucher.minOrderValue)}
             </Text>
           </View>
         )}
         <View className="flex-row items-center">
           <Ionicons name="time-outline" size={14} color="#6B7280" />
-          <Text className="text-xs text-gray-600 ml-2">
+          <Text className="ml-2 text-xs text-gray-600">
             {formatExpiryDate(voucher.expiresAt)}
           </Text>
         </View>
