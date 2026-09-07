@@ -4,15 +4,14 @@ import {
   getRecentBookings,
   getUserBookings,
 } from "@/api/book";
-import { LocationDetails } from "@/types/book";
-import { fetchDrivingDistance } from "@/utils/helpers/calculatePrice";
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import {LocationDetails} from "@/types/book";
+import {fetchDrivingDistance} from "@/utils/helpers/calculatePrice";
+import {useInfiniteQuery, useQuery} from "@tanstack/react-query";
 
-export const useUserBookings = <T>(status: string, limit: number) => {
+export const useUserBookings = (status: string, limit: number) => {
   return useInfiniteQuery({
     queryKey: ["userBookings", status, limit],
-    queryFn: ({ pageParam = 1 }) =>
-      getUserBookings<T[]>(status, pageParam, limit),
+    queryFn: ({pageParam = 1}) => getUserBookings(status, pageParam, limit),
     getNextPageParam: (lastPage) => lastPage.nextPage,
     initialPageParam: 1,
   });

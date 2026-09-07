@@ -24,7 +24,7 @@ export default function ProfileRegistration() {
   const [form, setForm] = useState<NewUser>({
     fullName: "",
     address: null,
-    gender: "",
+    gender: "prefer_not",
     email: "",
     profilePictureUrl: "",
   });
@@ -66,7 +66,10 @@ export default function ProfileRegistration() {
       setErrors(result.errors);
       return;
     }
-    if (!form.email?.trim() || !isAllowedEmailDomain(form.email, allowedDomains)) {
+    if (
+      !form.email?.trim() ||
+      !isAllowedEmailDomain(form.email, allowedDomains)
+    ) {
       setErrors({email: allowedDomainsMessage(allowedDomains)});
       return;
     }
@@ -77,7 +80,7 @@ export default function ProfileRegistration() {
     setLoading(true);
     const formData = new FormData();
     formData.append("fullName", form.fullName.trim());
-    formData.append("gender", form.gender || "");
+    formData.append("gender", form.gender);
     if (form.email) formData.append("email", form.email);
     if (form.address) {
       formData.append("addressName", form.address.name);
@@ -136,20 +139,20 @@ export default function ProfileRegistration() {
     <SafeAreaView style={{flex: 1, backgroundColor: "#fff"}}>
       <CustomKeyAvoidingView>
         <View className="flex-1 gap-6 p-6">
-          <View className="gap-3 items-center">
+          <View className="items-center gap-3">
             <Pressable
-              className="justify-center items-center rounded-full border size-40 border-lightPrimary active:border-2"
+              className="items-center justify-center border rounded-full size-40 border-lightPrimary active:border-2"
               onPress={pickProfilePic}
             >
               {form.profilePictureUrl ? (
-                <View className="justify-center items-center bg-gray-100 rounded-full size-36">
+                <View className="items-center justify-center bg-gray-100 rounded-full size-36">
                   <Image
                     source={{uri: form.profilePictureUrl}}
                     style={{width: 120, height: 120, borderRadius: 999}}
                     contentFit="cover"
                   />
                   <Pressable
-                    className="absolute right-0 top-2 p-1 bg-white rounded-full"
+                    className="absolute right-0 p-1 bg-white rounded-full top-2"
                     onPress={() =>
                       setForm((prev) => ({...prev, profilePictureUrl: ""}))
                     }
@@ -158,7 +161,7 @@ export default function ProfileRegistration() {
                   </Pressable>
                 </View>
               ) : (
-                <View className="justify-center items-center bg-gray-100 rounded-full size-36">
+                <View className="items-center justify-center bg-gray-100 rounded-full size-36">
                   <Ionicons name="camera" size={24} color="#FFA840" />
                 </View>
               )}
@@ -221,14 +224,20 @@ export default function ProfileRegistration() {
             value={form.address}
             onChange={onAddressChange}
             error={
-              Object.keys(errors || {}).length === 0
-                ? undefined
-                : "All fields in address are required and must be valid."
+              errors.address ||
+              errors.street ||
+              errors.barangay ||
+              errors.city ||
+              errors.province
+                ? "All fields in address are required and must be valid."
+                : undefined
             }
           />
 
           <View className="gap-2">
-            <Text className="text-sm font-medium text-gray-700">Gender</Text>
+            <Text className="text-sm font-medium text-gray-700">
+              Gender<Text className="text-red-500">*</Text>
+            </Text>
 
             <Dropdown
               dropdownPosition="top"
@@ -263,7 +272,7 @@ export default function ProfileRegistration() {
 
             <Pressable
               onPress={() => router.replace("/(drawer)/book")}
-              className="items-center py-4 my-2 bg-white rounded-lg border border-lightPrimary active:bg-gray-100"
+              className="items-center py-4 my-2 bg-white border rounded-lg border-lightPrimary active:bg-gray-100"
             >
               <Text className="text-base font-bold text-lightPrimary">
                 Skip for now

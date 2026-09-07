@@ -8,7 +8,7 @@ import Constants from "expo-constants";
 import * as Device from "expo-device";
 import * as Notifications from "expo-notifications";
 import {getItemAsync, setItemAsync} from "expo-secure-store";
-import {Alert, Platform} from "react-native";
+import {Platform} from "react-native";
 
 export {PUSH_REGISTRATION_KEY};
 export const NOTIFICATION_PERMISSION_KEY = "notification_permission_asked";
@@ -58,59 +58,31 @@ export async function getExpoPushToken() {
   }
 }
 
-/**
- * Soft-ask once (Alert). Does not block the app if declined.
- * Returns true when permission is granted.
- */
-export async function ensureNotificationPermissionSoft(): Promise<boolean> {
-  try {
-    if (!Device.isDevice) return false;
-
-    const hasAsked = await getItemAsync(NOTIFICATION_PERMISSION_KEY);
-    const {status: existingStatus} = await Notifications.getPermissionsAsync();
-
-    if (existingStatus === "granted") return true;
-
-    if (hasAsked) {
-      console.log("⚠️ Permission previously declined");
-      return false;
-    }
-
-    return await new Promise<boolean>((resolve) => {
-      Alert.alert(
-        "🔔 Stay Updated",
-        "Enable notifications to receive alerts about scheduled trips and booking updates.",
-        [
-          {
-            text: "Not Now",
-            style: "cancel",
-            onPress: async () => {
-              await setItemAsync(NOTIFICATION_PERMISSION_KEY, "declined");
-              resolve(false);
-            },
-          },
-          {
-            text: "Enable",
-            onPress: async () => {
-              const {status} = await Notifications.requestPermissionsAsync();
-              await setItemAsync(NOTIFICATION_PERMISSION_KEY, "asked");
-              resolve(status === "granted");
-            },
-          },
-        ],
-      );
-    });
-  } catch (error) {
-    console.error("❌ ensureNotificationPermissionSoft failed:", error);
-    return false;
-  }
+export async function isNotificationPermissionGranted(): Promise<boolean> {
+  const {status} = await Notifications.getPermissionsAsync();
+  return status === "granted";
 }
 
-/** Soft-ask (if needed) then fetch token. Used on login by the push hook. */
+/** True when we should ask the OS for notification permission once. */
+export async function shouldPromptForNotificationPermission(): Promise<boolean> {
+  if (!Device.isDevice) return false;
+
+  const hasAsked = await getItemAsync(NOTIFICATION_PERMISSION_KEY);
+  if (hasAsked) return false;
+
+  return !(await isNotificationPermissionGranted());
+}
+
+export async function requestNotificationPermission(): Promise<boolean> {
+  const {status} = await Notifications.requestPermissionsAsync();
+  await setItemAsync(NOTIFICATION_PERMISSION_KEY, "asked");
+  return status === "granted";
+}
+
+/** Fetch token when OS permission is already granted. */
 export async function registerForPushNotificationsAsync() {
   try {
-    const granted = await ensureNotificationPermissionSoft();
-    if (!granted) return undefined;
+    if (!(await isNotificationPermissionGranted())) return undefined;
     return await getExpoPushToken();
   } catch (error) {
     console.error("❌ registerForPushNotificationsAsync failed:", error);

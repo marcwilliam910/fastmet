@@ -1,5 +1,6 @@
 import CustomKeyAvoidingView from "@/components/CustomKeyAvoid";
 import {Countdown} from "@/components/Timers";
+import {ACCOUNT_PENDING_DELETION_ROUTE} from "@/constants/routes";
 import {ApprovalStatus} from "@/store/slices/authSlice";
 import {useAppStore} from "@/store/useAppStore";
 import {UserAddress} from "@/types/user";
@@ -44,6 +45,8 @@ type LoginResponse = {
     gender: "male" | "female" | "prefer_not";
     preRegistered: boolean;
     email: string | null;
+    deletionStatus?: "active" | "pending_deletion" | "deleted";
+    deletionScheduledAt?: string | null;
   };
   status: "new" | "existing" | "pre-registered";
 };
@@ -230,6 +233,27 @@ export default function PhoneOTPScreen() {
           preRegistered: data.client.preRegistered,
           email: data.client.email,
         });
+
+        if (data.client.deletionStatus === "pending_deletion") {
+          Toast.show({
+            type: "info",
+            text1: "Account pending deletion",
+            text2: "Cancel deletion to keep using Fastmet.",
+            position: "top",
+            visibilityTime: 5_000,
+            swipeable: true,
+            topOffset: 50,
+          });
+          router.replace({
+            pathname: ACCOUNT_PENDING_DELETION_ROUTE,
+            params: {
+              scheduledAt: data.client.deletionScheduledAt
+                ? String(data.client.deletionScheduledAt)
+                : "",
+            },
+          });
+          return;
+        }
 
         const message =
           data.status === "existing"

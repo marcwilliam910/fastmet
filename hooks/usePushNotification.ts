@@ -1,13 +1,14 @@
 import {
   registerForPushNotificationsAsync,
+  requestNotificationPermission,
   savePushTokenToBackend,
+  shouldPromptForNotificationPermission,
 } from "@/hooks/pushToken";
 import {handleNotificationEntry} from "@/utils/helpers/notificationRouting";
 import * as Notifications from "expo-notifications";
 import {useEffect, useRef, useState} from "react";
 import {useAuth} from "./useAuth";
 
-// Configure notification handler
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldPlaySound: true,
@@ -16,6 +17,24 @@ Notifications.setNotificationHandler({
     shouldShowList: true,
   }),
 });
+
+let coldStartResponse: Notifications.NotificationResponse | null = null;
+let hasFetchedColdStart = false;
+
+Notifications.addNotificationResponseReceivedListener((response) => {
+  if (!hasFetchedColdStart) {
+    coldStartResponse = response;
+  }
+});
+
+Promise.resolve(Notifications.getLastNotificationResponse()).then(
+  (response) => {
+    hasFetchedColdStart = true;
+    if (response && !coldStartResponse) {
+      coldStartResponse = response;
+    }
+  },
+);
 
 export function usePushNotifications() {
   const [expoPushToken, setExpoPushToken] = useState<string | undefined>();
@@ -31,29 +50,37 @@ export function usePushNotifications() {
   useEffect(() => {
     if (!isLoggedIn) return;
 
-    // Soft-ask once (if needed), then register token — never hard-requires permission.
-    registerForPushNotificationsAsync().then((token) => {
-      setExpoPushToken(token);
+    void (async () => {
+      const token = await registerForPushNotificationsAsync();
       if (token) {
-        savePushTokenToBackend(token);
+        setExpoPushToken(token);
+        await savePushTokenToBackend(token);
+        return;
       }
-    });
 
-    // Cold start: app launched by tapping a notification while killed.
-    Notifications.getLastNotificationResponseAsync().then((response) => {
-      if (response) {
-        handleNotificationEntry(response.notification.request.content.data);
+      if (await shouldPromptForNotificationPermission()) {
+        const granted = await requestNotificationPermission();
+        if (granted) {
+          const newToken = await registerForPushNotificationsAsync();
+          setExpoPushToken(newToken);
+          if (newToken) {
+            await savePushTokenToBackend(newToken);
+          }
+        }
       }
-    });
+    })();
 
-    // Foreground receives — same as before (state + log only).
+    if (coldStartResponse) {
+      handleNotificationEntry(coldStartResponse.notification.request.content.data);
+      coldStartResponse = null;
+    }
+
     notificationListener.current =
       Notifications.addNotificationReceivedListener((notification) => {
         setNotification(notification);
         console.log("📬 Notification received:", notification);
       });
 
-    // User taps (foreground or background).
     responseListener.current =
       Notifications.addNotificationResponseReceivedListener((response) => {
         const data = response.notification.request.content.data;
@@ -62,14 +89,10 @@ export function usePushNotifications() {
       });
 
     return () => {
-      if (notificationListener.current) {
-        notificationListener.current.remove();
-        notificationListener.current = null;
-      }
-      if (responseListener.current) {
-        responseListener.current.remove();
-        responseListener.current = null;
-      }
+      notificationListener.current?.remove();
+      notificationListener.current = null;
+      responseListener.current?.remove();
+      responseListener.current = null;
     };
   }, [isLoggedIn]);
 

@@ -1,114 +1,90 @@
-import { Ionicons } from "@expo/vector-icons";
+import {Ionicons} from "@expo/vector-icons";
 import React from "react";
-import { Pressable, Text, TouchableOpacity, View } from "react-native";
+import {Linking, Pressable, ScrollView, Text, View} from "react-native";
 
-export interface ContactTabProps {
-  onCall: () => void;
-  onEmail: () => void;
-  onOpenLiveChat: () => void;
-}
-export default function ContactTab({
-  onCall,
-  onEmail,
-  onOpenLiveChat,
-}: ContactTabProps) {
-  const supportHours = [
-    { day: "Mon – Fri", hours: "8:00 AM – 9:00 PM" },
-    { day: "Saturday", hours: "9:00 AM – 6:00 PM" },
-    { day: "Sun & Holidays", hours: "10:00 AM – 4:00 PM" },
-  ];
-
-  const directContacts: {
-    icon: keyof typeof Ionicons.glyphMap;
-    label: string;
-    value: string;
-    onPress: () => void;
-  }[] = [
-    {
-      icon: "call",
-      label: "Call Us",
-      value: "(02) 8800-1234",
-      onPress: onCall,
-    },
-    {
-      icon: "mail",
-      label: "Email Us",
-      value: "support@fastmet.ph",
-      onPress: onEmail,
-    },
-  ];
+export default function ContactTab() {
+  const handleEmail = () => {
+    Linking.openURL(`mailto:${process.env.EXPO_PUBLIC_SUPPORT_EMAIL}`);
+  };
 
   return (
-    <View className="gap-3.5">
-      <Text className="text-base font-bold text-secondary">Contact Us</Text>
+    <ScrollView
+      className="flex-1 px-5 py-6"
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={{paddingBottom: 40}}
+    >
+      <View className="items-center mb-6">
+        <View className="justify-center items-center mb-4 w-20 h-20 bg-blue-100 rounded-full">
+          <Ionicons name="headset" size={40} color="#3B82F6" />
+        </View>
+        <Text className="mb-2 text-2xl font-bold text-gray-900">
+          Contact Support
+        </Text>
+        <Text className="text-center text-gray-600">
+          We're here to help with any questions or concerns
+        </Text>
+      </View>
 
-      {/* Live Chat */}
       <Pressable
-        onPress={onOpenLiveChat}
-        className="bg-secondary rounded-2xl p-4 flex-row items-center gap-3.5"
+        onPress={handleEmail}
+        className="flex-row justify-between items-center px-4 py-3  mb-3 bg-white rounded-2xl border border-gray-200 active:bg-gray-50"
       >
-        <View className="w-12 h-12 rounded-xl bg-lightPrimary items-center justify-center">
-          <Ionicons name="chatbubble-ellipses" size={22} color="#0F2535" />
-        </View>
-        <View className="flex-1">
-          <View className="flex-row items-center gap-2 mb-1">
-            <Text className="text-sm font-bold text-white">Live Chat</Text>
-            <View className="flex-row items-center gap-1 px-2 py-0.5 rounded-full bg-green-500/10">
-              <View className="w-1.5 h-1.5 rounded-full bg-green-500" />
-              <Text className="text-[10px] font-bold text-green-500">
-                Online
-              </Text>
-            </View>
+        <View className="flex-row gap-4 items-center">
+          <View className="justify-center items-center w-12 h-12 bg-blue-100 rounded-full">
+            <Ionicons name="mail" size={24} color="#3B82F6" />
           </View>
-          <Text className="text-xs text-white/40">Avg. response ~2 mins</Text>
+          <View>
+            <Text className="text-base font-semibold text-gray-900">
+              Email Us
+            </Text>
+            <Text className="text-sm text-gray-500">
+              {process.env.EXPO_PUBLIC_SUPPORT_EMAIL}
+            </Text>
+          </View>
         </View>
-        <Ionicons name="chevron-forward" size={18} color="#FFA84066" />
+        <Ionicons name="chevron-forward" size={24} color="#9CA3AF" />
       </Pressable>
 
-      {/* Call / Email */}
-      <View className="flex-row gap-3">
-        {directContacts.map((item) => (
-          <TouchableOpacity
-            key={item.label}
-            onPress={item.onPress}
-            activeOpacity={0.8}
-            className="flex-1 bg-white rounded-2xl p-4 items-center gap-2 border border-gray-100"
-          >
-            <View className="w-11 h-11 rounded-xl bg-orange-50 items-center justify-center">
-              <Ionicons name={item.icon} size={20} color="#FFA840" />
-            </View>
-            <Text className="text-xs font-bold text-secondary">
-              {item.label}
-            </Text>
-            <Text className="text-[10px] text-gray-400 text-center">
-              {item.value}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      {/* Support Hours */}
-      <View className="bg-white rounded-2xl p-4 border border-gray-100">
-        <View className="flex-row items-center gap-2 mb-3">
-          <Ionicons name="time-outline" size={16} color="#FFA840" />
-          <Text className="text-sm font-bold text-secondary">
-            Support Hours
-          </Text>
-        </View>
-        {supportHours.map((row, i) => (
-          <View
-            key={row.day}
-            className={`flex-row justify-between py-2.5 ${
-              i < supportHours.length - 1 ? "border-b border-gray-100" : ""
-            }`}
-          >
-            <Text className="text-sm text-gray-500">{row.day}</Text>
-            <Text className="text-sm font-semibold text-secondary">
-              {row.hours}
+      <View className="mt-6">
+        <Text className="mb-3 text-sm font-semibold text-gray-700">
+          Support Hours
+        </Text>
+        <View className="p-4 bg-gray-50 rounded-xl">
+          <View className="flex-row justify-between mb-2">
+            <Text className="text-gray-600">Monday - Friday</Text>
+            <Text className="font-semibold text-gray-900">
+              8:00 AM - 8:00 PM
             </Text>
           </View>
-        ))}
+          <View className="flex-row justify-between mb-2">
+            <Text className="text-gray-600">Saturday</Text>
+            <Text className="font-semibold text-gray-900">
+              9:00 AM - 6:00 PM
+            </Text>
+          </View>
+          <View className="flex-row justify-between">
+            <Text className="text-gray-600">Sunday</Text>
+            <Text className="font-semibold text-gray-900">
+              10:00 AM - 4:00 PM
+            </Text>
+          </View>
+        </View>
       </View>
-    </View>
+
+      {/* <View className="p-4 mt-6 bg-blue-50 rounded-xl">
+        <View className="flex-row gap-2 items-start">
+          <Ionicons name="information-circle" size={20} color="#3B82F6" />
+          <View className="flex-1">
+            <Text className="mb-1 font-semibold text-blue-900">
+              Emergency Support
+            </Text>
+            <Text className="text-sm text-blue-700">
+              For urgent matters during active trips, use the in-app SOS button
+              on your active booking screen.
+            </Text>
+          </View>
+        </View>
+      </View> */}
+    </ScrollView>
   );
 }

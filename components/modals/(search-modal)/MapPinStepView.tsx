@@ -1,4 +1,6 @@
+import {STATIC_IMAGES} from "@/utils/constants";
 import {Ionicons} from "@expo/vector-icons";
+import {Image} from "expo-image";
 import React, {RefObject} from "react";
 import {
   ActivityIndicator,
@@ -47,7 +49,7 @@ const MapPinStepView: React.FC<MapPinStepViewProps> = ({
   return (
     <View style={{flex: 1}}>
       <View
-        className="flex-row items-center justify-center px-4"
+        className="flex-row justify-center items-center px-4"
         style={{paddingBottom: Platform.OS === "ios" ? 25 : 16}}
       >
         <Pressable
@@ -76,7 +78,7 @@ const MapPinStepView: React.FC<MapPinStepViewProps> = ({
           onChangeText={setAdditionalDetails}
           placeholder="e.g. In front of Jollibee or near gate 3"
           placeholderTextColor="#9CA3AF"
-          className="p-3 text-base text-gray-800 bg-white border border-gray-200 rounded-xl"
+          className="p-3 text-base text-gray-800 bg-white rounded-xl border border-gray-200"
         />
         <Text className="mt-2 text-sm text-gray-500" numberOfLines={2}>
           {pinMoved
@@ -108,7 +110,7 @@ const MapPinStepView: React.FC<MapPinStepViewProps> = ({
             marginTop: -40,
           }}
         >
-          <Ionicons name="pin" size={40} color={themeColor} />
+          <Image source={STATIC_IMAGES.pin} style={{width: 30, height: 50}} />
         </View>
       </View>
 

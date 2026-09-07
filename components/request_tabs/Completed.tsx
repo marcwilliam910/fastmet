@@ -6,8 +6,10 @@ import {
 import {useUserBookings} from "@/queries/bookingQueries";
 import {useAppStore} from "@/store/useAppStore";
 import {CompletedBooking, LocationDetails} from "@/types/book";
-import {createConversationId} from "@/utils/helpers/booking";
-import {formatDate} from "@/utils/helpers/date";
+import {
+  createConversationId,
+  getBookingTimelineItems,
+} from "@/utils/helpers/booking";
 import {formatLocation} from "@/utils/helpers/location";
 import {Ionicons} from "@expo/vector-icons";
 import {Image} from "expo-image";
@@ -23,10 +25,10 @@ import {
   Text,
   View,
 } from "react-native";
-import ImageView from "react-native-image-viewing";
 import {useSafeAreaInsets} from "react-native-safe-area-context";
 import {
   AttachedImages,
+  BookingTimeline,
   ItemType,
   LocationUI,
   Note,
@@ -34,6 +36,7 @@ import {
   SeeMoreHeader,
   SelectedServices,
 } from "../BookingSeeMoreInfo";
+import ImageViewer from "../ImageViewer";
 import StarDisplay from "../StarDisplay";
 
 export default function CompletedRoute({count}: {count: number}) {
@@ -197,13 +200,21 @@ const CompletedCard = ({
         className="overflow-hidden bg-white rounded-2xl active:opacity-90"
       >
         {/* Header */}
-        <View className="flex-row justify-between items-center px-5 py-3 bg-lightPrimary">
-          <Text
-            className={`font-semibold text-white ${maxLoadKg ? "text-base" : "text-lg"}`}
-          >
-            {vehicle} {maxLoadKg ? `(${maxLoadKg}kg)` : ""}
-          </Text>
-          <Text className="text-sm text-white">Completed at {formatted}</Text>
+        <View className="px-5 py-3 bg-lightPrimary">
+          <View className="flex-row justify-between items-center">
+            <View className="flex-1 mr-4">
+              <Text
+                className="text-base font-semibold text-white"
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
+                {vehicle}
+                {maxLoadKg ? ` · ${maxLoadKg}kg` : ""}
+              </Text>
+            </View>
+
+            <Text className="text-xs text-white/80 shrink-0">{formatted}</Text>
+          </View>
         </View>
 
         {/* Body */}
@@ -329,6 +340,11 @@ function SeeMoreModal({
       };
     }, [data]);
 
+  const timelineItems = useMemo(
+    () => (data ? getBookingTimelineItems(data, "completed") : []),
+    [data],
+  );
+
   if (!data) return null;
 
   return (
@@ -366,7 +382,7 @@ function SeeMoreModal({
                   Order Reference
                 </Text>
                 <Text className="text-sm font-bold text-white">
-                  #{data.bookingRef}
+                  {data.bookingRef}
                 </Text>
               </View>
               <View className="items-end shrink-0 max-w-[55%]">
@@ -466,37 +482,19 @@ function SeeMoreModal({
                 {data.routeData.distance.toFixed(2)}km
               </Text>
             </View>
-
-            {/* Booking Type */}
-            <View className="flex-row justify-between items-center p-3 bg-white rounded-lg">
-              <Text className="text-sm font-semibold text-gray-600">
-                {data.bookingType.type === "schedule"
-                  ? "Scheduled on"
-                  : data.bookingType.value}
-              </Text>
-              {data.bookingType.type === "schedule" && (
-                <Text className="text-sm font-bold text-gray-600">
-                  {formatDate(data.bookingType.value || "")}
-                </Text>
-              )}
-            </View>
-
-            {/* Completed At */}
-            <View className="flex-row justify-between items-center p-3 bg-white rounded-lg">
-              <Text className="text-sm font-semibold text-gray-600">
-                Completed on
-              </Text>
-              <Text className="text-sm font-bold text-gray-800">
-                {formatDate(data.completedAt)}
-              </Text>
-            </View>
           </View>
+
+          <BookingTimeline items={timelineItems} />
+
+          {/* Note */}
+          {data.note && <Note note={data.note} />}
 
           {/* Payment Info */}
           <PaymentInfo
             paymentMethod={data.paymentMethod}
             routeData={data.routeData}
             paidBy={data.paidBy}
+            voucherApplied={data.voucherApplied}
           />
 
           {/* Delivery Proof Images */}
@@ -643,9 +641,6 @@ function SeeMoreModal({
           {/* Item Type */}
           {data.itemType && <ItemType itemType={data.itemType} />}
 
-          {/* Note */}
-          {data.note && <Note note={data.note} />}
-
           {/* Images */}
           {data.photos && data.photos.length > 0 && (
             <AttachedImages
@@ -728,7 +723,7 @@ function SeeMoreModal({
           </View>
         )}
       </View>
-      <ImageView
+      <ImageViewer
         images={[{uri: selectedImage}]}
         imageIndex={0}
         visible={isImageViewVisible}

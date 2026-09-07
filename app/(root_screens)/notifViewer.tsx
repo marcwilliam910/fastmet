@@ -112,6 +112,8 @@ const renderNotificationContent = (
       return <ScheduledAutoAssignedContent data={data} />;
     case "scheduled_auto_cancelled":
       return <ScheduledAutoCancelledContent data={data} />;
+    case "driver_started_scheduled_trip":
+      return <DefaultContent data={data} />;
     default:
       return <DefaultContent data={data} />;
   }

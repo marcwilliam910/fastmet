@@ -1,25 +1,25 @@
-import { queryClient } from "@/lib/queryClient";
+import {queryClient} from "@/lib/queryClient";
 import {
   Montserrat_400Regular,
   Montserrat_700Bold,
   useFonts,
 } from "@expo-google-fonts/montserrat";
-import { QueryClientProvider } from "@tanstack/react-query";
-import { SplashScreen, Stack } from "expo-router";
-import { useEffect, useState } from "react";
-import { StatusBar } from "react-native";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { SafeAreaProvider } from "react-native-safe-area-context";
+import {QueryClientProvider} from "@tanstack/react-query";
+import {SplashScreen, Stack} from "expo-router";
+import {useEffect, useState} from "react";
+import {Pressable, StatusBar, Text, View} from "react-native";
+import {GestureHandlerRootView} from "react-native-gesture-handler";
+import {SafeAreaProvider} from "react-native-safe-area-context";
 
 import AnimatedSplash from "@/components/AnimatedSplash";
 import LoadingModal from "@/components/modals/loading";
-import { toastConfig } from "@/config/toastConfig";
-import { useAuth } from "@/hooks/useAuth";
-import { useSyncAuthMeta } from "@/hooks/useSyncAuthMeta";
+import {toastConfig} from "@/config/toastConfig";
+import {useAuth} from "@/hooks/useAuth";
+import {useSyncAuthMeta} from "@/hooks/useSyncAuthMeta";
 import SocketProvider from "@/sockets/context/SocketProvider";
+import * as Sentry from "@sentry/react-native";
 import Toast from "react-native-toast-message";
 import "../global.css";
-import * as Sentry from '@sentry/react-native';
 
 function AuthMetaSync() {
   useSyncAuthMeta();
@@ -27,7 +27,7 @@ function AuthMetaSync() {
 }
 
 Sentry.init({
-  dsn: 'https://aceadef3929e78209242fa356db6b552@o4510836378697728.ingest.us.sentry.io/4510836521435136',
+  dsn: "https://aceadef3929e78209242fa356db6b552@o4510836378697728.ingest.us.sentry.io/4510836521435136",
 
   // Adds more context data to events (IP address, cookies, user, etc.)
   // For more information, visit: https://docs.sentry.io/platforms/react-native/data-management/data-collected/
@@ -43,14 +43,37 @@ Sentry.init({
 void SplashScreen.preventAutoHideAsync();
 
 export default Sentry.wrap(function RootLayout() {
-  const { hasHydrated } = useAuth();
+  const {hasHydrated} = useAuth();
 
   const [fontsLoaded] = useFonts({
     Montserrat_400Regular,
     Montserrat_700Bold,
   });
 
-  const isReady = fontsLoaded && hasHydrated;
+  const [preRegStatus, setPreRegStatus] = useState<
+    "loading" | "error" | "loaded"
+  >("loading");
+  const [preRegActive, setPreRegActive] = useState(false);
+
+  const fetchPreRegStatus = async () => {
+    setPreRegStatus("loading");
+    try {
+      const res = await fetch(
+        `${process.env.EXPO_PUBLIC_BASE_URL}/api/app-config/pre-registration`,
+      );
+      const data = await res.json();
+      setPreRegActive(data?.isClientPreReg === true);
+      setPreRegStatus("loaded");
+    } catch (e) {
+      setPreRegStatus("error");
+    }
+  };
+
+  useEffect(() => {
+    void fetchPreRegStatus();
+  }, []);
+
+  const isReady = fontsLoaded && hasHydrated && preRegStatus !== "loading";
   const [splashAnimationFinished, setSplashAnimationFinished] = useState(false);
 
   useEffect(() => {
@@ -62,39 +85,49 @@ export default Sentry.wrap(function RootLayout() {
     return null;
   }
 
-  if (!splashAnimationFinished) {
+  if (preRegStatus === "error") {
     return (
-      <AnimatedSplash onFinish={() => setSplashAnimationFinished(true)} />
+      <View className="flex-1 justify-center items-center px-6 bg-white">
+        <Text className="mb-4 text-base text-center text-neutral-700 font-montserrat">
+          Couldn't connect. Please check your connection and try again.
+        </Text>
+        <Pressable
+          onPress={fetchPreRegStatus}
+          className="bg-[#ED8718] active:bg-[#FFA840] px-6 py-3 rounded-full"
+        >
+          <Text className="font-bold text-white font-montserrat">Retry</Text>
+        </Pressable>
+      </View>
     );
   }
 
+  if (!splashAnimationFinished) {
+    return <AnimatedSplash onFinish={() => setSplashAnimationFinished(true)} />;
+  }
+
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
+    <GestureHandlerRootView style={{flex: 1}}>
       <SafeAreaProvider>
-        {/* <FontWrapper> */}
         <QueryClientProvider client={queryClient}>
           <SocketProvider>
             <AuthMetaSync />
-            <Stack screenOptions={{ headerShown: false }}>
-              {/* <Stack.Protected guard={!user}>
-          <Stack.Screen name="(auth)" />
-        </Stack.Protected>
+            <Stack screenOptions={{headerShown: false}}>
+              <Stack.Protected guard={preRegActive}>
+                <Stack.Screen name="(pre_registration)" />
+              </Stack.Protected>
 
-        <Stack.Protected guard={!!user}>
-          <Stack.Screen name="(drawer)" />
-          <Stack.Screen name="(root_screens)" />
-        </Stack.Protected> */}
-              <Stack.Screen name="(drawer)" />
-              <Stack.Screen name="(auth)" />
-              <Stack.Screen name="(root_screens)" />
-              <Stack.Screen name="(public_screens)" />
+              <Stack.Protected guard={!preRegActive}>
+                <Stack.Screen name="(drawer)" />
+                <Stack.Screen name="(auth)" />
+                <Stack.Screen name="(root_screens)" />
+                <Stack.Screen name="(public_screens)" />
+              </Stack.Protected>
             </Stack>
           </SocketProvider>
           <Toast config={toastConfig} />
           <LoadingModal />
         </QueryClientProvider>
 
-        {/* </FontWrapper> */}
         <StatusBar backgroundColor="#0F2535" barStyle="light-content" />
       </SafeAreaProvider>
     </GestureHandlerRootView>

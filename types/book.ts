@@ -23,6 +23,13 @@ export type RouteData = {
   gasAdjFactor?: number;
 };
 
+export type BookingETAUpdatedPayload = {
+  bookingId: string;
+  distanceKm: number;
+  durationMin: number;
+  etaRevision: string;
+};
+
 export type Booking = {
   _id: string;
   bookingRef: string;
@@ -49,9 +56,20 @@ export type Booking = {
   createdAt: string;
   status: string;
   driverRating: number | null;
+  acceptedAt?: string | null;
+  activeAt?: string | null;
+  pickedUpAt?: string | null;
+  completedAt?: string | null;
   cancelledAt: string | null;
+  cancelledBy?: "client" | "driver" | "system" | null;
+  cancellationReason?: "no_show_client" | "no_show_driver" | "other" | null;
   requestedDrivers: RequestedDriver[];
   driver?: Driver;
+  voucherApplied?: {
+    issuedRewardId: string;
+    voucherTemplateId: string;
+    discountAmount: number;
+  } | null;
 };
 
 export type ActiveBooking = Booking & {driver: Driver};
@@ -96,6 +114,7 @@ export type RequestBooking = {
   photos: string[];
   note: string;
   itemType: string | null;
+  voucherRewardId?: string;
 };
 
 export type RequestedDriver = {

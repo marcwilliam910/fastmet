@@ -11,6 +11,12 @@ export const STATIC_IMAGES = {
   announcement: require("@/assets/images/announcement.png"),
   phone: require("@/assets/images/phone.png"),
   map_bg: require("@/assets/images/map_bg.png"),
+  pin: require("@/assets/images/pin.png"),
+
+  // Top view icons
+  motor: require("@/assets/top-view/motor.png"),
+  car: require("@/assets/top-view/car.png"),
+  truck: require("@/assets/top-view/truck.png"),
 };
 
 export const SUPPORT_EMAIL =

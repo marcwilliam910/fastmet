@@ -1,4 +1,4 @@
-import { rateDriver } from "@/api/book";
+import { rateDriver, rescheduleBooking } from "@/api/book";
 import api from "@/lib/axios";
 import { queryClient } from "@/lib/queryClient";
 import { useMutation } from "@tanstack/react-query";
@@ -51,6 +51,49 @@ export const useRateDriverMutation = () =>
         text2: error.response?.data?.message || "Please try again",
         position: "top",
         visibilityTime: 3000,
+        swipeable: true,
+        topOffset: 50,
+      });
+    },
+  });
+
+export const useRescheduleBookingMutation = () =>
+  useMutation({
+    mutationFn: ({
+      bookingId,
+      newScheduledTime,
+    }: {
+      bookingId: string;
+      newScheduledTime: string;
+    }) => rescheduleBooking(bookingId, newScheduledTime),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["userBookings", "pending"],
+        exact: false,
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["userBookings", "scheduled"],
+        exact: false,
+      });
+      queryClient.invalidateQueries({queryKey: ["userBookingCounts"]});
+
+      Toast.show({
+        type: "success",
+        text1: "Booking rescheduled",
+        text2: "Pickup time has been updated.",
+        position: "top",
+        visibilityTime: 3000,
+        swipeable: true,
+        topOffset: 50,
+      });
+    },
+    onError: (error: AxiosError<{message: string}>) => {
+      Toast.show({
+        type: "error",
+        text1: "Could not reschedule",
+        text2: error.response?.data?.message || "Please try again",
+        position: "top",
+        visibilityTime: 4000,
         swipeable: true,
         topOffset: 50,
       });

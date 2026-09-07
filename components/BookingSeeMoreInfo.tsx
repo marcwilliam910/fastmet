@@ -1,5 +1,7 @@
 import {LocationDetails, RouteData} from "@/types/book";
 import {Service} from "@/types/vehicle";
+import {BookingTimelineItem} from "@/utils/helpers/booking";
+import {formatDate} from "@/utils/helpers/date";
 import {formatLocation} from "@/utils/helpers/location";
 import {Ionicons} from "@expo/vector-icons";
 import {Image} from "expo-image";
@@ -120,16 +122,26 @@ export const PaymentInfo = ({
   paymentMethod,
   routeData,
   paidBy,
+  voucherApplied,
 }: {
   paymentMethod: string;
   routeData: RouteData;
   paidBy?: "sender" | "receiver";
+  voucherApplied?: {
+    issuedRewardId: string;
+    voucherTemplateId: string;
+    discountAmount: number;
+  } | null;
 }) => {
+  const netAmount = voucherApplied
+    ? routeData.totalPrice - voucherApplied.discountAmount
+    : routeData.totalPrice;
+
   return (
     <View className="p-5 bg-gray-50 rounded-2xl">
       <Text className="mb-3 text-base font-semibold text-gray-800">
         Payment Information (
-        {paymentMethod === "cash" ? "Cash Payment" : "Gcash Payment"})
+        {paymentMethod === "cash" ? "Cash Payment" : "Gcash Manual Payment"})
       </Text>
       {paidBy && (
         <View className="flex-row justify-between items-center p-3 mb-2 bg-white rounded-lg">
@@ -175,17 +187,46 @@ export const PaymentInfo = ({
           </Text>
         </View>
 
+        {/* Voucher Discount */}
+        {voucherApplied && (
+          <>
+            <View className="flex-row justify-between">
+              <Text className="text-xs text-gray-500">Gross Fare</Text>
+              <Text className="text-xs font-semibold text-gray-700">
+                Php{" "}
+                {routeData.totalPrice.toLocaleString("en-US", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </Text>
+            </View>
+
+            <View className="flex-row justify-between">
+              <Text className="text-xs font-medium text-green-600">
+                Voucher Discount
+              </Text>
+              <Text className="text-xs font-semibold text-green-600">
+                - Php{" "}
+                {voucherApplied.discountAmount.toLocaleString("en-US", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </Text>
+            </View>
+          </>
+        )}
+
         {/* Divider */}
         <View className="my-2 h-px bg-gray-200" />
 
         {/* Total */}
         <View className="flex-row justify-between">
           <Text className="text-base font-semibold text-gray-800">
-            Total Amount
+            {voucherApplied ? "Amount Paid" : "Total Amount"}
           </Text>
           <Text className="text-xl font-bold text-darkPrimary">
             Php{" "}
-            {routeData.totalPrice.toLocaleString("en-US", {
+            {netAmount.toLocaleString("en-US", {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
             })}
@@ -371,6 +412,44 @@ export const AttachedImages = ({
             />
           </Pressable>
         ))}
+      </View>
+    </View>
+  );
+};
+
+export const BookingTimeline = ({items}: {items: BookingTimelineItem[]}) => {
+  if (items.length <= 1) return null;
+
+  return (
+    <View className="p-5 bg-gray-50 rounded-2xl">
+      <Text className="mb-4 text-base font-semibold text-gray-800">
+        Timeline
+      </Text>
+      <View className="gap-4">
+        {items.map((item, index) => {
+          const isLast = index === items.length - 1;
+
+          return (
+            <View key={`${item.label}-${index}`} className="flex-row gap-3">
+              <View className="items-center">
+                <View
+                  className={`size-2.5 rounded-full ${
+                    isLast ? "bg-lightPrimary" : "bg-gray-300"
+                  }`}
+                />
+                {!isLast && <View className="flex-1 mt-1 w-px bg-gray-200" />}
+              </View>
+              <View className="flex-1 pb-1">
+                <Text className="text-sm font-medium text-gray-800">
+                  {item.label}
+                </Text>
+                <Text className="mt-0.5 text-xs text-gray-500">
+                  {formatDate(item.date)}
+                </Text>
+              </View>
+            </View>
+          );
+        })}
       </View>
     </View>
   );

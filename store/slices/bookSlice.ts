@@ -1,11 +1,11 @@
 import type {LocationDetails, RouteData} from "@/types/book";
-import {BookingTypeConfig} from "@/types/bookingType";
 import {SelectedVehicle, Service} from "@/types/vehicle";
 import {
   addressMentionsAllowedPickupCity,
   isDropOffAllowed,
   isWithinAllowedPickupBounds,
 } from "@/utils/constants";
+import {deriveDefaultBookingType, resolveModifier} from "@/utils/helpers/bookingType";
 import {StateCreator} from "zustand";
 import {BookingTypeSlice} from "./bookingTypeSlice";
 import {LoadingSlice} from "./loadingStore";
@@ -18,29 +18,10 @@ export type BookingType = {
   priceModifier: number; // resolved from DB config at selection time
 };
 
-// Decoupled so it's reusable in both setBookingType and clearStates
-const resolveModifier = (
-  configs: BookingTypeConfig[],
-  type: Type,
-  value: string,
-): number => {
-  const config = configs.find((c) => c.key === type);
-  if (!config) return 1.0;
-
-  if (config.subOptions?.length > 0) {
-    // ASAP-like: modifier lives on the sub-option (REGULAR, PRIORITY)
-    const sub = config.subOptions.find((s) => s.key === value);
-    return sub?.priceModifier ?? 1.0;
-  }
-
-  // Flat types (pooling, schedule): modifier lives on the parent
-  return config.priceModifier ?? 1.0;
-};
-
 export interface BookSlice {
   pickUp: LocationDetails;
   dropOff: LocationDetails;
-  bookingType: BookingType;
+  bookingType: BookingType | null;
   selectedVehicle: SelectedVehicle | null;
   routeData: RouteData;
   paymentMethod: "cash" | "gcash";
@@ -92,7 +73,7 @@ export const createBookSlice: StateCreator<
 > = (set, get) => ({
   pickUp: null,
   dropOff: null,
-  bookingType: {type: "asap", value: "REGULAR", priceModifier: 1.0},
+  bookingType: null,
   selectedVehicle: null,
   routeData: {
     distance: 0,
@@ -234,12 +215,7 @@ export const createBookSlice: StateCreator<
     set((state) => ({
       pickUp: null,
       dropOff: null,
-      // Re-resolve so default reflects configs even if they loaded after app boot
-      bookingType: {
-        type: "asap",
-        value: "REGULAR",
-        priceModifier: resolveModifier(state.bookingTypes, "asap", "REGULAR"),
-      },
+      bookingType: deriveDefaultBookingType(state.bookingTypes),
       selectedVehicle: null,
       routeData: {
         distance: 0,

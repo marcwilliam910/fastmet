@@ -25,6 +25,7 @@ const SheetButton = ({
   const [showModal, setShowModal] = useState(false);
   const { isLoggedIn } = useAuth();
 
+  const bookingType = useAppStore((state) => state.bookingType);
   const selectedVehicle = useAppStore((state) => state.selectedVehicle);
   const pickUp = useAppStore((state) => state.pickUp);
   const dropOff = useAppStore((state) => state.dropOff);
@@ -97,6 +98,7 @@ const SheetButton = ({
   };
 
   const isDisabled =
+    !bookingType ||
     !selectedVehicle ||
     !pickUp ||
     !dropOff ||

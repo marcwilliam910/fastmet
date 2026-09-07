@@ -7,8 +7,12 @@ import Toast from "react-native-toast-message";
 import {Socket} from "socket.io-client";
 import {
   acceptanceRequestedSchedule,
+  bookingCompleted,
   cancelScheduleDriverOffer,
+  driverArrivedAtDropoff,
+  driverArrivedAtPickup,
   driverUnavailable,
+  scheduledReminder,
 } from "../handlers/booking";
 import {receiveMessage} from "../handlers/chat";
 import {getSocket} from "../socket";
@@ -69,6 +73,10 @@ export default function SocketProvider({
       acceptanceRequestedSchedule(socket);
     const cleanupCancelScheduleDriverOffer = cancelScheduleDriverOffer(socket);
     const cleanupDriverUnavailable = driverUnavailable(socket);
+    const cleanupScheduledReminder = scheduledReminder(socket);
+    const cleanupDriverArrivedAtPickup = driverArrivedAtPickup(socket);
+    const cleanupDriverArrivedAtDropoff = driverArrivedAtDropoff(socket);
+    const cleanupBookingCompleted = bookingCompleted(socket);
 
     return () => {
       socket.off("connect_error"); // Clean up the listener
@@ -76,6 +84,10 @@ export default function SocketProvider({
       cleanupAcceptanceRequestedSchedule();
       cleanupCancelScheduleDriverOffer();
       cleanupDriverUnavailable();
+      cleanupScheduledReminder();
+      cleanupDriverArrivedAtPickup();
+      cleanupDriverArrivedAtDropoff();
+      cleanupBookingCompleted();
       socket.disconnect();
     };
   }, [socket, token]);

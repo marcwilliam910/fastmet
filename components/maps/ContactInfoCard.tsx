@@ -1,3 +1,4 @@
+import {useAppStore} from "@/store/useAppStore";
 import {Ionicons} from "@expo/vector-icons";
 import React from "react";
 import {Platform, Pressable, Text, TextInput, View} from "react-native";
@@ -51,23 +52,25 @@ export default function ContactInfoCard({
             </View>
           </View>
 
-          <Pressable
-            onPress={onUseMyInfo}
-            hitSlop={8}
-            className="flex-row items-center px-3 py-2 rounded-full bg-lightPrimary/10"
-          >
-            <Ionicons
-              name="person-circle-outline"
-              size={16}
-              color={THEME_COLOR}
-            />
-            <Text
-              className="ml-1 text-xs font-medium"
-              style={{color: THEME_COLOR}}
+          {useAppStore.getState().id && (
+            <Pressable
+              onPress={onUseMyInfo}
+              hitSlop={8}
+              className="flex-row items-center px-3 py-2 rounded-full bg-lightPrimary/10"
             >
-              Use mine
-            </Text>
-          </Pressable>
+              <Ionicons
+                name="person-circle-outline"
+                size={16}
+                color={THEME_COLOR}
+              />
+              <Text
+                className="ml-1 text-xs font-medium"
+                style={{color: THEME_COLOR}}
+              >
+                Use mine
+              </Text>
+            </Pressable>
+          )}
         </View>
 
         {!!additionalDetails && (

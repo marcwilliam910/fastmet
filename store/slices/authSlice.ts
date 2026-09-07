@@ -1,5 +1,7 @@
 import {UserAddress} from "@/types/user";
 import {StateCreator} from "zustand";
+import type {LiveEtaSlice} from "./liveEtaSlice";
+import {useDriverLocationStore} from "../useDriverLocationStore";
 
 export type ApprovalStatus = "pending" | "approved" | "rejected";
 
@@ -23,7 +25,12 @@ export interface AuthSlice {
   logout: () => void;
 }
 
-export const createAuthSlice: StateCreator<AuthSlice> = (set) => ({
+export const createAuthSlice: StateCreator<
+  AuthSlice & LiveEtaSlice,
+  [],
+  [],
+  AuthSlice
+> = (set, get) => ({
   phoneNumber: "",
   id: null,
   registrationStep: 1,
@@ -43,7 +50,10 @@ export const createAuthSlice: StateCreator<AuthSlice> = (set) => ({
       ...data,
     })),
 
-  logout: () =>
+  logout: () => {
+    get().clearLiveEtaCache();
+    // Clear all driver location cache entries on logout as safety net
+    useDriverLocationStore.getState().clearDriverLocationCache();
     set({
       phoneNumber: "",
       id: null,
@@ -57,5 +67,6 @@ export const createAuthSlice: StateCreator<AuthSlice> = (set) => ({
       approvalStatus: "pending",
       profilePictureUrl: "",
       preRegistered: false,
-    }),
+    });
+  },
 });

@@ -1,0 +1,112 @@
+import ContactTab from "@/components/support/contact";
+import MyReportsTab from "@/components/support/MyReportsTab";
+import ReportTab from "@/components/support/report";
+import {useDrawerFallbackBack} from "@/hooks/useDrawerFallbackBack";
+import {useState} from "react";
+import {
+  ActivityIndicator,
+  Pressable,
+  Text,
+  useWindowDimensions,
+  View,
+} from "react-native";
+import Animated from "react-native-reanimated";
+import {SafeAreaView} from "react-native-safe-area-context";
+import {
+  NavigationState,
+  SceneRendererProps,
+  TabView,
+} from "react-native-tab-view";
+
+type TabRoute = {
+  key: string;
+  title: string;
+};
+
+type CustomTabBarProps = SceneRendererProps & {
+  navigationState: NavigationState<TabRoute>;
+};
+
+function CustomTabBar({navigationState, jumpTo}: CustomTabBarProps) {
+  const layout = useWindowDimensions();
+  const tabWidth = layout.width / navigationState.routes.length;
+
+  return (
+    <View className="flex-row bg-white border-b border-gray-200">
+      {navigationState.routes.map((route, idx) => {
+        const isFocused = navigationState.index === idx;
+
+        return (
+          <Pressable
+            key={route.key}
+            onPress={() => jumpTo(route.key)}
+            className="flex-1 justify-center items-center py-4"
+            style={{width: tabWidth}}
+          >
+            <Text
+              className={`text-sm font-medium ${
+                isFocused ? "text-[#0F2535]" : "text-gray-400"
+              }`}
+            >
+              {route.title}
+            </Text>
+          </Pressable>
+        );
+      })}
+      <Animated.View
+        className="absolute bottom-0 h-[3px] bg-[#0F2535]"
+        style={{
+          width: tabWidth,
+          transform: [
+            {
+              translateX: navigationState.index * tabWidth,
+            },
+          ],
+        }}
+      />
+    </View>
+  );
+}
+
+export default function CustomerSupport() {
+  useDrawerFallbackBack();
+  const layout = useWindowDimensions();
+  const [index, setIndex] = useState(0);
+  const [routes] = useState<TabRoute[]>([
+    {key: "report", title: "File Report"},
+    {key: "myReports", title: "My Reports"},
+    {key: "contact", title: "Contact"},
+  ]);
+
+  const renderScene = ({route}: {route: TabRoute}) => {
+    switch (route.key) {
+      case "report":
+        return <ReportTab />;
+      case "myReports":
+        return <MyReportsTab />;
+      case "contact":
+        return <ContactTab />;
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <SafeAreaView className="flex-1 bg-white" edges={["bottom"]}>
+      <TabView
+        navigationState={{index, routes}}
+        renderScene={renderScene}
+        onIndexChange={setIndex}
+        initialLayout={{width: layout.width}}
+        lazy
+        renderLazyPlaceholder={() => (
+          <View className="flex-1 justify-center items-center">
+            <ActivityIndicator size="small" color="#999" />
+          </View>
+        )}
+        className="bg-white"
+        renderTabBar={(props) => <CustomTabBar {...props} />}
+      />
+    </SafeAreaView>
+  );
+}

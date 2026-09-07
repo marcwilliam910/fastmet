@@ -1,3 +1,4 @@
+import ImageViewer from "@/components/ImageViewer";
 import {queryClient} from "@/lib/queryClient";
 import {useConversationById} from "@/queries/conversation";
 import {useSocket} from "@/sockets/context/SocketProvider";
@@ -26,8 +27,8 @@ import {
   View,
 } from "react-native";
 import {Bubble, GiftedChat, IMessage} from "react-native-gifted-chat";
-import ImageView from "react-native-image-viewing";
 import {SafeAreaView} from "react-native-safe-area-context";
+import Toast from "react-native-toast-message";
 
 const Message = () => {
   const params = useLocalSearchParams();
@@ -52,7 +53,14 @@ const Message = () => {
   const [imageViewerVisible, setImageViewerVisible] = useState(false);
   const [selectedImageUrl, setSelectedImageUrl] = useState("");
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [canSendMessages, setCanSendMessages] = useState(false);
   const navigation = useNavigation();
+
+  useEffect(() => {
+    if (conversation?.hasActiveBooking != null) {
+      setCanSendMessages(conversation.hasActiveBooking === true);
+    }
+  }, [conversation?.hasActiveBooking]);
 
   // Format message for GiftedChat
   const formatMessage = useCallback(
@@ -109,8 +117,13 @@ const Message = () => {
     const handleRoomJoined = (data: {
       conversationId: string;
       success: boolean;
+      canSendMessages?: boolean;
     }) => {
       console.log("Room joined:", data.conversationId);
+
+      if (typeof data.canSendMessages === "boolean") {
+        setCanSendMessages(data.canSendMessages);
+      }
 
       // Request message history
       socket.emit("get_messages", {
@@ -146,9 +159,22 @@ const Message = () => {
     };
 
     // Handle errors
-    const handleMessageError = (error: any) => {
+    const handleMessageError = (error: {error?: string}) => {
       console.error("Message error:", error);
-      // You can show a toast/alert here
+      setIsUploadingImage(false);
+      Toast.show({
+        type: "error",
+        text1: "Message not sent",
+        text2: error?.error || "Unable to send message",
+      });
+    };
+
+    const handleChatReadonly = (data: {
+      conversationId: string;
+      canSendMessages: boolean;
+    }) => {
+      if (data.conversationId !== conversationId) return;
+      setCanSendMessages(data.canSendMessages);
     };
 
     // Register listeners
@@ -156,6 +182,7 @@ const Message = () => {
     socket.on("messages_loaded", handleMessagesLoaded);
     socket.on("receive_message", handleReceiveMessage);
     socket.on("message_error", handleMessageError);
+    socket.on("chat_readonly", handleChatReadonly);
 
     // Cleanup
     return () => {
@@ -164,13 +191,14 @@ const Message = () => {
       socket.off("messages_loaded", handleMessagesLoaded);
       socket.off("receive_message", handleReceiveMessage);
       socket.off("message_error", handleMessageError);
+      socket.off("chat_readonly", handleChatReadonly);
     };
   }, [conversationId, conversation, socket, formatMessage]);
 
   // Send message via socket
   const onSend = useCallback(
     (newMessages: IMessage[] = []) => {
-      if (!conversation || !conversationId) {
+      if (!conversation || !conversationId || !canSendMessages) {
         console.error("Missing required data for sending message");
         return;
       }
@@ -190,7 +218,7 @@ const Message = () => {
         });
       });
     },
-    [conversation, conversationId, socket],
+    [conversation, conversationId, socket, canSendMessages],
   );
 
   useEffect(() => {
@@ -325,6 +353,16 @@ const Message = () => {
   };
 
   const renderInputToolbar = () => {
+    if (!canSendMessages) {
+      return (
+        <View className="px-4 py-4 border-t border-gray-700 bg-secondary">
+          <Text className="text-center text-gray-400">
+            This chat is now read-only. The booking has been completed.
+          </Text>
+        </View>
+      );
+    }
+
     return (
       <View className="px-2 py-3 border-t border-gray-700 bg-secondary">
         <View className="flex-row gap-3 items-end">
@@ -548,7 +586,7 @@ const Message = () => {
         />
       </KeyboardAvoidingView>
 
-      <ImageView
+      <ImageViewer
         images={[{uri: selectedImageUrl}]}
         imageIndex={0}
         visible={imageViewerVisible}

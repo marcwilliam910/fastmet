@@ -203,7 +203,7 @@ const EditProfile = () => {
 
     const formData = new FormData();
     formData.append("fullName", form.fullName);
-    formData.append("gender", form.gender || "");
+    formData.append("gender", form.gender);
     formData.append("email", form.email || "");
     // Send structured address data
     if (form.address) {
@@ -309,7 +309,7 @@ const EditProfile = () => {
 
             {form.profilePictureUrl && (
               <Pressable
-                className="absolute top-2 right-2 p-1 bg-white rounded-full"
+                className="absolute p-1 bg-white rounded-full top-2 right-2"
                 onPress={() =>
                   setForm((prev) => ({...prev, profilePictureUrl: ""}))
                 }
@@ -319,7 +319,7 @@ const EditProfile = () => {
             )}
 
             <View
-              className="absolute right-2 bottom-2 p-2 bg-white rounded-full"
+              className="absolute p-2 bg-white rounded-full right-2 bottom-2"
               style={{
                 shadowColor: "#000", // color of the shadow
                 shadowOffset: {width: 0, height: 2}, // x/y offset
@@ -437,7 +437,7 @@ const EditProfile = () => {
       {/* Fixed buttons at bottom - only show when keyboard is hidden */}
       {!keyboardVisible && (
         <View
-          className="absolute right-0 left-0 px-6 bg-white border-t border-gray-100"
+          className="absolute left-0 right-0 px-6 bg-white border-t border-gray-100"
           style={{
             bottom: inset.bottom,
             paddingTop: 8,
@@ -454,7 +454,7 @@ const EditProfile = () => {
             </Text>
           </Pressable>
           <Pressable
-            className="items-center py-4 my-2 rounded-lg border-gray-200 bg-ctaSecondary active:bg-ctaSecondaryActive"
+            className="items-center py-4 my-2 border-gray-200 rounded-lg bg-ctaSecondary active:bg-ctaSecondaryActive"
             onPress={() => router.back()}
           >
             <Text className="text-base font-bold">Back</Text>

@@ -1,8 +1,9 @@
 import {Type} from "@/store/slices/bookSlice";
 import {useAppStore} from "@/store/useAppStore";
 import {LocationDetails, RouteData} from "@/types/book";
-import {GOOGLE_MAPS_API_KEY} from "@/utils/constants";
+import {GOOGLE_MAPS_API_KEY, STATIC_IMAGES} from "@/utils/constants";
 import {formatDuration} from "@/utils/helpers/date";
+import {Image} from "expo-image";
 import * as Location from "expo-location";
 import {useFocusEffect} from "expo-router";
 import React, {
@@ -15,10 +16,14 @@ import React, {
   useState,
 } from "react";
 import {Alert, StatusBar, StyleSheet, Text, View} from "react-native";
-import MapView, {LatLng, Marker, PROVIDER_GOOGLE} from "react-native-maps";
+import MapView, {
+  LatLng,
+  Marker,
+  Polyline,
+  PROVIDER_GOOGLE,
+} from "react-native-maps";
 import MapViewDirections from "react-native-maps-directions";
 import {useSafeAreaInsets} from "react-native-safe-area-context";
-import {MapMarkerPin} from "../MapMarkerPin";
 
 type Region = {
   latitude: number;
@@ -64,8 +69,9 @@ const MapScreen = forwardRef<MapScreenHandle, Props>(function MapScreen(
   const [isAnimating, setIsAnimating] = useState(false);
   const [tracksViewChanges, setTracksViewChanges] = useState(true);
   const setLoading = useAppStore((state) => state.setLoading);
+  const [routeCoordinates, setRouteCoordinates] = useState<LatLng[]>([]);
 
-  const MARKER_SIZE = 40;
+  // const MARKER_SIZE = 40;
 
   const markRouteUnfitted = useCallback(() => {
     onRouteFitChange?.(false);
@@ -183,6 +189,13 @@ const MapScreen = forwardRef<MapScreenHandle, Props>(function MapScreen(
     onRouteFitChange,
   ]);
 
+  useEffect(() => {
+    if (!pickUp || !dropOff) {
+      routeCoordinatesRef.current = [];
+      setRouteCoordinates([]);
+    }
+  }, [pickUp, dropOff]);
+
   // Update the useEffect
   useEffect(() => {
     if (pickUp?.coords && mapRef.current && !isAnimating) {
@@ -232,28 +245,50 @@ const MapScreen = forwardRef<MapScreenHandle, Props>(function MapScreen(
           }
         }}
       >
-        {/* POLYLINE FIRST - renders at bottom */}
+        {/* Route fetcher — invisible, only used for coordinates */}
         {pickUp && dropOff && (
           <MapViewDirections
-            origin={{
-              latitude: pickUp.coords.lat,
-              longitude: pickUp.coords.lng,
-            }}
+            origin={{latitude: pickUp.coords.lat, longitude: pickUp.coords.lng}}
             destination={{
               latitude: dropOff.coords.lat,
               longitude: dropOff.coords.lng,
             }}
             apikey={GOOGLE_MAPS_API_KEY ?? ""}
-            strokeWidth={5}
-            strokeColor="#007AFF"
+            strokeWidth={0}
+            strokeColor="transparent"
             optimizeWaypoints
             mode="DRIVING"
             onReady={(result) => {
               routeCoordinatesRef.current = result.coordinates;
+              setRouteCoordinates(result.coordinates);
               if (!isAnimating && mapRef.current) {
                 performFitToCoordinates(result.coordinates);
               }
             }}
+          />
+        )}
+
+        {/* Casing — dark, wide, sits underneath */}
+        {routeCoordinates.length > 0 && (
+          <Polyline
+            coordinates={routeCoordinates}
+            strokeWidth={7}
+            strokeColor="#0052CC"
+            lineCap="round"
+            lineJoin="round"
+            zIndex={1}
+          />
+        )}
+
+        {/* Fill — brand blue, narrower, on top */}
+        {routeCoordinates.length > 0 && (
+          <Polyline
+            coordinates={routeCoordinates}
+            strokeWidth={4}
+            strokeColor="#4D9FFF"
+            lineCap="round"
+            lineJoin="round"
+            zIndex={2}
           />
         )}
 
@@ -270,8 +305,11 @@ const MapScreen = forwardRef<MapScreenHandle, Props>(function MapScreen(
             tracksViewChanges={tracksViewChanges}
             zIndex={1000}
           >
-            <View style={{width: MARKER_SIZE, height: MARKER_SIZE, opacity: 1}}>
-              <MapMarkerPin color="#0074FF" size={MARKER_SIZE} />
+            <View>
+              <Image
+                source={STATIC_IMAGES.pickup}
+                style={{width: 50, height: 50}}
+              />
             </View>
           </Marker>
         )}
@@ -288,8 +326,11 @@ const MapScreen = forwardRef<MapScreenHandle, Props>(function MapScreen(
             tracksViewChanges={tracksViewChanges}
             zIndex={1001}
           >
-            <View style={{width: MARKER_SIZE, height: MARKER_SIZE, opacity: 1}}>
-              <MapMarkerPin color="#ED1C24" size={MARKER_SIZE} />
+            <View>
+              <Image
+                source={STATIC_IMAGES.dropoff}
+                style={{width: 50, height: 50}}
+              />
             </View>
           </Marker>
         )}
@@ -304,7 +345,11 @@ const MapScreen = forwardRef<MapScreenHandle, Props>(function MapScreen(
 
 export default memo(MapScreen);
 
-export function DistanceBubble({routeData}: {routeData: RouteData}) {
+export function DistanceBubble({
+  routeData,
+}: {
+  routeData: Pick<RouteData, "distance" | "duration">;
+}) {
   const inset = useSafeAreaInsets();
 
   return (
