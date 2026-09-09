@@ -4,6 +4,72 @@ import { Image } from "expo-image";
 import React from "react";
 import { Text, View } from "react-native";
 
+// Reusable Delivery Route Card Component
+export const DeliveryRouteCard = ({ 
+  pickUp, 
+  dropOff 
+}: { 
+  pickUp?: Record<string, any>; 
+  dropOff?: Record<string, any> 
+}) => {
+  if (!pickUp && !dropOff) return null;
+
+  return (
+    <View className="bg-gray-50 rounded-2xl p-5 border border-gray-200">
+      <Text className="text-xs font-semibold text-gray-500 mb-4 uppercase tracking-wide">
+        Delivery Route
+      </Text>
+
+      <View className="gap-3">
+        {/* Pick-up */}
+        {pickUp && (
+          <View className="flex-row items-start">
+            <View className="items-center mr-3">
+              <View className="bg-green-500 rounded-full size-10 justify-center items-center">
+                <Ionicons name="location" size={20} color="#FFFFFF" />
+              </View>
+              {dropOff && <View className="w-0.5 h-16 bg-gray-300 my-1" />}
+            </View>
+            <View className="flex-1 pt-1">
+              <Text className="text-xs text-gray-500 mb-1">Pick-up</Text>
+              <Text className="text-base font-semibold text-gray-900">
+                {pickUp.name}
+              </Text>
+              {formatLocation(pickUp) && (
+                <Text className="text-sm text-gray-500 mt-0.5">
+                  {formatLocation(pickUp)}
+                </Text>
+              )}
+            </View>
+          </View>
+        )}
+
+        {/* Drop-off */}
+        {dropOff && (
+          <View className="flex-row items-start">
+            <View className="items-center mr-3">
+              <View className="bg-red-500 rounded-full size-10 justify-center items-center">
+                <Ionicons name="flag" size={20} color="#FFFFFF" />
+              </View>
+            </View>
+            <View className="flex-1 pt-1">
+              <Text className="text-xs text-gray-500 mb-1">Drop-off</Text>
+              <Text className="text-base font-semibold text-gray-900">
+                {dropOff.name}
+              </Text>
+              {formatLocation(dropOff) && (
+                <Text className="text-sm text-gray-500 mt-0.5">
+                  {formatLocation(dropOff)}
+                </Text>
+              )}
+            </View>
+          </View>
+        )}
+      </View>
+    </View>
+  );
+};
+
 // Driver Offer notification content
 export const DriverOfferContent = ({ data }: { data: Record<string, any> }) => {
   const { drivers, pickUp, dropOff } = data;
@@ -148,62 +214,7 @@ export const BookingExpiredContent = ({
   data: Record<string, any>;
 }) => {
   const { pickUp, dropOff } = data;
-
-  return (
-    <View className="bg-gray-50 rounded-2xl p-5 border border-gray-200">
-      <Text className="text-xs font-semibold text-gray-500 mb-4 uppercase tracking-wide">
-        Delivery Route
-      </Text>
-
-      <View className="gap-3">
-        {/* Pick-up */}
-        {pickUp && (
-          <View className="flex-row items-start">
-            <View className="items-center mr-3">
-              <View className="bg-green-500 rounded-full size-10 justify-center items-center">
-                <Ionicons name="location" size={20} color="#FFFFFF" />
-              </View>
-              {/* Connecting line */}
-              {dropOff && <View className="w-0.5 h-16 bg-gray-300 my-1" />}
-            </View>
-            <View className="flex-1 pt-1">
-              <Text className="text-xs text-gray-500 mb-1">Pick-up</Text>
-              <Text className="text-base font-semibold text-gray-900">
-                {pickUp.name}
-              </Text>
-              {formatLocation(pickUp) && (
-                <Text className="text-sm text-gray-500 mt-0.5">
-                  {formatLocation(pickUp)}
-                </Text>
-              )}
-            </View>
-          </View>
-        )}
-
-        {/* Drop-off */}
-        {dropOff && (
-          <View className="flex-row items-start">
-            <View className="items-center mr-3">
-              <View className="bg-red-500 rounded-full size-10 justify-center items-center">
-                <Ionicons name="flag" size={20} color="#FFFFFF" />
-              </View>
-            </View>
-            <View className="flex-1 pt-1">
-              <Text className="text-xs text-gray-500 mb-1">Drop-off</Text>
-              <Text className="text-base font-semibold text-gray-900">
-                {dropOff.name}
-              </Text>
-              {formatLocation(dropOff) && (
-                <Text className="text-sm text-gray-500 mt-0.5">
-                  {formatLocation(dropOff)}
-                </Text>
-              )}
-            </View>
-          </View>
-        )}
-      </View>
-    </View>
-  );
+  return <DeliveryRouteCard pickUp={pickUp} dropOff={dropOff} />;
 };
 
 export const ScheduledChooseDriverContent = ({
@@ -661,6 +672,16 @@ export const ScheduledAutoCancelledContent = ({
       </View>
     </View>
   );
+};
+
+// Admin action notification content - reuses route card
+export const AdminBookingActionContent = ({
+  data,
+}: {
+  data: Record<string, any>;
+}) => {
+  const { pickUp, dropOff } = data;
+  return <DeliveryRouteCard pickUp={pickUp} dropOff={dropOff} />;
 };
 
 // Default fallback content for unknown notification types

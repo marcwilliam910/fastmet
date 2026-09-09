@@ -2,6 +2,7 @@ import ContactTab from "@/components/support/contact";
 import MyReportsTab from "@/components/support/MyReportsTab";
 import ReportTab from "@/components/support/report";
 import {useDrawerFallbackBack} from "@/hooks/useDrawerFallbackBack";
+import {usePendingReportsAgainstMeCount} from "@/queries/reportQueries";
 import {useState} from "react";
 import {
   ActivityIndicator,
@@ -25,9 +26,14 @@ type TabRoute = {
 
 type CustomTabBarProps = SceneRendererProps & {
   navigationState: NavigationState<TabRoute>;
+  pendingAgainstMeCount: number;
 };
 
-function CustomTabBar({navigationState, jumpTo}: CustomTabBarProps) {
+function CustomTabBar({
+  navigationState,
+  jumpTo,
+  pendingAgainstMeCount,
+}: CustomTabBarProps) {
   const layout = useWindowDimensions();
   const tabWidth = layout.width / navigationState.routes.length;
 
@@ -35,6 +41,8 @@ function CustomTabBar({navigationState, jumpTo}: CustomTabBarProps) {
     <View className="flex-row bg-white border-b border-gray-200">
       {navigationState.routes.map((route, idx) => {
         const isFocused = navigationState.index === idx;
+        const showCount =
+          route.key === "myReports" && pendingAgainstMeCount > 0;
 
         return (
           <Pressable
@@ -43,13 +51,24 @@ function CustomTabBar({navigationState, jumpTo}: CustomTabBarProps) {
             className="flex-1 justify-center items-center py-4"
             style={{width: tabWidth}}
           >
-            <Text
-              className={`text-sm font-medium ${
-                isFocused ? "text-[#0F2535]" : "text-gray-400"
-              }`}
-            >
-              {route.title}
-            </Text>
+            <View className="flex-row items-center gap-1.5">
+              <Text
+                className={`text-sm font-medium ${
+                  isFocused ? "text-[#0F2535]" : "text-gray-400"
+                }`}
+              >
+                {route.title}
+              </Text>
+              {showCount && (
+                <View className="absolute -top-3 -right-5 bg-red-500 rounded-full size-[16px] justify-center items-center">
+                  <Text
+                    className={`text-white text-[${pendingAgainstMeCount > 9 ? "6px" : "8px"}] scale-125 font-bold`}
+                  >
+                    {pendingAgainstMeCount > 9 ? "9+" : pendingAgainstMeCount}
+                  </Text>
+                </View>
+              )}
+            </View>
           </Pressable>
         );
       })}
@@ -77,6 +96,7 @@ export default function CustomerSupport() {
     {key: "myReports", title: "My Reports"},
     {key: "contact", title: "Contact"},
   ]);
+  const {data: pendingAgainstMeCount = 0} = usePendingReportsAgainstMeCount();
 
   const renderScene = ({route}: {route: TabRoute}) => {
     switch (route.key) {
@@ -105,7 +125,12 @@ export default function CustomerSupport() {
           </View>
         )}
         className="bg-white"
-        renderTabBar={(props) => <CustomTabBar {...props} />}
+        renderTabBar={(props) => (
+          <CustomTabBar
+            {...props}
+            pendingAgainstMeCount={pendingAgainstMeCount}
+          />
+        )}
       />
     </SafeAreaView>
   );

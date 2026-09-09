@@ -1,9 +1,9 @@
-import { queryClient } from "@/lib/queryClient";
-import { useAppStore } from "@/store/useAppStore";
-import { ConversationResponse } from "@/types/chat";
-import { InfiniteData } from "@tanstack/react-query";
+import {queryClient} from "@/lib/queryClient";
+import {useAppStore} from "@/store/useAppStore";
+import {ConversationResponse} from "@/types/chat";
+import {InfiniteData} from "@tanstack/react-query";
 import Toast from "react-native-toast-message";
-import { Socket } from "socket.io-client";
+import {Socket} from "socket.io-client";
 
 export const receiveMessage = (socket: Socket) => {
   const receiveMessageHandler = (data: {
@@ -18,7 +18,7 @@ export const receiveMessage = (socket: Socket) => {
       .getState()
       .setUnreadConversationsCount(data.unreadConversationsCount);
 
-    const { isInMessageScreen, activeConversationId } = useAppStore.getState();
+    const {isInMessageScreen, activeConversationId} = useAppStore.getState();
     const isViewingThisConversation =
       isInMessageScreen && activeConversationId === data.conversationId;
 
@@ -31,26 +31,31 @@ export const receiveMessage = (socket: Socket) => {
 
       const conversationsQueries = queryClient.getQueriesData<
         InfiniteData<ConversationsPage>
-      >({ queryKey: ["conversations"] });
+      >({queryKey: ["conversations"]});
 
       const hasCache = conversationsQueries.some(([, d]) => !!d?.pages?.length);
+      const foundInCache = conversationsQueries.some(([, d]) =>
+        d?.pages?.some((page) =>
+          page.conversations.some((c) => c._id === data.conversationId),
+        ),
+      );
 
-      if (hasCache) {
+      // Brand-new conversation is not in the list yet. Refetch outside any
+      // cache write — invalidating inside setQueriesData gets overwritten by
+      // the returned old list, so the first message never appears until refresh.
+      if (!hasCache || !foundInCache) {
+        queryClient.invalidateQueries({queryKey: ["conversations"]});
+      } else {
         queryClient.setQueriesData<InfiniteData<ConversationsPage>>(
-          { queryKey: ["conversations"] },
+          {queryKey: ["conversations"]},
           (old) => {
             if (!old?.pages?.length) return old;
 
-            // Find the conversation across all pages
             const found = old.pages
               .flatMap((p) => p.conversations)
               .find((c) => c._id === data.conversationId);
 
-            if (!found) {
-              // Conversation not in cache (brand-new) -- fall back to refetch
-              queryClient.invalidateQueries({ queryKey: ["conversations"] });
-              return old;
-            }
+            if (!found) return old;
 
             // Remove the conversation from whichever page it sits in
             const pagesWithout = old.pages.map((page) => ({
@@ -86,8 +91,6 @@ export const receiveMessage = (socket: Socket) => {
             };
           },
         );
-      } else {
-        queryClient.invalidateQueries({ queryKey: ["conversations"] });
       }
 
       Toast.show({

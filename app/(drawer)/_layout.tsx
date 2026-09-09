@@ -6,6 +6,7 @@ import {usePushNotifications} from "@/hooks/usePushNotification";
 import {useAnnouncementUnreadCount} from "@/queries/announcementQueries";
 import {useUnreadChatCount} from "@/queries/conversation";
 import {useUnreadNotificationCount} from "@/queries/notification";
+import {usePendingReportsAgainstMeCount} from "@/queries/reportQueries";
 import {useVoucherBadgeCount} from "@/queries/rewardQueries";
 import {useAppStore} from "@/store/useAppStore";
 import {hasProfile} from "@/utils/helpers/onboarding";
@@ -113,6 +114,8 @@ export default function DrawerLayout() {
   // Fetch voucher badge count
   const {data: voucherBadgeCount, refetch: refetchVoucherBadge} =
     useVoucherBadgeCount();
+  const {data: pendingReportsAgainstMeCount = 0} =
+    usePendingReportsAgainstMeCount();
 
   // Refetch voucher badge when drawer/voucher screen gains focus
   useFocusEffect(
@@ -277,7 +280,21 @@ export default function DrawerLayout() {
         <Drawer.Screen
           name="support"
           options={{
-            drawerLabel: "Customer Support",
+            drawerLabel: ({focused}) => (
+              <View className="relative flex-row flex-1 justify-between items-center">
+                <Text
+                  style={{
+                    color: focused ? "#FFA840" : "#FFFFFF",
+                    fontWeight: "500",
+                  }}
+                >
+                  Customer Support
+                </Text>
+                {pendingReportsAgainstMeCount > 0 && (
+                  <View className="-top-0 -right-3 justify-center items-center bg-red-500 rounded-full size-2" />
+                )}
+              </View>
+            ),
             title: "Customer Support",
             // headerShown: true,
             drawerIcon: ({focused}) => (

@@ -1,4 +1,4 @@
-import { BookingExpiredContent, DefaultContent, DriverOfferContent, ScheduledAutoAssignedContent, ScheduledAutoAssignWarningContent, ScheduledAutoCancelledContent, ScheduledChooseDriverContent, ScheduledNoDriversContent } from "@/components/NotifContentUI";
+import { AdminBookingActionContent, BookingExpiredContent, DefaultContent, DriverOfferContent, ScheduledAutoAssignedContent, ScheduledAutoAssignWarningContent, ScheduledAutoCancelledContent, ScheduledChooseDriverContent, ScheduledNoDriversContent } from "@/components/NotifContentUI";
 import { useMarkNotificationAsRead } from "@/mutations/notification";
 import { useNotificationById } from "@/queries/notification";
 import { formatDate } from "@/utils/helpers/date";
@@ -114,6 +114,10 @@ const renderNotificationContent = (
       return <ScheduledAutoCancelledContent data={data} />;
     case "driver_started_scheduled_trip":
       return <DefaultContent data={data} />;
+    case "booking_cancelled_admin":
+    case "booking_force_completed_admin":
+    case "voucher_released_admin":
+      return <AdminBookingActionContent data={data} />;
     default:
       return <DefaultContent data={data} />;
   }

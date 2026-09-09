@@ -11,6 +11,7 @@ type NotificationData = Record<string, unknown> | undefined | null;
  * 
  * Current supported targets:
  * - "searchingDriver": Navigate back to driver search screen (for driver offers)
+ * - "chat": Navigate to the conversation
  * - default: Navigate to generic notification viewer
  */
 export function handleNotificationEntry(
@@ -30,6 +31,23 @@ export function handleNotificationEntry(
           router.push({
             pathname: "/(root_screens)/booking/searchingDriver",
             params: {bookingId},
+          });
+        } catch {
+          // navigation not ready — ignore
+        }
+      }, 0);
+    }
+    return;
+  }
+
+  if (target === "chat") {
+    const conversationId = data.conversationId as string | undefined;
+    if (conversationId) {
+      setTimeout(() => {
+        try {
+          pushOnce({
+            pathname: "/message",
+            params: {conversationId},
           });
         } catch {
           // navigation not ready — ignore

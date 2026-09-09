@@ -53,6 +53,14 @@ export const reportAPI = {
     return response.data;
   },
 
+  // Pending reports filed against this client (badge count)
+  getPendingAgainstMeCount: async (): Promise<{count: number}> => {
+    const response = await api.get<{count: number}>(
+      "/reports/pending-against-me-count",
+    );
+    return response.data;
+  },
+
   // Get report by ID
   getReportById: async (reportId: string): Promise<{report: Report}> => {
     const response = await api.get(`/reports/${reportId}`);

@@ -14,6 +14,9 @@ export enum NOTIFICATION_TYPES {
   scheduled_auto_cancelled = "scheduled_auto_cancelled",
   driver_unavailable = "driver_unavailable",
   driver_started_scheduled_trip = "driver_started_scheduled_trip",
+  booking_cancelled_admin = "booking_cancelled_admin",
+  booking_force_completed_admin = "booking_force_completed_admin",
+  voucher_released_admin = "voucher_released_admin",
 }
 
 export const NOTIFICATION_CONFIG: Record<
@@ -64,6 +67,21 @@ export const NOTIFICATION_CONFIG: Record<
     icon: "navigate",
     color: "#10B981", // green
     label: "Trip Started",
+  },
+  [NOTIFICATION_TYPES.booking_cancelled_admin]: {
+    icon: "close-circle",
+    color: "#DC2626", // red
+    label: "Booking Cancelled",
+  },
+  [NOTIFICATION_TYPES.booking_force_completed_admin]: {
+    icon: "checkmark-circle",
+    color: "#10B981", // green
+    label: "Booking Completed",
+  },
+  [NOTIFICATION_TYPES.voucher_released_admin]: {
+    icon: "ticket",
+    color: "#8B5CF6", // purple
+    label: "Voucher Released",
   },
 };
 // Default fallback for unknown notification types

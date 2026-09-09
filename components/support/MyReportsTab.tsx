@@ -1,7 +1,11 @@
 import {reportAPI} from "@/api/reports";
+import {
+  PENDING_REPORTS_AGAINST_ME_KEY,
+  usePendingReportsAgainstMeCount,
+} from "@/queries/reportQueries";
 import {Report} from "@/types/report";
 import {Ionicons} from "@expo/vector-icons";
-import {useQuery} from "@tanstack/react-query";
+import {useQuery, useQueryClient} from "@tanstack/react-query";
 import {Image} from "expo-image";
 import {router} from "expo-router";
 import React, {useState} from "react";
@@ -18,6 +22,8 @@ type ReportType = "filed" | "received";
 
 export default function MyReportsTab() {
   const [activeType, setActiveType] = useState<ReportType>("filed");
+  const queryClient = useQueryClient();
+  const {data: pendingAgainstMeCount = 0} = usePendingReportsAgainstMeCount();
 
   const {data, isLoading, error, refetch, isRefetching} = useQuery({
     queryKey: ["reports", activeType],
@@ -25,6 +31,13 @@ export default function MyReportsTab() {
   });
 
   const reports = data?.reports || [];
+
+  const handleRefresh = async () => {
+    await Promise.all([
+      refetch(),
+      queryClient.invalidateQueries({queryKey: PENDING_REPORTS_AGAINST_ME_KEY}),
+    ]);
+  };
 
   return (
     <View className="flex-1">
@@ -50,13 +63,22 @@ export default function MyReportsTab() {
             activeType === "received" ? "bg-lightPrimary" : "bg-gray-100"
           }`}
         >
-          <Text
-            className={`text-center font-semibold ${
-              activeType === "received" ? "text-white" : "text-gray-600"
-            }`}
-          >
-            Reports Against Me
-          </Text>
+          <View className="flex-row justify-center items-center gap-1.5">
+            <Text
+              className={`text-center font-semibold ${
+                activeType === "received" ? "text-white" : "text-gray-600"
+              }`}
+            >
+              Reports Against Me
+            </Text>
+            {pendingAgainstMeCount > 0 && (
+              <View
+                className={`size-2 rounded-full ${
+                  activeType === "received" ? "bg-white" : "bg-red-500"
+                }`}
+              />
+            )}
+          </View>
         </Pressable>
       </View>
 
@@ -75,7 +97,7 @@ export default function MyReportsTab() {
             {(error as Error).message}
           </Text>
           <Pressable
-            onPress={() => refetch()}
+            onPress={() => handleRefresh()}
             className="px-6 py-3 mt-4 bg-orange-500 rounded-xl"
           >
             <Text className="font-semibold text-white">Retry</Text>
@@ -101,7 +123,7 @@ export default function MyReportsTab() {
           refreshControl={
             <RefreshControl
               refreshing={isRefetching}
-              onRefresh={refetch}
+              onRefresh={handleRefresh}
               tintColor="#FFA840"
             />
           }
