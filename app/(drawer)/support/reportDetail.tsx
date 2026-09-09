@@ -53,11 +53,11 @@ export default function ReportDetailScreen() {
       });
       return;
     }
-    if (replyMessage.length > 500) {
+    if (replyMessage.length > 2000) {
       Toast.show({
         type: "error",
         text1: "Too Long",
-        text2: "Reply must be 500 characters or less",
+        text2: "Reply must be 2000 characters or less",
       });
       return;
     }
@@ -115,7 +115,7 @@ export default function ReportDetailScreen() {
   }
 
   const status = STATUS_CONFIG[report.status];
-  const canReply = report.reportedAgainst === "driver" && report.reply === null;
+  const canReply = report.reportedAgainst === "client" && report.reply === null;
   const reportImages = report.images ?? [];
   const bookingStatus =
     typeof report.bookingId === "object" ? report.bookingId.status : "N/A";
@@ -301,7 +301,7 @@ export default function ReportDetailScreen() {
             <View className="flex-row gap-2 justify-center items-center p-4 mb-4 bg-gray-100 rounded-xl">
               <Ionicons name="hourglass-outline" size={16} color="#6B7280" />
               <Text className="text-sm text-center text-gray-600">
-                {report.reportedAgainst === "driver"
+                {report.reportedAgainst === "client"
                   ? "Waiting for reply or admin review"
                   : "Reported party has not replied yet"}
               </Text>

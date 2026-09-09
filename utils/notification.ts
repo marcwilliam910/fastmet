@@ -17,6 +17,8 @@ export enum NOTIFICATION_TYPES {
   booking_cancelled_admin = "booking_cancelled_admin",
   booking_force_completed_admin = "booking_force_completed_admin",
   voucher_released_admin = "voucher_released_admin",
+  report = "report",
+  report_reply = "report_reply",
 }
 
 export const NOTIFICATION_CONFIG: Record<
@@ -82,6 +84,16 @@ export const NOTIFICATION_CONFIG: Record<
     icon: "ticket",
     color: "#8B5CF6", // purple
     label: "Voucher Released",
+  },
+  [NOTIFICATION_TYPES.report]: {
+    icon: "flag",
+    color: "#DC2626",
+    label: "New Report",
+  },
+  [NOTIFICATION_TYPES.report_reply]: {
+    icon: "chatbox",
+    color: "#3B82F6",
+    label: "Report Reply",
   },
 };
 // Default fallback for unknown notification types

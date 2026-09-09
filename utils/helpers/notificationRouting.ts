@@ -1,3 +1,5 @@
+import {queryClient} from "@/lib/queryClient";
+import {PENDING_REPORTS_AGAINST_ME_KEY} from "@/queries/reportQueries";
 import {pushOnce} from "@/utils/helpers/navigation";
 import {router} from "expo-router";
 
@@ -12,8 +14,35 @@ type NotificationData = Record<string, unknown> | undefined | null;
  * Current supported targets:
  * - "searchingDriver": Navigate back to driver search screen (for driver offers)
  * - "chat": Navigate to the conversation
+ * - "reportDetail": Navigate to a filed or received report
  * - default: Navigate to generic notification viewer
  */
+function reportIdFrom(data: NotificationData): string | undefined {
+  if (!data) return;
+  if (typeof data.reportId === "string" && data.reportId) return data.reportId;
+  const nested = data.data as Record<string, unknown> | undefined;
+  return typeof nested?.reportId === "string" ? nested.reportId : undefined;
+}
+
+export function navigateToReportDetail(reportId: string): void {
+  if (!reportId) return;
+
+  void queryClient.invalidateQueries({queryKey: ["reports"]});
+  void queryClient.invalidateQueries({queryKey: ["report", reportId]});
+  void queryClient.invalidateQueries({queryKey: PENDING_REPORTS_AGAINST_ME_KEY});
+
+  setTimeout(() => {
+    try {
+      pushOnce({
+        pathname: "/(drawer)/support/reportDetail",
+        params: {reportId},
+      });
+    } catch {
+      // navigation not ready — ignore
+    }
+  }, 0);
+}
+
 export function handleNotificationEntry(
   data: NotificationData,
   options: {navigate?: boolean} = {navigate: true},
@@ -37,6 +66,13 @@ export function handleNotificationEntry(
         }
       }, 0);
     }
+    return;
+  }
+
+  const type = data.type as string | undefined;
+  if (target === "reportDetail" || type === "report" || type === "report_reply") {
+    const reportId = reportIdFrom(data);
+    if (reportId) navigateToReportDetail(reportId);
     return;
   }
 

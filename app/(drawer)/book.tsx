@@ -176,6 +176,7 @@ const Book = () => {
           setSearchType(type);
           setSearchModalVisible(true);
         }}
+        toZoomOut={() => mapScreenRef.current?.fitToRoute()}
       />
 
       <SearchModal

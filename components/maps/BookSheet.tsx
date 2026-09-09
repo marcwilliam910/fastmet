@@ -25,10 +25,12 @@ import SheetButton from "./SheetButton";
 const BookSheet = ({
   isDragging,
   onOpenSearch,
+  toZoomOut,
   isSurgeLoading,
 }: {
   isDragging: boolean;
   onOpenSearch: (type: "pickup" | "dropoff") => void;
+  toZoomOut: () => void;
   isSurgeLoading: boolean;
 }) => {
   const sheetRef = useRef<BottomSheet>(null);
@@ -146,8 +148,10 @@ const BookSheet = ({
   );
 
   useEffect(() => {
-    if (hasDistanceFee) sheetRef.current?.snapToIndex(0);
-  }, [hasDistanceFee]);
+    if (hasDistanceFee) {
+      toZoomOut();
+    }
+  }, [hasDistanceFee, toZoomOut]);
 
   return (
     <>

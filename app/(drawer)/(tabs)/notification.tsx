@@ -1,11 +1,13 @@
-import { useMarkAllNotificationsAsRead } from "@/mutations/notification";
 import {
-  useNotifications,
-} from "@/queries/notification";
-import { Notification } from "@/types/notification";
-import { formatLastMessageTime } from "@/utils/helpers/date";
-import { getNotificationConfig } from "@/utils/notification";
-import { pushOnce } from "@/utils/helpers/navigation";
+  useMarkAllNotificationsAsRead,
+  useMarkNotificationAsRead,
+} from "@/mutations/notification";
+import {useNotifications} from "@/queries/notification";
+import {Notification} from "@/types/notification";
+import {formatLastMessageTime} from "@/utils/helpers/date";
+import {navigateToReportDetail} from "@/utils/helpers/notificationRouting";
+import {pushOnce} from "@/utils/helpers/navigation";
+import {getNotificationConfig} from "@/utils/notification";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useMemo } from "react";
 import {
@@ -133,16 +135,25 @@ export default NotificationScreen;
 
 const NotificationCard = ({ item }: { item: Notification }) => {
   const config = getNotificationConfig(item.type);
+  const {mutate: markAsRead} = useMarkNotificationAsRead();
+  const reportId = item.data?.reportId as string | undefined;
+  const isReport =
+    (item.type === "report" || item.type === "report_reply") && !!reportId;
 
   return (
     <Pressable
       className={`flex-row items-center gap-4 px-4 py-3 active:bg-ctaSecondary ${!item.isRead ? "bg-orange-50" : ""}`}
-      onPress={() =>
+      onPress={() => {
+        if (!item.isRead) markAsRead(item._id);
+        if (isReport && reportId) {
+          navigateToReportDetail(reportId);
+          return;
+        }
         pushOnce({
           pathname: "/(root_screens)/notifViewer",
           params: { notificationId: item._id },
-        })
-      }
+        });
+      }}
     >
       <View
         className="justify-center items-center rounded-full size-12"

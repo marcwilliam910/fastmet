@@ -1,19 +1,19 @@
-import {reportAPI} from "@/api/reports";
 import {
   PENDING_REPORTS_AGAINST_ME_KEY,
   usePendingReportsAgainstMeCount,
+  useReports,
 } from "@/queries/reportQueries";
 import {Report} from "@/types/report";
 import {Ionicons} from "@expo/vector-icons";
-import {useQuery, useQueryClient} from "@tanstack/react-query";
+import {useQueryClient} from "@tanstack/react-query";
 import {Image} from "expo-image";
 import {router} from "expo-router";
 import React, {useState} from "react";
 import {
   ActivityIndicator,
+  FlatList,
   Pressable,
   RefreshControl,
-  ScrollView,
   Text,
   View,
 } from "react-native";
@@ -25,12 +25,18 @@ export default function MyReportsTab() {
   const queryClient = useQueryClient();
   const {data: pendingAgainstMeCount = 0} = usePendingReportsAgainstMeCount();
 
-  const {data, isLoading, error, refetch, isRefetching} = useQuery({
-    queryKey: ["reports", activeType],
-    queryFn: () => reportAPI.getReports({type: activeType, limit: 20}),
-  });
+  const {
+    data,
+    isLoading,
+    error,
+    refetch,
+    isRefetching,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useReports(activeType);
 
-  const reports = data?.reports || [];
+  const reports = data?.pages.flatMap((page) => page.reports) ?? [];
 
   const handleRefresh = async () => {
     await Promise.all([
@@ -116,22 +122,32 @@ export default function MyReportsTab() {
           </Text>
         </View>
       ) : (
-        <ScrollView
-          className="flex-1 px-5 py-4"
+        <FlatList
+          className="flex-1"
+          data={reports}
+          keyExtractor={(report) => report._id}
+          renderItem={({item}) => <ReportCard report={item} />}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{paddingBottom: 40}}
+          contentContainerStyle={{paddingHorizontal: 20, paddingTop: 16, paddingBottom: 40}}
           refreshControl={
             <RefreshControl
-              refreshing={isRefetching}
+              refreshing={isRefetching && !isFetchingNextPage}
               onRefresh={handleRefresh}
               tintColor="#FFA840"
             />
           }
-        >
-          {reports.map((report) => (
-            <ReportCard key={report._id} report={report} />
-          ))}
-        </ScrollView>
+          onEndReached={() => {
+            if (hasNextPage && !isFetchingNextPage) fetchNextPage();
+          }}
+          onEndReachedThreshold={0.3}
+          ListFooterComponent={
+            isFetchingNextPage ? (
+              <View className="py-4">
+                <ActivityIndicator color="#FFA840" />
+              </View>
+            ) : null
+          }
+        />
       )}
     </View>
   );
