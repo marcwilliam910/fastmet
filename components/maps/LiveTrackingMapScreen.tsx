@@ -348,7 +348,7 @@ export default function LiveTrackingMapScreen({
             </Marker>
           )}
 
-          {driverLocation && showDriverOnMap && (
+          {driverLocation && showDriverOnMap && status !== "need_continuance" && (
             <MapViewDirections
               origin={{
                 latitude: driverLocation.lat,

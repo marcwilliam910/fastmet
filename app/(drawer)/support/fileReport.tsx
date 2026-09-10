@@ -1,4 +1,5 @@
 import {reportAPI} from "@/api/reports";
+import {useBookingSettings} from "@/hooks/useBookingSettings";
 import {useSubmitReportMutation} from "@/mutations/reportMutation";
 import {Booking} from "@/types/book";
 import {CategoryOption} from "@/types/report";
@@ -38,6 +39,7 @@ const CATEGORY_ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
 
 export default function FileReportScreen() {
   const {width: screenWidth} = useWindowDimensions();
+  const {reportWindowDays} = useBookingSettings();
   const photoSlotSize =
     (screenWidth - 40 - PHOTO_GAP * (PHOTO_COLS - 1)) / PHOTO_COLS;
 
@@ -171,7 +173,8 @@ export default function FileReportScreen() {
               File a Report
             </Text>
             <Text className="mt-1 text-sm text-gray-500">
-              Report issues within 5 days of completion or cancellation
+              Report issues within {reportWindowDays} days of completion or
+              cancellation
             </Text>
           </View>
 
@@ -274,9 +277,10 @@ export default function FileReportScreen() {
                   <Text className="mt-2 text-sm text-center text-gray-500">
                     No eligible bookings found
                   </Text>
-                  <Text className="mt-1 text-xs text-center text-gray-400">
-                    Only completed or no-show bookings from the last 5 days
-                  </Text>
+                    <Text className="mt-1 text-xs text-center text-gray-400">
+                      Only completed or no-show bookings from the last{" "}
+                      {reportWindowDays} days
+                    </Text>
                 </View>
               ) : (
                 <ScrollView nestedScrollEnabled>

@@ -643,7 +643,7 @@ export default function PaymentMethod() {
           disabled={loading}
         >
           <Text className="text-lg font-bold text-center text-white">
-            {loading ? "Loading..." : "Book Now"}
+            {loading ? "Booking..." : "Book Now"}
           </Text>
         </Pressable>
       </View>

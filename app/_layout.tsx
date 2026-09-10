@@ -1,3 +1,4 @@
+import {BookingSettingsBootstrap} from "@/hooks/useBookingSettings";
 import {queryClient} from "@/lib/queryClient";
 import {
   Montserrat_400Regular,
@@ -18,6 +19,7 @@ import {useAuth} from "@/hooks/useAuth";
 import {useSyncAuthMeta} from "@/hooks/useSyncAuthMeta";
 import SocketProvider from "@/sockets/context/SocketProvider";
 import * as Sentry from "@sentry/react-native";
+import * as Device from "expo-device";
 import Toast from "react-native-toast-message";
 import "../global.css";
 
@@ -44,6 +46,7 @@ void SplashScreen.preventAutoHideAsync();
 
 export default Sentry.wrap(function RootLayout() {
   const {hasHydrated} = useAuth();
+  const isEmulator = !Device.isDevice;
 
   const [fontsLoaded] = useFonts({
     Montserrat_400Regular,
@@ -85,6 +88,16 @@ export default Sentry.wrap(function RootLayout() {
     return null;
   }
 
+  if (isEmulator) {
+    return (
+      <View className="flex-1 justify-center items-center px-6 bg-white">
+        <Text className="text-base text-center text-neutral-700 font-montserrat">
+          This app cannot run on an emulator.
+        </Text>
+      </View>
+    );
+  }
+
   if (preRegStatus === "error") {
     return (
       <View className="flex-1 justify-center items-center px-6 bg-white">
@@ -109,6 +122,7 @@ export default Sentry.wrap(function RootLayout() {
     <GestureHandlerRootView style={{flex: 1}}>
       <SafeAreaProvider>
         <QueryClientProvider client={queryClient}>
+          <BookingSettingsBootstrap />
           <SocketProvider>
             <AuthMetaSync />
             <Stack screenOptions={{headerShown: false}}>

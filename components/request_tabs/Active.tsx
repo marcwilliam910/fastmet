@@ -1,5 +1,6 @@
 import CancelBookingButton from "@/components/CancelBookingButton";
 import useSeeMoreDetails from "@/hooks/useSeeMoreDetails";
+import {useBookingSettings} from "@/hooks/useBookingSettings";
 import {useUserBookings} from "@/queries/bookingQueries";
 import {useSocket} from "@/sockets/context/SocketProvider";
 import {useAppStore} from "@/store/useAppStore";
@@ -189,6 +190,7 @@ const ActiveCard = ({
   onPressSeeMore,
   onCancelled,
 }: ActiveCardProps) => {
+  const {driverNoShowMinutes} = useBookingSettings();
   const {
     _id: id,
     selectedVehicle: {name: vehicle, maxLoadKg = 0},
@@ -256,6 +258,17 @@ const ActiveCard = ({
             <Ionicons name="arrow-forward" size={16} color="white" />
           </Pressable>
         </View>
+        {booking.status === "need_continuance" && (
+          <View className="px-4 py-3 bg-amber-50 border-b border-amber-100">
+            <Text className="text-sm font-semibold text-amber-900">
+              Finding a replacement driver
+            </Text>
+            <Text className="mt-1 text-xs leading-5 text-amber-800">
+              No action needed. Your price stays the same. We will assign a
+              new driver automatically.
+            </Text>
+          </View>
+        )}
         <View className="px-4 py-3">
           <Text className="mb-1 text-sm font-semibold text-gray-500">
             Driver
@@ -389,7 +402,7 @@ const ActiveCard = ({
       <CancelBookingButton
         bookingId={id}
         referenceTime={getReferenceTime()}
-        graceMinutes={50}
+        graceMinutes={driverNoShowMinutes}
         onCancelled={onCancelled}
       />
     </View>

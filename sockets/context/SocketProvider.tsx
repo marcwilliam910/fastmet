@@ -8,6 +8,9 @@ import {Socket} from "socket.io-client";
 import {
   acceptanceRequestedSchedule,
   bookingCompleted,
+  bookingDriverReassigned,
+  bookingNeedsContinuance,
+  continuanceCancelledClient,
   cancelScheduleDriverOffer,
   driverArrivedAtDropoff,
   driverArrivedAtPickup,
@@ -77,6 +80,9 @@ export default function SocketProvider({
     const cleanupDriverArrivedAtPickup = driverArrivedAtPickup(socket);
     const cleanupDriverArrivedAtDropoff = driverArrivedAtDropoff(socket);
     const cleanupBookingCompleted = bookingCompleted(socket);
+    const cleanupNeedsContinuance = bookingNeedsContinuance(socket);
+    const cleanupDriverReassigned = bookingDriverReassigned(socket);
+    const cleanupContinuanceCancelled = continuanceCancelledClient(socket);
 
     return () => {
       socket.off("connect_error"); // Clean up the listener
@@ -88,6 +94,9 @@ export default function SocketProvider({
       cleanupDriverArrivedAtPickup();
       cleanupDriverArrivedAtDropoff();
       cleanupBookingCompleted();
+      cleanupNeedsContinuance();
+      cleanupDriverReassigned();
+      cleanupContinuanceCancelled();
       socket.disconnect();
     };
   }, [socket, token]);

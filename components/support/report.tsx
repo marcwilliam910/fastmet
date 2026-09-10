@@ -1,9 +1,12 @@
+import {useBookingSettings} from "@/hooks/useBookingSettings";
 import {Ionicons} from "@expo/vector-icons";
 import {router} from "expo-router";
 import React from "react";
 import {Pressable, ScrollView, Text, View} from "react-native";
 
 export default function ReportTab() {
+  const {reportWindowDays} = useBookingSettings();
+
   return (
     <ScrollView
       className="flex-1 px-5 py-4"
@@ -94,10 +97,10 @@ export default function ReportTab() {
               Reporting Guidelines
             </Text>
             <Text className="text-sm text-amber-700">
-              • Reports must be filed within 5 days of completion/cancellation
-              {"\n"}• Provide clear description and photos if available{"\n"}•
-              Driver can reply to your report once{"\n"}• Admin will review and
-              take appropriate action
+              • Reports must be filed within {reportWindowDays} days of
+              completion/cancellation{"\n"}• Provide clear description and photos
+              if available{"\n"}• Driver can reply to your report once{"\n"}•
+              Admin will review and take appropriate action
             </Text>
           </View>
         </View>

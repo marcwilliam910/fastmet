@@ -402,3 +402,57 @@ export const bookingCompleted = (socket: Socket) => {
     socket.off("bookingCompleted", handleBookingCompleted);
   };
 };
+
+export const bookingNeedsContinuance = (socket: Socket) => {
+  const handler = ({bookingId}: {bookingId: string}) => {
+    queryClient.invalidateQueries({queryKey: ["userBookings", "active"]});
+    queryClient.invalidateQueries({queryKey: ["userBooking", bookingId]});
+    Toast.show({
+      type: "info",
+      text1: "Finding a replacement driver",
+      text2: "No action needed. Your price stays the same.",
+      position: "top",
+      topOffset: 50,
+      visibilityTime: 8000,
+    });
+  };
+  socket.on("bookingNeedsContinuance", handler);
+  return () => socket.off("bookingNeedsContinuance", handler);
+};
+
+export const bookingDriverReassigned = (socket: Socket) => {
+  const handler = ({bookingId}: {bookingId: string}) => {
+    useDriverLocationStore.getState().clearDriverLocationCache(bookingId);
+    queryClient.invalidateQueries({queryKey: ["userBookings", "active"]});
+    queryClient.invalidateQueries({queryKey: ["userBooking", bookingId]});
+    Toast.show({
+      type: "success",
+      text1: "New driver assigned",
+      text2: "A replacement driver is continuing your delivery.",
+      position: "top",
+      topOffset: 50,
+    });
+  };
+  socket.on("bookingDriverReassigned", handler);
+  return () => socket.off("bookingDriverReassigned", handler);
+};
+
+export const continuanceCancelledClient = (socket: Socket) => {
+  const handler = (payload: {bookingId: string; reason: "driver" | "timeout"}) => {
+    queryClient.invalidateQueries({queryKey: ["userBookings", "active"]});
+    queryClient.invalidateQueries({queryKey: ["userBooking", payload.bookingId]});
+    Toast.show({
+      type: "info",
+      text1: "Driver continuing",
+      text2:
+        payload.reason === "driver"
+          ? "Your original driver will continue the delivery."
+          : "No replacement found. Your original driver will continue.",
+      position: "top",
+      topOffset: 50,
+      visibilityTime: 4000,
+    });
+  };
+  socket.on("continuance_cancelled", handler);
+  return () => socket.off("continuance_cancelled", handler);
+};

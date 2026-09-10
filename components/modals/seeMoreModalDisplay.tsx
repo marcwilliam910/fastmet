@@ -288,6 +288,19 @@ export default function SeeMoreModalDisplay({
 
           <BookingTimeline items={timelineItems} />
 
+          {data.status === "need_continuance" && (
+            <View className="p-4 bg-amber-50 rounded-2xl">
+              <Text className="text-sm font-semibold text-amber-900">
+                Replacement in progress
+              </Text>
+              <Text className="mt-1 text-xs leading-5 text-amber-800">
+                Your driver could not continue. We are assigning a replacement
+                automatically. You do not need to do anything, and your price
+                is unchanged.
+              </Text>
+            </View>
+          )}
+
           {/* Payment Info */}
           <PaymentInfo
             paymentMethod={data.paymentMethod}

@@ -108,7 +108,11 @@ export default function ViewOnMap() {
                 color="#FFA840"
               />
             </Pressable>
-            <Text className="text-lg font-semibold">On the way</Text>
+            <Text className="text-lg font-semibold">
+              {booking.status === "need_continuance"
+                ? "Finding a replacement"
+                : "On the way"}
+            </Text>
           </View>
 
           <View>
